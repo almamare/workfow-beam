@@ -26,7 +26,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             />
             <div className="flex-1 flex flex-col overflow-hidden">
                 <Navbar onToggleSidebar={toggleMobileSidebar} />
-                <main className="flex-1 overflow-y-auto p-4">
+                <main className="flex-1 overflow-y-auto p-4 bg-slate-50 dark:bg-slate-900">
                     {children}
                 </main>
             </div>

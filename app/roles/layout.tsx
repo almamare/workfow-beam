@@ -2,7 +2,7 @@
 
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import { MainLayout } from '@/components/layout/main-layout';
+import MainLayout from '@/components/layout/main-layout';
 
 export default function RolesLayout({
   children,

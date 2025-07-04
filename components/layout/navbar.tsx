@@ -1,26 +1,46 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/stores/store';
 import { Bell, Search, Sun, Moon, User, Settings, LogOut, Menu } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
+
 import { useTheme } from '@/contexts/ThemeContext';
+import { logout } from '@/stores/slices/login'; // optional if you want to use it
 
 export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
-    const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const [showSearch, setShowSearch] = useState(false);
+    const dispatch = useDispatch();
+    const router = useRouter();
+
+    // Read user data from Redux state
+    const user = useSelector((state: RootState) => state.login.user);
+
+    const handleLogout = () => {
+        dispatch(logout());
+        router.push('/login');
+    };
 
     return (
         <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
             <div className="flex flex-col">
-                {/* Top row: menu, logo, search icon, and other icons */}
+                {/* Top row */}
                 <div className="flex h-16 items-center justify-between px-4">
-                    {/* Left: menu button (mobile) and possibly logo */}
+                    {/* Sidebar toggle (mobile) */}
                     <div className="flex items-center gap-2">
                         <Button
                             variant="ghost"
@@ -33,20 +53,17 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                         <div className="font-semibold lg:hidden">WorkFlow</div>
                     </div>
 
-                    {/* Center: search (desktop) and search icon (mobile) */}
+                    {/* Center search (desktop) */}
                     <div className="hidden lg:flex items-center gap-4 flex-1 max-w-md mx-auto">
                         <div className="relative w-full">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                                placeholder="Search..."
-                                className="pl-9 bg-muted/50"
-                            />
+                            <Input placeholder="Search..." className="pl-9 bg-muted/50" />
                         </div>
                     </div>
 
-                    {/* Right: icons */}
+                    {/* Right icons */}
                     <div className="flex items-center gap-2">
-                        {/* Search icon for mobile */}
+                        {/* Mobile search toggle */}
                         <Button
                             variant="ghost"
                             size="sm"
@@ -63,57 +80,55 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                             onClick={toggleTheme}
                             className="h-8 w-8 p-0"
                         >
-                            {theme === 'light' ? (
-                                <Moon className="h-4 w-4" />
-                            ) : (
-                                <Sun className="h-4 w-4" />
-                            )}
+                            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                         </Button>
 
                         {/* Notifications */}
                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative">
                             <Bell className="h-4 w-4" />
-                            <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs">
-                                3
-                            </Badge>
+                            <Badge variant="danger" className="absolute -top-1 -right-1 border-[6px] h-5 w-5 rounded-full p-0 text-xs">3</Badge>
                         </Button>
 
                         {/* User menu */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                <Button variant="ghost" className="h-10 w-10 p-0">
                                     <Avatar className="h-8 w-8">
                                         <AvatarImage src={user?.avatar} />
                                         <AvatarFallback>
-                                            {user?.firstName?.[0]}{user?.lastName?.[0]}
+                                            {user?.name?.[0] ?? ''}
+                                            {user?.surname?.[0] ?? ''}
                                         </AvatarFallback>
                                     </Avatar>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
-                                <div className="flex items-center justify-start gap-2 p-2">
-                                    <Avatar className="h-8 w-8">
+                                <div className="flex items-center gap-2 p-2">
+                                    <Avatar className="h-10 w-10">
                                         <AvatarImage src={user?.avatar} />
                                         <AvatarFallback>
-                                            {user?.firstName?.[0]}{user?.lastName?.[0]}
+                                            {user?.name?.[0] ?? ''}
+                                            {user?.surname?.[0] ?? ''}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex flex-col space-y-1 leading-none">
-                                        <p className="font-medium">{user?.firstName} {user?.lastName}</p>
-                                        <p className="text-xs text-muted-foreground">{user?.email}</p>
+                                        <p className="font-medium">
+                                            {user?.name} {user?.surname}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">{user?.role} - {user?.number}</p>
                                     </div>
                                 </div>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => router.push('/profile')}>
                                     <User className="mr-2 h-4 w-4" />
                                     Profile
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => router.push('/settings')}>
                                     <Settings className="mr-2 h-4 w-4" />
                                     Settings
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={logout}>
+                                <DropdownMenuItem onClick={() => handleLogout()}>
                                     <LogOut className="mr-2 h-4 w-4" />
                                     Logout
                                 </DropdownMenuItem>
@@ -122,15 +137,12 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                     </div>
                 </div>
 
-                {/* Search bar for mobile, appears below when activated */}
+                {/* Mobile search bar */}
                 {showSearch && (
                     <div className="p-2 border-t lg:hidden">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                                placeholder="Search..."
-                                className="pl-9 bg-muted/50 w-full"
-                            />
+                            <Input placeholder="Search..." className="pl-9 bg-muted/50 w-full" />
                         </div>
                     </div>
                 )}
