@@ -136,7 +136,8 @@ export default function ContractRequestsPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (value) => {
+      render: (_, request) => {
+        const value = request.status;
         const variants = {
           pending: 'secondary',
           approved: 'default',

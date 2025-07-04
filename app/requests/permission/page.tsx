@@ -168,7 +168,7 @@ export default function PermissionRequestsPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (value) => {
+      render: (value: PermissionRequest['status']) => {
         const variants = {
           pending: 'secondary',
           approved: 'default',

@@ -1,16 +1,43 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DataTable, Column, Action } from '@/components/ui/data-table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit, Eye, DollarSign, Clock, CheckCircle, XCircle } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import {
+  Plus,
+  Edit,
+  Eye,
+  DollarSign,
+  Clock,
+  CheckCircle,
+  XCircle
+} from 'lucide-react';
 
 interface AdvanceRequest {
   id: string;
@@ -114,14 +141,14 @@ export default function AdvanceRequestsPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (value) => {
+      render: (value: AdvanceRequest['status']) => {
         const variants = {
           pending: 'secondary',
           approved: 'default',
           rejected: 'destructive',
           paid: 'default'
         } as const;
-        
+
         return (
           <Badge variant={variants[value]}>
             {value.charAt(0).toUpperCase() + value.slice(1)}
@@ -153,24 +180,26 @@ export default function AdvanceRequestsPage() {
       requestDate: new Date().toISOString().split('T')[0],
       status: 'pending'
     };
-    
+
     setRequests(prev => [...prev, newRequest]);
     setIsCreateDialogOpen(false);
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'approved':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'rejected':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'paid':
-        return <DollarSign className="h-4 w-4 text-blue-500" />;
-      default:
-        return null;
-    }
+  const updateRequestStatus = (id: string, status: 'approved' | 'rejected') => {
+    setRequests(prev =>
+      prev.map(r =>
+        r.id === id
+          ? {
+              ...r,
+              status,
+              approvedBy: 'Current User',
+              approvedDate: new Date().toISOString().split('T')[0]
+            }
+          : r
+      )
+    );
+    setIsViewDialogOpen(false);
+    setSelectedRequest(null);
   };
 
   const stats = [
@@ -198,14 +227,15 @@ export default function AdvanceRequestsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header with stats and create button */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Advance Requests</h1>
           <p className="text-muted-foreground mt-1">
             Manage employee advance payment requests
           </p>
         </div>
-        
+
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -242,23 +272,11 @@ export default function AdvanceRequestsPage() {
               </div>
               <div>
                 <Label htmlFor="amount">Amount ($)</Label>
-                <Input 
-                  id="amount" 
-                  name="amount" 
-                  type="number" 
-                  step="0.01"
-                  min="0"
-                  required 
-                />
+                <Input id="amount" name="amount" type="number" step="0.01" min="0" required />
               </div>
               <div>
                 <Label htmlFor="purpose">Purpose</Label>
-                <Textarea 
-                  id="purpose" 
-                  name="purpose" 
-                  placeholder="Describe the purpose of this advance request..."
-                  required 
-                />
+                <Textarea id="purpose" name="purpose" required />
               </div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
@@ -271,11 +289,11 @@ export default function AdvanceRequestsPage() {
         </Dialog>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
+        {stats.map(stat => (
           <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
               {stat.icon}
             </CardHeader>
@@ -286,31 +304,23 @@ export default function AdvanceRequestsPage() {
         ))}
       </div>
 
+      {/* Table */}
       <Card>
         <CardHeader>
           <CardTitle>Advance Requests</CardTitle>
-          <CardDescription>
-            View and manage all advance payment requests
-          </CardDescription>
+          <CardDescription>View and manage all advance payment requests</CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTable
-            data={requests}
-            columns={columns}
-            actions={actions}
-            searchPlaceholder="Search requests..."
-          />
+          <DataTable data={requests} columns={columns} actions={actions} searchPlaceholder="Search requests..." />
         </CardContent>
       </Card>
 
-      {/* View Details Dialog */}
+      {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Request Details</DialogTitle>
-            <DialogDescription>
-              Complete information about this advance request
-            </DialogDescription>
+            <DialogDescription>Complete information about this advance request</DialogDescription>
           </DialogHeader>
           {selectedRequest && (
             <div className="space-y-6">
@@ -332,27 +342,25 @@ export default function AdvanceRequestsPage() {
                   <p className="text-sm">{new Date(selectedRequest.requestDate).toLocaleDateString()}</p>
                 </div>
               </div>
-              
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Purpose</Label>
                 <p className="text-sm mt-1">{selectedRequest.purpose}</p>
               </div>
-
               <div className="flex items-center gap-2">
                 <Label className="text-sm font-medium text-muted-foreground">Status</Label>
                 <div className="flex items-center gap-2">
-                  {getStatusIcon(selectedRequest.status)}
+                  {selectedRequest.status === 'pending' && <Clock className="h-4 w-4 text-yellow-500" />}
+                  {selectedRequest.status === 'approved' && <CheckCircle className="h-4 w-4 text-green-500" />}
+                  {selectedRequest.status === 'rejected' && <XCircle className="h-4 w-4 text-red-500" />}
+                  {selectedRequest.status === 'paid' && <DollarSign className="h-4 w-4 text-blue-500" />}
                   <Badge variant={
                     selectedRequest.status === 'pending' ? 'secondary' :
                     selectedRequest.status === 'approved' ? 'default' :
-                    selectedRequest.status === 'rejected' ? 'destructive' :
-                    'default'
-                  }>
+                    selectedRequest.status === 'rejected' ? 'destructive' : 'default'}>
                     {selectedRequest.status.charAt(0).toUpperCase() + selectedRequest.status.slice(1)}
                   </Badge>
                 </div>
               </div>
-
               {selectedRequest.approvedBy && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -367,56 +375,20 @@ export default function AdvanceRequestsPage() {
                   )}
                 </div>
               )}
-
               {selectedRequest.notes && (
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Notes</Label>
                   <p className="text-sm mt-1">{selectedRequest.notes}</p>
                 </div>
               )}
-
               <div className="flex justify-end gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setIsViewDialogOpen(false);
-                    setSelectedRequest(null);
-                  }}
-                >
-                  Close
-                </Button>
+                <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>Close</Button>
                 {selectedRequest.status === 'pending' && (
                   <>
-                    <Button 
-                      variant="destructive"
-                      onClick={() => {
-                        setRequests(prev => prev.map(r => 
-                          r.id === selectedRequest.id 
-                            ? { ...r, status: 'rejected' as const }
-                            : r
-                        ));
-                        setIsViewDialogOpen(false);
-                        setSelectedRequest(null);
-                      }}
-                    >
+                    <Button variant="destructive" onClick={() => updateRequestStatus(selectedRequest.id, 'rejected')}>
                       Reject
                     </Button>
-                    <Button 
-                      onClick={() => {
-                        setRequests(prev => prev.map(r => 
-                          r.id === selectedRequest.id 
-                            ? { 
-                                ...r, 
-                                status: 'approved' as const,
-                                approvedBy: 'Current User',
-                                approvedDate: new Date().toISOString().split('T')[0]
-                              }
-                            : r
-                        ));
-                        setIsViewDialogOpen(false);
-                        setSelectedRequest(null);
-                      }}
-                    >
+                    <Button onClick={() => updateRequestStatus(selectedRequest.id, 'approved')}>
                       Approve
                     </Button>
                   </>
