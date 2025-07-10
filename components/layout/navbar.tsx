@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/stores/store';
 import { Bell, Search, Sun, Moon, User, Settings, LogOut, Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useDispatch } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,16 +18,20 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 import { useTheme } from '@/contexts/ThemeContext';
-import { logout } from '@/stores/slices/login'; // optional if you want to use it
+import { logout } from '@/stores/slices/login';
 
 export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
     const { theme, toggleTheme } = useTheme();
     const [showSearch, setShowSearch] = useState(false);
+    const [isClient, setIsClient] = useState(false); // 👈 مهم لحل مشكلة التهيئة
     const dispatch = useDispatch();
     const router = useRouter();
 
-    // Read user data from Redux state
     const user = useSelector((state: RootState) => state.login.user);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const handleLogout = () => {
         dispatch(logout());
@@ -96,8 +99,7 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                                     <Avatar className="h-8 w-8">
                                         <AvatarImage src={user?.avatar} />
                                         <AvatarFallback>
-                                            {user?.name?.[0] ?? ''}
-                                            {user?.surname?.[0] ?? ''}
+                                            {isClient && `${user?.name?.[0] ?? ''}${user?.surname?.[0] ?? ''}`}
                                         </AvatarFallback>
                                     </Avatar>
                                 </Button>
@@ -107,15 +109,16 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                                     <Avatar className="h-10 w-10">
                                         <AvatarImage src={user?.avatar} />
                                         <AvatarFallback>
-                                            {user?.name?.[0] ?? ''}
-                                            {user?.surname?.[0] ?? ''}
+                                            {isClient && `${user?.name?.[0] ?? ''}${user?.surname?.[0] ?? ''}`}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex flex-col space-y-1 leading-none">
                                         <p className="font-medium">
                                             {user?.name} {user?.surname}
                                         </p>
-                                        <p className="text-xs text-muted-foreground">{user?.role} - {user?.number}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {user?.role} - {user?.number}
+                                        </p>
                                     </div>
                                 </div>
                                 <DropdownMenuSeparator />
@@ -128,7 +131,7 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                                     Settings
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleLogout()}>
+                                <DropdownMenuItem onClick={handleLogout}>
                                     <LogOut className="mr-2 h-4 w-4" />
                                     Logout
                                 </DropdownMenuItem>

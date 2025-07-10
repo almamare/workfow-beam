@@ -32,6 +32,15 @@ const menuItems: MenuItem[] = [
         href: '/dashboard'
     },
     {
+        title: 'Projects & Tasks',
+        icon: <FolderOpen className="h-4 w-4" />,
+        children: [
+            { title: 'Projects', icon: <FolderOpen className="h-4 w-4" />, href: '/projects' },
+            { title: 'Task Orders', icon: <FileText className="h-4 w-4" />, href: '/tasks' },
+            { title: 'Work Logs', icon: <FileText className="h-4 w-4" />, href: '/work-logs' }
+        ]
+    },
+    {
         title: 'User Management',
         icon: <Users className="h-4 w-4" />,
         children: [
@@ -58,15 +67,6 @@ const menuItems: MenuItem[] = [
             { title: 'Cash Ledger', icon: <DollarSign className="h-4 w-4" />, href: '/financial/cash-ledger' },
             { title: 'Project Budgets', icon: <DollarSign className="h-4 w-4" />, href: '/financial/budgets' },
             { title: 'Loans', icon: <DollarSign className="h-4 w-4" />, href: '/financial/loans' }
-        ]
-    },
-    {
-        title: 'Projects & Tasks',
-        icon: <FolderOpen className="h-4 w-4" />,
-        children: [
-            { title: 'Projects', icon: <FolderOpen className="h-4 w-4" />, href: '/projects' },
-            { title: 'Task Orders', icon: <FileText className="h-4 w-4" />, href: '/tasks' },
-            { title: 'Work Logs', icon: <FileText className="h-4 w-4" />, href: '/work-logs' }
         ]
     },
     {
