@@ -343,7 +343,6 @@ export default function RolesPage() {
             data={roles}
             columns={columns}
             actions={actions}
-            searchPlaceholder="Search roles..."
           />
         </CardContent>
       </Card>

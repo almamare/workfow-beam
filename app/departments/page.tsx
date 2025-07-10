@@ -313,7 +313,6 @@ export default function DepartmentsPage() {
             data={departments}
             columns={columns}
             actions={actions}
-            searchPlaceholder="Search departments..."
           />
         </CardContent>
       </Card>
