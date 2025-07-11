@@ -105,7 +105,7 @@ export default function UsersPage() {
             key: 'role',
             header: 'Role',
             render: (value) => (
-                <Badge variant="secondary">{value}</Badge>
+                <Badge variant="outline">{value}</Badge>
             ),
             sortable: true
         },
@@ -118,7 +118,7 @@ export default function UsersPage() {
             key: 'status',
             header: 'Status',
             render: (value) => (
-                <Badge variant={value === 'active' ? 'default' : 'secondary'}>
+                <Badge variant={value === 'active' ? 'default' : 'outline'}>
                     {value}
                 </Badge>
             ),
