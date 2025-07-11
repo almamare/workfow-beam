@@ -89,7 +89,7 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                         {/* Notifications */}
                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative">
                             <Bell className="h-4 w-4" />
-                            <Badge variant="danger" className="absolute -top-1 -right-1 border-[6px] h-5 w-5 rounded-full p-0 text-xs">3</Badge>
+                            <Badge variant="rejected" className="absolute -top-1 -right-1 border-[6px] h-5 w-5 rounded-full p-0 text-xs">3</Badge>
                         </Button>
 
                         {/* User menu */}

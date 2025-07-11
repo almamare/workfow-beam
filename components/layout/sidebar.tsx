@@ -95,6 +95,16 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
     const pathname = usePathname();
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
+    // التحقق من مسارات المشاريع وتوسيع القائمة تلقائياً
+    useEffect(() => {
+        const projectPaths = ['/projects', '/tasks', '/work-logs'];
+        const isInProjectPath = projectPaths.some(path => pathname.startsWith(path));
+        
+        if (isInProjectPath && !expandedItems.includes('Projects & Tasks')) {
+            setExpandedItems(prev => [...prev, 'Projects & Tasks']);
+        }
+    }, [pathname, expandedItems]);
+
     const toggleExpanded = (title: string) => {
         setExpandedItems(prev =>
             prev.includes(title)
@@ -118,7 +128,6 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             const sidebar = document.querySelector('.sidebar');
-            // التصحيح هنا: إضافة القوس المفقود
             if (sidebar && !sidebar.contains(e.target as Node)) {
                 if (mobileOpen && setMobileOpen) {
                     setMobileOpen(false);

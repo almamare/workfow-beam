@@ -17,12 +17,20 @@ import {
     CardHeader,
     CardTitle
 } from '@/components/ui/card';
-import { DataTable, Column } from '@/components/ui/data-table';
-import { Badge } from '@/components/ui/badge'; 
+import { DataTable, Column, Action } from '@/components/ui/data-table';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import type { Project } from '@/stores/types/projects';
+import { Edit, HardDriveDownload, Eye } from 'lucide-react';
+import {
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem
+} from '@/components/ui/select';
 
 export default function ProjectsPage() {
     const projects = useSelector(selectProjects);
@@ -71,10 +79,24 @@ export default function ProjectsPage() {
             sortable: true
         },
         {
-            key: 'type',
-            header: 'Type',
+            key: 'status',
+            header: 'Status',
             render: (value) => (
-                <Badge variant={value === 'Public' ? 'secondary' : 'destructive'}>
+                <Badge
+                    variant={
+                        value === 'Active'
+                            ? 'approved'
+                            : value === 'Inactive'
+                                ? 'outline'
+                                : value === 'Complete'
+                                    ? 'completed'
+                                    : value === 'Stopped'
+                                        ? 'rejected'
+                                        : value === 'Onhold'
+                                            ? 'onhold'
+                                            : 'default'
+                    }
+                >
                     {value}
                 </Badge>
             ),
@@ -92,86 +114,117 @@ export default function ProjectsPage() {
         },
         {
             key: 'created_at',
-            header: 'Created At',
+            header: 'Created At'
+        }
+    ];
+
+    const actions: Action<Project>[] = [
+        {
+            label: 'Details',
+            onClick: (project) => {
+                router.push(`/projects/details?id=${project.id}`);
+            },
+            icon: <Eye className="h-4 w-4" />
+        },
+        {
+            label: 'Edit',
+            onClick: (project) => {
+                router.push(`/projects/edit?id=${project.id}`);
+            },
+            icon: <Edit className="h-4 w-4" />
+        },
+        {
+            label: 'Download',
+            onClick: (project) => {
+                console.log(`Downloading project ${project.id}`);
+            },
+            icon: <HardDriveDownload className="h-4 w-4" />
         }
     ];
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            {/* Page header */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
                 <div>
                     <h1 className="text-3xl font-bold">Projects</h1>
                     <p className="text-muted-foreground mt-1">
                         Browse and manage all system projects
                     </p>
                 </div>
-                <Button
-                    onClick={() => router.push('/projects/create')}
-                    className="bg-primary text-white"
-                >
+                <Button onClick={() => router.push('/projects/create')} className="bg-primary text-white">
                     + Create Project
                 </Button>
             </div>
 
-            <div className="flex gap-4 items-center flex-wrap">
-                <div className="w-full md:max-w-sm">
-                    <Input
-                        placeholder="Search by number..."
-                        value={search}
-                        onChange={(e) => {
-                            setSearch(e.target.value);
-                            setPage(1);
-                        }}
-                    />
-                </div>
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4">
+                <Input
+                    placeholder="Search by number..."
+                    value={search}
+                    onChange={(e) => {
+                        setSearch(e.target.value);
+                        setPage(1);
+                    }}
+                    className="w-full sm:max-w-sm"
+                />
 
-                {/* Dropdown for type filter */}
-                <div>
-                    <select
-                        value={type}
-                        onChange={(e) => {
-                            setType(e.target.value as 'Public' | 'Communications' | 'Restoration' | 'Referral');
-                            setPage(1);
-                        }}
-                        className="border rounded px-3 py-2"
-                    >
-                        <option value="Public">Public</option>
-                        <option value="Communications">Communications</option>
-                        <option value="Restoration">Restoration</option>
-                        <option value="Referral">Referral</option>
-                    </select>
-                </div>
+                <Select
+                    value={type}
+                    onValueChange={(value) => {
+                        setType(value as typeof type);
+                        setPage(1);
+                    }}
+                >
+                    <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Project Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Public">Public</SelectItem>
+                        <SelectItem value="Communications">Communications</SelectItem>
+                        <SelectItem value="Restoration">Restoration</SelectItem>
+                        <SelectItem value="Referral">Referral</SelectItem>
+                    </SelectContent>
+                </Select>
 
-                {/* Limit dropdown */}
-                <div className="ml-auto">
-                    <select
-                        value={limit}
-                        onChange={(e) => {
-                            setLimit(Number(e.target.value));
-                            setPage(1);
-                        }}
-                        className="border rounded px-3 py-2"
-                    >
-                        <option value={5}>5 per page</option>
-                        <option value={10}>10 per page</option>
-                        <option value={25}>25 per page</option>
-                        <option value={50}>50 per page</option>
-                    </select>
-                </div>
             </div>
 
+            {/* Table */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Project List</CardTitle>
-                    <CardDescription>
-                        Showing {Math.min((page - 1) * limit + 1, totalItems)} to{' '}
-                        {Math.min(page * limit, totalItems)} of {totalItems} projects
-                    </CardDescription>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        {/* Left: Title + Description */}
+                        <div>
+                            <CardTitle>Project List ({type})</CardTitle>
+                            <CardDescription>Total {totalItems} projects found</CardDescription>
+                        </div>
+
+                        {/* Right: Select limit */}
+                        <Select
+                            value={limit.toString()}
+                            onValueChange={(value) => {
+                                setLimit(parseInt(value, 10));
+                                setPage(1);
+                            }}
+                        >
+                            <SelectTrigger className="w-36">
+                                <SelectValue placeholder="Items per page" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="10">10 per page</SelectItem>
+                                <SelectItem value="20">20 per page</SelectItem>
+                                <SelectItem value="50">50 per page</SelectItem>
+                                <SelectItem value="100">100 per page</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </CardHeader>
+
                 <CardContent>
                     <DataTable
                         data={projects}
                         columns={columns}
+                        actions={actions}
                         loading={loading}
                         pagination={{
                             currentPage: page,

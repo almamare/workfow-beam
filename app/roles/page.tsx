@@ -115,7 +115,7 @@ export default function RolesPage() {
       render: (_, role) => (
         <div className="flex flex-wrap gap-1">
           {role.permissions.slice(0, 3).map(permission => (
-            <Badge key={permission} variant="secondary" className="text-xs">
+            <Badge key={permission} variant="default" className="text-xs">
               {availablePermissions.find(p => p.id === permission)?.name || permission}
             </Badge>
           ))}
@@ -142,7 +142,7 @@ export default function RolesPage() {
       key: 'isActive',
       header: 'Status',
       render: (_, role) => (
-        <Badge variant={role.isActive ? 'default' : 'secondary'}>
+        <Badge variant="default">
           {role.isActive ? 'Active' : 'Inactive'}
         </Badge>
       ),
