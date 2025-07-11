@@ -183,10 +183,10 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <Badge variant={
-                    activity.status === 'approved' ? 'default' :
-                    activity.status === 'pending' ? 'secondary' :
-                    activity.status === 'completed' ? 'default' :
-                    'destructive'
+                    activity.status === 'approved' ? 'approved' :
+                    activity.status === 'pending' ? 'pending' :
+                    activity.status === 'completed' ? 'completed' :
+                    'default'
                   }>
                     {activity.status}
                   </Badge>
