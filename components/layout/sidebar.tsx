@@ -16,6 +16,7 @@ import {
     X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 interface MenuItem {
@@ -99,7 +100,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
     useEffect(() => {
         const projectPaths = ['/projects', '/tasks', '/work-logs'];
         const isInProjectPath = projectPaths.some(path => pathname.startsWith(path));
-        
+
         if (isInProjectPath && !expandedItems.includes('Projects & Tasks')) {
             setExpandedItems(prev => [...prev, 'Projects & Tasks']);
         }
@@ -112,6 +113,8 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                 : [...prev, title]
         );
     };
+
+    const hideText = collapsed && !mobileOpen;
 
     const isActive = (href: string) => pathname === href;
     const isParentActive = (children: MenuItem[]) =>
@@ -161,9 +164,34 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                 collapsed && !mobileOpen ? "lg:w-16" : "lg:w-64"
             )}>
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b">
+                <div className="flex items-center justify-between px-4 py-3 border-b">
                     {(!collapsed || mobileOpen) && (
-                        <h2 className="text-lg font-semibold">WorkFlow</h2>
+                        <div className="flex items-center gap-2">
+                            {/* شعار الشركة */}
+                            <Image
+                                src="https://cdn.shuarano.com/img/logo.png"
+                                alt="Shuaa Al-Ranou logo"
+                                width={26}
+                                height={32}
+                                priority
+                                className="shrink-0"
+                            />
+
+                            {/* اسم الشركة + الوصف القصير */}
+                            <div
+                                className={cn(
+                                    'leading-tight overflow-hidden transition-opacity duration-200',
+                                    hideText ? 'opacity-0 w-0' : 'opacity-100'
+                                )}
+                            >
+                                <span className="block font-semibold text-[18px] tracking-wide">
+                                    Shuaa Al-Ranou
+                                </span>
+                                <span className="block text-[10px] text-muted-foreground">
+                                    Trade and General Contracting
+                                </span>
+                            </div>
+                        </div>
                     )}
                     <Button
                         variant="ghost"
@@ -175,7 +203,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                 onToggle();
                             }
                         }}
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 lg:hidden"
                     >
                         <X className="h-4 w-4" />
                     </Button>

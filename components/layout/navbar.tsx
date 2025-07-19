@@ -6,6 +6,7 @@ import { RootState } from '@/stores/store';
 import { Bell, Search, Sun, Moon, User, Settings, LogOut, Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -53,7 +54,27 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                         >
                             <Menu className="h-4 w-4" />
                         </Button>
-                        <div className="font-semibold lg:hidden">WorkFlow</div>
+                        <div className="flex items-center gap-2 lg:hidden">
+                            {/* شعار الشركة */}
+                            <Image
+                                src="https://cdn.shuarano.com/img/logo.png"
+                                alt="Shuaa Al-Ranou logo"
+                                width={23}
+                                height={30}
+                                priority
+                                className="shrink-0"
+                            />
+
+                            {/* اسم الشركة + الوصف القصير */}
+                            <div className='leading-tight '>
+                                <span className="block font-semibold text-[16px] tracking-wide">
+                                    Shuaa Al-Ranou
+                                </span>
+                                <span className="block text-[9px] text-muted-foreground">
+                                    Trade and General Contracting
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Center search (desktop) */}

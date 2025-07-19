@@ -3,72 +3,81 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
-import { authentication } from '@/stores/slices/login';  // Async thunk for login
-import { toast } from 'sonner';                         // Toast notifications
-import { AppDispatch } from '@/stores/store';            // Type for dispatch
+import { authentication } from '@/stores/slices/login';
+import { toast } from 'sonner';
+import { AppDispatch } from '@/stores/store';
 import { useDispatch as useReduxDispatch } from 'react-redux';
-
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { User, Lock, Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
 
 export default function LoginPage() {
-    // Local state for input fields and password visibility toggle
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
-    // Next.js router for navigation
     const router = useRouter();
-
-    // Typed dispatch to work properly with Redux Toolkit thunks
     const dispatch = useReduxDispatch<AppDispatch>();
-
-    // Get loading state from Redux store
     const { loading } = useSelector((state: any) => state.login);
 
-    // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         try {
-            // Dispatch the authentication thunk with username and password
             const result = await dispatch(authentication({ username, password }));
-
-            // If login successful, redirect to dashboard
             if (authentication.fulfilled.match(result)) {
                 router.push('/dashboard');
             } else {
-                // Show error toast if login failed
-                toast.error(result.payload as string || 'Login failed');
+                toast.error((result.payload as string) || 'Login failed');
             }
         } catch {
-            // Show toast on unexpected errors
             toast.error('An unexpected error occurred');
         }
     };
 
     return (
-        // Main container with gradient background and center alignment
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4">
-            <Card className="w-full max-w-md shadow-xl rounded-2xl">
-                {/* Card header with title and description */}
-                <CardHeader className="space-y-1">
-                    <CardTitle className="text-3xl font-bold text-center text-indigo-600 dark:text-white">
-                        Welcome Back
+        <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 p-4">
+            <Card className="w-full max-w-md shadow-xl rounded-2xl border border-gray-200 dark:border-gray-700">
+                {/* ===== Header (Logo + Company + Form Title) ===== */}
+                <CardHeader className="flex flex-col items-center space-y-6">
+                    {/* Logo + Company name & tagline */}
+                    <div className="flex flex-col items-center space-y-2">
+                        <Image
+                            src="https://cdn.shuarano.com/img/logo.png"
+                            alt="Shuaa Al-Ranou logo"
+                            width={48}
+                            height={48}
+                            priority
+                            className="shrink-0"
+                        />
+
+                        <div className="text-center leading-tight">
+                            <span className="block font-semibold text-[18px] tracking-wide">
+                                Shuaa Al-Ranou
+                            </span>
+                            <span className="block text-[11px] text-muted-foreground">
+                                Trade & General Contracting
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Form title */}
+                    <CardTitle className="text-3xl font-semibold text-[#EF6C00] dark:text-white">
+                        Sign In
                     </CardTitle>
-                    <CardDescription className="text-center text-gray-500 dark:text-gray-400">
-                        Sign in to your SHUAA RANO account
-                    </CardDescription>
                 </CardHeader>
 
-                {/* Card content containing the login form */}
+                {/* ===== Login form ===== */}
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Username input field with icon */}
+                        {/* Username */}
                         <div className="space-y-2">
                             <Label htmlFor="username">Username</Label>
                             <div className="relative">
@@ -85,7 +94,7 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        {/* Password input field with icon and show/hide toggle */}
+                        {/* Password */}
                         <div className="space-y-2">
                             <Label htmlFor="password">Password</Label>
                             <div className="relative">
@@ -93,7 +102,7 @@ export default function LoginPage() {
                                 <Input
                                     id="password"
                                     type={showPassword ? 'text' : 'password'}
-                                    placeholder="Enter your password"
+                                    placeholder="••••••••"
                                     className="pl-10 pr-10"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -111,12 +120,16 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        {/* Submit button with loading spinner */}
-                        <Button type="submit" className="w-full" disabled={loading}>
+                        {/* Submit */}
+                        <Button
+                            type="submit"
+                            className="w-full bg-[#EF6C00] hover:bg-[#d85f00] text-white font-semibold"
+                            disabled={loading}
+                        >
                             {loading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Signing in...
+                                    Signing in…
                                 </>
                             ) : (
                                 <>
@@ -126,9 +139,14 @@ export default function LoginPage() {
                             )}
                         </Button>
 
-                        {/* Forgot password link */}
+                        {/* Forgot password */}
                         <div className="text-center">
-                            <Button variant="link" size="sm" onClick={() => toast.info('Password recovery feature coming soon!')}>
+                            <Button
+                                variant="link"
+                                size="sm"
+                                className="text-sm text-[#455A64]"
+                                onClick={() => toast.info('Password recovery feature coming soon!')}
+                            >
                                 Forgot your password?
                             </Button>
                         </div>
