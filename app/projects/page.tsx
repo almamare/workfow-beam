@@ -31,6 +31,8 @@ import {
     SelectContent,
     SelectItem
 } from '@/components/ui/select';
+import { toast } from "sonner";
+import axios from "@/utils/axios";
 
 export default function ProjectsPage() {
     const projects = useSelector(selectProjects);
@@ -45,10 +47,34 @@ export default function ProjectsPage() {
     const [type, setType] = useState<'Public' | 'Communications' | 'Restoration' | 'Referral'>('Public');
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
+    const [projectIsDownload, setProjectIsDownload] = useState(false);
 
     useEffect(() => {
         dispatch(fetchProjects({ page, limit, search, type }));
     }, [dispatch, page, limit, search, type]);
+
+    const downloadProject = async (projectId: string, fileName = 'Project_merged') => {
+        setProjectIsDownload(true);
+        try {
+            const { data } = await axios.get(`/projects/download/merged/${projectId}`, { responseType: 'blob' },);
+
+            const blob = new Blob([data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+
+            const link = document.createElement('a'); 
+            link.href = url;
+            link.download = `${fileName}.pdf`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            window.URL.revokeObjectURL(url);
+            link.remove();
+        } catch (err) {
+            toast.error('تعذّر تحميل المشروع');
+        } finally {
+            setProjectIsDownload(false);
+        }
+    }
 
     const columns: Column<Project>[] = [
         {
@@ -129,14 +155,14 @@ export default function ProjectsPage() {
         {
             label: 'Edit',
             onClick: (project) => {
-                router.push(`/projects/edit?id=${project.id}`);
+                router.push(`/projects/update?id=${project.id}`);
             },
             icon: <Edit className="h-4 w-4" />
         },
         {
             label: 'Download',
             onClick: (project) => {
-                console.log(`Downloading project ${project.id}`);
+                downloadProject(project.id);
             },
             icon: <HardDriveDownload className="h-4 w-4" />
         }

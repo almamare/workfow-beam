@@ -128,12 +128,24 @@ export default function ProjectDetailsPage() {
         }
     };
 
-    const handleDeleteTender = async () => {
-        toast.info("Delete tender not implemented yet.");
-    };
-
-    const handleTenderDeleteClick = (tender: Tender) => {
-        setTenderToDelete(tender.id);
+    const handleDeleteTender = async (tenderId: string) => {
+        if (!tenderId) return;
+        try {
+            await axios.delete(`/projects/tenders/delete/${tenderId}`);
+            toast.success("Tender deleted successfully");
+            if (projectId) {
+                dispatch(fetchTenders({
+                    projectId,
+                    page,
+                    limit,
+                    search,
+                }));
+            }
+        } catch (error) {
+            toast.error("Failed to delete tender");
+        } finally {
+            setOpen(false);
+        }
     };
 
 
@@ -205,7 +217,11 @@ export default function ProjectDetailsPage() {
     //———————————————————————————————————————
     // Table configs
     //———————————————————————————————————————
-    const tenderColumns: Column<Tender>[] = [
+    interface TenderColumn extends Column<Tender> {}
+
+    interface TenderAction extends Action<Tender> {}
+
+    const tenderColumns: TenderColumn[] = [
         { key: "sequence", header: "ID", sortable: true },
         { key: "name", header: "Name", sortable: true },
         { key: "price", header: "Price", sortable: true },
@@ -213,15 +229,17 @@ export default function ProjectDetailsPage() {
         { key: "amount", header: "Amount", sortable: true },
     ];
 
-    const tenderActions: Action<Tender>[] = [
+    const tenderActions: TenderAction[] = [
         {
             label: "Edit",
-            onClick: (t) => router.push(`/tenders/edit?id=${t.id}`),
+            onClick: (t: Tender) => router.push(`/projects/tender/update?id=${t.id}`),
             icon: <Edit className="w-4 h-4" />,
         },
         {
             label: "Delete",
-            onClick: handleTenderDeleteClick,
+            onClick: (t: Tender) => {
+                handleDeleteTender(t.id);
+            },
             icon: <Trash2 className="w-4 h-4 text-red-500" />,
         },
     ];
@@ -267,7 +285,7 @@ export default function ProjectDetailsPage() {
         );
 
     return (
-        <div className="space-y-6 pb-10">
+        <div className="space-y-4 pb-10">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>

@@ -13,7 +13,10 @@ import {
     Shield,
     ChevronDown,
     ChevronRight,
-    X
+    X,
+    Wallet,
+    Contact,
+    Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -37,17 +40,8 @@ const menuItems: MenuItem[] = [
         icon: <FolderOpen className="h-4 w-4" />,
         children: [
             { title: 'Projects', icon: <FolderOpen className="h-4 w-4" />, href: '/projects' },
-            { title: 'Task Orders', icon: <FileText className="h-4 w-4" />, href: '/tasks' },
-            { title: 'Work Logs', icon: <FileText className="h-4 w-4" />, href: '/work-logs' }
-        ]
-    },
-    {
-        title: 'User Management',
-        icon: <Users className="h-4 w-4" />,
-        children: [
-            { title: 'Users', icon: <Users className="h-4 w-4" />, href: '/users' },
-            { title: 'Roles', icon: <Shield className="h-4 w-4" />, href: '/roles' },
-            { title: 'Departments', icon: <FolderOpen className="h-4 w-4" />, href: '/departments' }
+            { title: 'Budgets', icon: <Wallet className="h-4 w-4" />, href: '/budgets' },
+            { title: 'Task Orders', icon: <FileText className="h-4 w-4" />, href: '/tasks' }
         ]
     },
     {
@@ -58,6 +52,16 @@ const menuItems: MenuItem[] = [
             { title: 'Contract Requests', icon: <FileText className="h-4 w-4" />, href: '/requests/contract' },
             { title: 'Permission Requests', icon: <FileText className="h-4 w-4" />, href: '/requests/permission' },
             { title: 'Approvals', icon: <Shield className="h-4 w-4" />, href: '/approvals' }
+        ]
+    },
+    {
+        title: 'User Management',
+        icon: <Users className="h-4 w-4" />,
+        children: [
+            { title: 'Users', icon: <Users className="h-4 w-4" />, href: '/users' },
+            { title: 'Departments', icon: <FolderOpen className="h-4 w-4" />, href: '/departments' },
+            { title: 'Permissions', icon: <Shield className="h-4 w-4" />, href: '/permissions' },
+            { title: 'Employees', icon: <Contact className="h-4 w-4" />, href: '/employees' }
         ]
     },
     {
@@ -79,9 +83,9 @@ const menuItems: MenuItem[] = [
         ]
     },
     {
-        title: 'Audit Logs',
-        icon: <Shield className="h-4 w-4" />,
-        href: '/audit-logs'
+        title: 'Settings',
+        icon: <Settings className="h-4 w-4" />,
+        href: '/settings'
     }
 ];
 
@@ -98,7 +102,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
 
     // التحقق من مسارات المشاريع وتوسيع القائمة تلقائياً
     useEffect(() => {
-        const projectPaths = ['/projects', '/tasks', '/work-logs'];
+        const projectPaths = ['/projects', '/tasks', '/budgets'];
         const isInProjectPath = projectPaths.some(path => pathname.startsWith(path));
 
         if (isInProjectPath && !expandedItems.includes('Projects & Tasks')) {
