@@ -1,38 +1,70 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/stores/store';
-import { Bell, Search, Sun, Moon, User, Settings, LogOut, Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import axios from '@/utils/axios';
+
+import { useTheme } from '@/contexts/ThemeContext';
+import { logout } from '@/stores/slices/login';
+
 import { Button } from '@/components/ui/button';
-import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+
+import NotificationsMenu from '@/components/notifications';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
-    DropdownMenuTrigger
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
 
-import { useTheme } from '@/contexts/ThemeContext';
-import { logout } from '@/stores/slices/login';
+import {
+    Bell,
+    Search,
+    Sun,
+    Moon,
+    User,
+    Settings,
+    LogOut,
+    Menu,
+    Check,
+    X,
+    Loader2,
+} from 'lucide-react';
 
+/* =========================================================
+   Types
+========================================================= */
+type NotificationItem = {
+    id: string;
+    titel?: string;         // backend typo "titel"
+    title?: string;         // normalized
+    message: string;
+    notification_type?: string;
+    is_read: 0 | 1 | boolean;
+    created_at: string;
+};
+
+type Counts = { read: number; unread: number };
+
+/* =========================================================
+   Navbar
+========================================================= */
 export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
     const { theme, toggleTheme } = useTheme();
     const [showSearch, setShowSearch] = useState(false);
-    const [isClient, setIsClient] = useState(false); // 👈 مهم لحل مشكلة التهيئة
+    const [isClient, setIsClient] = useState(false);
     const dispatch = useDispatch();
     const router = useRouter();
-
     const user = useSelector((state: RootState) => state.login.user);
 
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
+    useEffect(() => setIsClient(true), []);
 
     const handleLogout = () => {
         dispatch(logout());
@@ -44,7 +76,7 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
             <div className="flex flex-col">
                 {/* Top row */}
                 <div className="flex h-16 items-center justify-between px-4">
-                    {/* Sidebar toggle (mobile) */}
+                    {/* Sidebar toggle (mobile) + logo */}
                     <div className="flex items-center gap-2">
                         <Button
                             variant="ghost"
@@ -54,19 +86,17 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                         >
                             <Menu className="h-4 w-4" />
                         </Button>
+
                         <div className="flex items-center gap-2 lg:hidden">
-                            {/* شعار الشركة */}
                             <Image
                                 src="https://cdn.shuarano.com/img/logo.png"
                                 alt="Shuaa Al-Ranou logo"
-                                width={23}
+                                width={22}
                                 height={30}
                                 priority
                                 className="shrink-0"
                             />
-
-                            {/* اسم الشركة + الوصف القصير */}
-                            <div className='leading-tight '>
+                            <div className="leading-tight">
                                 <span className="block font-semibold text-[16px] tracking-wide">
                                     Shuaa Al-Ranou
                                 </span>
@@ -98,20 +128,12 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                         </Button>
 
                         {/* Theme toggle */}
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={toggleTheme}
-                            className="h-8 w-8 p-0"
-                        >
+                        <Button variant="ghost" size="sm" onClick={toggleTheme} className="h-8 w-8 p-0">
                             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                         </Button>
 
-                        {/* Notifications */}
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative">
-                            <Bell className="h-4 w-4" />
-                            <Badge variant="rejected" className="absolute -top-1 -right-1 border-[6px] h-5 w-5 rounded-full p-0 text-xs">3</Badge>
-                        </Button>
+                        {/* Notifications menu (PRO) */}
+                        <NotificationsMenu onOpenAll={() => router.push('/notifications')}  />
 
                         {/* User menu */}
                         <DropdownMenu>
@@ -174,3 +196,5 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
         </header>
     );
 }
+
+

@@ -17,6 +17,7 @@ import {
     Wallet,
     Contact,
     Settings,
+    Megaphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -39,6 +40,7 @@ const menuItems: MenuItem[] = [
         title: 'Projects & Tasks',
         icon: <FolderOpen className="h-4 w-4" />,
         children: [
+            { title: 'Clients', icon: <Users className="h-4 w-4" />, href: '/clients' },
             { title: 'Projects', icon: <FolderOpen className="h-4 w-4" />, href: '/projects' },
             { title: 'Budgets', icon: <Wallet className="h-4 w-4" />, href: '/budgets' },
             { title: 'Task Orders', icon: <FileText className="h-4 w-4" />, href: '/tasks' }
@@ -83,6 +85,16 @@ const menuItems: MenuItem[] = [
         ]
     },
     {
+        title: 'Contractors',
+        icon: <Users className="h-4 w-4" />,
+        href: '/contractors'
+    },
+    {
+        title: 'Notifications',
+        icon: <Megaphone className="h-4 w-4" />,
+        href: '/notifications'
+    },
+    {
         title: 'Settings',
         icon: <Settings className="h-4 w-4" />,
         href: '/settings'
@@ -100,9 +112,8 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
     const pathname = usePathname();
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
-    // التحقق من مسارات المشاريع وتوسيع القائمة تلقائياً
     useEffect(() => {
-        const projectPaths = ['/projects', '/tasks', '/budgets'];
+        const projectPaths = ['/clients', '/projects', '/tasks', '/budgets'];
         const isInProjectPath = projectPaths.some(path => pathname.startsWith(path));
 
         if (isInProjectPath && !expandedItems.includes('Projects & Tasks')) {
@@ -124,14 +135,12 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
     const isParentActive = (children: MenuItem[]) =>
         children.some(child => child.href && isActive(child.href));
 
-    // Close sidebar when clicking on a link on mobile
     const handleItemClick = () => {
         if (mobileOpen && setMobileOpen) {
             setMobileOpen(false);
         }
     };
 
-    // Close sidebar when clicking outside on mobile
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             const sidebar = document.querySelector('.sidebar');
@@ -171,17 +180,15 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                     {(!collapsed || mobileOpen) && (
                         <div className="flex items-center gap-2">
-                            {/* شعار الشركة */}
                             <Image
                                 src="https://cdn.shuarano.com/img/logo.png"
                                 alt="Shuaa Al-Ranou logo"
-                                width={26}
+                                width={25}
                                 height={32}
                                 priority
                                 className="shrink-0"
                             />
 
-                            {/* اسم الشركة + الوصف القصير */}
                             <div
                                 className={cn(
                                     'leading-tight overflow-hidden transition-opacity duration-200',
@@ -286,7 +293,6 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                 </nav>
             </div>
 
-            {/* تنسيق شريط التمرير */}
             <style jsx global>{`
                 .custom-scrollbar::-webkit-scrollbar {
                     width: 5px;
