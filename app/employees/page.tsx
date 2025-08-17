@@ -4,12 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { AppDispatch } from '@/stores/store';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import {
-    fetchUsers,
-    selectUsers,
+    fetchEmployees,
+    selectEmployees,
     selectLoading,
     selectTotalPages,
     selectTotalItems
-} from '@/stores/slices/users';
+} from '@/stores/slices/employees';
 import {
     Card,
     CardContent,
@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import type { User } from '@/stores/types/users';
+import type { Employee } from '@/stores/types/employees';
 import { Edit, Eye } from 'lucide-react';
 import {
     Select,
@@ -32,8 +32,8 @@ import {
     SelectItem
 } from '@/components/ui/select';
 
-export default function UsersPage() {
-    const users = useSelector(selectUsers);
+export default function EmployeesPage() {
+    const employees = useSelector(selectEmployees);
     const loading = useSelector(selectLoading);
     const totalPages = useSelector(selectTotalPages);
     const totalItems = useSelector(selectTotalItems);
@@ -43,48 +43,45 @@ export default function UsersPage() {
 
     // Local UI states
     const [search, setSearch] = useState(''); // Search input
-    const [status, setStatus] = useState<'Active' | 'Inactive' | 'Blocked' | 'Pending'>('Active'); // Status filter
-    const [type, setType] = useState<'Accounts' | 'Employment' | 'Contracts' | 'General'>('Accounts'); // Type filter
     const [page, setPage] = useState(1); // Current page
     const [limit, setLimit] = useState(10); // Items per page
 
-    // Fetch users from Redux store whenever filters/page/limit change
+    // Fetch employees from Redux store whenever filters/page/limit change
     useEffect(() => {
-        dispatch(fetchUsers({ page, limit, search, type }));
-    }, [dispatch, page, limit, search, status, type]);
+        dispatch(fetchEmployees({ page, limit, search }));
+    }, [dispatch, page, limit, search]);
 
     // Table columns definition
-    const columns: Column<User>[] = [
-        { key: 'number', header: 'Number', sortable: true },
-        { key: 'name', header: 'Name', sortable: true },
-        { key: 'surname', header: 'Surname', sortable: true },
-        { key: 'email', header: 'Email', sortable: true },
-        { key: 'phone', header: 'Phone', sortable: true },
+    const columns: Column<Employee>[] = [
+        { key: 'employee_code', header: 'Code', sortable: true },
+        { key: 'job_title', header: 'Job Title', sortable: true },
         { key: 'role', header: 'Role', sortable: true },
-        { key: 'type', header: 'Type', sortable: true },
+        { key: 'hire_date', header: 'Hire Date', sortable: true },
+        { key: 'salary_grade', header: 'Salary Grade', sortable: true },
         {
-            key: 'status',
-            header: 'Status',
-            render: (value) => (
-                <Badge
-                    variant={
-                        value === 'Active' ? 'completed' :
-                            value === 'Disabled' ? 'rejected' :
-                                value === 'Locked' ? 'draft' :
-                                        'default'
-                    }
-                >
-                    {value}
-                </Badge>
-            ),
-            sortable: true
+            key: 'notes',
+            header: 'Notes',
+            render: (value) => value || '-',
         },
-        { key: 'created_at', header: 'Created At', sortable: true }
+        {
+            key: 'created_at',
+            header: 'Created At',
+            sortable: true
+        }
     ];
 
     // Actions for each row (view details, edit)
-    const actions: Action<User>[] = [
-        { label: 'Edit', onClick: (user) => router.push(`/users/update?id=${user.id}`), icon: <Edit className="h-4 w-4" /> }
+    const actions: Action<Employee>[] = [
+        {
+            label: 'Details',
+            onClick: (employee) => router.push(`/employees/details?id=${employee.id}`),
+            icon: <Eye className="h-4 w-4" />
+        },
+        {
+            label: 'Edit',
+            onClick: (employee) => router.push(`/employees/update?id=${employee.id}`),
+            icon: <Edit className="h-4 w-4" />
+        }
     ];
 
     return (
@@ -92,11 +89,11 @@ export default function UsersPage() {
             {/* Page header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
                 <div>
-                    <h1 className="text-3xl font-bold">Users</h1>
-                    <p className="text-muted-foreground mt-1">Browse and manage all system users</p>
+                    <h1 className="text-3xl font-bold">Employees</h1>
+                    <p className="text-muted-foreground mt-1">Browse and manage all company employees</p>
                 </div>
-                <Button onClick={() => router.push('/users/create')} className="bg-primary text-white">
-                    + Create User
+                <Button onClick={() => router.push('/employees/create')} className="bg-primary text-white">
+                    + Create Employee
                 </Button>
             </div>
 
@@ -104,34 +101,20 @@ export default function UsersPage() {
             <div className="flex flex-col sm:flex-row flex-wrap gap-4">
                 {/* Search input */}
                 <Input
-                    placeholder="Search by number..."
+                    placeholder="Search by employee code or job title..."
                     value={search}
                     onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                     className="w-full sm:max-w-sm"
                 />
-
-                {/* Type filter */}
-                <Select value={type} onValueChange={(value) => { setType(value as typeof type); setPage(1); }}>
-                    <SelectTrigger className="w-48">
-                        <SelectValue placeholder="User Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Accounts">Accounts</SelectItem>
-                        <SelectItem value="Employment">Employment</SelectItem>
-                        <SelectItem value="Contracts">Contracts</SelectItem>
-                        <SelectItem value="General">General</SelectItem>
-                        <SelectItem value="Financial">Financial</SelectItem>
-                    </SelectContent>
-                </Select>
             </div>
 
-            {/* Users table */}
+            {/* Employees table */}
             <Card>
                 <CardHeader>
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <CardTitle>User List</CardTitle>
-                            <CardDescription>Total {totalItems} users found</CardDescription>
+                            <CardTitle>Employee List</CardTitle>
+                            <CardDescription>Total {totalItems} employees found</CardDescription>
                         </div>
 
                         {/* Pagination limit selector */}
@@ -151,7 +134,7 @@ export default function UsersPage() {
 
                 <CardContent>
                     <DataTable
-                        data={users}
+                        data={employees}
                         columns={columns}
                         actions={actions}
                         loading={loading}
@@ -162,7 +145,7 @@ export default function UsersPage() {
                             totalItems,
                             onPageChange: setPage
                         }}
-                        noDataMessage="No users found"
+                        noDataMessage="No employees found"
                     />
                 </CardContent>
             </Card>

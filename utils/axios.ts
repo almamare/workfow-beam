@@ -3,7 +3,7 @@ import axios, { InternalAxiosRequestConfig, AxiosHeaders } from 'axios';
 import Cookies from 'js-cookie';
 
 const instance = axios.create({
-    baseURL: 'https://api.shuarano.com/api/v1',
+    baseURL: 'http://localhost/beam/api/v1',
     headers: {
         'Content-Type': 'application/json',
     },

@@ -30,6 +30,7 @@ interface MenuItem {
     children?: MenuItem[];
 }
 
+// Define sidebar menu items
 const menuItems: MenuItem[] = [
     {
         title: 'Dashboard',
@@ -44,16 +45,6 @@ const menuItems: MenuItem[] = [
             { title: 'Projects', icon: <FolderOpen className="h-4 w-4" />, href: '/projects' },
             { title: 'Budgets', icon: <Wallet className="h-4 w-4" />, href: '/budgets' },
             { title: 'Task Orders', icon: <FileText className="h-4 w-4" />, href: '/tasks' }
-        ]
-    },
-    {
-        title: 'Requests & Approvals',
-        icon: <FileText className="h-4 w-4" />,
-        children: [
-            { title: 'Advance Requests', icon: <FileText className="h-4 w-4" />, href: '/requests/advance' },
-            { title: 'Contract Requests', icon: <FileText className="h-4 w-4" />, href: '/requests/contract' },
-            { title: 'Permission Requests', icon: <FileText className="h-4 w-4" />, href: '/requests/permission' },
-            { title: 'Approvals', icon: <Shield className="h-4 w-4" />, href: '/approvals' }
         ]
     },
     {
@@ -112,15 +103,20 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
     const pathname = usePathname();
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
+    // Automatically expand parent menu if current pathname matches child route
     useEffect(() => {
-        const projectPaths = ['/clients', '/projects', '/tasks', '/budgets'];
-        const isInProjectPath = projectPaths.some(path => pathname.startsWith(path));
+        const newExpanded: string[] = [];
 
-        if (isInProjectPath && !expandedItems.includes('Projects & Tasks')) {
-            setExpandedItems(prev => [...prev, 'Projects & Tasks']);
-        }
-    }, [pathname, expandedItems]);
+        menuItems.forEach(item => {
+            if (item.children?.some(child => child.href && pathname.startsWith(child.href))) {
+                newExpanded.push(item.title);
+            }
+        });
 
+        setExpandedItems(newExpanded);
+    }, [pathname]);
+
+    // Toggle expansion of a parent menu
     const toggleExpanded = (title: string) => {
         setExpandedItems(prev =>
             prev.includes(title)
@@ -135,12 +131,14 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
     const isParentActive = (children: MenuItem[]) =>
         children.some(child => child.href && isActive(child.href));
 
+    // Close mobile sidebar when clicking a link
     const handleItemClick = () => {
         if (mobileOpen && setMobileOpen) {
             setMobileOpen(false);
         }
     };
 
+    // Close mobile sidebar if click outside
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             const sidebar = document.querySelector('.sidebar');
@@ -242,6 +240,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                     </Link>
                                 ) : (
                                     <div>
+                                        {/* Parent menu button */}
                                         <button
                                             onClick={() => (!collapsed || mobileOpen) && toggleExpanded(item.title)}
                                             className={cn(
@@ -265,6 +264,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                             )}
                                         </button>
 
+                                        {/* Render child items if expanded */}
                                         {(!collapsed || mobileOpen) && expandedItems.includes(item.title) && item.children && (
                                             <div className="ml-4 mt-1 space-y-1 max-h-60 overflow-y-auto custom-scrollbar">
                                                 {item.children.map((child) => (
