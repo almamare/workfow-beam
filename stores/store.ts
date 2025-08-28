@@ -8,6 +8,7 @@ import Clients from '@/stores/slices/clients';           // Importing the Client
 import Contractors from '@/stores/slices/contractors';   // Importing the Contractors type from the contractors slice
 import UsersSil from '@/stores/slices/users';               
 import Employees from '@/stores/slices/employees';
+import TaskRequests from '@/stores/slices/tasks_requests';
 
 
 // This is the Redux store configuration for the login functionality
@@ -22,7 +23,8 @@ const store = configureStore({
         clients: Clients,           // This is the slice for managing clients
         contractors: Contractors,   // This is the slice for managing contractors
         users: UsersSil,
-        employees: Employees
+        employees: Employees,
+        taskRequests: TaskRequests
     },
 });
 

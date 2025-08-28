@@ -16,6 +16,8 @@ import { toast } from 'sonner';
 import axios from '@/utils/axios';
 import { Loader2, Save, RotateCcw } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
+
 
 type ClientPayload = {
     name: string;
@@ -204,8 +206,9 @@ const EditClientPage: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Header */}
+            <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Edit Client</h1>

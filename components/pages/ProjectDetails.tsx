@@ -51,6 +51,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import axios from "@/utils/axios";
+import { Breadcrumb } from '@/components/layout/breadcrumb';
+
 
 //————————————————————————————————————————
 // Types
@@ -287,6 +289,7 @@ export default function ProjectDetailsPage() {
     return (
         <div className="space-y-4 pb-10">
             {/* Header */}
+            <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Project Details</h1>

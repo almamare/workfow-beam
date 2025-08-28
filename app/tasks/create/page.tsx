@@ -1,6 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,12 +19,31 @@ import {
     CardContent,
     CardFooter
 } from '@/components/ui/card';
+import { DatePicker } from "@/components/DatePicker";
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
 import { Loader2, Save, RotateCcw, Plus, Trash2, FileUp } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import type { AppDispatch } from '@/stores/store';
+import {
+    fetchContractors,
+    selectContractors,
+    selectContractorsLoading,
+    selectContractorsError,
+} from '@/stores/slices/contractors';
+import type { Contractor } from '@/stores/types/contractors';
+import {
+    fetchProjects,
+    selectProjects,
+    selectLoading as selectProjectsLoading,
+    selectError as selectProjectsError,
+} from '@/stores/slices/projects';
+import type { Project } from '@/stores/types/projects';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 
+// Type definitions
 type ContractTerm = {
     title: string;
     description: string;
@@ -31,10 +51,10 @@ type ContractTerm = {
 
 type TaskOrderDocument = {
     title: string;
-    file: string;      // data:*/*;base64,....
-    name?: string;     // UI only
-    type?: string;     // UI only
-    size?: number;     // UI only
+    file: string;       // base64 encoded string
+    name?: string;      // Original filename
+    type?: string;      // MIME type
+    size?: number;      // File size in bytes
 };
 
 type TaskOrderPayload = {
@@ -42,13 +62,15 @@ type TaskOrderPayload = {
     project_id: string;
     title: string;
     description?: string;
-    issue_date: string;      // YYYY-MM-DD
-    est_cost: string;        // as string e.g. "12000.50"
+    issue_date: string;       // ISO format (YYYY-MM-DD)
+    est_cost: string;         // Numeric string representation
+    notes: string;
     status: 'Active' | 'Closed' | 'Cancelled' | 'Pending' | 'Onhold';
     contract_terms: ContractTerm[];
     documents: TaskOrderDocument[];
 };
 
+// Initial form state
 const initialValues: TaskOrderPayload = {
     contractor_id: '',
     project_id: '',
@@ -56,26 +78,59 @@ const initialValues: TaskOrderPayload = {
     description: '',
     issue_date: '',
     est_cost: '',
+    notes: '',
     status: 'Active',
-    contract_terms: [
-        { title: '', description: '' }
-    ],
-    documents: [
-        { title: '', file: '' }
-    ]
+    contract_terms: [{ title: '', description: '' }],
+    documents: [{ title: '', file: '' }]
 };
 
+// Available status options
 const statuses: TaskOrderPayload['status'][] = [
     'Active', 'Pending', 'Onhold', 'Closed', 'Cancelled'
 ];
 
+// Project types
+const projectTypes = ['Public', 'Communications', 'Restoration', 'Referral'];
+
+// Allowed file types for upload
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+// Special values for placeholder items
+const EMPTY_CONTRACTOR_VALUE = "no-contractors-available";
+const EMPTY_PROJECT_VALUE = "no-projects-available";
+
 const CreateTaskOrderPage: React.FC = () => {
+    // Form state and loading indicators
     const [form, setForm] = useState<TaskOrderPayload>(initialValues);
     const [loading, setLoading] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [projectType, setProjectType] = useState<string>('Public');
     const router = useRouter();
 
-    // Base64 helper
+    // Redux state management
+    const dispatch = useDispatch<AppDispatch>();
+
+    // Contractors state
+    const contractors = useSelector(selectContractors);
+    const contractorsLoading = useSelector(selectContractorsLoading);
+    const contractorsError = useSelector(selectContractorsError);
+
+    // Projects state
+    const projects = useSelector(selectProjects);
+    const projectsLoading = useSelector(selectProjectsLoading);
+    const projectsError = useSelector(selectProjectsError);
+
+    // Fetch initial data on component mount
+    useEffect(() => {
+        dispatch(fetchProjects({ page: 1, limit: 100, search: "", type: projectType }));
+    }, [dispatch, projectType]);
+
+    useEffect(() => {
+        dispatch(fetchContractors());
+    }, [dispatch]);
+
+    // Convert file to base64 data URL
     const readFileAsDataURL = (file: File) =>
         new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
@@ -84,119 +139,166 @@ const CreateTaskOrderPage: React.FC = () => {
             reader.readAsDataURL(file);
         });
 
-    // Update simple fields
+    // Update form fields
     const updateField = useCallback(
         (name: keyof TaskOrderPayload, value: string) => {
+            // Don't update if the value is from a placeholder option
+            if (value === EMPTY_CONTRACTOR_VALUE || value === EMPTY_PROJECT_VALUE) {
+                return;
+            }
+
             setForm(prev => ({ ...prev, [name]: value }));
-            setFieldErrors(prev => {
-                const clone = { ...prev };
-                delete clone[name as string];
-                return clone;
-            });
+            // Clear field error when updating
+            setFieldErrors(prev => ({ ...prev, [name]: '' }));
         },
         []
     );
 
-    // Terms handlers
+    // Contract terms handlers
     const updateTermField = (index: number, key: keyof ContractTerm, value: string) => {
         setForm(prev => {
-            const next = [...prev.contract_terms];
-            next[index] = { ...next[index], [key]: value };
-            return { ...prev, contract_terms: next };
-        });
-    };
-    const addTerm = () => {
-        setForm(prev => ({ ...prev, contract_terms: [...prev.contract_terms, { title: '', description: '' }] }));
-    };
-    const removeTerm = (index: number) => {
-        setForm(prev => {
-            const next = prev.contract_terms.filter((_, i) => i !== index);
-            return { ...prev, contract_terms: next.length ? next : [{ title: '', description: '' }] };
+            const terms = [...prev.contract_terms];
+            terms[index] = { ...terms[index], [key]: value };
+            return { ...prev, contract_terms: terms };
         });
     };
 
-    // Documents handlers
+    const addTerm = () => {
+        setForm(prev => ({
+            ...prev,
+            contract_terms: [...prev.contract_terms, { title: '', description: '' }]
+        }));
+    };
+
+    const removeTerm = (index: number) => {
+        setForm(prev => ({
+            ...prev,
+            contract_terms: prev.contract_terms.filter((_, i) => i !== index)
+        }));
+    };
+
+    // Document handlers
     const updateDocTitle = (index: number, value: string) => {
         setForm(prev => {
-            const next = [...prev.documents];
-            next[index] = { ...next[index], title: value };
-            return { ...prev, documents: next };
+            const docs = [...prev.documents];
+            docs[index] = { ...docs[index], title: value };
+            return { ...prev, documents: docs };
         });
     };
+
     const updateDocFile = async (index: number, file?: File) => {
         if (!file) return;
+
+        // Validate file type
+        if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+            toast.error('Only JPG, PNG, and PDF files are allowed');
+            return;
+        }
+
+        // Validate file size
+        if (file.size > MAX_FILE_SIZE) {
+            toast.error('File size exceeds 5MB limit');
+            return;
+        }
+
         try {
             const dataUrl = await readFileAsDataURL(file);
             setForm(prev => {
-                const next = [...prev.documents];
-                next[index] = { ...next[index], file: dataUrl, name: file.name, type: file.type, size: file.size };
-                return { ...prev, documents: next };
+                const docs = [...prev.documents];
+                docs[index] = {
+                    ...docs[index],
+                    file: dataUrl,
+                    name: file.name,
+                    type: file.type,
+                    size: file.size
+                };
+                return { ...prev, documents: docs };
             });
-        } catch (e) {
-            toast.error('Failed to read file.');
+        } catch (error) {
+            toast.error('Failed to process file');
         }
     };
+
     const addDocument = () => {
-        setForm(prev => ({ ...prev, documents: [...prev.documents, { title: '', file: '' }] }));
-    };
-    const removeDocument = (index: number) => {
-        setForm(prev => {
-            const next = prev.documents.filter((_, i) => i !== index);
-            return { ...prev, documents: next.length ? next : [{ title: '', file: '' }] };
-        });
+        setForm(prev => ({
+            ...prev,
+            documents: [...prev.documents, { title: '', file: '' }]
+        }));
     };
 
-    // Validation
+    const removeDocument = (index: number) => {
+        setForm(prev => ({
+            ...prev,
+            documents: prev.documents.filter((_, i) => i !== index)
+        }));
+    };
+
+    // Form validation
     const validate = useCallback(() => {
         const errors: Record<string, string> = {};
-        const required: (keyof TaskOrderPayload)[] = [
-            'contractor_id',
-            'project_id',
-            'title',
-            'issue_date',
-            'est_cost',
-            'status'
+        const requiredFields: (keyof TaskOrderPayload)[] = [
+            'contractor_id', 'project_id', 'title',
+            'issue_date', 'est_cost', 'status'
         ];
 
-        required.forEach(f => {
-            const v = form[f];
-            if (!v || String(v).trim() === '') errors[f] = 'Required';
+        // Required field validation
+        requiredFields.forEach(field => {
+            if (!form[field] || String(form[field]).trim() === '') {
+                errors[field] = 'This field is required';
+            }
         });
 
-        // est_cost numeric >= 0
+        // Numeric validation for estimated cost
         if (!errors.est_cost) {
-            const num = Number(form.est_cost);
-            if (Number.isNaN(num)) errors.est_cost = 'Invalid number';
-            else if (num < 0) errors.est_cost = 'Must be ≥ 0';
-        }
-
-        // issue_date basic check (YYYY-MM-DD)
-        if (!errors.issue_date) {
-            const ok = /^\d{4}-\d{2}-\d{2}$/.test(form.issue_date);
-            if (!ok) errors.issue_date = 'Invalid date (YYYY-MM-DD)';
-        }
-
-        // Validate terms (if provided, require both fields)
-        form.contract_terms.forEach((t, i) => {
-            const bothEmpty = !t.title.trim() && !t.description.trim();
-            const oneEmpty = (!!t.title.trim() && !t.description.trim()) || (!t.title.trim() && !!t.description.trim());
-            if (oneEmpty) {
-                errors[`contract_terms_${i}`] = 'Term title and description are both required or leave both empty.';
+            const value = Number(form.est_cost);
+            if (isNaN(value)) {
+                errors.est_cost = 'Must be a valid number';
+            } else if (value < 0) {
+                errors.est_cost = 'Must be greater than or equal to zero';
             }
-            // We allow completely empty row; it will be filtered out before submit.
-            if (!bothEmpty && (!t.title.trim() || !t.description.trim())) {
-                errors[`contract_terms_${i}`] = 'Both fields required.';
+        }
+
+        // Date validation
+        if (!errors.issue_date) {
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!dateRegex.test(form.issue_date)) {
+                errors.issue_date = 'Invalid date format (YYYY-MM-DD required)';
+            } else {
+                const selectedDate = new Date(form.issue_date);
+                const today = new Date();
+
+                if (selectedDate > today) {
+                    errors.issue_date = 'Future dates are not allowed';
+                }
+            }
+        }
+
+        // Contractor and project selection validation
+        if (!form.contractor_id) {
+            errors.contractor_id = 'Please select a contractor';
+        }
+
+        if (!form.project_id) {
+            errors.project_id = 'Please select a project';
+        }
+
+        // Contract terms validation
+        form.contract_terms.forEach((term, index) => {
+            const hasTitle = term.title.trim() !== '';
+            const hasDescription = term.description.trim() !== '';
+
+            if ((hasTitle && !hasDescription) || (!hasTitle && hasDescription)) {
+                errors[`contract_terms_${index}`] = 'Both title and description are required';
             }
         });
 
-        // Validate documents (title & file should be together)
-        form.documents.forEach((d, i) => {
-            const title = d.title?.trim();
-            const file = d.file?.trim();
-            const bothEmpty = !title && !file;
-            const oneEmpty = (!!title && !file) || (!title && !!file);
-            if (oneEmpty) {
-                errors[`documents_${i}`] = 'Document title and file are both required or leave both empty.';
+        // Documents validation
+        form.documents.forEach((doc, index) => {
+            const hasTitle = doc.title.trim() !== '';
+            const hasFile = doc.file.trim() !== '';
+
+            if ((hasTitle && !hasFile) || (!hasTitle && hasFile)) {
+                errors[`documents_${index}`] = 'Both title and file are required';
             }
         });
 
@@ -204,164 +306,346 @@ const CreateTaskOrderPage: React.FC = () => {
         return Object.keys(errors).length === 0;
     }, [form]);
 
-    // Prepare payload (filter empty rows)
-    const formattedPayload = useMemo(() => {
-        const terms = form.contract_terms
-            .filter(t => t.title.trim() && t.description.trim())
-            .map(t => ({ title: t.title.trim(), description: t.description.trim() }));
+    // Prepare payload for submission
+    const formattedPayload = useMemo((): TaskOrderPayload => {
+        // Filter out empty terms
+        const validTerms = form.contract_terms
+            .filter(term => term.title.trim() && term.description.trim())
+            .map(term => ({
+                title: term.title.trim(),
+                description: term.description.trim()
+            }));
 
-        const docs = form.documents
-            .filter(d => d.title.trim() && d.file.trim())
-            .map(d => ({ title: d.title.trim(), file: d.file.trim() }));
+        // Filter out empty documents
+        const validDocs = form.documents
+            .filter(doc => doc.title.trim() && doc.file.trim())
+            .map(doc => ({
+                title: doc.title.trim(),
+                file: doc.file.trim()
+            }));
 
-        const payload: TaskOrderPayload = {
+        return {
+            ...form,
             contractor_id: form.contractor_id.trim(),
             project_id: form.project_id.trim(),
             title: form.title.trim(),
             description: form.description?.trim() || '',
-            issue_date: form.issue_date,                 // assume already YYYY-MM-DD
-            est_cost: String(Number(form.est_cost).toFixed(2)), // normalize to "####.##"
-            status: form.status,
-            contract_terms: terms,
-            documents: docs
+            est_cost: Number(form.est_cost).toFixed(2), // Ensure 2 decimal places
+            notes: form.notes.trim(),
+            contract_terms: validTerms,
+            documents: validDocs
         };
-        return payload;
     }, [form]);
 
+    // Form submission handler
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
         if (!validate()) {
-            toast.error('Please fix the validation errors.');
+            toast.error('Please fix form errors before submitting');
             return;
         }
-        setLoading(true);
-        try {
-            const result = await axios.post('/task-orders/create', { params: formattedPayload });
 
-            if (result.data?.header?.success) {
-                toast.success('Task Order created successfully!');
-                setForm(initialValues);
+        setLoading(true);
+
+        try {
+            // POST request with correct payload format
+            const response = await axios.post('/task-orders/create', { params: formattedPayload });
+
+            if (response.data?.header?.success) {
+                toast.success('Task order created successfully!');
+                router.push('/tasks'); // Redirect to task orders page
             } else {
-                toast.error(result.data?.header?.messages?.[0]?.message || 'Failed to create task order.');
-                return;
+                const errorMessage = response.data?.header?.messages?.[0]?.message ||
+                    'Unknown error occurred';
+                toast.error(`Creation failed: ${errorMessage}`);
             }
         } catch (error: any) {
-            const msg =
-                error?.response?.data?.header?.messages?.[0]?.message ||
-                error?.response?.data?.header?.message ||
-                error?.message ||
-                'Failed to create task order. Please try again.';
-            toast.error(msg);
+            const errorMessage = error.response?.data?.header?.message ||
+                error.message ||
+                'Network error';
+            toast.error(`Failed to create task order: ${errorMessage}`);
         } finally {
             setLoading(false);
         }
     };
 
+    // Reset form to initial state
     const handleReset = () => {
         setForm(initialValues);
         setFieldErrors({});
-        toast.message('Form reset to initial defaults.');
+        setProjectType('Public');
+        toast.info('Form has been reset');
     };
 
+    // Helper functions for entity labels
+    const getContractorLabel = (contractor: Contractor) => {
+        return contractor.name ||
+            contractor.number ||
+            `Contractor ${contractor.id}`;
+    };
+
+    const getProjectLabel = (project: Project) => {
+        return project.name ||
+            project.client_name ||
+            `Project ${project.id}`;
+    };
+
+    // Memoized options for performance
+    const contractorOptions = useMemo(() => {
+        return contractors?.map(contractor => ({
+            id: contractor.id,
+            label: getContractorLabel(contractor)
+        })) || [];
+    }, [contractors]);
+
+    const projectOptions = useMemo(() => {
+        return projects?.map(project => ({
+            id: project.id,
+            label: getProjectLabel(project)
+        })) || [];
+    }, [projects]);
+
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
+        <div className="space-y-4">
+            {/* Page Header */}
+            <Breadcrumb />
+            <div className="flex flex-col md:flex-row md:items-end mb-4 justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
                         Create Task Order
                     </h1>
-                    <p className="text-muted-foreground mt-2">
-                        Enter the task order details, attach documents, then submit to create a new task order.
+                    <p className="text-muted-foreground">
+                        Fill in task order details, attach required documents, and submit
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button type="button" variant="outline" onClick={() => router.push('/task-orders')}>
-                        Back to Task Orders
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => router.push('/tasks')}
+                    >
+                        Back Task Orders
                     </Button>
                 </div>
             </div>
 
-            {/* Form */}
-            <form id="taskorder-create-form" onSubmit={handleSubmit} className="space-y-4">
+            {/* Main Form */}
+            <form
+                id="taskorder-create-form"
+                onSubmit={handleSubmit}
+                className="space-y-4"
+            >
                 <div className="grid gap-4 md:grid-cols-3">
-                    {/* Basic Info */}
+                    {/* Left Column - Basic Information */}
                     <Card className="md:col-span-2">
                         <CardHeader>
-                            <CardTitle>Basic Information</CardTitle>
-                            <CardDescription>Core details for the task order.</CardDescription>
+                            <CardTitle>Core Information</CardTitle>
+                            <CardDescription>
+                                Essential details for the task order
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid gap-4 md:grid-cols-2">
+                                {/* Contractor Selection */}
                                 <div className="space-y-2">
-                                    <Label htmlFor="contractor_id">Contractor ID *</Label>
-                                    <Input
-                                        id="contractor_id"
+                                    <Label htmlFor="contractor_id">Contractor *</Label>
+                                    <Select
                                         value={form.contractor_id}
-                                        onChange={e => updateField('contractor_id', e.target.value)}
-                                        placeholder="12345678abcdef01"
-                                    />
-                                    {fieldErrors.contractor_id && <p className="text-xs text-red-500">{fieldErrors.contractor_id}</p>}
+                                        onValueChange={value => updateField('contractor_id', value)}
+                                    >
+                                        <SelectTrigger id="contractor_id">
+                                            {contractorsLoading ? (
+                                                <div className="flex items-center">
+                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                    Loading contractors...
+                                                </div>
+                                            ) : (
+                                                <SelectValue placeholder="Select contractor" />
+                                            )}
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {contractorOptions.length === 0 ? (
+                                                <SelectItem
+                                                    value={EMPTY_CONTRACTOR_VALUE}
+                                                    disabled
+                                                >
+                                                    No contractors available
+                                                </SelectItem>
+                                            ) : (
+                                                contractorOptions.map(contractor => (
+                                                    <SelectItem
+                                                        key={contractor.id}
+                                                        value={contractor.id}
+                                                    >
+                                                        {contractor.label}
+                                                    </SelectItem>
+                                                ))
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                    {fieldErrors.contractor_id && (
+                                        <p className="text-xs text-red-500">
+                                            {fieldErrors.contractor_id}
+                                        </p>
+                                    )}
+                                    {contractorsError && (
+                                        <p className="text-xs text-red-500">
+                                            Error loading contractors: {contractorsError}
+                                        </p>
+                                    )}
                                 </div>
+
+                                {/* Project Type and Project Selection */}
                                 <div className="space-y-2">
-                                    <Label htmlFor="project_id">Project ID *</Label>
-                                    <Input
-                                        id="project_id"
-                                        value={form.project_id}
-                                        onChange={e => updateField('project_id', e.target.value)}
-                                        placeholder="abcdef0123456789"
-                                    />
-                                    {fieldErrors.project_id && <p className="text-xs text-red-500">{fieldErrors.project_id}</p>}
+                                    <Label htmlFor="project_type">Project Type *</Label>
+                                    <Select
+                                        value={projectType}
+                                        onValueChange={setProjectType}
+                                    >
+                                        <SelectTrigger id="project_type">
+                                            <SelectValue placeholder="Project Type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {projectTypes.map(type => (
+                                                <SelectItem key={type} value={type}>
+                                                    {type}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="project_id">Project *</Label>
+                                    <Select
+                                        value={form.project_id}
+                                        onValueChange={value => updateField('project_id', value)}
+                                    >
+                                        <SelectTrigger id="project_id">
+                                            {projectsLoading ? (
+                                                <div className="flex items-center">
+                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                    Loading projects...
+                                                </div>
+                                            ) : (
+                                                <SelectValue placeholder="Select project" />
+                                            )}
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {projectOptions.length === 0 ? (
+                                                <SelectItem
+                                                    value={EMPTY_PROJECT_VALUE}
+                                                    disabled
+                                                >
+                                                    No projects available
+                                                </SelectItem>
+                                            ) : (
+                                                projectOptions.map(project => (
+                                                    <SelectItem
+                                                        key={project.id}
+                                                        value={project.id}
+                                                    >
+                                                        {project.label}
+                                                    </SelectItem>
+                                                ))
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                    {fieldErrors.project_id && (
+                                        <p className="text-xs text-red-500">
+                                            {fieldErrors.project_id}
+                                        </p>
+                                    )}
+                                    {projectsError && (
+                                        <p className="text-xs text-red-500">
+                                            Error loading projects: {projectsError}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Title Field */}
                                 <div className="space-y-2">
                                     <Label htmlFor="title">Title *</Label>
                                     <Input
                                         id="title"
                                         value={form.title}
                                         onChange={e => updateField('title', e.target.value)}
-                                        placeholder="Task Order Title"
+                                        placeholder="Task order title"
                                     />
-                                    {fieldErrors.title && <p className="text-xs text-red-500">{fieldErrors.title}</p>}
+                                    {fieldErrors.title && (
+                                        <p className="text-xs text-red-500">
+                                            {fieldErrors.title}
+                                        </p>
+                                    )}
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="issue_date">Issue Date *</Label>
-                                    <Input
-                                        id="issue_date"
-                                        type="date"
+
+                                {/* Issue Date */}
+                                <div className="flex flex-col">
+                                    <Label htmlFor="issue_date" className="mb-3 mt-[6px]" >
+                                        Issue Date *
+                                    </Label>
+
+                                    <DatePicker
                                         value={form.issue_date}
-                                        onChange={e => updateField('issue_date', e.target.value)}
+                                        onChange={(val) => updateField('issue_date', val)}
                                     />
-                                    {fieldErrors.issue_date && <p className="text-xs text-red-500">{fieldErrors.issue_date}</p>}
+
+                                    {fieldErrors.issue_date && (
+                                        <p className="mt-1 text-xs text-red-500">
+                                            {fieldErrors.issue_date}
+                                        </p>
+                                    )}
                                 </div>
+
+                                {/* Status Selection */}
                                 <div className="space-y-2">
                                     <Label htmlFor="status">Status *</Label>
-                                    <Select value={form.status} onValueChange={(val) => updateField('status', val)}>
+                                    <Select
+                                        value={form.status}
+                                        onValueChange={value => updateField('status', value)}
+                                    >
                                         <SelectTrigger id="status">
                                             <SelectValue placeholder="Select status" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {statuses.map(s => (
-                                                <SelectItem value={s} key={s}>{s}</SelectItem>
+                                            {statuses.map(status => (
+                                                <SelectItem key={status} value={status}>
+                                                    {status}
+                                                </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    {fieldErrors.status && <p className="text-xs text-red-500">{fieldErrors.status}</p>}
+                                    {fieldErrors.status && (
+                                        <p className="text-xs text-red-500">
+                                            {fieldErrors.status}
+                                        </p>
+                                    )}
                                 </div>
+
+                                {/* Estimated Cost */}
                                 <div className="space-y-2">
-                                    <Label htmlFor="est_cost">Estimated Cost *</Label>
+                                    <Label htmlFor="est_cost">Estimated Cost (IQD) *</Label>
                                     <Input
                                         id="est_cost"
-                                        inputMode="decimal"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
                                         value={form.est_cost}
                                         onChange={e => updateField('est_cost', e.target.value)}
-                                        placeholder="12000.50"
+                                        placeholder="0"
                                     />
-                                    {fieldErrors.est_cost && <p className="text-xs text-red-500">{fieldErrors.est_cost}</p>}
+                                    {fieldErrors.est_cost && (
+                                        <p className="text-xs text-red-500">
+                                            {fieldErrors.est_cost}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
+                            {/* Description Field */}
                             <div className="space-y-2">
-                                <Label htmlFor="description">Description (Optional)</Label>
+                                <Label htmlFor="description">Description</Label>
                                 <textarea
                                     id="description"
                                     className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -373,38 +657,56 @@ const CreateTaskOrderPage: React.FC = () => {
                         </CardContent>
                     </Card>
 
-                    {/* Contract Terms */}
+                    {/* Right Column - Contract Terms */}
                     <Card>
                         <CardHeader>
                             <CardTitle>Contract Terms</CardTitle>
-                            <CardDescription>Add one or more terms.</CardDescription>
+                            <CardDescription>
+                                Define terms and conditions for this task order
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {form.contract_terms.map((t, i) => (
-                                <div key={i} className="rounded-lg border p-3 space-y-2">
+                            {form.contract_terms.map((term, index) => (
+                                <div key={index} className="rounded-lg border p-3 space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <Label className="font-medium">Term #{i + 1}</Label>
-                                        <Button type="button" variant="ghost" size="sm" onClick={() => removeTerm(i)}>
-                                            <Trash2 className="h-4 w-4" />
+                                        <Label className="font-medium">
+                                            Term - ({index + 1})
+                                        </Label>
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="xs"
+                                            onClick={() => removeTerm(index)}
+                                            disabled={form.contract_terms.length <= 1}
+                                        >
+                                            <Trash2 className="h-4 w-4 me-1" />
+                                            Delete
                                         </Button>
                                     </div>
                                     <Input
-                                        placeholder="Title"
-                                        value={t.title}
-                                        onChange={e => updateTermField(i, 'title', e.target.value)}
+                                        placeholder="Term title"
+                                        value={term.title}
+                                        onChange={e => updateTermField(index, 'title', e.target.value)}
                                     />
                                     <textarea
                                         className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                        placeholder="Description"
-                                        value={t.description}
-                                        onChange={e => updateTermField(i, 'description', e.target.value)}
+                                        placeholder="Term description"
+                                        value={term.description}
+                                        onChange={e => updateTermField(index, 'description', e.target.value)}
                                     />
-                                    {fieldErrors[`contract_terms_${i}`] && (
-                                        <p className="text-xs text-red-500">{fieldErrors[`contract_terms_${i}`]}</p>
+                                    {fieldErrors[`contract_terms_${index}`] && (
+                                        <p className="text-xs text-red-500">
+                                            {fieldErrors[`contract_terms_${index}`]}
+                                        </p>
                                     )}
                                 </div>
                             ))}
-                            <Button type="button" variant="outline" onClick={addTerm}>
+                            <Button
+                                type="button"
+                                variant="success"
+                                size="sm"
+                                onClick={addTerm}
+                            >
                                 <Plus className="h-4 w-4 mr-2" />
                                 Add Term
                             </Button>
@@ -412,67 +714,144 @@ const CreateTaskOrderPage: React.FC = () => {
                     </Card>
                 </div>
 
-                {/* Documents */}
+                {/* Notes Section */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Documents</CardTitle>
-                        <CardDescription>Attach blueprints, signed contracts, etc.</CardDescription>
+                        <CardTitle>Task Order Notes</CardTitle>
+                        <CardDescription>
+                            Additional notes for this task order
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2">
+                            <Label htmlFor="notes">Notes</Label>
+                            <textarea
+                                id="notes"
+                                className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                value={form.notes}
+                                onChange={e => updateField('notes', e.target.value)}
+                                placeholder="Additional notes for the task order..."
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Documents Section */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Supporting Documents</CardTitle>
+                        <CardDescription>
+                            Upload relevant files (PDF, JPG, PNG - max 5MB each)
+                        </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {form.documents.map((d, i) => (
-                            <div key={i} className="rounded-lg border p-3 space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label className="font-medium">Document #{i + 1}</Label>
-                                    <Button type="button" variant="ghost" size="sm" onClick={() => removeDocument(i)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                <Input
-                                    placeholder="Title (e.g., Blueprint Drawing)"
-                                    value={d.title}
-                                    onChange={e => updateDocTitle(i, e.target.value)}
-                                />
-                                <div className="flex items-center gap-3">
-                                    <label
-                                        htmlFor={`file_${i}`}
-                                        className="inline-flex items-center gap-2 cursor-pointer rounded-md border px-3 py-2 text-sm"
-                                    >
-                                        <FileUp className="h-4 w-4" />
-                                        Choose file
-                                    </label>
-                                    <input
-                                        id={`file_${i}`}
-                                        type="file"
-                                        accept="image/*,.pdf"
-                                        className="hidden"
-                                        onChange={(e) => updateDocFile(i, e.target.files?.[0])}
+                        <div className="grid gap-4 md:grid-cols-3">
+                            {form.documents.map((doc, index) => (
+                                <div key={index} className="rounded-lg border p-3 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="font-medium">
+                                            Document - ({index + 1})
+                                        </Label>
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="xs"
+                                            onClick={() => removeDocument(index)}
+                                            disabled={form.documents.length <= 1}
+                                        >
+                                            <Trash2 className="h-4 w-4 me-1" />
+                                            Delete
+                                        </Button>
+                                    </div>
+                                    <Input
+                                        placeholder="Document title"
+                                        value={doc.title}
+                                        onChange={e => updateDocTitle(index, e.target.value)}
                                     />
-                                    {d.name ? (
-                                        <span className="text-sm text-muted-foreground truncate">{d.name}</span>
-                                    ) : (
-                                        <span className="text-sm text-muted-foreground">No file selected</span>
+                                    <div className="flex items-center gap-3">
+                                        <label
+                                            htmlFor={`file_${index}`}
+                                            className="inline-flex items-center gap-2 cursor-pointer rounded-md border px-3 py-2 text-sm hover:bg-accent"
+                                        >
+                                            <FileUp className="h-4 w-4" />
+                                            {doc.name ? "Change File" : "Select File"}
+                                        </label>
+                                        <input
+                                            id={`file_${index}`}
+                                            type="file"
+                                            accept=".jpg,.jpeg,.png,.pdf"
+                                            className="hidden"
+                                            onChange={e => updateDocFile(index, e.target.files?.[0])}
+                                        />
+                                        {doc.name ? (
+                                            <span className="text-sm text-muted-foreground truncate max-w-[200px]">
+                                                {doc.name}
+                                            </span>
+                                        ) : (
+                                            <span className="text-sm text-muted-foreground">
+                                                No file selected
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* File Preview */}
+                                    {doc.file && (
+                                        <div className="mt-2">
+                                            {doc.type?.startsWith('image/') ? (
+                                                <img
+                                                    src={doc.file}
+                                                    alt="Preview"
+                                                    className="h-24 object-contain border rounded"
+                                                />
+                                            ) : doc.type === 'application/pdf' ? (
+                                                <div className="flex items-center text-blue-500">
+                                                    <FileUp className="h-6 w-6 mr-2" />
+                                                    <span>PDF Document</span>
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    )}
+
+                                    {fieldErrors[`documents_${index}`] && (
+                                        <p className="text-xs text-red-500">
+                                            {fieldErrors[`documents_${index}`]}
+                                        </p>
                                     )}
                                 </div>
-                                {fieldErrors[`documents_${i}`] && (
-                                    <p className="text-xs text-red-500">{fieldErrors[`documents_${i}`]}</p>
-                                )}
-                            </div>
-                        ))}
-                        <Button type="button" variant="outline" onClick={addDocument}>
+                            ))}
+                        </div>
+                        <Button
+                            type="button"
+                            variant="success"
+                            size="sm"
+                            onClick={addDocument}
+                        >
                             <Plus className="h-4 w-4 mr-2" />
                             Add Document
                         </Button>
                     </CardContent>
 
-                    <CardFooter className="justify-end gap-3">
-                        <Button type="button" variant="outline" onClick={handleReset} disabled={loading}>
+                    {/* Form Actions */}
+                    <CardFooter className="justify-end gap-3 pt-6">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleReset}
+                            disabled={loading}
+                        >
                             <RotateCcw className="h-4 w-4 mr-2" />
-                            Reset
+                            Reset Form
                         </Button>
-                        <Button type="submit" disabled={loading}>
-                            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                            <Save className="h-4 w-4 mr-2" />
-                            {loading ? 'Saving...' : 'Create Task Order'}
+                        <Button
+                            type="submit"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                                <Save className="h-4 w-4 mr-2" />
+                            )}
+                            {loading ? 'Creating...' : 'Create Task Order'}
                         </Button>
                     </CardFooter>
                 </Card>

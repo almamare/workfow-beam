@@ -8,7 +8,7 @@ const badgeVariants = cva(
         variants: {
             variant: {
                 draft: 'bg-gray-500 text-white hover:bg-gray-500/80',
-                pending: 'bg-yellow-500 text-white hover:bg-yellow-500/80',
+                pending: 'bg-yellow-500 text-gray-700 hover:bg-yellow-500/80',
                 approved: 'bg-blue-500 text-white hover:bg-blue-500/80',
                 rejected: 'bg-red-500 text-white hover:bg-red-500/80',
                 inprogress: 'bg-indigo-500 text-white hover:bg-indigo-500/80',

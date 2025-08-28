@@ -33,6 +33,9 @@ import {
 } from '@/components/ui/select';
 import { toast } from "sonner";
 import axios from "@/utils/axios";
+import { Breadcrumb } from '@/components/layout/breadcrumb';
+
+
 
 export default function ProjectsPage() {
     const projects = useSelector(selectProjects);
@@ -169,8 +172,9 @@ export default function ProjectsPage() {
     ];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Page header */}
+            <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
                 <div>
                     <h1 className="text-3xl font-bold">Projects</h1>

@@ -14,7 +14,6 @@ import { Bell, Loader2, Check, X, Trash2 } from 'lucide-react';
 /* ========================= Types ========================= */
 export type NotificationItem = {
     id: string;
-    titel?: string; // backend typo
     title?: string;
     message: string;
     notification_type?: string;
@@ -81,7 +80,7 @@ const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
                 // Normalize fields
                 const normalized = [...unreadItems, ...readItems].map((n) => ({
                     ...n,
-                    title: n.title ?? n.titel ?? 'Notification',
+                    title: n.title ?? n.title ?? 'Notification',
                     is_read: !!n.is_read,
                 }));
 
@@ -217,7 +216,7 @@ const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between gap-2">
                                             <p className={`font-medium truncate ${n.is_read ? 'opacity-80' : ''}`}>
-                                                {n.title || n.titel || 'Notification'}
+                                                {n.title || n.title || 'Notification'}
                                             </p>
                                             <span className="text-[11px] text-muted-foreground shrink-0">
                                                 {timeAgo(n.created_at)}

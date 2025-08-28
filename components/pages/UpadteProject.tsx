@@ -22,12 +22,14 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Save, RotateCcw } from 'lucide-react';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { DatePicker } from "@/components/DatePicker";
+
 
 type ProjectPayload = {
     project_id?: string;
     project_code: string;
     name: string;
-    client_name: string;
     start_date: string;
     end_date: string;
     type: string;
@@ -43,7 +45,6 @@ const initialValues: ProjectPayload = {
     project_id: '',
     project_code: '',
     name: '',
-    client_name: '',
     start_date: '',
     end_date: '',
     type: '',
@@ -83,7 +84,6 @@ const UpdateProjectPage: React.FC = () => {
                     project_id: project.id,
                     project_code: project.project_code,
                     name: project.name,
-                    client_name: project.client_name,
                     start_date: project.start_date.slice(0, 10),
                     end_date: project.end_date.slice(0, 10),
                     type: project.type,
@@ -118,7 +118,7 @@ const UpdateProjectPage: React.FC = () => {
     const validate = useCallback(() => {
         const errors: Record<string, string> = {};
         const required: (keyof ProjectPayload)[] = [
-            'project_code', 'name', 'client_name', 'start_date', 'end_date', 'type', 'fiscal_year'
+            'project_code', 'name', 'start_date', 'end_date', 'type', 'fiscal_year'
         ];
 
         required.forEach(f => {
@@ -184,7 +184,8 @@ const UpdateProjectPage: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
+            <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Update Project</h1>
@@ -203,7 +204,6 @@ const UpdateProjectPage: React.FC = () => {
                             <div className="grid gap-4 md:grid-cols-2">
                                 <InputGroup label="Project Code *" value={form.project_code} name="project_code" error={fieldErrors.project_code} onChange={updateField} />
                                 <InputGroup label="Name *" value={form.name} name="name" error={fieldErrors.name} onChange={updateField} />
-                                <InputGroup label="Client Name *" value={form.client_name} name="client_name" error={fieldErrors.client_name} onChange={updateField} />
                                 <SelectGroup label="Type *" value={form.type} options={projectTypes} name="type" error={fieldErrors.type} onChange={updateField} />
                                 <SelectGroup label="Fiscal Year *" value={form.fiscal_year} options={fiscalYears} name="fiscal_year" error={fieldErrors.fiscal_year} onChange={updateField} />
                             </div>
@@ -217,8 +217,14 @@ const UpdateProjectPage: React.FC = () => {
                     <Card>
                         <CardHeader><CardTitle>Dates</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
-                            <InputGroup label="Start Date *" type="date" value={form.start_date} name="start_date" error={fieldErrors.start_date} onChange={updateField} />
-                            <InputGroup label="End Date *" type="date" value={form.end_date} name="end_date" error={fieldErrors.end_date} onChange={updateField} />
+                            <div className="space-y-2">
+                                <Label htmlFor="start_date">Start Date *</Label>
+                                <DatePicker value={form.start_date} onChange={(val) => updateField('start_date', val)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="end_date">End Date *</Label>
+                                <DatePicker value={form.end_date} onChange={(val) => updateField('end_date', val)} />
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

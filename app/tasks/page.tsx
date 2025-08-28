@@ -21,6 +21,7 @@ import { useRouter } from 'next/navigation';
 import type { TaskOrder } from '@/stores/types/task-orders';
 import { Edit, Eye } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 
 export default function TaskOrdersPage() {
     const taskOrders = useSelector(selectTaskOrders);
@@ -57,8 +58,13 @@ export default function TaskOrdersPage() {
             sortable: true
         },
         {
-            key: 'description',
-            header: 'Description',
+            key: 'contractor_name',
+            header: 'Contractor',
+            sortable: true
+        },
+        {
+            key: 'project_name',
+            header: 'Project',
             sortable: true
         },
         {
@@ -72,13 +78,17 @@ export default function TaskOrdersPage() {
             render: (value) => (
                 <Badge
                     variant={
-                        value === 'Approved'
-                            ? 'approved'
-                            : value === 'Rejected'
-                                ? 'rejected'
-                                : value === 'Pending'
+                        value === 'Active'
+                            ? 'completed'
+                            : value === 'Pending'
+                                ? 'pending'
+                                : value === 'Onhold'
                                     ? 'onhold'
-                                    : 'default'
+                                    : value === 'Closed'
+                                        ? 'draft'
+                                        : value === 'Cancelled'
+                                            ? 'rejected'
+                                            : 'default'
                     }
                 >
                     {value}
@@ -90,11 +100,6 @@ export default function TaskOrdersPage() {
             key: 'created_at',
             header: 'Created At',
             sortable: true
-        },
-        {
-            key: 'updated_at',
-            header: 'Updated At',
-            sortable: true
         }
     ];
 
@@ -102,22 +107,23 @@ export default function TaskOrdersPage() {
         {
             label: 'Details',
             onClick: (taskOrder) => {
-                router.push(`/task-orders/details?id=${taskOrder.id}`);
+                router.push(`/tasks/details?id=${taskOrder.id}`);
             },
             icon: <Eye className="h-4 w-4" />
         },
         {
             label: 'Edit',
             onClick: (taskOrder) => {
-                router.push(`/task-orders/update?id=${taskOrder.id}`);
+                router.push(`/tasks/update?id=${taskOrder.id}`);
             },
             icon: <Edit className="h-4 w-4" />
         }
     ];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Page header */}
+            <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
                 <div>
                     <h1 className="text-3xl font-bold">Task Orders</h1>

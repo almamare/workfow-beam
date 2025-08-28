@@ -31,6 +31,7 @@ import {
     SelectContent,
     SelectItem
 } from '@/components/ui/select';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 
 export default function UsersPage() {
     const users = useSelector(selectUsers);
@@ -88,8 +89,9 @@ export default function UsersPage() {
     ];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Page header */}
+            <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
                 <div>
                     <h1 className="text-3xl font-bold">Users</h1>

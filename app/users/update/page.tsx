@@ -30,6 +30,7 @@ import {
     SelectContent,
     SelectItem
 } from '@/components/ui/select';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 
 // User payload type
 type UserPayload = {
@@ -172,8 +173,10 @@ const UpdateUserPage: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Page Header */}
+
+            <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight">

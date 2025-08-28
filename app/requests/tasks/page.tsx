@@ -4,12 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { AppDispatch } from '@/stores/store';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import {
-    fetchEmployees,
-    selectEmployees,
+    fetchTaskRequests,
+    selectTaskRequests,
     selectLoading,
     selectTotalPages,
     selectTotalItems
-} from '@/stores/slices/employees';
+} from '@/stores/slices/tasks_requests';
 import {
     Card,
     CardContent,
@@ -18,10 +18,11 @@ import {
     CardTitle
 } from '@/components/ui/card';
 import { DataTable, Column, Action } from '@/components/ui/data-table';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import type { Employee } from '@/stores/types/employees';
+import type { TaskRequest } from '@/stores/types/tasks_requests';
 import { Edit, Eye } from 'lucide-react';
 import {
     Select,
@@ -32,8 +33,8 @@ import {
 } from '@/components/ui/select';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 
-export default function EmployeesPage() {
-    const employees = useSelector(selectEmployees);
+export default function TaskRequestsPage() {
+    const taskRequests = useSelector(selectTaskRequests);
     const loading = useSelector(selectLoading);
     const totalPages = useSelector(selectTotalPages);
     const totalItems = useSelector(selectTotalItems);
@@ -41,47 +42,92 @@ export default function EmployeesPage() {
     const router = useRouter();
     const dispatch = useReduxDispatch<AppDispatch>();
 
-    // Local UI states
-    const [search, setSearch] = useState(''); // Search input
-    const [page, setPage] = useState(1); // Current page
-    const [limit, setLimit] = useState(10); // Items per page
+    const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
 
-    // Fetch employees from Redux store whenever filters/page/limit change
     useEffect(() => {
-        dispatch(fetchEmployees({ page, limit, search }));
+        dispatch(fetchTaskRequests({ page, limit, search }));
     }, [dispatch, page, limit, search]);
 
-    // Table columns definition
-    const columns: Column<Employee>[] = [
-        { key: 'employee_code', header: 'Code', sortable: true },
-        { key: 'job_title', header: 'Job Title', sortable: true },
-        { key: 'name', header: 'Name', sortable: true },
-        { key: 'surname', header: 'Surname', sortable: true },
-        { key: 'role', header: 'Role', sortable: true },
-        { key: 'hire_date', header: 'Hire Date', sortable: true },
-        { key: 'salary_grade', header: 'Salary Grade', sortable: true },
+    const columns: Column<TaskRequest>[] = [
+        {
+            key: 'request_code',
+            header: 'Request Code',
+            sortable: true
+        },
+        {
+            key: 'request_type',
+            header: 'Type',
+            sortable: true
+        },
+        {
+            key: 'contractor_name',
+            header: 'Contractor',
+            sortable: true
+        },
+        {
+            key: 'project_name',
+            header: 'Project',
+            sortable: true
+        },
         {
             key: 'notes',
             header: 'Notes',
-            render: (value) => value || '-',
+            sortable: true
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            render: (value) => (
+                <Badge
+                    variant={
+                        value === 'Pending'
+                            ? 'pending'
+                            : value === 'Approved'
+                                ? 'approved'
+                                : value === 'Rejected'
+                                    ? 'rejected'
+                                    : value === 'Closed'
+                                        ? 'draft'
+                                        : value === 'Complete'
+                                            ? 'completed'
+                                            : 'default'
+                    }
+                >
+                    {value}
+                </Badge>
+            ),
+            sortable: true
+        },
+        {
+            key: 'created_by_name',
+            header: 'Created By'
         },
         {
             key: 'created_at',
-            header: 'Created At',
+            header: 'Created At'
+        },
+        {
+            key: 'updated_at',
+            header: 'Updated At',
             sortable: true
         }
     ];
 
-    // Actions for each row (view details, edit)
-    const actions: Action<Employee>[] = [
+    const actions: Action<TaskRequest>[] = [
         {
             label: 'Details',
-            onClick: (employee) => router.push(`/employees/details?id=${employee.id}`),
+            onClick: (task) => {
+                router.push(`/requests/tasks/details?id=${task.id}`);
+            },
             icon: <Eye className="h-4 w-4" />
         },
         {
             label: 'Edit',
-            onClick: (employee) => router.push(`/employees/update?id=${employee.id}`),
+            onClick: (task) => {
+                router.push(`/tasks/requests/update?id=${task.id}`);
+            },
             icon: <Edit className="h-4 w-4" />
         }
     ];
@@ -92,36 +138,42 @@ export default function EmployeesPage() {
             <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
                 <div>
-                    <h1 className="text-3xl font-bold">Employees</h1>
-                    <p className="text-muted-foreground mt-1">Browse and manage all company employees</p>
+                    <h1 className="text-3xl font-bold">Task Requests</h1>
+                    <p className="text-muted-foreground mt-1">
+                        Browse and manage all task requests
+                    </p>
                 </div>
-                <Button onClick={() => router.push('/employees/create')} className="bg-primary text-white">
-                    + Create Employee
-                </Button>
             </div>
 
             {/* Filters */}
             <div className="flex flex-col sm:flex-row flex-wrap gap-4">
-                {/* Search input */}
                 <Input
-                    placeholder="Search by employee code number..."
+                    placeholder="Search by code..."
                     value={search}
-                    onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                    onChange={(e) => {
+                        setSearch(e.target.value);
+                        setPage(1);
+                    }}
                     className="w-full sm:max-w-sm"
                 />
             </div>
 
-            {/* Employees table */}
+            {/* Table */}
             <Card>
                 <CardHeader>
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <CardTitle>Employee List</CardTitle>
-                            <CardDescription>Total {totalItems} employees found</CardDescription>
+                            <CardTitle>Task Requests List </CardTitle>
+                            <CardDescription>Total {totalItems} requests found</CardDescription>
                         </div>
 
-                        {/* Pagination limit selector */}
-                        <Select value={limit.toString()} onValueChange={(value) => { setLimit(parseInt(value, 10)); setPage(1); }}>
+                        <Select
+                            value={limit.toString()}
+                            onValueChange={(value) => {
+                                setLimit(parseInt(value, 10));
+                                setPage(1);
+                            }}
+                        >
                             <SelectTrigger className="w-36">
                                 <SelectValue placeholder="Items per page" />
                             </SelectTrigger>
@@ -137,7 +189,7 @@ export default function EmployeesPage() {
 
                 <CardContent>
                     <DataTable
-                        data={employees}
+                        data={taskRequests}
                         columns={columns}
                         actions={actions}
                         loading={loading}
@@ -148,7 +200,7 @@ export default function EmployeesPage() {
                             totalItems,
                             onPageChange: setPage
                         }}
-                        noDataMessage="No employees found"
+                        noDataMessage="No task requests found"
                     />
                 </CardContent>
             </Card>

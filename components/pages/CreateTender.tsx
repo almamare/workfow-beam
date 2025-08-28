@@ -23,6 +23,8 @@ import {
     Calculator
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
+
 
 type TenderItem = {
     project_id: string;
@@ -267,8 +269,10 @@ const CreateTenderPage: React.FC = () => {
         }).format(n);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Header */}
+            <Breadcrumb />
+
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
@@ -302,6 +306,7 @@ const CreateTenderPage: React.FC = () => {
                         <div className="flex gap-2 flex-wrap">
                             <Button
                                 type="button"
+                                size="sm"
                                 variant="outline"
                                 onClick={recalcAll}
                             >
@@ -310,7 +315,8 @@ const CreateTenderPage: React.FC = () => {
                             </Button>
                             <Button
                                 type="button"
-                                variant="secondary"
+                                size="sm"
+                                variant="success"
                                 onClick={addItem}
                                 disabled={!form.project_id}
                             >
@@ -330,17 +336,17 @@ const CreateTenderPage: React.FC = () => {
                                     >
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm font-medium">
-                                                Item #{index + 1}
+                                                Item - ({index + 1})
                                             </span>
                                             {form.items.length > 1 && (
                                                 <Button
                                                     type="button"
                                                     variant="destructive"
-                                                    size="sm"
+                                                    size="xs"
                                                     onClick={() => removeItem(index)}
                                                 >
                                                     <Trash2 className="h-4 w-4 mr-1" />
-                                                    Remove
+                                                    Delete
                                                 </Button>
                                             )}
                                         </div>
@@ -431,7 +437,8 @@ const CreateTenderPage: React.FC = () => {
                         <div className="flex gap-2">
                             <Button
                                 type="button"
-                                variant="outline"
+                                size="sm"
+                                variant="success"
                                 onClick={addItem}
                                 disabled={!form.project_id}
                             >
@@ -440,6 +447,7 @@ const CreateTenderPage: React.FC = () => {
                             </Button>
                             <Button
                                 type="button"
+                                size="sm"
                                 variant="secondary"
                                 onClick={recalcAll}
                             >

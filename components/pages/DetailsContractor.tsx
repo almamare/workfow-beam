@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DeleteDialog } from '@/components/delete-dialog';
 import { Loader2, SquarePen, Trash2, ArrowLeft, Phone, Mail, Building } from 'lucide-react';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 
 /* ---------- Types ---------- */
 type Contractor = {
@@ -119,7 +120,8 @@ export default function ContractorDetails() {
     return (
         <div className="space-y-4">
 
-                        {/* Header */}
+            {/* Header */}
+            <Breadcrumb />
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight">

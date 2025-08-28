@@ -12,11 +12,11 @@ import type { AppDispatch } from '@/stores/store';
 
 import {
     fetchContractors,
-    selectContractors,
+    selectContractors, 
     selectContractorsLoading,
     selectContractorsTotal,
     selectContractorsPages,
-    selectContractorsError,
+    selectContractorsError, 
 } from '@/stores/slices/contractors';
 
 import {

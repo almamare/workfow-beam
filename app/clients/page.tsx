@@ -13,6 +13,7 @@ import {
     selectClientsPages,
     selectClientsError,
 } from '@/stores/slices/clients';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -45,22 +46,19 @@ export default function ClientsPage() {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    // أظهر الأخطاء كتنبية
     useEffect(() => {
         if (error) toast.error(error);
     }, [error]);
 
-    // Debounce للبحث
     useEffect(() => {
         const t = setTimeout(() => setDebouncedSearch(search), 400);
         return () => clearTimeout(t);
     }, [search]);
 
-    // منع إطلاق نفس الطلب مرتين (StrictMode/رندرة مزدوجة)
     const lastKeyRef = useRef<string>('');
     useEffect(() => {
         const key = JSON.stringify({ page, limit, search: debouncedSearch });
-        if (lastKeyRef.current === key) return; // نفس الطلب — لا تعيد
+        if (lastKeyRef.current === key) return; 
         lastKeyRef.current = key;
         dispatch(fetchClients({ page, limit, search: debouncedSearch }));
     }, [dispatch, page, limit, debouncedSearch]);
@@ -83,7 +81,6 @@ export default function ClientsPage() {
                 setDeleting(true);
                 await axios.delete(`/clients/delete/${id}`);
                 toast.success('Client deleted successfully');
-                // إعادة تحميل نفس الصفحة الحالية بالفلترة الحالية
                 dispatch(fetchClients({ page, limit, search: debouncedSearch }));
             } catch {
                 toast.error('Failed to delete client');
@@ -116,6 +113,7 @@ export default function ClientsPage() {
         <>
             <div className="space-y-4">
                 {/* Header */}
+                <Breadcrumb />
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
                     <div>
                         <h1 className="text-3xl font-bold">Clients</h1>

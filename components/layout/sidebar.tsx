@@ -52,14 +52,23 @@ const menuItems: MenuItem[] = [
         icon: <Users className="h-4 w-4" />,
         children: [
             { title: 'Users', icon: <Users className="h-4 w-4" />, href: '/users' },
-            { title: 'Departments', icon: <FolderOpen className="h-4 w-4" />, href: '/departments' },
             { title: 'Permissions', icon: <Shield className="h-4 w-4" />, href: '/permissions' },
             { title: 'Employees', icon: <Contact className="h-4 w-4" />, href: '/employees' }
         ]
     },
     {
+        title: 'Requests & Approvals',
+        icon: <FileText className="h-4 w-4" />,
+        children: [
+            { title: 'Tasks Requests', icon: <FileText className="h-4 w-4" />, href: '/requests/tasks' },
+            { title: 'Financial Requests', icon: <FileText className="h-4 w-4" />, href: '/requests/financial' },
+            { title: 'Employees Requests', icon: <FileText className="h-4 w-4" />, href: '/requests/employees' },
+            { title: 'Approvals', icon: <Shield className="h-4 w-4" />, href: '/approvals' }
+        ]
+    },
+    {
         title: 'Financial',
-        icon: <DollarSign className="h-4 w-4" />,
+        icon: <Wallet className="h-4 w-4" />,
         children: [
             { title: 'Contractor Payments', icon: <DollarSign className="h-4 w-4" />, href: '/financial/contractor-payments' },
             { title: 'Cash Ledger', icon: <DollarSign className="h-4 w-4" />, href: '/financial/cash-ledger' },
@@ -127,7 +136,10 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
 
     const hideText = collapsed && !mobileOpen;
 
-    const isActive = (href: string) => pathname === href;
+    // ✅ Fixed isActive to also handle sub URLs
+    const isActive = (href: string) =>
+        pathname === href || pathname.startsWith(href + '/');
+
     const isParentActive = (children: MenuItem[]) =>
         children.some(child => child.href && isActive(child.href));
 

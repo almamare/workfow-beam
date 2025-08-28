@@ -11,7 +11,7 @@ import {
     selectBudgetLoading,
     selectBudgetMeta,
 } from '@/stores/slices/budgets';
-
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -103,6 +103,7 @@ export default function BudgetsPage() {
     return (
         <div className="space-y-4">
             {/* Header */}
+            <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
                 <div>
                     <h1 className="text-3xl font-bold">Budgets</h1>

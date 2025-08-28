@@ -23,6 +23,9 @@ import { toast } from 'sonner';
 import axios from '@/utils/axios';
 import { Loader2, Save, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { DatePicker } from "@/components/DatePicker";
+
 
 /* =========================
    Types
@@ -195,7 +198,7 @@ const CreateProjectPage: React.FC = () => {
             if (v === '' || v === null || v === undefined) {
                 delete payload[nf];
             } else {
-                payload[nf] = Number(v); 
+                payload[nf] = Number(v);
             }
         });
 
@@ -247,8 +250,9 @@ const CreateProjectPage: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Header */}
+            <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Create Project</h1>
@@ -393,11 +397,9 @@ const CreateProjectPage: React.FC = () => {
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="start_date">Start Date *</Label>
-                                <Input
-                                    id="start_date"
-                                    type="date"
+                                <DatePicker
                                     value={form.start_date}
-                                    onChange={(e) => updateField('start_date', e.target.value)}
+                                    onChange={(val) => updateField('start_date', val)}
                                 />
                                 {fieldErrors.start_date && (
                                     <p className="text-xs text-red-500">{fieldErrors.start_date}</p>
@@ -405,11 +407,9 @@ const CreateProjectPage: React.FC = () => {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="end_date">End Date *</Label>
-                                <Input
-                                    id="end_date"
-                                    type="date"
+                                <DatePicker
                                     value={form.end_date}
-                                    onChange={(e) => updateField('end_date', e.target.value)}
+                                    onChange={(val) => updateField('end_date', val)}
                                 />
                                 {fieldErrors.end_date && (
                                     <p className="text-xs text-red-500">{fieldErrors.end_date}</p>

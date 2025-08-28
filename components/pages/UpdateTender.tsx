@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import axios from '@/utils/axios';
 import { Loader2, Save, RotateCcw, Calculator } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 
 type TenderItem = {
     name: string;
@@ -129,7 +130,9 @@ const UpdateTenderPage: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
+
+            <Breadcrumb />
             <div className="flex justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
