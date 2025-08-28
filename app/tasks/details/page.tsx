@@ -1,6 +1,6 @@
 'use client'; // Marks this as a Client Component in Next.js
 
-import { useEffect } from 'react';
+import { useEffect, Suspense} from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/stores/store';
@@ -51,7 +51,7 @@ const statusVariant = (status: string) =>
                     status === 'Cancelled' ? 'rejected' : 'outline';
 
 // Main Component
-export default function TaskOrderDetails() {
+ function TaskOrderDetails() {
     const router = useRouter();
     const params = useSearchParams();
     const id = params.get('id'); // Get task order ID from URL query parameters
@@ -352,4 +352,22 @@ function formatDate(dateString?: string) {
     } catch {
         return 'Invalid date';
     }
+}
+
+/* =========================================================
+   Page Wrapper
+=========================================================== */
+export default function Page() {
+    return (
+        <Suspense
+            fallback={
+                <Centered>
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">Loading details…</p>
+                </Centered>
+            }
+        >
+            <TaskOrderDetails />
+        </Suspense>
+    );
 }

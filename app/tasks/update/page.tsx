@@ -8,7 +8,7 @@
    ========================================================================= */
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, Suspense } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
@@ -815,4 +815,28 @@ const UpdateTaskOrderPage: React.FC = () => {
     );
 };
 
-export default UpdateTaskOrderPage;
+// Centered Layout Component for states
+const Centered: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-3">
+        {children}
+    </div>
+);
+
+
+/* =========================================================
+   Page Wrapper
+=========================================================== */
+export default function Page() {
+    return (
+        <Suspense
+            fallback={
+                <Centered>
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">Loading update...</p>
+                </Centered>
+            }
+        >
+            <UpdateTaskOrderPage />
+        </Suspense>
+    );
+}
