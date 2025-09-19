@@ -28,5 +28,5 @@ instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
     return config;
 });
- 
+  
 export default instance;
