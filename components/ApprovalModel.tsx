@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -52,15 +52,15 @@ const ApprovalModel: React.FC<ApprovalModelProps> = ({ open, onClose, onCreated,
 
             if (res.data.header.success) {  
 
+            // Show success notification
+            toast.success("Approval created successfully");
+            
             // Trigger callback with created approval
             onCreated(res.data.body.approval);
             } else {
                 toast.error(res.data.header.messages[0].message);
                 return;
             }
-
-            // Show success notification
-            toast.success("Approval created successfully");
 
             // Reset form fields
             setStepName("");
@@ -83,6 +83,9 @@ const ApprovalModel: React.FC<ApprovalModelProps> = ({ open, onClose, onCreated,
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Add New Approval</DialogTitle>
+                    <DialogDescription>
+                        Create a new approval step for this request.
+                    </DialogDescription>
                 </DialogHeader>
 
                 <form onSubmit={handleCreate} className="space-y-4">

@@ -435,9 +435,9 @@ function TaskDetails() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {approvals.map(a => (
+                            {approvals?.map(a => (
                                 <TableRow key={a.id} className="hover:bg-gray-50">
-                                    <TableCell>{a.sequence}</TableCell>
+                                    <TableCell>{a?.sequence || ''}</TableCell>
                                     <TableCell>{a.step_no}</TableCell>
                                     <TableCell>{a.step_name}</TableCell>
                                     <TableCell>{a.remarks}</TableCell>

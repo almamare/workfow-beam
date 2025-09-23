@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -92,6 +92,9 @@ const AttachmentModel: React.FC<AttachmentModelProps> = ({
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Upload New Attachment</DialogTitle>
+                    <DialogDescription>
+                        Upload a file attachment for this request.
+                    </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                     <Input

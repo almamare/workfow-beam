@@ -56,6 +56,7 @@ export default function LoginPage() {
                             height={48}
                             priority
                             className="shrink-0"
+                            style={{ width: "48px", height: "48px" }}
                         />
 
                         <div className="text-center leading-tight">
