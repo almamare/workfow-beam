@@ -1,17 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Package, Plus, Search, Eye, Edit, Trash2, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Package, Plus, Eye, Edit, Trash2, AlertTriangle, CheckCircle, Download, Filter, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/ui/page-header';
+import { FilterBar } from '@/components/ui/filter-bar';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
 
 interface InventoryItem {
     id: string;
@@ -44,7 +46,7 @@ const mockItems: InventoryItem[] = [
         minimumStock: 10,
         maximumStock: 100,
         unitPrice: 450,
-        currency: 'SAR',
+        currency: '',
         supplier: 'Office Furniture Co.',
         location: 'Warehouse A',
         status: 'active',
@@ -62,7 +64,7 @@ const mockItems: InventoryItem[] = [
         minimumStock: 20,
         maximumStock: 200,
         unitPrice: 25,
-        currency: 'SAR',
+        currency: '',
         supplier: 'Paper Supplies Ltd.',
         location: 'Warehouse B',
         status: 'active',
@@ -80,7 +82,7 @@ const mockItems: InventoryItem[] = [
         minimumStock: 5,
         maximumStock: 50,
         unitPrice: 2500,
-        currency: 'SAR',
+        currency: '',
         supplier: 'Tech Solutions Inc.',
         location: 'Warehouse A',
         status: 'active',
@@ -98,7 +100,7 @@ const mockItems: InventoryItem[] = [
         minimumStock: 5,
         maximumStock: 30,
         unitPrice: 120,
-        currency: 'SAR',
+        currency: '',
         supplier: 'Office Supplies Co.',
         location: 'Warehouse B',
         status: 'inactive',
@@ -111,18 +113,6 @@ const categories = ['Furniture', 'Office Supplies', 'Electronics', 'Tools', 'Mai
 const units = ['piece', 'box', 'pack', 'ream', 'roll', 'meter', 'liter', 'kg', 'set'];
 const suppliers = ['Office Furniture Co.', 'Paper Supplies Ltd.', 'Tech Solutions Inc.', 'Office Supplies Co.', 'General Supplies'];
 const locations = ['Warehouse A', 'Warehouse B', 'Storage Room', 'Office', 'Maintenance Room'];
-
-const statusLabels = {
-    active: 'Active',
-    inactive: 'Inactive',
-    discontinued: 'Discontinued'
-};
-
-const statusColors = {
-    active: 'bg-green-100 text-green-800',
-    inactive: 'bg-yellow-100 text-yellow-800',
-    discontinued: 'bg-red-100 text-red-800'
-};
 
 export default function InventoryItemsPage() {
     const [items, setItems] = useState<InventoryItem[]>(mockItems);
@@ -142,7 +132,7 @@ export default function InventoryItemsPage() {
         minimumStock: '',
         maximumStock: '',
         unitPrice: '',
-        currency: 'SAR',
+        currency: '',
         supplier: '',
         location: ''
     });
@@ -212,7 +202,7 @@ export default function InventoryItemsPage() {
             minimumStock: '',
             maximumStock: '',
             unitPrice: '',
-            currency: 'SAR',
+            currency: '',
             supplier: '',
             location: ''
         });
@@ -280,7 +270,7 @@ export default function InventoryItemsPage() {
             minimumStock: '',
             maximumStock: '',
             unitPrice: '',
-            currency: 'SAR',
+            currency: '',
             supplier: '',
             location: ''
         });
@@ -301,10 +291,8 @@ export default function InventoryItemsPage() {
         toast.success(`Item ${status} successfully`);
     };
 
-    const formatCurrency = (amount: number, currency: string) => {
-        return new Intl.NumberFormat('en-SA', {
-            style: 'currency',
-            currency: currency,
+    const formatNumber = (amount: number) => {
+        return new Intl.NumberFormat('en-US', {
             minimumFractionDigits: 0
         }).format(amount);
     };
@@ -314,377 +302,423 @@ export default function InventoryItemsPage() {
     const outOfStockItems = filteredItems.filter(item => item.currentStock === 0).length;
     const totalValue = filteredItems.reduce((sum, item) => sum + (item.currentStock * item.unitPrice), 0);
 
+    const columns = [
+        {
+            key: 'itemCode' as keyof InventoryItem,
+            header: 'Item Code',
+            render: (value: any) => <span className="font-mono text-sm text-slate-600">{value}</span>,
+            sortable: true,
+            width: '120px'
+        },
+        {
+            key: 'name' as keyof InventoryItem,
+            header: 'Item Name',
+            render: (value: any, item: InventoryItem) => (
+                <div>
+                    <div className="font-semibold text-slate-800">{item.name}</div>
+                    <div className="text-sm text-slate-600 truncate max-w-xs">{item.description}</div>
+                </div>
+            ),
+            sortable: true
+        },
+        {
+            key: 'category' as keyof InventoryItem,
+            header: 'Category',
+            render: (value: any) => (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    {value}
+                </Badge>
+            ),
+            sortable: true
+        },
+        {
+            key: 'currentStock' as keyof InventoryItem,
+            header: 'Current Stock',
+            render: (value: any, item: InventoryItem) => (
+                <span className={`font-semibold ${item.currentStock <= item.minimumStock ? 'text-red-600' : 'text-green-600'}`}>
+                    {item.currentStock} {item.unit}
+                </span>
+            ),
+            sortable: true
+        },
+        {
+            key: 'minimumStock' as keyof InventoryItem,
+            header: 'Min/Max Stock',
+            render: (value: any, item: InventoryItem) => (
+                <span className="text-sm text-slate-600">
+                    {item.minimumStock}/{item.maximumStock} {item.unit}
+                </span>
+            ),
+            sortable: true
+        },
+        {
+            key: 'unitPrice' as keyof InventoryItem,
+            header: 'Unit Price',
+            render: (value: any, item: InventoryItem) => (
+                <span className="font-semibold text-slate-800">
+                    {formatNumber(value)}
+                </span>
+            ),
+            sortable: true
+        },
+        {
+            key: 'supplier' as keyof InventoryItem,
+            header: 'Supplier',
+            render: (value: any) => <span className="text-slate-700">{value}</span>,
+            sortable: true
+        },
+        {
+            key: 'location' as keyof InventoryItem,
+            header: 'Location',
+            render: (value: any) => <span className="text-slate-700">{value}</span>,
+            sortable: true
+        },
+        {
+            key: 'status' as keyof InventoryItem,
+            header: 'Status',
+            render: (value: any) => {
+                const statusColors = {
+                    'active': 'bg-green-100 text-green-700 border-green-200',
+                    'inactive': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                    'discontinued': 'bg-red-100 text-red-700 border-red-200'
+                };
+                
+                return (
+                    <Badge variant="outline" className={`${statusColors[value as keyof typeof statusColors]} font-medium`}>
+                        {value.charAt(0).toUpperCase() + value.slice(1)}
+                    </Badge>
+                );
+            },
+            sortable: true
+        }
+    ];
+
+    const actions = [
+        {
+            label: 'View Details',
+            onClick: (item: InventoryItem) => toast.info('View details feature coming soon'),
+            icon: <Eye className="h-4 w-4" />
+        },
+        {
+            label: 'Edit Item',
+            onClick: (item: InventoryItem) => handleEdit(item),
+            icon: <Edit className="h-4 w-4" />
+        },
+        {
+            label: 'Activate Item',
+            onClick: (item: InventoryItem) => handleStatusChange(item.id, 'active'),
+            icon: <CheckCircle className="h-4 w-4" />,
+            hidden: (item: InventoryItem) => item.status !== 'inactive'
+        },
+        {
+            label: 'Deactivate Item',
+            onClick: (item: InventoryItem) => handleStatusChange(item.id, 'inactive'),
+            icon: <RotateCcw className="h-4 w-4" />,
+            hidden: (item: InventoryItem) => item.status !== 'active'
+        },
+        {
+            label: 'Delete Item',
+            onClick: (item: InventoryItem) => handleDelete(item.id),
+            icon: <Trash2 className="h-4 w-4" />,
+            variant: 'destructive' as const
+        }
+    ];
+
+    const stats = [
+        {
+            label: 'Total Items',
+            value: totalItems,
+            change: '+8%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Low Stock Items',
+            value: lowStockItems,
+            change: '-2%',
+            trend: 'down' as const
+        },
+        {
+            label: 'Out of Stock',
+            value: outOfStockItems,
+            change: '-1%',
+            trend: 'down' as const
+        },
+        {
+            label: 'Total Value',
+            value: formatNumber(totalValue),
+            change: '+12%',
+            trend: 'up' as const
+        }
+    ];
+
+    const filterOptions = [
+        {
+            key: 'category',
+            label: 'Category',
+            value: categoryFilter,
+            options: [
+                { key: 'all', label: 'All Categories', value: 'all' },
+                ...categories.map(cat => ({ key: cat, label: cat, value: cat }))
+            ],
+            onValueChange: setCategoryFilter
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            value: statusFilter,
+            options: [
+                { key: 'all', label: 'All Statuses', value: 'all' },
+                { key: 'active', label: 'Active', value: 'active' },
+                { key: 'inactive', label: 'Inactive', value: 'inactive' },
+                { key: 'discontinued', label: 'Discontinued', value: 'discontinued' }
+            ],
+            onValueChange: setStatusFilter
+        },
+        {
+            key: 'stock',
+            label: 'Stock Level',
+            value: stockFilter,
+            options: [
+                { key: 'all', label: 'All Stock Levels', value: 'all' },
+                { key: 'low', label: 'Low Stock', value: 'low' },
+                { key: 'out', label: 'Out of Stock', value: 'out' },
+                { key: 'over', label: 'Over Stock', value: 'over' }
+            ],
+            onValueChange: setStockFilter
+        }
+    ];
+
+    const activeFilters = [];
+    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
+    if (categoryFilter !== 'all') activeFilters.push(`Category: ${categoryFilter}`);
+    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
+    if (stockFilter !== 'all') activeFilters.push(`Stock: ${stockFilter}`);
+
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-foreground">Inventory Items</h1>
-                    <p className="text-muted-foreground">Manage inventory items and stock levels</p>
-                </div>
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-primary hover:bg-primary/90">
-                            <Plus className="h-4 w-4 mr-2" />
-                            New Item
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>Create New Item</DialogTitle>
-                            <DialogDescription>
-                                Add a new item to inventory
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="name">Item Name</Label>
-                                <Input
-                                    id="name"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                    placeholder="Item name"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="description">Description</Label>
-                                <Textarea
-                                    id="description"
-                                    value={formData.description}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                    placeholder="Item description"
-                                    rows={3}
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="category">Category</Label>
-                                    <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Category" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {categories.map(category => (
-                                                <SelectItem key={category} value={category}>{category}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label htmlFor="unit">Unit</Label>
-                                    <Select value={formData.unit} onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Unit" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {units.map(unit => (
-                                                <SelectItem key={unit} value={unit}>{unit}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4">
-                                <div>
-                                    <Label htmlFor="currentStock">Current Stock</Label>
-                                    <Input
-                                        id="currentStock"
-                                        type="number"
-                                        value={formData.currentStock}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, currentStock: e.target.value }))}
-                                        placeholder="0"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="minimumStock">Min Stock</Label>
-                                    <Input
-                                        id="minimumStock"
-                                        type="number"
-                                        value={formData.minimumStock}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, minimumStock: e.target.value }))}
-                                        placeholder="0"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="maximumStock">Max Stock</Label>
-                                    <Input
-                                        id="maximumStock"
-                                        type="number"
-                                        value={formData.maximumStock}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, maximumStock: e.target.value }))}
-                                        placeholder="0"
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="unitPrice">Unit Price</Label>
-                                    <Input
-                                        id="unitPrice"
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.unitPrice}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, unitPrice: e.target.value }))}
-                                        placeholder="0.00"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="currency">Currency</Label>
-                                    <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="SAR">Saudi Riyal</SelectItem>
-                                            <SelectItem value="USD">US Dollar</SelectItem>
-                                            <SelectItem value="EUR">Euro</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="supplier">Supplier</Label>
-                                    <Select value={formData.supplier} onValueChange={(value) => setFormData(prev => ({ ...prev, supplier: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Supplier" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {suppliers.map(supplier => (
-                                                <SelectItem key={supplier} value={supplier}>{supplier}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label htmlFor="location">Location</Label>
-                                    <Select value={formData.location} onValueChange={(value) => setFormData(prev => ({ ...prev, location: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Location" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {locations.map(location => (
-                                                <SelectItem key={location} value={location}>{location}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div className="flex justify-end space-x-2">
-                                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button onClick={handleCreate}>
-                                    <Package className="h-4 w-4 mr-2" />
-                                    Create Item
-                                </Button>
-                            </div>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            </div>
+            {/* Page Header */}
+            <PageHeader
+                title="Inventory Items"
+                description="Manage inventory items and stock levels with comprehensive tracking and alert system"
+                stats={stats}
+                actions={{
+                    primary: {
+                        label: 'Add Item',
+                        onClick: () => setIsCreateDialogOpen(true),
+                        icon: <Plus className="h-4 w-4" />
+                    },
+                    secondary: [
+                        {
+                            label: 'Export Report',
+                            onClick: () => toast.info('Export feature coming soon'),
+                            icon: <Download className="h-4 w-4" />
+                        },
+                        {
+                            label: 'Stock Analysis',
+                            onClick: () => toast.info('Stock analysis coming soon'),
+                            icon: <Filter className="h-4 w-4" />
+                        }
+                    ]
+                }}
+            />
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Items</CardTitle>
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{totalItems}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
-                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-yellow-600">{lowStockItems}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
-                        <AlertTriangle className="h-4 w-4 text-red-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-red-600">{outOfStockItems}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-600">{formatCurrency(totalValue, 'SAR')}</div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                        placeholder="Search items..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pr-10"
-                    />
-                </div>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categories.map(category => (
-                            <SelectItem key={category} value={category}>{category}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        {Object.entries(statusLabels).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Select value={stockFilter} onValueChange={setStockFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Stock Level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Stock Levels</SelectItem>
-                        <SelectItem value="low">Low Stock</SelectItem>
-                        <SelectItem value="out">Out of Stock</SelectItem>
-                        <SelectItem value="over">Over Stock</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
+            {/* Filter Bar */}
+            <FilterBar
+                searchPlaceholder="Search by item name, code, or description..."
+                searchValue={searchTerm}
+                onSearchChange={setSearchTerm}
+                filters={filterOptions}
+                activeFilters={activeFilters}
+                onClearFilters={() => {
+                    setSearchTerm('');
+                    setCategoryFilter('all');
+                    setStatusFilter('all');
+                    setStockFilter('all');
+                }}
+            />
 
             {/* Items Table */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Package className="h-5 w-5" />
-                        Items List
-                    </CardTitle>
-                    <CardDescription>
-                        {filteredItems.length} items out of {items.length}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Item Code</TableHead>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Category</TableHead>
-                                    <TableHead>Current Stock</TableHead>
-                                    <TableHead>Min/Max Stock</TableHead>
-                                    <TableHead>Unit Price</TableHead>
-                                    <TableHead>Supplier</TableHead>
-                                    <TableHead>Location</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredItems.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell className="font-medium">{item.itemCode}</TableCell>
-                                        <TableCell className="max-w-xs">
-                                            <div>
-                                                <div className="font-medium truncate">{item.name}</div>
-                                                <div className="text-sm text-muted-foreground truncate">{item.description}</div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{item.category}</TableCell>
-                                        <TableCell className={`font-semibold ${item.currentStock <= item.minimumStock ? 'text-red-600' : 'text-green-600'}`}>
-                                            {item.currentStock} {item.unit}
-                                        </TableCell>
-                                        <TableCell className="text-sm">
-                                            {item.minimumStock}/{item.maximumStock} {item.unit}
-                                        </TableCell>
-                                        <TableCell className="font-semibold">
-                                            {formatCurrency(item.unitPrice, item.currency)}
-                                        </TableCell>
-                                        <TableCell>{item.supplier}</TableCell>
-                                        <TableCell>{item.location}</TableCell>
-                                        <TableCell>
-                                            <Badge className={`${statusColors[item.status]} w-fit`}>
-                                                {statusLabels[item.status]}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleEdit(item)}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                {item.status === 'active' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleStatusChange(item.id, 'inactive')}
-                                                        className="text-yellow-600 hover:text-yellow-700"
-                                                    >
-                                                        Deactivate
-                                                    </Button>
-                                                )}
-                                                {item.status === 'inactive' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleStatusChange(item.id, 'active')}
-                                                        className="text-green-600 hover:text-green-700"
-                                                    >
-                                                        Activate
-                                                    </Button>
-                                                )}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleStatusChange(item.id, 'discontinued')}
-                                                    className="text-red-600 hover:text-red-700"
-                                                >
-                                                    Discontinue
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleDelete(item.id)}
-                                                    className="text-destructive hover:text-destructive"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+            <EnhancedCard
+                title="Inventory Overview"
+                description={`${filteredItems.length} items out of ${items.length} total`}
+                variant="gradient"
+                size="lg"
+                stats={{
+                    total: items.length,
+                    badge: 'Active Items',
+                    badgeColor: 'success'
+                }}
+            >
+                <EnhancedDataTable
+                    data={filteredItems}
+                    columns={columns}
+                    actions={actions}
+                    loading={false}
+                    noDataMessage="No items found matching your criteria"
+                    searchPlaceholder="Search items..."
+                />
+            </EnhancedCard>
+
+            {/* Create Dialog */}
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Create New Item</DialogTitle>
+                        <DialogDescription>
+                            Add a new item to inventory
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="name">Item Name</Label>
+                            <Input
+                                id="name"
+                                value={formData.name}
+                                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                                placeholder="Item name"
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea
+                                id="description"
+                                value={formData.description}
+                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                placeholder="Item description"
+                                rows={3}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="category">Category</Label>
+                                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue placeholder="Select Category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map(category => (
+                                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label htmlFor="unit">Unit</Label>
+                                <Select value={formData.unit} onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue placeholder="Select Unit" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {units.map(unit => (
+                                            <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                            <div>
+                                <Label htmlFor="currentStock">Current Stock</Label>
+                                <Input
+                                    id="currentStock"
+                                    type="number"
+                                    value={formData.currentStock}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, currentStock: e.target.value }))}
+                                    placeholder="0"
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="minimumStock">Min Stock</Label>
+                                <Input
+                                    id="minimumStock"
+                                    type="number"
+                                    value={formData.minimumStock}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, minimumStock: e.target.value }))}
+                                    placeholder="0"
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="maximumStock">Max Stock</Label>
+                                <Input
+                                    id="maximumStock"
+                                    type="number"
+                                    value={formData.maximumStock}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, maximumStock: e.target.value }))}
+                                    placeholder="0"
+                                    className="mt-1"
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="unitPrice">Unit Price</Label>
+                                <Input
+                                    id="unitPrice"
+                                    type="number"
+                                    step="0.01"
+                                    value={formData.unitPrice}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, unitPrice: e.target.value }))}
+                                    placeholder="0.00"
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="currency">Currency</Label>
+                                <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="USD">US Dollar</SelectItem>
+                                        <SelectItem value="EUR">Euro</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="supplier">Supplier</Label>
+                                <Select value={formData.supplier} onValueChange={(value) => setFormData(prev => ({ ...prev, supplier: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue placeholder="Select Supplier" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {suppliers.map(supplier => (
+                                            <SelectItem key={supplier} value={supplier}>{supplier}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label htmlFor="location">Location</Label>
+                                <Select value={formData.location} onValueChange={(value) => setFormData(prev => ({ ...prev, location: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue placeholder="Select Location" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {locations.map(location => (
+                                            <SelectItem key={location} value={location}>{location}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="flex justify-end space-x-2 pt-4">
+                            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleCreate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                                <Package className="h-4 w-4 mr-2" />
+                                Create Item
+                            </Button>
+                        </div>
                     </div>
-                </CardContent>
-            </Card>
+                </DialogContent>
+            </Dialog>
 
             {/* Edit Dialog */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -692,7 +726,7 @@ export default function InventoryItemsPage() {
                     <DialogHeader>
                         <DialogTitle>Edit Item</DialogTitle>
                         <DialogDescription>
-                            Update item data
+                            Update item information and stock levels
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -702,6 +736,7 @@ export default function InventoryItemsPage() {
                                 id="edit-name"
                                 value={formData.name}
                                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                                className="mt-1"
                             />
                         </div>
                         <div>
@@ -711,13 +746,14 @@ export default function InventoryItemsPage() {
                                 value={formData.description}
                                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                                 rows={3}
+                                className="mt-1"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="edit-category">Category</Label>
                                 <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -730,7 +766,7 @@ export default function InventoryItemsPage() {
                             <div>
                                 <Label htmlFor="edit-unit">Unit</Label>
                                 <Select value={formData.unit} onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -749,6 +785,7 @@ export default function InventoryItemsPage() {
                                     type="number"
                                     value={formData.currentStock}
                                     onChange={(e) => setFormData(prev => ({ ...prev, currentStock: e.target.value }))}
+                                    className="mt-1"
                                 />
                             </div>
                             <div>
@@ -758,6 +795,7 @@ export default function InventoryItemsPage() {
                                     type="number"
                                     value={formData.minimumStock}
                                     onChange={(e) => setFormData(prev => ({ ...prev, minimumStock: e.target.value }))}
+                                    className="mt-1"
                                 />
                             </div>
                             <div>
@@ -767,6 +805,7 @@ export default function InventoryItemsPage() {
                                     type="number"
                                     value={formData.maximumStock}
                                     onChange={(e) => setFormData(prev => ({ ...prev, maximumStock: e.target.value }))}
+                                    className="mt-1"
                                 />
                             </div>
                         </div>
@@ -779,16 +818,16 @@ export default function InventoryItemsPage() {
                                     step="0.01"
                                     value={formData.unitPrice}
                                     onChange={(e) => setFormData(prev => ({ ...prev, unitPrice: e.target.value }))}
+                                    className="mt-1"
                                 />
                             </div>
                             <div>
                                 <Label htmlFor="edit-currency">Currency</Label>
                                 <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="SAR">Saudi Riyal</SelectItem>
                                         <SelectItem value="USD">US Dollar</SelectItem>
                                         <SelectItem value="EUR">Euro</SelectItem>
                                     </SelectContent>
@@ -799,7 +838,7 @@ export default function InventoryItemsPage() {
                             <div>
                                 <Label htmlFor="edit-supplier">Supplier</Label>
                                 <Select value={formData.supplier} onValueChange={(value) => setFormData(prev => ({ ...prev, supplier: value }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -812,7 +851,7 @@ export default function InventoryItemsPage() {
                             <div>
                                 <Label htmlFor="edit-location">Location</Label>
                                 <Select value={formData.location} onValueChange={(value) => setFormData(prev => ({ ...prev, location: value }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -823,11 +862,11 @@ export default function InventoryItemsPage() {
                                 </Select>
                             </div>
                         </div>
-                        <div className="flex justify-end space-x-2">
+                        <div className="flex justify-end space-x-2 pt-4">
                             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleUpdate}>
+                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
                                 <Package className="h-4 w-4 mr-2" />
                                 Save Changes
                             </Button>

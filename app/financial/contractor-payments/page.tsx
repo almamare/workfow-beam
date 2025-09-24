@@ -1,140 +1,153 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Plus, Search, Eye, Edit, Trash2, Receipt } from 'lucide-react';
+import { DollarSign, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, Building2, CreditCard, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/ui/page-header';
+import { FilterBar } from '@/components/ui/filter-bar';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
 
 interface ContractorPayment {
     id: string;
     paymentNumber: string;
     contractorName: string;
+    contractorId: string;
     projectName: string;
+    projectId: string;
     amount: number;
     currency: string;
-    paymentType: 'advance' | 'progress' | 'final' | 'retention';
-    status: 'pending' | 'approved' | 'paid' | 'rejected';
+    paymentMethod: 'bank_transfer' | 'cash' | 'check' | 'card';
     paymentDate: string;
-    dueDate: string;
     description: string;
-    invoiceNumber?: string;
-    approver?: string;
-    comments?: string;
+    status: 'pending' | 'approved' | 'paid' | 'rejected' | 'cancelled';
+    invoiceNumber: string;
+    invoiceDate: string;
+    approvalDate: string;
+    approvedBy: string;
+    paymentReference: string;
+    createdBy: string;
+    notes: string;
 }
 
 const mockPayments: ContractorPayment[] = [
     {
         id: '1',
         paymentNumber: 'PAY-001',
-        contractorName: 'Advanced Construction Co.',
-        projectName: 'New Building Project',
-        amount: 150000,
-        currency: 'SAR',
-        paymentType: 'progress',
-        status: 'pending',
+        contractorName: 'ABC Construction Ltd.',
+        contractorId: 'CTR-001',
+        projectName: 'Office Building Construction',
+        projectId: 'PRJ-001',
+        amount: 50000,
+        currency: '',
+        paymentMethod: 'bank_transfer',
         paymentDate: '2024-01-15',
-        dueDate: '2024-01-30',
-        description: 'Progress payment - Phase 1',
-        invoiceNumber: 'INV-2024-001'
+        description: 'Monthly progress payment for foundation work',
+        status: 'paid',
+        invoiceNumber: 'INV-2024-001',
+        invoiceDate: '2024-01-10',
+        approvalDate: '2024-01-12',
+        approvedBy: 'Ahmed Ali',
+        paymentReference: 'TXN-123456789',
+        createdBy: 'Fatima Mohamed',
+        notes: 'Payment processed successfully'
     },
     {
         id: '2',
         paymentNumber: 'PAY-002',
-        contractorName: 'Gulf Contractors',
-        projectName: 'Development Project',
-        amount: 75000,
-        currency: 'SAR',
-        paymentType: 'final',
-        status: 'paid',
-        paymentDate: '2024-01-10',
-        dueDate: '2024-01-25',
-        description: 'Final payment for the project',
+        contractorName: 'XYZ Electrical Co.',
+        contractorId: 'CTR-002',
+        projectName: 'Electrical Installation',
+        projectId: 'PRJ-002',
+        amount: 25000,
+        currency: '',
+        paymentMethod: 'check',
+        paymentDate: '2024-01-20',
+        description: 'Electrical materials and installation',
+        status: 'approved',
         invoiceNumber: 'INV-2024-002',
-        approver: 'Mohamed Ali',
-        comments: 'Payment approved and processed'
+        invoiceDate: '2024-01-18',
+        approvalDate: '2024-01-19',
+        approvedBy: 'Omar Hassan',
+        paymentReference: '',
+        createdBy: 'Sara Ahmed',
+        notes: 'Awaiting payment processing'
     },
     {
         id: '3',
         paymentNumber: 'PAY-003',
-        contractorName: 'United Contractors Co.',
-        projectName: 'Maintenance Project',
-        amount: 25000,
-        currency: 'SAR',
-        paymentType: 'advance',
-        status: 'rejected',
-        paymentDate: '2024-01-12',
-        dueDate: '2024-01-28',
-        description: 'Advance payment for the project',
+        contractorName: 'Green Landscaping',
+        contractorId: 'CTR-003',
+        projectName: 'Garden Design',
+        projectId: 'PRJ-003',
+        amount: 15000,
+        currency: '',
+        paymentMethod: 'cash',
+        paymentDate: '2024-01-25',
+        description: 'Landscaping materials and labor',
+        status: 'pending',
         invoiceNumber: 'INV-2024-003',
-        approver: 'Fatima Mohamed',
-        comments: 'Budget not available'
+        invoiceDate: '2024-01-22',
+        approvalDate: '',
+        approvedBy: '',
+        paymentReference: '',
+        createdBy: 'Mohammed Saleh',
+        notes: 'Pending approval'
     }
 ];
 
-const paymentTypes = {
-    advance: 'Advance Payment',
-    progress: 'Progress Payment',
-    final: 'Final Payment',
-    retention: 'Retention'
-};
-
-const statusLabels = {
-    pending: 'Pending',
-    approved: 'Approved',
-    paid: 'Paid',
-    rejected: 'Rejected'
-};
-
-const statusColors = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    approved: 'bg-green-100 text-green-800',
-    paid: 'bg-blue-100 text-blue-800',
-    rejected: 'bg-red-100 text-red-800'
-};
-
-const contractors = ['Advanced Construction Co.', 'Gulf Contractors', 'United Contractors Co.', 'Palm Contractors', 'Modern Construction Co.'];
-const projects = ['New Building Project', 'Development Project', 'Maintenance Project', 'Expansion Project', 'Renovation Project'];
+const contractors = ['ABC Construction Ltd.', 'XYZ Electrical Co.', 'Green Landscaping', 'Modern Plumbing', 'Quality Painters'];
+const projects = ['Office Building Construction', 'Electrical Installation', 'Garden Design', 'Plumbing Work', 'Painting Services'];
+const paymentMethods = [
+    { value: 'bank_transfer', label: 'Bank Transfer' },
+    { value: 'cash', label: 'Cash' },
+    { value: 'check', label: 'Check' },
+    { value: 'card', label: 'Credit Card' }
+];
 
 export default function ContractorPaymentsPage() {
     const [payments, setPayments] = useState<ContractorPayment[]>(mockPayments);
     const [searchTerm, setSearchTerm] = useState('');
+    const [contractorFilter, setContractorFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [typeFilter, setTypeFilter] = useState<string>('all');
+    const [methodFilter, setMethodFilter] = useState<string>('all');
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [editingPayment, setEditingPayment] = useState<ContractorPayment | null>(null);
     const [formData, setFormData] = useState({
-        contractorName: '',
-        projectName: '',
+        contractorId: '',
+        projectId: '',
         amount: '',
-        currency: 'SAR',
-        paymentType: 'progress' as ContractorPayment['paymentType'],
+        currency: '',
+        paymentMethod: 'bank_transfer',
         paymentDate: '',
-        dueDate: '',
         description: '',
-        invoiceNumber: ''
+        invoiceNumber: '',
+        invoiceDate: '',
+        notes: ''
     });
 
     const filteredPayments = payments.filter(payment => {
-        const matchesSearch = payment.contractorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        const matchesSearch = payment.paymentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            payment.contractorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             payment.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            payment.paymentNumber.toLowerCase().includes(searchTerm.toLowerCase());
+                            payment.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesContractor = contractorFilter === 'all' || payment.contractorId === contractorFilter;
         const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
-        const matchesType = typeFilter === 'all' || payment.paymentType === typeFilter;
+        const matchesMethod = methodFilter === 'all' || payment.paymentMethod === methodFilter;
         
-        return matchesSearch && matchesStatus && matchesType;
+        return matchesSearch && matchesContractor && matchesStatus && matchesMethod;
     });
 
     const handleCreate = () => {
-        if (!formData.contractorName || !formData.projectName || !formData.amount) {
+        if (!formData.contractorId || !formData.projectId || !formData.amount || !formData.paymentDate) {
             toast.error('Please fill in all required fields');
             return;
         }
@@ -142,46 +155,55 @@ export default function ContractorPaymentsPage() {
         const newPayment: ContractorPayment = {
             id: Date.now().toString(),
             paymentNumber: `PAY-${String(payments.length + 1).padStart(3, '0')}`,
-            contractorName: formData.contractorName,
-            projectName: formData.projectName,
+            contractorName: contractors.find(c => c === formData.contractorId) || '',
+            contractorId: formData.contractorId,
+            projectName: projects.find(p => p === formData.projectId) || '',
+            projectId: formData.projectId,
             amount: parseFloat(formData.amount),
             currency: formData.currency,
-            paymentType: formData.paymentType,
-            status: 'pending',
+            paymentMethod: formData.paymentMethod as ContractorPayment['paymentMethod'],
             paymentDate: formData.paymentDate,
-            dueDate: formData.dueDate,
             description: formData.description,
-            invoiceNumber: formData.invoiceNumber || undefined
+            status: 'pending',
+            invoiceNumber: formData.invoiceNumber,
+            invoiceDate: formData.invoiceDate,
+            approvalDate: '',
+            approvedBy: '',
+            paymentReference: '',
+            createdBy: 'Current User',
+            notes: formData.notes
         };
 
         setPayments([...payments, newPayment]);
         setIsCreateDialogOpen(false);
         setFormData({
-            contractorName: '',
-            projectName: '',
+            contractorId: '',
+            projectId: '',
             amount: '',
-            currency: 'SAR',
-            paymentType: 'progress',
+            currency: '',
+            paymentMethod: 'bank_transfer',
             paymentDate: '',
-            dueDate: '',
             description: '',
-            invoiceNumber: ''
+            invoiceNumber: '',
+            invoiceDate: '',
+            notes: ''
         });
-        toast.success('Payment created successfully');
+        toast.success('Payment request created successfully');
     };
 
     const handleEdit = (payment: ContractorPayment) => {
         setEditingPayment(payment);
         setFormData({
-            contractorName: payment.contractorName,
-            projectName: payment.projectName,
+            contractorId: payment.contractorId,
+            projectId: payment.projectId,
             amount: payment.amount.toString(),
             currency: payment.currency,
-            paymentType: payment.paymentType,
+            paymentMethod: payment.paymentMethod,
             paymentDate: payment.paymentDate,
-            dueDate: payment.dueDate,
             description: payment.description,
-            invoiceNumber: payment.invoiceNumber || ''
+            invoiceNumber: payment.invoiceNumber,
+            invoiceDate: payment.invoiceDate,
+            notes: payment.notes
         });
         setIsEditDialogOpen(true);
     };
@@ -192,15 +214,16 @@ export default function ContractorPaymentsPage() {
         const updatedPayments = payments.map(p =>
             p.id === editingPayment.id ? { 
                 ...p, 
-                contractorName: formData.contractorName,
-                projectName: formData.projectName,
+                contractorId: formData.contractorId,
+                projectId: formData.projectId,
                 amount: parseFloat(formData.amount),
                 currency: formData.currency,
-                paymentType: formData.paymentType,
+                paymentMethod: formData.paymentMethod as ContractorPayment['paymentMethod'],
                 paymentDate: formData.paymentDate,
-                dueDate: formData.dueDate,
                 description: formData.description,
-                invoiceNumber: formData.invoiceNumber || undefined
+                invoiceNumber: formData.invoiceNumber,
+                invoiceDate: formData.invoiceDate,
+                notes: formData.notes
             } : p
         );
 
@@ -208,15 +231,16 @@ export default function ContractorPaymentsPage() {
         setIsEditDialogOpen(false);
         setEditingPayment(null);
         setFormData({
-            contractorName: '',
-            projectName: '',
+            contractorId: '',
+            projectId: '',
             amount: '',
-            currency: 'SAR',
-            paymentType: 'progress',
+            currency: '',
+            paymentMethod: 'bank_transfer',
             paymentDate: '',
-            dueDate: '',
             description: '',
-            invoiceNumber: ''
+            invoiceNumber: '',
+            invoiceDate: '',
+            notes: ''
         });
         toast.success('Payment updated successfully');
     };
@@ -226,344 +250,442 @@ export default function ContractorPaymentsPage() {
         toast.success('Payment deleted successfully');
     };
 
-    const handleApprove = (id: string) => {
+    const handleStatusChange = (id: string, status: ContractorPayment['status']) => {
         setPayments(prev => prev.map(payment => 
             payment.id === id 
-                ? { ...payment, status: 'approved' as const, approver: 'General Manager' }
+                ? { 
+                    ...payment, 
+                    status: status,
+                    approvalDate: status === 'approved' || status === 'paid' ? new Date().toISOString().split('T')[0] : '',
+                    approvedBy: status === 'approved' || status === 'paid' ? 'Current User' : ''
+                }
                 : payment
         ));
-        toast.success('Payment approved');
+        toast.success(`Payment ${status} successfully`);
     };
 
-    const handlePay = (id: string) => {
-        setPayments(prev => prev.map(payment => 
-            payment.id === id 
-                ? { ...payment, status: 'paid' as const, approver: 'Financial Manager' }
-                : payment
-        ));
-        toast.success('Payment recorded');
-    };
-
-    const formatCurrency = (amount: number, currency: string) => {
-        return new Intl.NumberFormat('en-SA', {
-            style: 'currency',
-            currency: currency,
+    const formatNumber = (amount: number) => {
+        return new Intl.NumberFormat('en-US', {
             minimumFractionDigits: 0
         }).format(amount);
     };
 
     const totalAmount = filteredPayments.reduce((sum, payment) => sum + payment.amount, 0);
-    const pendingAmount = filteredPayments
-        .filter(p => p.status === 'pending')
-        .reduce((sum, payment) => sum + payment.amount, 0);
+    const paidAmount = filteredPayments.filter(p => p.status === 'paid').reduce((sum, payment) => sum + payment.amount, 0);
+    const pendingAmount = filteredPayments.filter(p => p.status === 'pending').reduce((sum, payment) => sum + payment.amount, 0);
+    const approvedAmount = filteredPayments.filter(p => p.status === 'approved').reduce((sum, payment) => sum + payment.amount, 0);
+
+    const columns = [
+        {
+            key: 'paymentNumber' as keyof ContractorPayment,
+            header: 'Payment Number',
+            render: (value: any) => <span className="font-mono text-sm text-slate-600">{value}</span>,
+            sortable: true,
+            width: '120px'
+        },
+        {
+            key: 'contractorName' as keyof ContractorPayment,
+            header: 'Contractor',
+            render: (value: any, payment: ContractorPayment) => (
+                <div>
+                    <div className="font-semibold text-slate-800">{payment.contractorName}</div>
+                    <div className="text-sm text-slate-600">{payment.contractorId}</div>
+                </div>
+            ),
+            sortable: true
+        },
+        {
+            key: 'projectName' as keyof ContractorPayment,
+            header: 'Project',
+            render: (value: any, payment: ContractorPayment) => (
+                <div>
+                    <div className="font-semibold text-slate-800">{payment.projectName}</div>
+                    <div className="text-sm text-slate-600">{payment.projectId}</div>
+                </div>
+            ),
+            sortable: true
+        },
+        {
+            key: 'amount' as keyof ContractorPayment,
+            header: 'Amount',
+            render: (value: any, payment: ContractorPayment) => (
+                <span className="font-semibold text-slate-800">
+                    {formatNumber(value)}
+                </span>
+            ),
+            sortable: true
+        },
+        {
+            key: 'paymentMethod' as keyof ContractorPayment,
+            header: 'Payment Method',
+            render: (value: any) => {
+                const methodLabels = {
+                    'bank_transfer': 'Bank Transfer',
+                    'cash': 'Cash',
+                    'check': 'Check',
+                    'card': 'Credit Card'
+                };
+                
+                return (
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        {methodLabels[value as keyof typeof methodLabels]}
+                    </Badge>
+                );
+            },
+            sortable: true
+        },
+        {
+            key: 'paymentDate' as keyof ContractorPayment,
+            header: 'Payment Date',
+            render: (value: any) => <span className="text-slate-700">{value}</span>,
+            sortable: true
+        },
+        {
+            key: 'invoiceNumber' as keyof ContractorPayment,
+            header: 'Invoice',
+            render: (value: any, payment: ContractorPayment) => (
+                <div>
+                    <div className="font-semibold text-slate-800">{payment.invoiceNumber}</div>
+                    <div className="text-sm text-slate-600">{payment.invoiceDate}</div>
+                </div>
+            ),
+            sortable: true
+        },
+        {
+            key: 'status' as keyof ContractorPayment,
+            header: 'Status',
+            render: (value: any) => {
+                const statusColors = {
+                    'pending': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                    'approved': 'bg-blue-100 text-blue-700 border-blue-200',
+                    'paid': 'bg-green-100 text-green-700 border-green-200',
+                    'rejected': 'bg-red-100 text-red-700 border-red-200',
+                    'cancelled': 'bg-gray-100 text-gray-700 border-gray-200'
+                };
+                
+                return (
+                    <Badge variant="outline" className={`${statusColors[value as keyof typeof statusColors]} font-medium`}>
+                        {value.charAt(0).toUpperCase() + value.slice(1)}
+                    </Badge>
+                );
+            },
+            sortable: true
+        }
+    ];
+
+    const actions = [
+        {
+            label: 'View Details',
+            onClick: (payment: ContractorPayment) => toast.info('View details feature coming soon'),
+            icon: <Eye className="h-4 w-4" />
+        },
+        {
+            label: 'Edit Payment',
+            onClick: (payment: ContractorPayment) => handleEdit(payment),
+            icon: <Edit className="h-4 w-4" />
+        },
+        {
+            label: 'Approve Payment',
+            onClick: (payment: ContractorPayment) => handleStatusChange(payment.id, 'approved'),
+            icon: <CheckCircle className="h-4 w-4" />,
+            hidden: (payment: ContractorPayment) => payment.status !== 'pending'
+        },
+        {
+            label: 'Mark as Paid',
+            onClick: (payment: ContractorPayment) => handleStatusChange(payment.id, 'paid'),
+            icon: <DollarSign className="h-4 w-4" />,
+            hidden: (payment: ContractorPayment) => payment.status !== 'approved'
+        },
+        {
+            label: 'Reject Payment',
+            onClick: (payment: ContractorPayment) => handleStatusChange(payment.id, 'rejected'),
+            icon: <XCircle className="h-4 w-4" />,
+            hidden: (payment: ContractorPayment) => payment.status === 'paid' || payment.status === 'rejected'
+        },
+        {
+            label: 'Delete Payment',
+            onClick: (payment: ContractorPayment) => handleDelete(payment.id),
+            icon: <Trash2 className="h-4 w-4" />,
+            variant: 'destructive' as const
+        }
+    ];
+
+    const stats = [
+        {
+            label: 'Total Payments',
+            value: filteredPayments.length,
+            change: '+12%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Total Amount',
+            value: formatNumber(totalAmount),
+            change: '+8%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Paid Amount',
+            value: formatNumber(paidAmount),
+            change: '+15%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Pending Amount',
+            value: formatNumber(pendingAmount),
+            change: '-5%',
+            trend: 'down' as const
+        }
+    ];
+
+    const filterOptions = [
+        {
+            key: 'contractor',
+            label: 'Contractor',
+            value: contractorFilter,
+            options: [
+                { key: 'all', label: 'All Contractors', value: 'all' },
+                ...contractors.map(contractor => ({ key: contractor, label: contractor, value: contractor }))
+            ],
+            onValueChange: setContractorFilter
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            value: statusFilter,
+            options: [
+                { key: 'all', label: 'All Statuses', value: 'all' },
+                { key: 'pending', label: 'Pending', value: 'pending' },
+                { key: 'approved', label: 'Approved', value: 'approved' },
+                { key: 'paid', label: 'Paid', value: 'paid' },
+                { key: 'rejected', label: 'Rejected', value: 'rejected' },
+                { key: 'cancelled', label: 'Cancelled', value: 'cancelled' }
+            ],
+            onValueChange: setStatusFilter
+        },
+        {
+            key: 'method',
+            label: 'Payment Method',
+            value: methodFilter,
+            options: [
+                { key: 'all', label: 'All Methods', value: 'all' },
+                ...paymentMethods.map(method => ({ key: method.value, label: method.label, value: method.value }))
+            ],
+            onValueChange: setMethodFilter
+        }
+    ];
+
+    const activeFilters = [];
+    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
+    if (contractorFilter !== 'all') activeFilters.push(`Contractor: ${contractorFilter}`);
+    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
+    if (methodFilter !== 'all') activeFilters.push(`Method: ${paymentMethods.find(m => m.value === methodFilter)?.label}`);
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-foreground">Contractor Payments</h1>
-                    <p className="text-muted-foreground">Manage contractor payments and contracts</p>
-                </div>
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-primary hover:bg-primary/90">
-                            <Plus className="h-4 w-4 mr-2" />
-                            New Payment
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>Create New Payment</DialogTitle>
-                            <DialogDescription>
-                                Create a new payment for contractor
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
+            {/* Page Header */}
+            <PageHeader
+                title="Contractor Payments"
+                description="Manage contractor payments with comprehensive tracking and approval workflow"
+                stats={stats}
+                actions={{
+                    primary: {
+                        label: 'New Payment',
+                        onClick: () => setIsCreateDialogOpen(true),
+                        icon: <Plus className="h-4 w-4" />
+                    },
+                    secondary: [
+                        {
+                            label: 'Export Report',
+                            onClick: () => toast.info('Export feature coming soon'),
+                            icon: <Download className="h-4 w-4" />
+                        },
+                        {
+                            label: 'Payment Analysis',
+                            onClick: () => toast.info('Payment analysis coming soon'),
+                            icon: <TrendingUp className="h-4 w-4" />
+                        }
+                    ]
+                }}
+            />
+
+            {/* Filter Bar */}
+            <FilterBar
+                searchPlaceholder="Search by payment number, contractor, project, or invoice..."
+                searchValue={searchTerm}
+                onSearchChange={setSearchTerm}
+                filters={filterOptions}
+                activeFilters={activeFilters}
+                onClearFilters={() => {
+                    setSearchTerm('');
+                    setContractorFilter('all');
+                    setStatusFilter('all');
+                    setMethodFilter('all');
+                }}
+            />
+
+            {/* Payments Table */}
+            <EnhancedCard
+                title="Payment Overview"
+                description={`${filteredPayments.length} payments out of ${payments.length} total`}
+                variant="gradient"
+                size="lg"
+                stats={{
+                    total: payments.length,
+                    badge: 'Active Payments',
+                    badgeColor: 'success'
+                }}
+            >
+                <EnhancedDataTable
+                    data={filteredPayments}
+                    columns={columns}
+                    actions={actions}
+                    loading={false}
+                    noDataMessage="No payments found matching your criteria"
+                    searchPlaceholder="Search payments..."
+                />
+            </EnhancedCard>
+
+            {/* Create Dialog */}
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Create New Payment</DialogTitle>
+                        <DialogDescription>
+                            Add a new contractor payment request
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="contractorId">Contractor</Label>
+                            <Select value={formData.contractorId} onValueChange={(value) => setFormData(prev => ({ ...prev, contractorId: value }))}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue placeholder="Select Contractor" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {contractors.map(contractor => (
+                                        <SelectItem key={contractor} value={contractor}>{contractor}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="projectId">Project</Label>
+                            <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue placeholder="Select Project" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {projects.map(project => (
+                                        <SelectItem key={project} value={project}>{project}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="contractorName">Contractor Name</Label>
-                                <Select value={formData.contractorName} onValueChange={(value) => setFormData(prev => ({ ...prev, contractorName: value }))}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select Contractor" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {contractors.map(contractor => (
-                                            <SelectItem key={contractor} value={contractor}>{contractor}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Label htmlFor="amount">Amount</Label>
+                                <Input
+                                    id="amount"
+                                    type="number"
+                                    step="0.01"
+                                    value={formData.amount}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                                    placeholder="0.00"
+                                    className="mt-1"
+                                />
                             </div>
                             <div>
-                                <Label htmlFor="projectName">Project Name</Label>
-                                <Select value={formData.projectName} onValueChange={(value) => setFormData(prev => ({ ...prev, projectName: value }))}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select Project" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {projects.map(project => (
-                                            <SelectItem key={project} value={project}>{project}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="amount">Amount</Label>
-                                    <Input
-                                        id="amount"
-                                        type="number"
-                                        value={formData.amount}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                                        placeholder="0"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="currency">Currency</Label>
-                                    <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="SAR">Saudi Riyal</SelectItem>
-                                            <SelectItem value="USD">US Dollar</SelectItem>
-                                            <SelectItem value="EUR">Euro</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="paymentType">Payment Type</Label>
-                                <Select value={formData.paymentType} onValueChange={(value: ContractorPayment['paymentType']) => setFormData(prev => ({ ...prev, paymentType: value }))}>
-                                    <SelectTrigger>
+                                <Label htmlFor="currency">Currency</Label>
+                                <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {Object.entries(paymentTypes).map(([key, label]) => (
-                                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                                        ))}
+                                        <SelectItem value="USD">US Dollar</SelectItem>
+                                        <SelectItem value="EUR">Euro</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="paymentDate">Payment Date</Label>
-                                    <Input
-                                        id="paymentDate"
-                                        type="date"
-                                        value={formData.paymentDate}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, paymentDate: e.target.value }))}
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="dueDate">Due Date</Label>
-                                    <Input
-                                        id="dueDate"
-                                        type="date"
-                                        value={formData.dueDate}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="description">Description</Label>
-                                <Textarea
-                                    id="description"
-                                    value={formData.description}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                    placeholder="Payment description"
-                                    rows={3}
-                                />
-                            </div>
+                        </div>
+                        <div>
+                            <Label htmlFor="paymentMethod">Payment Method</Label>
+                            <Select value={formData.paymentMethod} onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {paymentMethods.map(method => (
+                                        <SelectItem key={method.value} value={method.value}>{method.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="paymentDate">Payment Date</Label>
+                            <Input
+                                id="paymentDate"
+                                type="date"
+                                value={formData.paymentDate}
+                                onChange={(e) => setFormData(prev => ({ ...prev, paymentDate: e.target.value }))}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea
+                                id="description"
+                                value={formData.description}
+                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                placeholder="Payment description"
+                                rows={3}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="invoiceNumber">Invoice Number</Label>
                                 <Input
                                     id="invoiceNumber"
                                     value={formData.invoiceNumber}
                                     onChange={(e) => setFormData(prev => ({ ...prev, invoiceNumber: e.target.value }))}
-                                    placeholder="Invoice number (optional)"
+                                    placeholder="Invoice number"
+                                    className="mt-1"
                                 />
                             </div>
-                            <div className="flex justify-end space-x-2">
-                                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button onClick={handleCreate}>
-                                    <DollarSign className="h-4 w-4 mr-2" />
-                                    Create Payment
-                                </Button>
+                            <div>
+                                <Label htmlFor="invoiceDate">Invoice Date</Label>
+                                <Input
+                                    id="invoiceDate"
+                                    type="date"
+                                    value={formData.invoiceDate}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, invoiceDate: e.target.value }))}
+                                    className="mt-1"
+                                />
                             </div>
                         </div>
-                    </DialogContent>
-                </Dialog>
-            </div>
-
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(totalAmount, 'SAR')}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pending Amount</CardTitle>
-                        <Receipt className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-yellow-600">{formatCurrency(pendingAmount, 'SAR')}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Number of Payments</CardTitle>
-                        <Receipt className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{filteredPayments.length}</div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                        placeholder="Search payments..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pr-10"
-                    />
-                </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Payment Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="paid">Paid</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Payment Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
-                        {Object.entries(paymentTypes).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-
-            {/* Payments Table */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <DollarSign className="h-5 w-5" />
-                        Payments List
-                    </CardTitle>
-                    <CardDescription>
-                        {filteredPayments.length} payments out of {payments.length}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Payment Number</TableHead>
-                                    <TableHead>Contractor</TableHead>
-                                    <TableHead>Project</TableHead>
-                                    <TableHead>Amount</TableHead>
-                                    <TableHead>Payment Type</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Payment Date</TableHead>
-                                    <TableHead>Due Date</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredPayments.map((payment) => (
-                                    <TableRow key={payment.id}>
-                                        <TableCell className="font-medium">{payment.paymentNumber}</TableCell>
-                                        <TableCell>{payment.contractorName}</TableCell>
-                                        <TableCell className="max-w-xs truncate">{payment.projectName}</TableCell>
-                                        <TableCell className="font-semibold">
-                                            {formatCurrency(payment.amount, payment.currency)}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline">
-                                                {paymentTypes[payment.paymentType]}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={`${statusColors[payment.status]} w-fit`}>
-                                                {statusLabels[payment.status]}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>{payment.paymentDate}</TableCell>
-                                        <TableCell>{payment.dueDate}</TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleEdit(payment)}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                {payment.status === 'pending' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleApprove(payment.id)}
-                                                        className="text-green-600 hover:text-green-700"
-                                                    >
-                                                        Approve
-                                                    </Button>
-                                                )}
-                                                {payment.status === 'approved' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handlePay(payment.id)}
-                                                        className="text-blue-600 hover:text-blue-700"
-                                                    >
-                                                        Pay
-                                                    </Button>
-                                                )}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleDelete(payment.id)}
-                                                    className="text-destructive hover:text-destructive"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                        <div>
+                            <Label htmlFor="notes">Notes</Label>
+                            <Textarea
+                                id="notes"
+                                value={formData.notes}
+                                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                                placeholder="Additional notes"
+                                rows={2}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="flex justify-end space-x-2 pt-4">
+                            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleCreate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                                <DollarSign className="h-4 w-4 mr-2" />
+                                Create Payment
+                            </Button>
+                        </div>
                     </div>
-                </CardContent>
-            </Card>
+                </DialogContent>
+            </Dialog>
 
             {/* Edit Dialog */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -571,14 +693,14 @@ export default function ContractorPaymentsPage() {
                     <DialogHeader>
                         <DialogTitle>Edit Payment</DialogTitle>
                         <DialogDescription>
-                            Update payment data
+                            Update payment information and details
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="edit-contractorName">Contractor Name</Label>
-                            <Select value={formData.contractorName} onValueChange={(value) => setFormData(prev => ({ ...prev, contractorName: value }))}>
-                                <SelectTrigger>
+                            <Label htmlFor="edit-contractorId">Contractor</Label>
+                            <Select value={formData.contractorId} onValueChange={(value) => setFormData(prev => ({ ...prev, contractorId: value }))}>
+                                <SelectTrigger className="mt-1">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -589,9 +711,9 @@ export default function ContractorPaymentsPage() {
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="edit-projectName">Project Name</Label>
-                            <Select value={formData.projectName} onValueChange={(value) => setFormData(prev => ({ ...prev, projectName: value }))}>
-                                <SelectTrigger>
+                            <Label htmlFor="edit-projectId">Project</Label>
+                            <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
+                                <SelectTrigger className="mt-1">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -607,18 +729,19 @@ export default function ContractorPaymentsPage() {
                                 <Input
                                     id="edit-amount"
                                     type="number"
+                                    step="0.01"
                                     value={formData.amount}
                                     onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                                    className="mt-1"
                                 />
                             </div>
                             <div>
                                 <Label htmlFor="edit-currency">Currency</Label>
                                 <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="SAR">Saudi Riyal</SelectItem>
                                         <SelectItem value="USD">US Dollar</SelectItem>
                                         <SelectItem value="EUR">Euro</SelectItem>
                                     </SelectContent>
@@ -626,37 +749,27 @@ export default function ContractorPaymentsPage() {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="edit-paymentType">Payment Type</Label>
-                            <Select value={formData.paymentType} onValueChange={(value: ContractorPayment['paymentType']) => setFormData(prev => ({ ...prev, paymentType: value }))}>
-                                <SelectTrigger>
+                            <Label htmlFor="edit-paymentMethod">Payment Method</Label>
+                            <Select value={formData.paymentMethod} onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}>
+                                <SelectTrigger className="mt-1">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {Object.entries(paymentTypes).map(([key, label]) => (
-                                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                                    {paymentMethods.map(method => (
+                                        <SelectItem key={method.value} value={method.value}>{method.label}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="edit-paymentDate">Payment Date</Label>
-                                <Input
-                                    id="edit-paymentDate"
-                                    type="date"
-                                    value={formData.paymentDate}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, paymentDate: e.target.value }))}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="edit-dueDate">Due Date</Label>
-                                <Input
-                                    id="edit-dueDate"
-                                    type="date"
-                                    value={formData.dueDate}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-                                />
-                            </div>
+                        <div>
+                            <Label htmlFor="edit-paymentDate">Payment Date</Label>
+                            <Input
+                                id="edit-paymentDate"
+                                type="date"
+                                value={formData.paymentDate}
+                                onChange={(e) => setFormData(prev => ({ ...prev, paymentDate: e.target.value }))}
+                                className="mt-1"
+                            />
                         </div>
                         <div>
                             <Label htmlFor="edit-description">Description</Label>
@@ -665,21 +778,45 @@ export default function ContractorPaymentsPage() {
                                 value={formData.description}
                                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                                 rows={3}
+                                className="mt-1"
                             />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="edit-invoiceNumber">Invoice Number</Label>
+                                <Input
+                                    id="edit-invoiceNumber"
+                                    value={formData.invoiceNumber}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, invoiceNumber: e.target.value }))}
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="edit-invoiceDate">Invoice Date</Label>
+                                <Input
+                                    id="edit-invoiceDate"
+                                    type="date"
+                                    value={formData.invoiceDate}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, invoiceDate: e.target.value }))}
+                                    className="mt-1"
+                                />
+                            </div>
                         </div>
                         <div>
-                            <Label htmlFor="edit-invoiceNumber">Invoice Number</Label>
-                            <Input
-                                id="edit-invoiceNumber"
-                                value={formData.invoiceNumber}
-                                onChange={(e) => setFormData(prev => ({ ...prev, invoiceNumber: e.target.value }))}
+                            <Label htmlFor="edit-notes">Notes</Label>
+                            <Textarea
+                                id="edit-notes"
+                                value={formData.notes}
+                                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                                rows={2}
+                                className="mt-1"
                             />
                         </div>
-                        <div className="flex justify-end space-x-2">
+                        <div className="flex justify-end space-x-2 pt-4">
                             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleUpdate}>
+                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
                                 <DollarSign className="h-4 w-4 mr-2" />
                                 Save Changes
                             </Button>

@@ -1,16 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { DataTable, Column, Action } from '@/components/ui/data-table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Edit, Trash2, Shield, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Shield, Users, Download, Filter } from 'lucide-react';
+import { toast } from 'sonner';
+import { PageHeader } from '@/components/ui/page-header';
+import { FilterBar } from '@/components/ui/filter-bar';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
 
 interface Role {
   id: string;
@@ -87,22 +90,34 @@ const availablePermissions = [
 
 export default function RolesPage() {
   const [roles, setRoles] = useState<Role[]>(mockRoles);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
-  const columns: Column<Role>[] = [
+  const filteredRoles = roles.filter(role => {
+    const matchesSearch = role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        role.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && role.isActive) ||
+                         (statusFilter === 'inactive' && !role.isActive);
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const columns = [
     {
-      key: 'name',
+      key: 'name' as keyof Role,
       header: 'Role Name',
-      render: (_, role) => (
+      render: (value: any, role: Role) => (
         <div>
-          <div className="font-medium flex items-center gap-2">
+          <div className="font-semibold text-slate-800 flex items-center gap-2">
             <Shield className="h-4 w-4" />
             {role.name}
           </div>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-slate-600">
             {role.description}
           </div>
         </div>
@@ -110,17 +125,17 @@ export default function RolesPage() {
       sortable: true
     },
     {
-      key: 'permissions',
+      key: 'permissions' as keyof Role,
       header: 'Permissions',
-      render: (_, role) => (
+      render: (value: any, role: Role) => (
         <div className="flex flex-wrap gap-1">
           {role.permissions.slice(0, 3).map(permission => (
-            <Badge key={permission} variant="default" className="text-xs">
+            <Badge key={permission} variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
               {availablePermissions.find(p => p.id === permission)?.name || permission}
             </Badge>
           ))}
           {role.permissions.length > 3 && (
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs bg-gray-50 text-gray-700 border-gray-200">
               +{role.permissions.length - 3} more
             </Badge>
           )}
@@ -128,38 +143,45 @@ export default function RolesPage() {
       )
     },
     {
-      key: 'userCount',
+      key: 'userCount' as keyof Role,
       header: 'Users',
-      render: (_, role) => (
+      render: (value: any) => (
         <div className="flex items-center gap-1">
-          <Users className="h-4 w-4" />
-          {role.userCount}
+          <Users className="h-3 w-3 text-slate-500" />
+          <span className="font-semibold text-slate-800">{value}</span>
         </div>
       ),
       sortable: true
     },
     {
-      key: 'isActive',
+      key: 'isActive' as keyof Role,
       header: 'Status',
-      render: (_, role) => (
-        <Badge variant="default">
-          {role.isActive ? 'Active' : 'Inactive'}
+      render: (value: any) => (
+        <Badge 
+          variant="outline" 
+          className={`font-medium ${
+            value 
+              ? 'bg-green-100 text-green-700 border-green-200' 
+              : 'bg-red-100 text-red-700 border-red-200'
+          }`}
+        >
+          {value ? 'Active' : 'Inactive'}
         </Badge>
       ),
       sortable: true
     },
     {
-      key: 'createdAt',
+      key: 'createdAt' as keyof Role,
       header: 'Created',
-      render: (value) => new Date(value).toLocaleDateString(),
+      render: (value: any) => <span className="text-slate-500 text-sm">{new Date(value).toLocaleDateString()}</span>,
       sortable: true
     }
   ];
 
-  const actions: Action<Role>[] = [
+  const actions = [
     {
-      label: 'Edit',
-      onClick: (role) => {
+      label: 'Edit Role',
+      onClick: (role: Role) => {
         setSelectedRole(role);
         setSelectedPermissions(role.permissions);
         setIsEditDialogOpen(true);
@@ -167,11 +189,13 @@ export default function RolesPage() {
       icon: <Edit className="h-4 w-4" />
     },
     {
-      label: 'Delete',
-      onClick: (role) => {
+      label: 'Delete Role',
+      onClick: (role: Role) => {
         setRoles(prev => prev.filter(r => r.id !== role.id));
+        toast.success('Role deleted successfully');
       },
-      icon: <Trash2 className="h-4 w-4" />
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive' as const
     }
   ];
 
@@ -189,6 +213,7 @@ export default function RolesPage() {
     setRoles(prev => [...prev, newRole]);
     setIsCreateDialogOpen(false);
     setSelectedPermissions([]);
+    toast.success('Role created successfully');
   };
 
   const handleEditRole = (formData: FormData) => {
@@ -206,6 +231,7 @@ export default function RolesPage() {
     setIsEditDialogOpen(false);
     setSelectedRole(null);
     setSelectedPermissions([]);
+    toast.success('Role updated successfully');
   };
 
   const togglePermission = (permissionId: string) => {
@@ -218,134 +244,176 @@ export default function RolesPage() {
 
   const stats = [
     {
-      title: 'Total Roles',
-      value: roles.length.toString(),
-      description: 'System roles',
-      icon: Shield
+      label: 'Total Roles',
+      value: roles.length,
+      change: '+3%',
+      trend: 'up' as const
     },
     {
-      title: 'Active Roles',
-      value: roles.filter(r => r.isActive).length.toString(),
-      description: 'Currently active',
-      icon: Shield
+      label: 'Active Roles',
+      value: roles.filter(r => r.isActive).length,
+      change: '+1%',
+      trend: 'up' as const
     },
     {
-      title: 'Total Users',
-      value: roles.reduce((sum, role) => sum + role.userCount, 0).toString(),
-      description: 'Assigned users',
-      icon: Users
+      label: 'Total Users',
+      value: roles.reduce((sum, role) => sum + role.userCount, 0),
+      change: '+8%',
+      trend: 'up' as const
+    },
+    {
+      label: 'Avg. Permissions',
+      value: Math.round(roles.reduce((sum, role) => sum + role.permissions.length, 0) / roles.length),
+      change: '+2',
+      trend: 'up' as const
     }
   ];
 
+  const filterOptions = [
+    {
+      key: 'status',
+      label: 'Status',
+      value: statusFilter,
+      options: [
+        { key: 'all', label: 'All Statuses', value: 'all' },
+        { key: 'active', label: 'Active', value: 'active' },
+        { key: 'inactive', label: 'Inactive', value: 'inactive' }
+      ],
+      onValueChange: setStatusFilter
+    }
+  ];
+
+  const activeFilters = [];
+  if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
+  if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Roles</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage system roles and permissions
-          </p>
-        </div>
-        
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Role
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Create New Role</DialogTitle>
-              <DialogDescription>
-                Define a new role with specific permissions and access levels.
-              </DialogDescription>
-            </DialogHeader>
-            <form action={handleCreateRole} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Role Name</Label>
-                <Input id="name" name="name" placeholder="Enter role name" required />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea 
-                  id="description" 
-                  name="description" 
-                  placeholder="Describe the role's purpose and responsibilities"
-                  required 
-                />
-              </div>
-              <div>
-                <Label>Permissions</Label>
-                <div className="grid grid-cols-2 gap-3 mt-2 max-h-60 overflow-y-auto">
-                  {availablePermissions.map(permission => (
-                    <div key={permission.id} className="flex items-start space-x-2">
-                      <Switch
-                        id={permission.id}
-                        checked={selectedPermissions.includes(permission.id)}
-                        onCheckedChange={() => togglePermission(permission.id)}
-                      />
-                      <div className="grid gap-1.5 leading-none">
-                        <Label htmlFor={permission.id} className="text-sm font-medium">
-                          {permission.name}
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          {permission.description}
-                        </p>
-                      </div>
+      {/* Page Header */}
+      <PageHeader
+        title="Roles & Permissions"
+        description="Manage system roles and permissions with comprehensive access control and security management"
+        stats={stats}
+        actions={{
+          primary: {
+            label: 'Create Role',
+            onClick: () => setIsCreateDialogOpen(true),
+            icon: <Plus className="h-4 w-4" />
+          },
+          secondary: [
+            {
+              label: 'Export Roles',
+              onClick: () => toast.info('Export feature coming soon'),
+              icon: <Download className="h-4 w-4" />
+            },
+            {
+              label: 'Permission Matrix',
+              onClick: () => toast.info('Permission matrix coming soon'),
+              icon: <Filter className="h-4 w-4" />
+            }
+          ]
+        }}
+      />
+
+      {/* Filter Bar */}
+      <FilterBar
+        searchPlaceholder="Search by role name or description..."
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        filters={filterOptions}
+        activeFilters={activeFilters}
+        onClearFilters={() => {
+          setSearchTerm('');
+          setStatusFilter('all');
+        }}
+      />
+
+      {/* Roles Table */}
+      <EnhancedCard
+        title="Role Management"
+        description={`${filteredRoles.length} roles in the system`}
+        variant="gradient"
+        size="lg"
+        stats={{
+          total: roles.length,
+          badge: 'Active Roles',
+          badgeColor: 'success'
+        }}
+      >
+        <EnhancedDataTable
+          data={filteredRoles}
+          columns={columns}
+          actions={actions}
+          loading={false}
+          noDataMessage="No roles found matching your criteria"
+          searchPlaceholder="Search roles..."
+        />
+      </EnhancedCard>
+
+      {/* Create Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Role</DialogTitle>
+            <DialogDescription>
+              Define a new role with specific permissions and access levels.
+            </DialogDescription>
+          </DialogHeader>
+          <form action={handleCreateRole} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Role Name</Label>
+              <Input id="name" name="name" placeholder="Enter role name" required className="mt-1" />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea 
+                id="description" 
+                name="description" 
+                placeholder="Describe the role's purpose and responsibilities"
+                required 
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Permissions</Label>
+              <div className="grid grid-cols-2 gap-3 mt-2 max-h-60 overflow-y-auto custom-scrollbar">
+                {availablePermissions.map(permission => (
+                  <div key={permission.id} className="flex items-start space-x-2">
+                    <Switch
+                      id={permission.id}
+                      checked={selectedPermissions.includes(permission.id)}
+                      onCheckedChange={() => togglePermission(permission.id)}
+                    />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label htmlFor={permission.id} className="text-sm font-medium">
+                        {permission.name}
+                      </Label>
+                      <p className="text-xs text-slate-600">
+                        {permission.description}
+                      </p>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center space-x-2">
-                <Switch id="isActive" name="isActive" defaultChecked />
-                <Label htmlFor="isActive">Active Role</Label>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => {
-                  setIsCreateDialogOpen(false);
-                  setSelectedPermissions([]);
-                }}>
-                  Cancel
-                </Button>
-                <Button type="submit">Create Role</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Role Management</CardTitle>
-          <CardDescription>
-            View and manage all system roles and their permissions
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            data={roles}
-            columns={columns}
-            actions={actions}
-          />
-        </CardContent>
-      </Card>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch id="isActive" name="isActive" defaultChecked />
+              <Label htmlFor="isActive">Active Role</Label>
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => {
+                setIsCreateDialogOpen(false);
+                setSelectedPermissions([]);
+              }}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                Create Role
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -365,6 +433,7 @@ export default function RolesPage() {
                   name="name" 
                   defaultValue={selectedRole.name}
                   required 
+                  className="mt-1"
                 />
               </div>
               <div>
@@ -374,11 +443,12 @@ export default function RolesPage() {
                   name="description" 
                   defaultValue={selectedRole.description}
                   required 
+                  className="mt-1"
                 />
               </div>
               <div>
                 <Label>Permissions</Label>
-                <div className="grid grid-cols-2 gap-3 mt-2 max-h-60 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-3 mt-2 max-h-60 overflow-y-auto custom-scrollbar">
                   {availablePermissions.map(permission => (
                     <div key={permission.id} className="flex items-start space-x-2">
                       <Switch
@@ -390,7 +460,7 @@ export default function RolesPage() {
                         <Label htmlFor={`edit-${permission.id}`} className="text-sm font-medium">
                           {permission.name}
                         </Label>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-slate-600">
                           {permission.description}
                         </p>
                       </div>
@@ -406,7 +476,7 @@ export default function RolesPage() {
                 />
                 <Label htmlFor="editIsActive">Active Role</Label>
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 pt-4">
                 <Button 
                   type="button" 
                   variant="outline" 
@@ -418,7 +488,9 @@ export default function RolesPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit">Update Role</Button>
+                <Button type="submit" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                  Update Role
+                </Button>
               </div>
             </form>
           )}

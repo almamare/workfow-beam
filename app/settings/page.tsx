@@ -85,9 +85,9 @@ const mockSecuritySettings: SecuritySettings = {
 };
 
 const mockSystemSettings: SystemSettings = {
-    companyName: 'Shuaa Al-Ranou Company',
+    companyName: 'Shuaa Al-Ranou Trade & General Contracting',
     companyLogo: 'https://cdn.shuarano.com/img/logo.png',
-    defaultCurrency: 'SAR',
+    defaultCurrency: 'USD',
     dateFormat: 'DD/MM/YYYY',
     timeFormat: '24h',
     theme: 'light',
@@ -108,10 +108,10 @@ const timezones = [
 ];
 
 const currencies = [
-    { value: 'SAR', label: 'Saudi Riyal' },
     { value: 'USD', label: 'US Dollar' },
     { value: 'EUR', label: 'Euro' },
-    { value: 'AED', label: 'UAE Dirham' }
+    { value: 'AED', label: 'UAE Dirham' },
+    { value: 'GBP', label: 'British Pound' }
 ];
 
 const dateFormats = [

@@ -1,308 +1,634 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Wallet, Plus, Search, Eye, Edit, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
+import { Wallet, Plus, Eye, Edit, Trash2, TrendingUp, TrendingDown, Download, Filter, Calendar, CreditCard, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/ui/page-header';
+import { FilterBar } from '@/components/ui/filter-bar';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
 
-interface CashTransaction {
+interface CashLedgerEntry {
     id: string;
-    transactionNumber: string;
+    entryNumber: string;
     date: string;
     description: string;
     type: 'income' | 'expense';
     category: string;
     amount: number;
     currency: string;
-    balance: number;
-    reference?: string;
-    createdBy: string;
+    paymentMethod: 'cash' | 'bank_transfer' | 'check' | 'card';
+    reference: string;
+    projectId: string;
+    projectName: string;
+    contractorId: string;
+    contractorName: string;
     status: 'pending' | 'approved' | 'rejected';
+    createdBy: string;
+    approvedBy: string;
+    approvalDate: string;
+    notes: string;
+    balance: number;
 }
 
-const mockTransactions: CashTransaction[] = [
+const mockEntries: CashLedgerEntry[] = [
     {
         id: '1',
-        transactionNumber: 'CASH-001',
+        entryNumber: 'CL-001',
         date: '2024-01-15',
-        description: 'Daily cash sales',
-        type: 'income',
-        category: 'Sales',
+        description: 'Office rent payment',
+        type: 'expense',
+        category: 'Rent',
         amount: 5000,
-        currency: 'SAR',
-        balance: 5000,
-        reference: 'SALE-001',
+        currency: '',
+        paymentMethod: 'bank_transfer',
+        reference: 'TXN-001',
+        projectId: 'PRJ-001',
+        projectName: 'Office Building',
+        contractorId: '',
+        contractorName: '',
+        status: 'approved',
         createdBy: 'Ahmed Ali',
-        status: 'approved'
+        approvedBy: 'Fatima Mohamed',
+        approvalDate: '2024-01-15',
+        notes: 'Monthly office rent',
+        balance: 95000
     },
     {
         id: '2',
-        transactionNumber: 'CASH-002',
-        date: '2024-01-15',
-        description: 'Office supplies purchase',
+        entryNumber: 'CL-002',
+        date: '2024-01-16',
+        description: 'Contractor payment for foundation work',
         type: 'expense',
-        category: 'Office Expenses',
-        amount: 500,
-        currency: 'SAR',
-        balance: 4500,
-        reference: 'PUR-001',
-        createdBy: 'Fatima Mohamed',
-        status: 'approved'
+        category: 'Contractor Payment',
+        amount: 25000,
+        currency: '',
+        paymentMethod: 'check',
+        reference: 'CHK-001',
+        projectId: 'PRJ-001',
+        projectName: 'Office Building',
+        contractorId: 'CTR-001',
+        contractorName: 'ABC Construction',
+        status: 'approved',
+        createdBy: 'Omar Hassan',
+        approvedBy: 'Sara Ahmed',
+        approvalDate: '2024-01-16',
+        notes: 'Foundation work completion',
+        balance: 70000
     },
     {
         id: '3',
-        transactionNumber: 'CASH-003',
-        date: '2024-01-16',
-        description: 'Petty cash withdrawal',
-        type: 'expense',
-        category: 'Petty Cash',
-        amount: 200,
-        currency: 'SAR',
-        balance: 4300,
-        reference: 'PETTY-001',
-        createdBy: 'Omar Hassan',
-        status: 'pending'
+        entryNumber: 'CL-003',
+        date: '2024-01-17',
+        description: 'Client payment received',
+        type: 'income',
+        category: 'Client Payment',
+        amount: 100000,
+        currency: '',
+        paymentMethod: 'bank_transfer',
+        reference: 'TXN-002',
+        projectId: 'PRJ-001',
+        projectName: 'Office Building',
+        contractorId: '',
+        contractorName: '',
+        status: 'approved',
+        createdBy: 'Mohammed Saleh',
+        approvedBy: 'Ahmed Ali',
+        approvalDate: '2024-01-17',
+        notes: 'Progress payment from client',
+        balance: 170000
     },
     {
         id: '4',
-        transactionNumber: 'CASH-004',
-        date: '2024-01-16',
-        description: 'Cash deposit from bank',
-        type: 'income',
-        category: 'Bank Transfer',
-        amount: 10000,
-        currency: 'SAR',
-        balance: 14300,
-        reference: 'BANK-001',
-        createdBy: 'Sara Ahmed',
-        status: 'approved'
+        entryNumber: 'CL-004',
+        date: '2024-01-18',
+        description: 'Equipment purchase',
+        type: 'expense',
+        category: 'Equipment',
+        amount: 15000,
+        currency: '',
+        paymentMethod: 'card',
+        reference: 'CARD-001',
+        projectId: 'PRJ-002',
+        projectName: 'Warehouse Construction',
+        contractorId: '',
+        contractorName: '',
+        status: 'pending',
+        createdBy: 'Fatima Mohamed',
+        approvedBy: '',
+        approvalDate: '',
+        notes: 'Construction equipment',
+        balance: 155000
     }
 ];
 
-const categories = {
-    income: ['Sales', 'Bank Transfer', 'Cash Deposit', 'Refund', 'Other Income'],
-    expense: ['Office Expenses', 'Petty Cash', 'Utilities', 'Maintenance', 'Other Expenses']
-};
-
-const statusLabels = {
-    pending: 'Pending',
-    approved: 'Approved',
-    rejected: 'Rejected'
-};
-
-const statusColors = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    approved: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800'
-};
+const categories = ['Rent', 'Contractor Payment', 'Client Payment', 'Equipment', 'Materials', 'Utilities', 'Salaries', 'Insurance', 'Transportation', 'Other'];
+const projects = ['Office Building', 'Warehouse Construction', 'Residential Complex', 'Shopping Mall', 'Hospital'];
+const contractors = ['ABC Construction', 'XYZ Electrical', 'Green Landscaping', 'Modern Plumbing', 'Quality Painters'];
+const paymentMethods = [
+    { value: 'cash', label: 'Cash' },
+    { value: 'bank_transfer', label: 'Bank Transfer' },
+    { value: 'check', label: 'Check' },
+    { value: 'card', label: 'Credit Card' }
+];
 
 export default function CashLedgerPage() {
-    const [transactions, setTransactions] = useState<CashTransaction[]>(mockTransactions);
+    const [entries, setEntries] = useState<CashLedgerEntry[]>(mockEntries);
     const [searchTerm, setSearchTerm] = useState('');
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-    const [editingTransaction, setEditingTransaction] = useState<CashTransaction | null>(null);
+    const [editingEntry, setEditingEntry] = useState<CashLedgerEntry | null>(null);
     const [formData, setFormData] = useState({
+        date: '',
         description: '',
-        type: 'income' as CashTransaction['type'],
+        type: 'expense',
         category: '',
         amount: '',
-        currency: 'SAR',
-        reference: ''
+        currency: '',
+        paymentMethod: 'cash',
+        reference: '',
+        projectId: '',
+        contractorId: '',
+        notes: ''
     });
 
-    const filteredTransactions = transactions.filter(transaction => {
-        const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            transaction.transactionNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            transaction.reference?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesType = typeFilter === 'all' || transaction.type === typeFilter;
-        const matchesCategory = categoryFilter === 'all' || transaction.category === categoryFilter;
-        const matchesStatus = statusFilter === 'all' || transaction.status === statusFilter;
+    const filteredEntries = entries.filter(entry => {
+        const matchesSearch = entry.entryNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            entry.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            entry.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            entry.reference.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesType = typeFilter === 'all' || entry.type === typeFilter;
+        const matchesCategory = categoryFilter === 'all' || entry.category === categoryFilter;
+        const matchesStatus = statusFilter === 'all' || entry.status === statusFilter;
         
         return matchesSearch && matchesType && matchesCategory && matchesStatus;
     });
 
     const handleCreate = () => {
-        if (!formData.description || !formData.category || !formData.amount) {
+        if (!formData.date || !formData.description || !formData.category || !formData.amount) {
             toast.error('Please fill in all required fields');
             return;
         }
 
-        const amount = parseFloat(formData.amount);
-        const lastTransaction = transactions[transactions.length - 1];
-        const newBalance = formData.type === 'income' 
-            ? (lastTransaction?.balance || 0) + amount
-            : (lastTransaction?.balance || 0) - amount;
-
-        const newTransaction: CashTransaction = {
+        const newEntry: CashLedgerEntry = {
             id: Date.now().toString(),
-            transactionNumber: `CASH-${String(transactions.length + 1).padStart(3, '0')}`,
-            date: new Date().toISOString().split('T')[0],
+            entryNumber: `CL-${String(entries.length + 1).padStart(3, '0')}`,
+            date: formData.date,
             description: formData.description,
-            type: formData.type,
+            type: formData.type as CashLedgerEntry['type'],
             category: formData.category,
-            amount: amount,
+            amount: parseFloat(formData.amount),
             currency: formData.currency,
-            balance: newBalance,
-            reference: formData.reference || undefined,
+            paymentMethod: formData.paymentMethod as CashLedgerEntry['paymentMethod'],
+            reference: formData.reference,
+            projectId: formData.projectId,
+            projectName: projects.find(p => p === formData.projectId) || '',
+            contractorId: formData.contractorId,
+            contractorName: contractors.find(c => c === formData.contractorId) || '',
+            status: 'pending',
             createdBy: 'Current User',
-            status: 'pending'
+            approvedBy: '',
+            approvalDate: '',
+            notes: formData.notes,
+            balance: 0 // Will be calculated based on previous entries
         };
 
-        setTransactions([...transactions, newTransaction]);
+        setEntries([...entries, newEntry]);
         setIsCreateDialogOpen(false);
         setFormData({
+            date: '',
             description: '',
-            type: 'income',
+            type: 'expense',
             category: '',
             amount: '',
-            currency: 'SAR',
-            reference: ''
+            currency: '',
+            paymentMethod: 'cash',
+            reference: '',
+            projectId: '',
+            contractorId: '',
+            notes: ''
         });
-        toast.success('Transaction created successfully');
+        toast.success('Cash ledger entry created successfully');
     };
 
-    const handleEdit = (transaction: CashTransaction) => {
-        setEditingTransaction(transaction);
+    const handleEdit = (entry: CashLedgerEntry) => {
+        setEditingEntry(entry);
         setFormData({
-            description: transaction.description,
-            type: transaction.type,
-            category: transaction.category,
-            amount: transaction.amount.toString(),
-            currency: transaction.currency,
-            reference: transaction.reference || ''
+            date: entry.date,
+            description: entry.description,
+            type: entry.type,
+            category: entry.category,
+            amount: entry.amount.toString(),
+            currency: entry.currency,
+            paymentMethod: entry.paymentMethod,
+            reference: entry.reference,
+            projectId: entry.projectId,
+            contractorId: entry.contractorId,
+            notes: entry.notes
         });
         setIsEditDialogOpen(true);
     };
 
     const handleUpdate = () => {
-        if (!editingTransaction) return;
+        if (!editingEntry) return;
 
-        const amount = parseFloat(formData.amount);
-        const updatedTransactions = transactions.map(t => {
-            if (t.id === editingTransaction.id) {
-                const balanceChange = amount - editingTransaction.amount;
-                const newBalance = editingTransaction.type === 'income' 
-                    ? editingTransaction.balance + balanceChange
-                    : editingTransaction.balance - balanceChange;
-                
-                return {
-                    ...t,
-                    description: formData.description,
-                    type: formData.type,
-                    category: formData.category,
-                    amount: amount,
-                    currency: formData.currency,
-                    balance: newBalance,
-                    reference: formData.reference || undefined
-                };
-            }
-            return t;
-        });
+        const updatedEntries = entries.map(e =>
+            e.id === editingEntry.id ? { 
+                ...e, 
+                date: formData.date,
+                description: formData.description,
+                type: formData.type as CashLedgerEntry['type'],
+                category: formData.category,
+                amount: parseFloat(formData.amount),
+                currency: formData.currency,
+                paymentMethod: formData.paymentMethod as CashLedgerEntry['paymentMethod'],
+                reference: formData.reference,
+                projectId: formData.projectId,
+                projectName: projects.find(p => p === formData.projectId) || '',
+                contractorId: formData.contractorId,
+                contractorName: contractors.find(c => c === formData.contractorId) || '',
+                notes: formData.notes
+            } : e
+        );
 
-        setTransactions(updatedTransactions);
+        setEntries(updatedEntries);
         setIsEditDialogOpen(false);
-        setEditingTransaction(null);
+        setEditingEntry(null);
         setFormData({
+            date: '',
             description: '',
-            type: 'income',
+            type: 'expense',
             category: '',
             amount: '',
-            currency: 'SAR',
-            reference: ''
+            currency: '',
+            paymentMethod: 'cash',
+            reference: '',
+            projectId: '',
+            contractorId: '',
+            notes: ''
         });
-        toast.success('Transaction updated successfully');
+        toast.success('Cash ledger entry updated successfully');
     };
 
     const handleDelete = (id: string) => {
-        setTransactions(transactions.filter(t => t.id !== id));
-        toast.success('Transaction deleted successfully');
+        setEntries(entries.filter(e => e.id !== id));
+        toast.success('Cash ledger entry deleted successfully');
     };
 
-    const handleApprove = (id: string) => {
-        setTransactions(prev => prev.map(transaction => 
-            transaction.id === id 
-                ? { ...transaction, status: 'approved' as const }
-                : transaction
+    const handleStatusChange = (id: string, status: CashLedgerEntry['status']) => {
+        setEntries(prev => prev.map(entry => 
+            entry.id === id 
+                ? { 
+                    ...entry, 
+                    status: status,
+                    approvalDate: status === 'approved' ? new Date().toISOString().split('T')[0] : '',
+                    approvedBy: status === 'approved' ? 'Current User' : ''
+                }
+                : entry
         ));
-        toast.success('Transaction approved');
+        toast.success(`Entry ${status} successfully`);
     };
 
-    const handleReject = (id: string) => {
-        setTransactions(prev => prev.map(transaction => 
-            transaction.id === id 
-                ? { ...transaction, status: 'rejected' as const }
-                : transaction
-        ));
-        toast.success('Transaction rejected');
-    };
-
-    const formatCurrency = (amount: number, currency: string) => {
-        return new Intl.NumberFormat('en-SA', {
-            style: 'currency',
-            currency: currency,
+    const formatNumber = (amount: number) => {
+        return new Intl.NumberFormat('en-US', {
             minimumFractionDigits: 0
         }).format(amount);
     };
 
-    const currentBalance = transactions.length > 0 ? transactions[transactions.length - 1].balance : 0;
-    const totalIncome = transactions
-        .filter(t => t.type === 'income' && t.status === 'approved')
-        .reduce((sum, t) => sum + t.amount, 0);
-    const totalExpenses = transactions
-        .filter(t => t.type === 'expense' && t.status === 'approved')
-        .reduce((sum, t) => sum + t.amount, 0);
-    const pendingAmount = transactions
-        .filter(t => t.status === 'pending')
-        .reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
+    const totalIncome = filteredEntries.filter(e => e.type === 'income').reduce((sum, entry) => sum + entry.amount, 0);
+    const totalExpense = filteredEntries.filter(e => e.type === 'expense').reduce((sum, entry) => sum + entry.amount, 0);
+    const netBalance = totalIncome - totalExpense;
+    const pendingAmount = filteredEntries.filter(e => e.status === 'pending').reduce((sum, entry) => sum + entry.amount, 0);
+
+    const columns = [
+        {
+            key: 'entryNumber' as keyof CashLedgerEntry,
+            header: 'Entry Number',
+            render: (value: any) => <span className="font-mono text-sm text-slate-600">{value}</span>,
+            sortable: true,
+            width: '120px'
+        },
+        {
+            key: 'date' as keyof CashLedgerEntry,
+            header: 'Date',
+            render: (value: any) => <span className="text-slate-700">{value}</span>,
+            sortable: true,
+            width: '100px'
+        },
+        {
+            key: 'description' as keyof CashLedgerEntry,
+            header: 'Description',
+            render: (value: any, entry: CashLedgerEntry) => (
+                <div>
+                    <div className="font-semibold text-slate-800">{entry.description}</div>
+                    <div className="text-sm text-slate-600">{entry.category}</div>
+                </div>
+            ),
+            sortable: true
+        },
+        {
+            key: 'type' as keyof CashLedgerEntry,
+            header: 'Type',
+            render: (value: any) => {
+                const isIncome = value === 'income';
+                return (
+                    <Badge variant="outline" className={`${isIncome ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'} font-medium`}>
+                        {isIncome ? (
+                            <>
+                                <TrendingUp className="h-3 w-3 mr-1" />
+                                Income
+                            </>
+                        ) : (
+                            <>
+                                <TrendingDown className="h-3 w-3 mr-1" />
+                                Expense
+                            </>
+                        )}
+                    </Badge>
+                );
+            },
+            sortable: true
+        },
+        {
+            key: 'amount' as keyof CashLedgerEntry,
+            header: 'Amount',
+            render: (value: any, entry: CashLedgerEntry) => {
+                const isIncome = entry.type === 'income';
+                return (
+                    <span className={`font-semibold ${isIncome ? 'text-green-600' : 'text-red-600'}`}>
+                        {isIncome ? '+' : '-'}{formatNumber(value)}
+                    </span>
+                );
+            },
+            sortable: true
+        },
+        {
+            key: 'paymentMethod' as keyof CashLedgerEntry,
+            header: 'Payment Method',
+            render: (value: any) => {
+                const methodLabels = {
+                    'cash': 'Cash',
+                    'bank_transfer': 'Bank Transfer',
+                    'check': 'Check',
+                    'card': 'Credit Card'
+                };
+                
+                return (
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        {methodLabels[value as keyof typeof methodLabels]}
+                    </Badge>
+                );
+            },
+            sortable: true
+        },
+        {
+            key: 'reference' as keyof CashLedgerEntry,
+            header: 'Reference',
+            render: (value: any) => <span className="font-mono text-sm text-slate-600">{value}</span>,
+            sortable: true
+        },
+        {
+            key: 'projectName' as keyof CashLedgerEntry,
+            header: 'Project',
+            render: (value: any, entry: CashLedgerEntry) => (
+                <div>
+                    <div className="font-semibold text-slate-800">{entry.projectName}</div>
+                    <div className="text-sm text-slate-600">{entry.projectId}</div>
+                </div>
+            ),
+            sortable: true
+        },
+        {
+            key: 'status' as keyof CashLedgerEntry,
+            header: 'Status',
+            render: (value: any) => {
+                const statusColors = {
+                    'pending': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                    'approved': 'bg-green-100 text-green-700 border-green-200',
+                    'rejected': 'bg-red-100 text-red-700 border-red-200'
+                };
+                
+                return (
+                    <Badge variant="outline" className={`${statusColors[value as keyof typeof statusColors]} font-medium`}>
+                        {value.charAt(0).toUpperCase() + value.slice(1)}
+                    </Badge>
+                );
+            },
+            sortable: true
+        }
+    ];
+
+    const actions = [
+        {
+            label: 'View Details',
+            onClick: (entry: CashLedgerEntry) => toast.info('View details feature coming soon'),
+            icon: <Eye className="h-4 w-4" />
+        },
+        {
+            label: 'Edit Entry',
+            onClick: (entry: CashLedgerEntry) => handleEdit(entry),
+            icon: <Edit className="h-4 w-4" />
+        },
+        {
+            label: 'Approve Entry',
+            onClick: (entry: CashLedgerEntry) => handleStatusChange(entry.id, 'approved'),
+            icon: <TrendingUp className="h-4 w-4" />,
+            hidden: (entry: CashLedgerEntry) => entry.status !== 'pending'
+        },
+        {
+            label: 'Reject Entry',
+            onClick: (entry: CashLedgerEntry) => handleStatusChange(entry.id, 'rejected'),
+            icon: <TrendingDown className="h-4 w-4" />,
+            hidden: (entry: CashLedgerEntry) => entry.status === 'approved' || entry.status === 'rejected'
+        },
+        {
+            label: 'Delete Entry',
+            onClick: (entry: CashLedgerEntry) => handleDelete(entry.id),
+            icon: <Trash2 className="h-4 w-4" />,
+            variant: 'destructive' as const
+        }
+    ];
+
+    const stats = [
+        {
+            label: 'Total Income',
+            value: formatNumber(totalIncome),
+            change: '+15%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Total Expenses',
+            value: formatNumber(totalExpense),
+            change: '+8%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Net Balance',
+            value: formatNumber(netBalance),
+            change: netBalance >= 0 ? '+12%' : '-5%',
+            trend: netBalance >= 0 ? 'up' as const : 'down' as const
+        },
+        {
+            label: 'Pending Amount',
+            value: formatNumber(pendingAmount),
+            change: '-3%',
+            trend: 'down' as const
+        }
+    ];
+
+    const filterOptions = [
+        {
+            key: 'type',
+            label: 'Type',
+            value: typeFilter,
+            options: [
+                { key: 'all', label: 'All Types', value: 'all' },
+                { key: 'income', label: 'Income', value: 'income' },
+                { key: 'expense', label: 'Expense', value: 'expense' }
+            ],
+            onValueChange: setTypeFilter
+        },
+        {
+            key: 'category',
+            label: 'Category',
+            value: categoryFilter,
+            options: [
+                { key: 'all', label: 'All Categories', value: 'all' },
+                ...categories.map(category => ({ key: category, label: category, value: category }))
+            ],
+            onValueChange: setCategoryFilter
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            value: statusFilter,
+            options: [
+                { key: 'all', label: 'All Statuses', value: 'all' },
+                { key: 'pending', label: 'Pending', value: 'pending' },
+                { key: 'approved', label: 'Approved', value: 'approved' },
+                { key: 'rejected', label: 'Rejected', value: 'rejected' }
+            ],
+            onValueChange: setStatusFilter
+        }
+    ];
+
+    const activeFilters = [];
+    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
+    if (typeFilter !== 'all') activeFilters.push(`Type: ${typeFilter}`);
+    if (categoryFilter !== 'all') activeFilters.push(`Category: ${categoryFilter}`);
+    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-foreground">Cash Ledger</h1>
-                    <p className="text-muted-foreground">Track all cash transactions and balance</p>
-                </div>
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-primary hover:bg-primary/90">
-                            <Plus className="h-4 w-4 mr-2" />
-                            New Transaction
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>Create New Transaction</DialogTitle>
-                            <DialogDescription>
-                                Add a new cash transaction
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
+            {/* Page Header */}
+            <PageHeader
+                title="Cash Ledger"
+                description="Track all cash transactions with comprehensive income and expense management"
+                stats={stats}
+                actions={{
+                    primary: {
+                        label: 'New Entry',
+                        onClick: () => setIsCreateDialogOpen(true),
+                        icon: <Plus className="h-4 w-4" />
+                    },
+                    secondary: [
+                        {
+                            label: 'Export Report',
+                            onClick: () => toast.info('Export feature coming soon'),
+                            icon: <Download className="h-4 w-4" />
+                        },
+                        {
+                            label: 'Financial Analysis',
+                            onClick: () => toast.info('Financial analysis coming soon'),
+                            icon: <TrendingUp className="h-4 w-4" />
+                        }
+                    ]
+                }}
+            />
+
+            {/* Filter Bar */}
+            <FilterBar
+                searchPlaceholder="Search by entry number, description, category, or reference..."
+                searchValue={searchTerm}
+                onSearchChange={setSearchTerm}
+                filters={filterOptions}
+                activeFilters={activeFilters}
+                onClearFilters={() => {
+                    setSearchTerm('');
+                    setTypeFilter('all');
+                    setCategoryFilter('all');
+                    setStatusFilter('all');
+                }}
+            />
+
+            {/* Entries Table */}
+            <EnhancedCard
+                title="Cash Ledger Overview"
+                description={`${filteredEntries.length} entries out of ${entries.length} total`}
+                variant="gradient"
+                size="lg"
+                stats={{
+                    total: entries.length,
+                    badge: 'Active Entries',
+                    badgeColor: 'success'
+                }}
+            >
+                <EnhancedDataTable
+                    data={filteredEntries}
+                    columns={columns}
+                    actions={actions}
+                    loading={false}
+                    noDataMessage="No entries found matching your criteria"
+                    searchPlaceholder="Search entries..."
+                />
+            </EnhancedCard>
+
+            {/* Create Dialog */}
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Create New Entry</DialogTitle>
+                        <DialogDescription>
+                            Add a new cash ledger entry
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="date">Date</Label>
+                            <Input
+                                id="date"
+                                type="date"
+                                value={formData.date}
+                                onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea
+                                id="description"
+                                value={formData.description}
+                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                placeholder="Entry description"
+                                rows={3}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="description">Description</Label>
-                                <Input
-                                    id="description"
-                                    value={formData.description}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                    placeholder="Transaction description"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="type">Transaction Type</Label>
-                                <Select value={formData.type} onValueChange={(value: CashTransaction['type']) => setFormData(prev => ({ ...prev, type: value, category: '' }))}>
-                                    <SelectTrigger>
+                                <Label htmlFor="type">Type</Label>
+                                <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -314,315 +640,37 @@ export default function CashLedgerPage() {
                             <div>
                                 <Label htmlFor="category">Category</Label>
                                 <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="Select Category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {categories[formData.type].map(category => (
+                                        {categories.map(category => (
                                             <SelectItem key={category} value={category}>{category}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="amount">Amount</Label>
-                                    <Input
-                                        id="amount"
-                                        type="number"
-                                        value={formData.amount}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                                        placeholder="0"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="currency">Currency</Label>
-                                    <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="SAR">Saudi Riyal</SelectItem>
-                                            <SelectItem value="USD">US Dollar</SelectItem>
-                                            <SelectItem value="EUR">Euro</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="reference">Reference</Label>
-                                <Input
-                                    id="reference"
-                                    value={formData.reference}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, reference: e.target.value }))}
-                                    placeholder="Reference number (optional)"
-                                />
-                            </div>
-                            <div className="flex justify-end space-x-2">
-                                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button onClick={handleCreate}>
-                                    <Wallet className="h-4 w-4 mr-2" />
-                                    Create Transaction
-                                </Button>
-                            </div>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            </div>
-
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
-                        <Wallet className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(currentBalance, 'SAR')}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-green-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-600">{formatCurrency(totalIncome, 'SAR')}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-                        <TrendingDown className="h-4 w-4 text-red-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-red-600">{formatCurrency(totalExpenses, 'SAR')}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pending Amount</CardTitle>
-                        <Wallet className="h-4 w-4 text-yellow-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-yellow-600">{formatCurrency(pendingAmount, 'SAR')}</div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                        placeholder="Search transactions..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pr-10"
-                    />
-                </div>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Transaction Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
-                        <SelectItem value="income">Income</SelectItem>
-                        <SelectItem value="expense">Expense</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {Object.values(categories).flat().map(category => (
-                            <SelectItem key={category} value={category}>{category}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-
-            {/* Transactions Table */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Wallet className="h-5 w-5" />
-                        Cash Transactions
-                    </CardTitle>
-                    <CardDescription>
-                        {filteredTransactions.length} transactions out of {transactions.length}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Transaction Number</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Description</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Category</TableHead>
-                                    <TableHead>Amount</TableHead>
-                                    <TableHead>Balance</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Reference</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredTransactions.map((transaction) => (
-                                    <TableRow key={transaction.id}>
-                                        <TableCell className="font-medium">{transaction.transactionNumber}</TableCell>
-                                        <TableCell>{transaction.date}</TableCell>
-                                        <TableCell className="max-w-xs truncate">{transaction.description}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={transaction.type === 'income' ? 'default' : 'rejected'}>
-                                                {transaction.type === 'income' ? 'Income' : 'Expense'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>{transaction.category}</TableCell>
-                                        <TableCell className={`font-semibold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                                            {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount, transaction.currency)}
-                                        </TableCell>
-                                        <TableCell className="font-semibold">
-                                            {formatCurrency(transaction.balance, transaction.currency)}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={`${statusColors[transaction.status]} w-fit`}>
-                                                {statusLabels[transaction.status]}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>{transaction.reference || '-'}</TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleEdit(transaction)}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                {transaction.status === 'pending' && (
-                                                    <>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleApprove(transaction.id)}
-                                                            className="text-green-600 hover:text-green-700"
-                                                        >
-                                                            Approve
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleReject(transaction.id)}
-                                                            className="text-red-600 hover:text-red-700"
-                                                        >
-                                                            Reject
-                                                        </Button>
-                                                    </>
-                                                )}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleDelete(transaction.id)}
-                                                    className="text-destructive hover:text-destructive"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Edit Dialog */}
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Edit Transaction</DialogTitle>
-                        <DialogDescription>
-                            Update transaction data
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="edit-description">Description</Label>
-                            <Input
-                                id="edit-description"
-                                value={formData.description}
-                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-type">Transaction Type</Label>
-                            <Select value={formData.type} onValueChange={(value: CashTransaction['type']) => setFormData(prev => ({ ...prev, type: value, category: '' }))}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="income">Income</SelectItem>
-                                    <SelectItem value="expense">Expense</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-category">Category</Label>
-                            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {categories[formData.type].map(category => (
-                                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="edit-amount">Amount</Label>
+                                <Label htmlFor="amount">Amount</Label>
                                 <Input
-                                    id="edit-amount"
+                                    id="amount"
                                     type="number"
+                                    step="0.01"
                                     value={formData.amount}
                                     onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                                    placeholder="0.00"
+                                    className="mt-1"
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="edit-currency">Currency</Label>
+                                <Label htmlFor="currency">Currency</Label>
                                 <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="SAR">Saudi Riyal</SelectItem>
                                         <SelectItem value="USD">US Dollar</SelectItem>
                                         <SelectItem value="EUR">Euro</SelectItem>
                                     </SelectContent>
@@ -630,18 +678,223 @@ export default function CashLedgerPage() {
                             </div>
                         </div>
                         <div>
+                            <Label htmlFor="paymentMethod">Payment Method</Label>
+                            <Select value={formData.paymentMethod} onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {paymentMethods.map(method => (
+                                        <SelectItem key={method.value} value={method.value}>{method.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="reference">Reference</Label>
+                            <Input
+                                id="reference"
+                                value={formData.reference}
+                                onChange={(e) => setFormData(prev => ({ ...prev, reference: e.target.value }))}
+                                placeholder="Transaction reference"
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="projectId">Project</Label>
+                            <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue placeholder="Select Project" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {projects.map(project => (
+                                        <SelectItem key={project} value={project}>{project}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="contractorId">Contractor</Label>
+                            <Select value={formData.contractorId} onValueChange={(value) => setFormData(prev => ({ ...prev, contractorId: value }))}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue placeholder="Select Contractor" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {contractors.map(contractor => (
+                                        <SelectItem key={contractor} value={contractor}>{contractor}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="notes">Notes</Label>
+                            <Textarea
+                                id="notes"
+                                value={formData.notes}
+                                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                                placeholder="Additional notes"
+                                rows={2}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="flex justify-end space-x-2 pt-4">
+                            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleCreate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                                <Wallet className="h-4 w-4 mr-2" />
+                                Create Entry
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit Dialog */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Edit Entry</DialogTitle>
+                        <DialogDescription>
+                            Update cash ledger entry information
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="edit-date">Date</Label>
+                            <Input
+                                id="edit-date"
+                                type="date"
+                                value={formData.date}
+                                onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-description">Description</Label>
+                            <Textarea
+                                id="edit-description"
+                                value={formData.description}
+                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                rows={3}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="edit-type">Type</Label>
+                                <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="income">Income</SelectItem>
+                                        <SelectItem value="expense">Expense</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label htmlFor="edit-category">Category</Label>
+                                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map(category => (
+                                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="edit-amount">Amount</Label>
+                                <Input
+                                    id="edit-amount"
+                                    type="number"
+                                    step="0.01"
+                                    value={formData.amount}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="edit-currency">Currency</Label>
+                                <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="USD">US Dollar</SelectItem>
+                                        <SelectItem value="EUR">Euro</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-paymentMethod">Payment Method</Label>
+                            <Select value={formData.paymentMethod} onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {paymentMethods.map(method => (
+                                        <SelectItem key={method.value} value={method.value}>{method.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
                             <Label htmlFor="edit-reference">Reference</Label>
                             <Input
                                 id="edit-reference"
                                 value={formData.reference}
                                 onChange={(e) => setFormData(prev => ({ ...prev, reference: e.target.value }))}
+                                className="mt-1"
                             />
                         </div>
-                        <div className="flex justify-end space-x-2">
+                        <div>
+                            <Label htmlFor="edit-projectId">Project</Label>
+                            <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {projects.map(project => (
+                                        <SelectItem key={project} value={project}>{project}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-contractorId">Contractor</Label>
+                            <Select value={formData.contractorId} onValueChange={(value) => setFormData(prev => ({ ...prev, contractorId: value }))}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {contractors.map(contractor => (
+                                        <SelectItem key={contractor} value={contractor}>{contractor}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-notes">Notes</Label>
+                            <Textarea
+                                id="edit-notes"
+                                value={formData.notes}
+                                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                                rows={2}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="flex justify-end space-x-2 pt-4">
                             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleUpdate}>
+                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
                                 <Wallet className="h-4 w-4 mr-2" />
                                 Save Changes
                             </Button>

@@ -1,17 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, Search, Eye, Check, X, Clock, Filter } from 'lucide-react';
+import { Shield, Eye, Check, X, Clock, Plus, Download, Filter } from 'lucide-react';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/ui/page-header';
+import { FilterBar } from '@/components/ui/filter-bar';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
 
 interface Approval {
     id: string;
@@ -69,30 +69,6 @@ const mockApprovals: Approval[] = [
         comments: 'Budget not available at the moment'
     }
 ];
-
-const statusLabels = {
-    pending: 'Pending',
-    approved: 'Approved',
-    rejected: 'Rejected'
-};
-
-const priorityLabels = {
-    low: 'Low',
-    medium: 'Medium',
-    high: 'High'
-};
-
-const statusColors = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    approved: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800'
-};
-
-const priorityColors = {
-    low: 'bg-gray-100 text-gray-800',
-    medium: 'bg-blue-100 text-blue-800',
-    high: 'bg-red-100 text-red-800'
-};
 
 export default function ApprovalsPage() {
     const [approvals, setApprovals] = useState<Approval[]>(mockApprovals);
@@ -168,140 +144,243 @@ export default function ApprovalsPage() {
         }
     };
 
+    const columns = [
+        {
+            key: 'requestId' as keyof Approval,
+            header: 'Request ID',
+            render: (value: any) => <span className="font-mono text-sm text-slate-600">{value}</span>,
+            sortable: true,
+            width: '120px'
+        },
+        {
+            key: 'requestType' as keyof Approval,
+            header: 'Request Type',
+            render: (value: any) => (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    {value}
+                </Badge>
+            ),
+            sortable: true
+        },
+        {
+            key: 'title' as keyof Approval,
+            header: 'Title',
+            render: (value: any) => (
+                <span className="font-semibold text-slate-800">{value}</span>
+            ),
+            sortable: true
+        },
+        {
+            key: 'requester' as keyof Approval,
+            header: 'Requester',
+            render: (value: any) => <span className="text-slate-700">{value}</span>,
+            sortable: true
+        },
+        {
+            key: 'status' as keyof Approval,
+            header: 'Status',
+            render: (value: any) => {
+                const statusColors = {
+                    'pending': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                    'approved': 'bg-green-100 text-green-700 border-green-200',
+                    'rejected': 'bg-red-100 text-red-700 border-red-200'
+                };
+                
+                return (
+                    <Badge variant="outline" className={`${statusColors[value as keyof typeof statusColors]} flex items-center gap-1 w-fit`}>
+                        {getStatusIcon(value)}
+                        {value.charAt(0).toUpperCase() + value.slice(1)}
+                    </Badge>
+                );
+            },
+            sortable: true
+        },
+        {
+            key: 'priority' as keyof Approval,
+            header: 'Priority',
+            render: (value: any) => {
+                const priorityColors = {
+                    'low': 'bg-gray-100 text-gray-700 border-gray-200',
+                    'medium': 'bg-blue-100 text-blue-700 border-blue-200',
+                    'high': 'bg-red-100 text-red-700 border-red-200'
+                };
+                
+                return (
+                    <Badge variant="outline" className={`${priorityColors[value as keyof typeof priorityColors]} w-fit`}>
+                        {value.charAt(0).toUpperCase() + value.slice(1)}
+                    </Badge>
+                );
+            },
+            sortable: true
+        },
+        {
+            key: 'createdAt' as keyof Approval,
+            header: 'Created Date',
+            render: (value: any) => <span className="text-slate-500 text-sm">{new Date(value).toLocaleDateString()}</span>,
+            sortable: true
+        }
+    ];
+
+    const actions = [
+        {
+            label: 'View Details',
+            onClick: (approval: Approval) => openDetails(approval),
+            icon: <Eye className="h-4 w-4" />
+        },
+        {
+            label: 'Approve',
+            onClick: (approval: Approval) => {
+                if (approval.status === 'pending') {
+                    handleApprove(approval.id);
+                }
+            },
+            icon: <Check className="h-4 w-4" />,
+            hidden: (approval: Approval) => approval.status !== 'pending'
+        },
+        {
+            label: 'Reject',
+            onClick: (approval: Approval) => {
+                if (approval.status === 'pending') {
+                    handleReject(approval.id);
+                }
+            },
+            icon: <X className="h-4 w-4" />,
+            variant: 'destructive' as const,
+            hidden: (approval: Approval) => approval.status !== 'pending'
+        }
+    ];
+
+    const stats = [
+        {
+            label: 'Total Requests',
+            value: approvals.length,
+            change: '+15%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Pending Approval',
+            value: approvals.filter(a => a.status === 'pending').length,
+            change: '+8%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Approved',
+            value: approvals.filter(a => a.status === 'approved').length,
+            change: '+12%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Rejected',
+            value: approvals.filter(a => a.status === 'rejected').length,
+            change: '-3%',
+            trend: 'down' as const
+        }
+    ];
+
+    const filterOptions = [
+        {
+            key: 'status',
+            label: 'Status',
+            value: statusFilter,
+            options: [
+                { key: 'all', label: 'All Statuses', value: 'all' },
+                { key: 'pending', label: 'Pending', value: 'pending' },
+                { key: 'approved', label: 'Approved', value: 'approved' },
+                { key: 'rejected', label: 'Rejected', value: 'rejected' }
+            ],
+            onValueChange: setStatusFilter
+        },
+        {
+            key: 'priority',
+            label: 'Priority',
+            value: priorityFilter,
+            options: [
+                { key: 'all', label: 'All Priorities', value: 'all' },
+                { key: 'low', label: 'Low', value: 'low' },
+                { key: 'medium', label: 'Medium', value: 'medium' },
+                { key: 'high', label: 'High', value: 'high' }
+            ],
+            onValueChange: setPriorityFilter
+        }
+    ];
+
+    const activeFilters = [];
+    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
+    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
+    if (priorityFilter !== 'all') activeFilters.push(`Priority: ${priorityFilter}`);
+
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-foreground">Approvals Management</h1>
-                    <p className="text-muted-foreground">Review and approve various requests</p>
-                </div>
-            </div>
+            {/* Page Header */}
+            <PageHeader
+                title="Approvals Management"
+                description="Review and approve various requests with comprehensive workflow management and approval tracking"
+                stats={stats}
+                actions={{
+                    primary: {
+                        label: 'Create Request',
+                        onClick: () => toast.info('Create request feature coming soon'),
+                        icon: <Plus className="h-4 w-4" />
+                    },
+                    secondary: [
+                        {
+                            label: 'Export Report',
+                            onClick: () => toast.info('Export feature coming soon'),
+                            icon: <Download className="h-4 w-4" />
+                        },
+                        {
+                            label: 'Bulk Actions',
+                            onClick: () => toast.info('Bulk actions coming soon'),
+                            icon: <Filter className="h-4 w-4" />
+                        }
+                    ]
+                }}
+            />
 
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                        placeholder="Search approvals..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pr-10"
-                    />
-                </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Approval Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Priorities</SelectItem>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
+            {/* Filter Bar */}
+            <FilterBar
+                searchPlaceholder="Search by request ID, title, or requester..."
+                searchValue={searchTerm}
+                onSearchChange={setSearchTerm}
+                filters={filterOptions}
+                activeFilters={activeFilters}
+                onClearFilters={() => {
+                    setSearchTerm('');
+                    setStatusFilter('all');
+                    setPriorityFilter('all');
+                }}
+            />
 
             {/* Approvals Table */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Shield className="h-5 w-5" />
-                        Approvals List
-                    </CardTitle>
-                    <CardDescription>
-                        {filteredApprovals.length} approvals out of {approvals.length}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Request ID</TableHead>
-                                    <TableHead>Request Type</TableHead>
-                                    <TableHead>Title</TableHead>
-                                    <TableHead>Requester</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Priority</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredApprovals.map((approval) => (
-                                    <TableRow key={approval.id}>
-                                        <TableCell className="font-medium">{approval.requestId}</TableCell>
-                                        <TableCell>{approval.requestType}</TableCell>
-                                        <TableCell className="max-w-xs truncate">{approval.title}</TableCell>
-                                        <TableCell>{approval.requester}</TableCell>
-                                        <TableCell>
-                                            <Badge className={`${statusColors[approval.status]} flex items-center gap-1 w-fit`}>
-                                                {getStatusIcon(approval.status)}
-                                                {statusLabels[approval.status]}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={`${priorityColors[approval.priority]} w-fit`}>
-                                                {priorityLabels[approval.priority]}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>{approval.createdAt}</TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => openDetails(approval)}
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                {approval.status === 'pending' && (
-                                                    <>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleApprove(approval.id)}
-                                                            className="text-green-600 hover:text-green-700"
-                                                        >
-                                                            <Check className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleReject(approval.id)}
-                                                            className="text-red-600 hover:text-red-700"
-                                                        >
-                                                            <X className="h-4 w-4" />
-                                                        </Button>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
+            <EnhancedCard
+                title="Approvals List"
+                description={`${filteredApprovals.length} requests out of ${approvals.length} total`}
+                variant="gradient"
+                size="lg"
+                stats={{
+                    total: approvals.length,
+                    badge: 'Pending Reviews',
+                    badgeColor: 'warning'
+                }}
+            >
+                <EnhancedDataTable
+                    data={filteredApprovals}
+                    columns={columns}
+                    actions={actions}
+                    loading={false}
+                    noDataMessage="No approvals found matching your criteria"
+                    searchPlaceholder="Search approvals..."
+                />
+            </EnhancedCard>
 
             {/* Details Dialog */}
             <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
                 <DialogContent className="sm:max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Approval Details</DialogTitle>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Shield className="h-5 w-5" />
+                            Approval Details
+                        </DialogTitle>
                         <DialogDescription>
                             View request details and approve or reject it
                         </DialogDescription>
@@ -310,43 +389,43 @@ export default function ApprovalsPage() {
                         <div className="space-y-6">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <Label className="text-sm font-medium text-muted-foreground">Request ID</Label>
+                                    <Label className="text-sm font-medium text-slate-600">Request ID</Label>
                                     <p className="text-lg font-semibold">{selectedApproval.requestId}</p>
                                 </div>
                                 <div>
-                                    <Label className="text-sm font-medium text-muted-foreground">Request Type</Label>
+                                    <Label className="text-sm font-medium text-slate-600">Request Type</Label>
                                     <p className="text-lg">{selectedApproval.requestType}</p>
                                 </div>
                                 <div>
-                                    <Label className="text-sm font-medium text-muted-foreground">Requester</Label>
+                                    <Label className="text-sm font-medium text-slate-600">Requester</Label>
                                     <p className="text-lg">{selectedApproval.requester}</p>
                                 </div>
                                 <div>
-                                    <Label className="text-sm font-medium text-muted-foreground">Date</Label>
+                                    <Label className="text-sm font-medium text-slate-600">Date</Label>
                                     <p className="text-lg">{selectedApproval.createdAt}</p>
                                 </div>
                             </div>
                             
                             <div>
-                                <Label className="text-sm font-medium text-muted-foreground">Title</Label>
+                                <Label className="text-sm font-medium text-slate-600">Title</Label>
                                 <p className="text-lg font-semibold">{selectedApproval.title}</p>
                             </div>
                             
                             <div>
-                                <Label className="text-sm font-medium text-muted-foreground">Description</Label>
+                                <Label className="text-sm font-medium text-slate-600">Description</Label>
                                 <p className="text-lg">{selectedApproval.description}</p>
                             </div>
 
                             {selectedApproval.status !== 'pending' && (
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-muted-foreground">Comment</Label>
+                                    <Label className="text-sm font-medium text-slate-600">Comment</Label>
                                     <p className="text-lg">{selectedApproval.comments}</p>
                                     <div className="flex items-center gap-2">
-                                        <Label className="text-sm font-medium text-muted-foreground">Approved by:</Label>
+                                        <Label className="text-sm font-medium text-slate-600">Approved by:</Label>
                                         <span className="text-lg">{selectedApproval.approver}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Label className="text-sm font-medium text-muted-foreground">Approval Date:</Label>
+                                        <Label className="text-sm font-medium text-slate-600">Approval Date:</Label>
                                         <span className="text-lg">{selectedApproval.approvedAt}</span>
                                     </div>
                                 </div>

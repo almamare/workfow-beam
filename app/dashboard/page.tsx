@@ -187,7 +187,7 @@ const recentActivities = [
         id: 3,
         type: 'payment',
         title: 'Payment processed',
-        description: 'Contractor payment of SAR 50,000 has been processed',
+        description: 'Contractor payment of 50,000 has been processed',
         time: '6 hours ago',
         icon: DollarSign,
         color: 'text-green-600'

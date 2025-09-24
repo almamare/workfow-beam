@@ -1,5 +1,6 @@
 // Represents a single Task Request
 export interface TaskRequest {
+    priority: string;
     id: string;                // Unique request ID
     created_id: string;        // ID of the user who created it
     created_by_name: string;   // Name of the user who created it

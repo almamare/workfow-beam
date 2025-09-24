@@ -1,14 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { DataTable, Column, Action } from '@/components/ui/data-table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Users, Building } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Building, Download, Filter } from 'lucide-react';
+import { toast } from 'sonner';
+import { PageHeader } from '@/components/ui/page-header';
+import { FilterBar } from '@/components/ui/filter-bar';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
 
 interface Department {
     id: string;
@@ -76,21 +79,32 @@ const mockDepartments: Department[] = [
 
 export default function DepartmentsPage() {
     const [departments, setDepartments] = useState<Department[]>(mockDepartments);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
     const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-    const columns: Column<Department>[] = [
+    const filteredDepartments = departments.filter(dept => {
+        const matchesSearch = dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            dept.manager.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            dept.description.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === 'all' || dept.status === statusFilter;
+        
+        return matchesSearch && matchesStatus;
+    });
+
+    const columns = [
         {
-            key: 'name',
+            key: 'name' as keyof Department,
             header: 'Department',
-            render: (_, department) => (
+            render: (value: any, department: Department) => (
                 <div>
-                    <div className="font-medium flex items-center gap-2">
+                    <div className="font-semibold text-slate-800 flex items-center gap-2">
                         <Building className="h-4 w-4" />
                         {department.name}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-slate-600">
                         {department.description}
                     </div>
                 </div>
@@ -98,60 +112,74 @@ export default function DepartmentsPage() {
             sortable: true
         },
         {
-            key: 'manager',
+            key: 'manager' as keyof Department,
             header: 'Manager',
+            render: (value: any) => <span className="text-slate-700">{value}</span>,
             sortable: true
         },
         {
-            key: 'employeeCount',
+            key: 'employeeCount' as keyof Department,
             header: 'Employees',
-            render: (value) => (
+            render: (value: any) => (
                 <div className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    {value}
+                    <Users className="h-3 w-3 text-slate-500" />
+                    <span className="font-semibold text-slate-800">{value}</span>
                 </div>
             ),
             sortable: true
         },
         {
-            key: 'budget',
+            key: 'budget' as keyof Department,
             header: 'Budget',
-            render: (value) => `$${value.toLocaleString()}`,
-            sortable: true
-        },
-        {
-            key: 'status',
-            header: 'Status',
-            render: (value) => (
-                <Badge variant="default">
-                    {value}
-                </Badge>
+            render: (value: any) => (
+                <span className="font-semibold text-green-600">
+                    ${value.toLocaleString()}
+                </span>
             ),
             sortable: true
         },
         {
-            key: 'createdAt',
+            key: 'status' as keyof Department,
+            header: 'Status',
+            render: (value: any) => {
+                const statusColors = {
+                    'active': 'bg-green-100 text-green-700 border-green-200',
+                    'inactive': 'bg-red-100 text-red-700 border-red-200'
+                };
+                
+                return (
+                    <Badge variant="outline" className={`${statusColors[value as keyof typeof statusColors]} font-medium`}>
+                        {value.charAt(0).toUpperCase() + value.slice(1)}
+                    </Badge>
+                );
+            },
+            sortable: true
+        },
+        {
+            key: 'createdAt' as keyof Department,
             header: 'Created',
-            render: (value) => new Date(value).toLocaleDateString(),
+            render: (value: any) => <span className="text-slate-500 text-sm">{new Date(value).toLocaleDateString()}</span>,
             sortable: true
         }
     ];
 
-    const actions: Action<Department>[] = [
+    const actions = [
         {
-            label: 'Edit',
-            onClick: (department) => {
+            label: 'Edit Department',
+            onClick: (department: Department) => {
                 setSelectedDepartment(department);
                 setIsEditDialogOpen(true);
             },
             icon: <Edit className="h-4 w-4" />
         },
         {
-            label: 'Delete',
-            onClick: (department) => {
+            label: 'Delete Department',
+            onClick: (department: Department) => {
                 setDepartments(prev => prev.filter(d => d.id !== department.id));
+                toast.success('Department deleted successfully');
             },
-            icon: <Trash2 className="h-4 w-4" />
+            icon: <Trash2 className="h-4 w-4" />,
+            variant: 'destructive' as const
         }
     ];
 
@@ -169,6 +197,7 @@ export default function DepartmentsPage() {
 
         setDepartments(prev => [...prev, newDepartment]);
         setIsCreateDialogOpen(false);
+        toast.success('Department created successfully');
     };
 
     const handleEditDepartment = (formData: FormData) => {
@@ -186,136 +215,154 @@ export default function DepartmentsPage() {
         setDepartments(prev => prev.map(d => d.id === selectedDepartment.id ? updatedDepartment : d));
         setIsEditDialogOpen(false);
         setSelectedDepartment(null);
+        toast.success('Department updated successfully');
     };
+
+    const stats = [
+        {
+            label: 'Total Departments',
+            value: departments.length,
+            change: '+2%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Active Departments',
+            value: departments.filter(d => d.status === 'active').length,
+            change: '+1%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Total Employees',
+            value: departments.reduce((sum, dept) => sum + dept.employeeCount, 0),
+            change: '+5%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Total Budget',
+            value: `$${(departments.reduce((sum, dept) => sum + dept.budget, 0) / 1000000).toFixed(1)}M`,
+            change: '+8%',
+            trend: 'up' as const
+        }
+    ];
+
+    const filterOptions = [
+        {
+            key: 'status',
+            label: 'Status',
+            value: statusFilter,
+            options: [
+                { key: 'all', label: 'All Statuses', value: 'all' },
+                { key: 'active', label: 'Active', value: 'active' },
+                { key: 'inactive', label: 'Inactive', value: 'inactive' }
+            ],
+            onValueChange: setStatusFilter
+        }
+    ];
+
+    const activeFilters = [];
+    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
+    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold">Departments</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Manage organizational departments and their structure
-                    </p>
-                </div>
+            {/* Page Header */}
+            <PageHeader
+                title="Departments"
+                description="Manage organizational departments and their structure with comprehensive department management tools"
+                stats={stats}
+                actions={{
+                    primary: {
+                        label: 'Add Department',
+                        onClick: () => setIsCreateDialogOpen(true),
+                        icon: <Plus className="h-4 w-4" />
+                    },
+                    secondary: [
+                        {
+                            label: 'Export Data',
+                            onClick: () => toast.info('Export feature coming soon'),
+                            icon: <Download className="h-4 w-4" />
+                        },
+                        {
+                            label: 'Department Report',
+                            onClick: () => toast.info('Department report coming soon'),
+                            icon: <Filter className="h-4 w-4" />
+                        }
+                    ]
+                }}
+            />
 
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Department
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Add New Department</DialogTitle>
-                            <DialogDescription>
-                                Create a new department with manager and budget allocation.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <form action={handleCreateDepartment} className="space-y-4">
-                            <div>
-                                <Label htmlFor="name">Department Name</Label>
-                                <Input id="name" name="name" required />
-                            </div>
-                            <div>
-                                <Label htmlFor="description">Description</Label>
-                                <Input id="description" name="description" required />
-                            </div>
-                            <div>
-                                <Label htmlFor="manager">Manager</Label>
-                                <Input id="manager" name="manager" required />
-                            </div>
-                            <div>
-                                <Label htmlFor="budget">Annual Budget</Label>
-                                <Input id="budget" name="budget" type="number" required />
-                            </div>
-                            <div className="flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button type="submit">Create Department</Button>
-                            </div>
-                        </form>
-                    </DialogContent>
-                </Dialog>
-            </div>
+            {/* Filter Bar */}
+            <FilterBar
+                searchPlaceholder="Search by department name, manager, or description..."
+                searchValue={searchTerm}
+                onSearchChange={setSearchTerm}
+                filters={filterOptions}
+                activeFilters={activeFilters}
+                onClearFilters={() => {
+                    setSearchTerm('');
+                    setStatusFilter('all');
+                }}
+            />
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Departments</CardTitle>
-                        <Building className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{departments.length}</div>
-                        <p className="text-xs text-muted-foreground">
-                            {departments.filter(d => d.status === 'active').length} active
-                        </p>
-                    </CardContent>
-                </Card>
+            {/* Departments Table */}
+            <EnhancedCard
+                title="Department Directory"
+                description={`${filteredDepartments.length} departments in the organization`}
+                variant="gradient"
+                size="lg"
+                stats={{
+                    total: departments.length,
+                    badge: 'Active Departments',
+                    badgeColor: 'success'
+                }}
+            >
+                <EnhancedDataTable
+                    data={filteredDepartments}
+                    columns={columns}
+                    actions={actions}
+                    loading={false}
+                    noDataMessage="No departments found matching your criteria"
+                    searchPlaceholder="Search departments..."
+                />
+            </EnhancedCard>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">
-                            {departments.reduce((sum, dept) => sum + dept.employeeCount, 0)}
+            {/* Create Dialog */}
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add New Department</DialogTitle>
+                        <DialogDescription>
+                            Create a new department with manager and budget allocation.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form action={handleCreateDepartment} className="space-y-4">
+                        <div>
+                            <Label htmlFor="name">Department Name</Label>
+                            <Input id="name" name="name" required className="mt-1" />
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            Across all departments
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
-                        <Building className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">
-                            ${departments.reduce((sum, dept) => sum + dept.budget, 0).toLocaleString()}
+                        <div>
+                            <Label htmlFor="description">Description</Label>
+                            <Input id="description" name="description" required className="mt-1" />
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            Annual allocation
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Avg. Department Size</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">
-                            {Math.round(departments.reduce((sum, dept) => sum + dept.employeeCount, 0) / departments.length)}
+                        <div>
+                            <Label htmlFor="manager">Manager</Label>
+                            <Input id="manager" name="manager" required className="mt-1" />
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            Employees per department
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Department Management</CardTitle>
-                    <CardDescription>
-                        View and manage all organizational departments
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <DataTable
-                        data={departments}
-                        columns={columns}
-                        actions={actions}
-                    />
-                </CardContent>
-            </Card>
+                        <div>
+                            <Label htmlFor="budget">Annual Budget</Label>
+                            <Input id="budget" name="budget" type="number" required className="mt-1" />
+                        </div>
+                        <div className="flex justify-end gap-2 pt-4">
+                            <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                                Create Department
+                            </Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
 
             {/* Edit Dialog */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -335,6 +382,7 @@ export default function DepartmentsPage() {
                                     name="name"
                                     defaultValue={selectedDepartment.name}
                                     required
+                                    className="mt-1"
                                 />
                             </div>
                             <div>
@@ -344,6 +392,7 @@ export default function DepartmentsPage() {
                                     name="description"
                                     defaultValue={selectedDepartment.description}
                                     required
+                                    className="mt-1"
                                 />
                             </div>
                             <div>
@@ -353,6 +402,7 @@ export default function DepartmentsPage() {
                                     name="manager"
                                     defaultValue={selectedDepartment.manager}
                                     required
+                                    className="mt-1"
                                 />
                             </div>
                             <div>
@@ -363,6 +413,7 @@ export default function DepartmentsPage() {
                                     type="number"
                                     defaultValue={selectedDepartment.budget}
                                     required
+                                    className="mt-1"
                                 />
                             </div>
                             <div>
@@ -371,14 +422,14 @@ export default function DepartmentsPage() {
                                     id="editStatus"
                                     name="status"
                                     defaultValue={selectedDepartment.status}
-                                    className="w-full p-2 border rounded-md"
+                                    className="w-full p-2 border rounded-md mt-1"
                                     required
                                 >
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
                                 </select>
                             </div>
-                            <div className="flex justify-end gap-2">
+                            <div className="flex justify-end gap-2 pt-4">
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -389,7 +440,9 @@ export default function DepartmentsPage() {
                                 >
                                     Cancel
                                 </Button>
-                                <Button type="submit">Update Department</Button>
+                                <Button type="submit" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                                    Update Department
+                                </Button>
                             </div>
                         </form>
                     )}

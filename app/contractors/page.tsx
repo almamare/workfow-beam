@@ -1,8 +1,3 @@
-/* =========================================================
-   src/app/contractors/page.tsx
-   القائمة الرئيسية للمقاولين (مع عرض، تعديل، حذف)
-========================================================= */
-
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
@@ -19,29 +14,17 @@ import {
     selectContractorsError, 
 } from '@/stores/slices/contractors';
 
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { DataTable, Column, Action } from '@/components/ui/data-table';
-import {
-    Select,
-    SelectTrigger,
-    SelectValue,
-    SelectContent,
-    SelectItem,
-} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { DeleteDialog } from '@/components/delete-dialog';
-import { Trash2, SquarePen, Eye } from 'lucide-react';
+import { Trash2, SquarePen, Eye, Plus, Download, Filter, Building2 } from 'lucide-react';
 import type { Contractor } from '@/stores/types/contractors';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
+import { PageHeader } from '@/components/ui/page-header';
+import { FilterBar } from '@/components/ui/filter-bar';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
 
 export default function ContractorsPage() {
     const dispatch = useDispatch<AppDispatch>();
@@ -82,33 +65,69 @@ export default function ContractorsPage() {
         dispatch(fetchContractors({ page, limit, search: debouncedSearch }));
     }, [dispatch, page, limit, debouncedSearch]);
 
-    /* ---------- Table columns ---------- */
-    const columns: Column<Contractor>[] = [
-        { key: 'number', header: 'No.', sortable: true },
-        { key: 'name', header: 'Name', sortable: true },
-        { key: 'phone', header: 'Phone', sortable: true },
-        { key: 'email', header: 'Email', sortable: true },
-        { key: 'province', header: 'Province', sortable: true },
-        {
-            key: 'status',
-            header: 'Status',
-            render: (value: string) => (
-                <Badge
-                    variant={
-                        value === 'Active'
-                            ? 'completed'
-                            : value === 'Inactive'
-                                ? 'rejected'
-                                : 'outline'
-                    }
-                >
+    const columns = [
+        { 
+            key: 'number' as keyof Contractor, 
+            header: 'Contractor #', 
+            render: (value: any) => <span className="text-slate-500 font-mono text-sm">{value}</span>,
+            sortable: true,
+            width: '100px'
+        },
+        { 
+            key: 'name' as keyof Contractor, 
+            header: 'Company Name', 
+            render: (value: any) => <span className="font-semibold text-slate-800">{value}</span>,
+            sortable: true 
+        },
+        { 
+            key: 'phone' as keyof Contractor, 
+            header: 'Phone', 
+            render: (value: any) => <span className="text-slate-600">{value}</span>,
+            sortable: true 
+        },
+        { 
+            key: 'email' as keyof Contractor, 
+            header: 'Email', 
+            render: (value: any) => <span className="text-slate-600">{value}</span>,
+            sortable: true 
+        },
+        { 
+            key: 'province' as keyof Contractor, 
+            header: 'Province', 
+            render: (value: any) => (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                     {value}
                 </Badge>
             ),
+            sortable: true 
+        },
+        {
+            key: 'status' as keyof Contractor,
+            header: 'Status',
+            render: (value: string) => {
+                const statusColors = {
+                    'Active': 'bg-green-100 text-green-700 border-green-200',
+                    'Inactive': 'bg-red-100 text-red-700 border-red-200',
+                    'Pending': 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                };
+                
+                return (
+                    <Badge 
+                        variant="outline" 
+                        className={`${statusColors[value as keyof typeof statusColors] || statusColors.Pending} font-medium`}
+                    >
+                        {value}
+                    </Badge>
+                );
+            },
             sortable: true,
         },
-        { key: 'created_at', header: 'Created', sortable: true },
-        { key: 'updated_at', header: 'Updated', sortable: true },
+        { 
+            key: 'created_at' as keyof Contractor, 
+            header: 'Created', 
+            render: (value: any) => <span className="text-slate-500 text-sm">{new Date(value).toLocaleDateString()}</span>,
+            sortable: true 
+        }
     ];
 
     /* ---------- Handlers ---------- */
@@ -131,108 +150,130 @@ export default function ContractorsPage() {
         [dispatch, page, limit, debouncedSearch]
     );
 
-    const actions: Action<Contractor>[] = [
+    const actions = [
         {
-            label: 'Details',
+            label: 'View Details',
             icon: <Eye className="h-4 w-4" />,
-            onClick: (row) => router.push(`/contractors/details?id=${row.id}`),
+            onClick: (row: Contractor) => router.push(`/contractors/details?id=${row.id}`),
         },
         {
-            label: 'Edit',
+            label: 'Edit Contractor',
             icon: <SquarePen className="h-4 w-4" />,
-            onClick: (row) => router.push(`/contractors/update?id=${row.id}`),
+            onClick: (row: Contractor) => router.push(`/contractors/update?id=${row.id}`),
         },
         {
-            label: 'Delete',
+            label: 'Delete Contractor',
             icon: <Trash2 className="h-4 w-4" />,
-            onClick: (row) => {
+            onClick: (row: Contractor) => {
                 setSelId(row.id);
                 setOpen(true);
             },
+            variant: 'destructive' as const
         },
     ];
 
-    /* =========================================================
-       Render
-    ========================================================= */
+    const stats = [
+        {
+            label: 'Total Contractors',
+            value: total,
+            change: '+6%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Active Contractors',
+            value: contractors.filter(c => c.status === 'Active').length,
+            change: '+4%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Pending Approval',
+            value: contractors.filter(c => c.status === 'Pending').length,
+            change: '-2%',
+            trend: 'down' as const
+        },
+        {
+            label: 'Avg. Projects',
+            value: '3.2',
+            change: '+0.5',
+            trend: 'up' as const
+        }
+    ];
+
+    const activeFilters = [];
+    if (search) activeFilters.push(`Search: ${search}`);
+
     return (
         <>
-            <div className="space-y-4">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
-                    <div>
-                        <h1 className="text-3xl font-bold">Contractors</h1>
-                        <p className="text-muted-foreground mt-1">
-                            Browse and manage all contractors
-                        </p>
-                    </div>
-                    <Button onClick={() => router.push('/contractors/create')}>
-                        + Create Contractor
-                    </Button>
-                </div>
+            <div className="space-y-6">
+                {/* Page Header */}
+                <PageHeader
+                    title="Contractors"
+                    description="Manage contractor relationships and track project assignments with comprehensive contractor management tools"
+                    stats={stats}
+                    actions={{
+                        primary: {
+                            label: 'Add Contractor',
+                            onClick: () => router.push('/contractors/create'),
+                            icon: <Plus className="h-4 w-4" />
+                        },
+                        secondary: [
+                            {
+                                label: 'Export Data',
+                                onClick: () => toast.info('Export feature coming soon'),
+                                icon: <Download className="h-4 w-4" />
+                            },
+                            {
+                                label: 'Company Directory',
+                                onClick: () => toast.info('Company directory coming soon'),
+                                icon: <Building2 className="h-4 w-4" />
+                            }
+                        ]
+                    }}
+                />
 
-                {/* Filters */}
-                <div className="flex flex-col sm:flex-row flex-wrap gap-4">
-                    <Input
-                        placeholder="Search by name or number..."
-                        value={search}
-                        onChange={(e) => {
-                            setSearch(e.target.value);
-                            setPage(1);
+                {/* Filter Bar */}
+                <FilterBar
+                    searchPlaceholder="Search by company name, contact person, or number..."
+                    searchValue={search}
+                    onSearchChange={(value) => {
+                        setSearch(value);
+                        setPage(1);
+                    }}
+                    activeFilters={activeFilters}
+                    onClearFilters={() => {
+                        setSearch('');
+                        setPage(1);
+                    }}
+                />
+
+                {/* Contractors Table */}
+                <EnhancedCard
+                    title="Contractors Directory"
+                    description={`${total} contractor${total !== 1 ? 's' : ''} in the system`}
+                    variant="gradient"
+                    size="lg"
+                    stats={{
+                        total: total,
+                        badge: 'Active Contractors',
+                        badgeColor: 'success'
+                    }}
+                >
+                    <EnhancedDataTable
+                        data={contractors}
+                        columns={columns}
+                        actions={actions}
+                        loading={loading}
+                        pagination={{
+                            currentPage: page,
+                            totalPages: pages,
+                            pageSize: limit,
+                            totalItems: total,
+                            onPageChange: setPage,
                         }}
-                        className="w-full sm:max-w-sm"
+                        noDataMessage="No contractors found matching your search criteria"
+                        searchPlaceholder="Search contractors..."
                     />
-
-                    <Select
-                        value={String(limit)}
-                        onValueChange={(v) => {
-                            setLimit(Number(v));
-                            setPage(1);
-                        }}
-                    >
-                        <SelectTrigger className="w-36">
-                            <SelectValue placeholder="Items per page" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {[10, 20, 50, 100].map((n) => (
-                                <SelectItem key={n} value={String(n)}>
-                                    {n} per page
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                {/* Table */}
-                <Card>
-                    <CardHeader>
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                            <div>
-                                <CardTitle>Contractor List</CardTitle>
-                                <CardDescription>
-                                    {total} contractor{total !== 1 && 's'} found
-                                </CardDescription>
-                            </div>
-                        </div>
-                    </CardHeader>
-
-                    <CardContent>
-                        <DataTable
-                            data={contractors}
-                            columns={columns}
-                            actions={actions}
-                            loading={loading}
-                            pagination={{
-                                currentPage: page,
-                                totalPages: pages,
-                                pageSize: limit,
-                                totalItems: total,
-                                onPageChange: setPage,
-                            }}
-                            noDataMessage="No contractors found"
-                        />
-                    </CardContent>
-                </Card>
+                </EnhancedCard>
             </div>
 
             {/* Delete Dialog */}

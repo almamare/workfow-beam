@@ -76,10 +76,10 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
     };
 
     return (
-        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80 border-b border-slate-200 shadow-sm">
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80 border-b border-slate-300 shadow-sm">
             <div className="flex flex-col">
                 {/* Top row */}
-                <div className="flex h-16 items-center justify-between px-6">
+                <div className="flex h-18 items-center justify-between px-4">
                     {/* Sidebar toggle (mobile) + logo */}
                     <div className="flex items-center gap-3">
                         <Button
@@ -91,7 +91,7 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                             <Menu className="h-5 w-5 text-slate-600" />
                         </Button>
 
-                        <div className="flex items-center gap-3 lg:hidden">
+                        <div className="flex items-center gap-2 lg:hidden">
                             <div className="relative">
                                 <Image
                                     src="https://cdn.shuarano.com/img/logo.png"
@@ -102,14 +102,13 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                                     className="shrink-0"
                                     style={{ width: "28px", height: "36px" }}
                                 />
-                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                             </div>
                             <div className="leading-tight">
-                                <span className="block font-bold text-lg tracking-wide text-slate-800">
+                                <span className="block text-sm font-semibold tracking-wide text-slate-800">
                                     Shuaa Al-Ranou
                                 </span>
                                 <span className="block text-xs text-slate-500 font-medium">
-                                    Trade & Contracting
+                                    Trade & General Contracting
                                 </span>
                             </div>
                         </div>
@@ -145,7 +144,7 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                         {/* System Status */}
                         <div className="hidden md:flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
                             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span className="text-xs font-medium text-green-700">System Online</span>
+                            <span className="text-xs font-medium text-green-700">Online</span>
                         </div>
 
                         {/* Theme toggle */}
@@ -161,72 +160,6 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                                 <Sun className="h-5 w-5 text-yellow-500" />
                             )}
                         </Button>
-
-                        {/* Quick Actions */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button 
-                                    variant="ghost" 
-                                    className="h-10 w-10 p-0 hover:bg-slate-100 rounded-lg"
-                                >
-                                    <Activity className="h-5 w-5 text-slate-600" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-64 p-2">
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Button 
-                                        variant="ghost" 
-                                        className="h-auto p-3 flex flex-col items-center gap-2 hover:bg-orange-50"
-                                        onClick={() => router.push('/projects')}
-                                    >
-                                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                                            <TrendingUp className="h-4 w-4 text-white" />
-                                        </div>
-                                        <span className="text-xs font-medium">New Project</span>
-                                    </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        className="h-auto p-3 flex flex-col items-center gap-2 hover:bg-orange-50"
-                                        onClick={() => router.push('/tasks')}
-                                    >
-                                        <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-                                            <Check className="h-4 w-4 text-white" />
-                                        </div>
-                                        <span className="text-xs font-medium">Add Task</span>
-                                    </Button>
-                                </div>
-                                <DropdownMenuSeparator className="my-2" />
-                                <div className="grid grid-cols-3 gap-1">
-                                    <Button 
-                                        variant="ghost" 
-                                        size="sm"
-                                        className="h-auto p-2 flex flex-col items-center gap-1 text-xs hover:bg-slate-50"
-                                        onClick={() => router.push('/help')}
-                                    >
-                                        <HelpCircle className="h-4 w-4" />
-                                        Help
-                                    </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="sm"
-                                        className="h-auto p-2 flex flex-col items-center gap-1 text-xs hover:bg-slate-50"
-                                        onClick={() => router.push('/settings')}
-                                    >
-                                        <Settings className="h-4 w-4" />
-                                        Settings
-                                    </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="sm"
-                                        className="h-auto p-2 flex flex-col items-center gap-1 text-xs hover:bg-slate-50"
-                                        onClick={() => router.push('/security')}
-                                    >
-                                        <Shield className="h-4 w-4" />
-                                        Security
-                                    </Button>
-                                </div>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
 
                         {/* Notifications menu (PRO) */}
                         <NotificationsMenu onOpenAll={() => router.push('/notifications')}  />

@@ -242,7 +242,7 @@ export default function UpdateContractorPage() {
                                 id="name"
                                 label="Name *"
                                 value={form.name}
-                                placeholder="e.g. Al-Amal Company"
+                                placeholder="e.g. Shuaa Al-Ranou Trade & General Contracting"
                                 error={errors.name}
                                 onChange={(v) => updateField('name', v)}
                             />
@@ -283,7 +283,7 @@ export default function UpdateContractorPage() {
                                 id="email"
                                 label="Email"
                                 value={form.email}
-                                placeholder="info@company.com"
+                                placeholder="info@shuarano.com"
                                 error={errors.email}
                                 onChange={(v) => updateField('email', v)}
                             />

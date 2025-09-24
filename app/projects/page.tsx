@@ -10,20 +10,11 @@ import {
     selectTotalPages,
     selectTotalItems
 } from '@/stores/slices/projects';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle
-} from '@/components/ui/card';
-import { DataTable, Column, Action } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import type { Project } from '@/stores/types/projects';
-import { Edit, HardDriveDownload, Eye } from 'lucide-react';
+import { Edit, HardDriveDownload, Eye, Plus, Filter, Download } from 'lucide-react';
 import {
     Select,
     SelectTrigger,
@@ -33,9 +24,10 @@ import {
 } from '@/components/ui/select';
 import { toast } from "sonner";
 import axios from "@/utils/axios";
-import { Breadcrumb } from '@/components/layout/breadcrumb';
-
-
+import { PageHeader } from '@/components/ui/page-header';
+import { FilterBar } from '@/components/ui/filter-bar';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
 
 export default function ProjectsPage() {
     const projects = useSelector(selectProjects);
@@ -73,200 +65,257 @@ export default function ProjectsPage() {
             window.URL.revokeObjectURL(url);
             link.remove();
         } catch (err) {
-            toast.error('تعذّر تحميل المشروع');
+            toast.error('Failed to download project');
         } finally {
             setProjectIsDownload(false);
         }
     }
 
-    const columns: Column<Project>[] = [
+    const columns = [
         {
-            key: 'sequence',
+            key: 'sequence' as keyof Project,
             header: 'ID',
-            render: (value) => <span className="text-muted-foreground">{value}</span>,
-            sortable: true
+            render: (value: any) => <span className="text-slate-500 font-mono text-sm">{value}</span>,
+            sortable: true,
+            width: '80px'
         },
         {
-            key: 'project_code',
+            key: 'project_code' as keyof Project,
             header: 'Project Code',
-            sortable: true
-        },
-        {
-            key: 'number',
-            header: 'Number',
-            render: (value) => <span className="text-muted-foreground">{value}</span>,
-            sortable: true
-        },
-        {
-            key: 'name',
-            header: 'Name',
-            sortable: true
-        },
-        {
-            key: 'client_name',
-            header: 'Client Name',
-            sortable: true
-        },
-        {
-            key: 'status',
-            header: 'Status',
-            render: (value) => (
-                <Badge
-                    variant={
-                        value === 'Active'
-                            ? 'approved'
-                            : value === 'Inactive'
-                                ? 'outline'
-                                : value === 'Complete'
-                                    ? 'completed'
-                                    : value === 'Stopped'
-                                        ? 'rejected'
-                                        : value === 'Onhold'
-                                            ? 'onhold'
-                                            : 'default'
-                    }
-                >
-                    {value}
-                </Badge>
+            render: (value: any) => (
+                <span className="font-semibold text-slate-800">{value}</span>
             ),
             sortable: true
         },
         {
-            key: 'start_date',
+            key: 'number' as keyof Project,
+            header: 'Number',
+            render: (value: any) => <span className="text-slate-600">{value}</span>,
+            sortable: true
+        },
+        {
+            key: 'name' as keyof Project,
+            header: 'Project Name',
+            render: (value: any) => (
+                <span className="font-medium text-slate-800">{value}</span>
+            ),
+            sortable: true
+        },
+        {
+            key: 'client_name' as keyof Project,
+            header: 'Client',
+            render: (value: any) => (
+                <span className="text-slate-700">{value}</span>
+            ),
+            sortable: true
+        },
+        {
+            key: 'status' as keyof Project,
+            header: 'Status',
+            render: (value: any) => {
+                const statusColors = {
+                    'Active': 'bg-green-100 text-green-700 border-green-200',
+                    'Inactive': 'bg-slate-100 text-slate-700 border-slate-200',
+                    'Complete': 'bg-blue-100 text-blue-700 border-blue-200',
+                    'Stopped': 'bg-red-100 text-red-700 border-red-200',
+                    'Onhold': 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                };
+                
+                return (
+                    <Badge 
+                        variant="outline" 
+                        className={`${statusColors[value as keyof typeof statusColors] || statusColors.Inactive} font-medium`}
+                    >
+                        {value}
+                    </Badge>
+                );
+            },
+            sortable: true
+        },
+        {
+            key: 'start_date' as keyof Project,
             header: 'Start Date',
+            render: (value: any) => (
+                <span className="text-slate-600">{value}</span>
+            ),
             sortable: true
         },
         {
-            key: 'end_date',
+            key: 'end_date' as keyof Project,
             header: 'End Date',
+            render: (value: any) => (
+                <span className="text-slate-600">{value}</span>
+            ),
             sortable: true
-        },
-        {
-            key: 'created_at',
-            header: 'Created At'
         }
     ];
 
-    const actions: Action<Project>[] = [
+    const actions = [
         {
-            label: 'Details',
-            onClick: (project) => {
+            label: 'View Details',
+            onClick: (project: Project) => {
                 router.push(`/projects/details?id=${project.id}`);
             },
             icon: <Eye className="h-4 w-4" />
         },
         {
-            label: 'Edit',
-            onClick: (project) => {
+            label: 'Edit Project',
+            onClick: (project: Project) => {
                 router.push(`/projects/update?id=${project.id}`);
             },
             icon: <Edit className="h-4 w-4" />
         },
         {
-            label: 'Download',
-            onClick: (project) => {
+            label: 'Download PDF',
+            onClick: (project: Project) => {
                 downloadProject(project.id);
             },
-            icon: <HardDriveDownload className="h-4 w-4" />
+            icon: <HardDriveDownload className="h-4 w-4" />,
+            variant: 'outline' as const
         }
     ];
 
+    const stats = [
+        {
+            label: 'Total Projects',
+            value: totalItems,
+            change: '+12%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Active Projects',
+            value: projects.filter(p => p.status === 'Active').length,
+            change: '+8%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Completed',
+            value: projects.filter(p => p.status === 'Complete').length,
+            change: '+15%',
+            trend: 'up' as const
+        },
+        {
+            label: 'On Hold',
+            value: projects.filter(p => p.status === 'Onhold').length,
+            change: '-3%',
+            trend: 'down' as const
+        }
+    ];
+
+    const projectTypeOptions = [
+        { key: 'Public', label: 'Public Projects', value: 'Public' },
+        { key: 'Communications', label: 'Communications', value: 'Communications' },
+        { key: 'Restoration', label: 'Restoration', value: 'Restoration' },
+        { key: 'Referral', label: 'Referral', value: 'Referral' }
+    ];
+
+    const activeFilters = [];
+    if (search) activeFilters.push(`Search: ${search}`);
+    if (type !== 'Public') activeFilters.push(`Type: ${type}`);
+
     return (
-        <div className="space-y-4">
-            {/* Page header */}
-            <Breadcrumb />
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
-                <div>
-                    <h1 className="text-3xl font-bold">Projects</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Browse and manage all system projects
-                    </p>
-                </div>
-                <Button onClick={() => router.push('/projects/create')} className="bg-primary text-white">
-                    + Create Project
-                </Button>
-            </div>
+        <div className="space-y-6">
+            {/* Page Header */}
+            <PageHeader
+                title="Projects"
+                description="Browse and manage all system projects with comprehensive filtering and management tools"
+                stats={stats}
+                actions={{
+                    primary: {
+                        label: 'Create Project',
+                        onClick: () => router.push('/projects/create'),
+                        icon: <Plus className="h-4 w-4" />
+                    },
+                    secondary: [
+                        {
+                            label: 'Export Data',
+                            onClick: () => toast.info('Export feature coming soon'),
+                            icon: <Download className="h-4 w-4" />
+                        },
+                        {
+                            label: 'Advanced Filters',
+                            onClick: () => toast.info('Advanced filters coming soon'),
+                            icon: <Filter className="h-4 w-4" />
+                        }
+                    ]
+                }}
+            />
 
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row flex-wrap gap-4">
-                <Input
-                    placeholder="Search by number..."
-                    value={search}
-                    onChange={(e) => {
-                        setSearch(e.target.value);
-                        setPage(1);
-                    }}
-                    className="w-full sm:max-w-sm"
-                />
+            {/* Filter Bar */}
+            <FilterBar
+                searchPlaceholder="Search by project name, code, or client..."
+                searchValue={search}
+                onSearchChange={(value) => {
+                    setSearch(value);
+                    setPage(1);
+                }}
+                filters={[
+                    {
+                        key: 'type',
+                        label: 'Project Type',
+                        value: type,
+                        options: projectTypeOptions,
+                        onValueChange: (value) => {
+                            setType(value as typeof type);
+                            setPage(1);
+                        }
+                    }
+                ]}
+                activeFilters={activeFilters}
+                onClearFilters={() => {
+                    setSearch('');
+                    setType('Public');
+                    setPage(1);
+                }}
+            />
 
-                <Select
-                    value={type}
-                    onValueChange={(value) => {
-                        setType(value as typeof type);
-                        setPage(1);
-                    }}
-                >
-                    <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Project Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Public">Public</SelectItem>
-                        <SelectItem value="Communications">Communications</SelectItem>
-                        <SelectItem value="Restoration">Restoration</SelectItem>
-                        <SelectItem value="Referral">Referral</SelectItem>
-                    </SelectContent>
-                </Select>
-
-            </div>
-
-            {/* Table */}
-            <Card>
-                <CardHeader>
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        {/* Left: Title + Description */}
-                        <div>
-                            <CardTitle>Project List ({type})</CardTitle>
-                            <CardDescription>Total {totalItems} projects found</CardDescription>
-                        </div>
-
-                        {/* Right: Select limit */}
-                        <Select
-                            value={limit.toString()}
-                            onValueChange={(value) => {
-                                setLimit(parseInt(value, 10));
-                                setPage(1);
-                            }}
-                        >
-                            <SelectTrigger className="w-36">
-                                <SelectValue placeholder="Items per page" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="10">10 per page</SelectItem>
-                                <SelectItem value="20">20 per page</SelectItem>
-                                <SelectItem value="50">50 per page</SelectItem>
-                                <SelectItem value="100">100 per page</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </CardHeader>
-
-                <CardContent>
-                    <DataTable
-                        data={projects}
-                        columns={columns}
-                        actions={actions}
-                        loading={loading}
-                        pagination={{
-                            currentPage: page,
-                            totalPages,
-                            pageSize: limit,
-                            totalItems,
-                            onPageChange: setPage
+            {/* Projects Table */}
+            <EnhancedCard
+                title="Projects List"
+                description={`${type} projects - ${totalItems} total projects found`}
+                variant="gradient"
+                size="lg"
+                stats={{
+                    total: totalItems,
+                    badge: `${type} Projects`,
+                    badgeColor: type === 'Public' ? 'success' : 'default'
+                }}
+                headerActions={
+                    <Select
+                        value={limit.toString()}
+                        onValueChange={(value) => {
+                            setLimit(parseInt(value, 10));
+                            setPage(1);
                         }}
-                        noDataMessage="No projects found"
-                    />
-                </CardContent>
-            </Card>
+                    >
+                        <SelectTrigger className="w-36 bg-white border-slate-200">
+                            <SelectValue placeholder="Items per page" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="10">10 per page</SelectItem>
+                            <SelectItem value="20">20 per page</SelectItem>
+                            <SelectItem value="50">50 per page</SelectItem>
+                            <SelectItem value="100">100 per page</SelectItem>
+                        </SelectContent>
+                    </Select>
+                }
+            >
+                <EnhancedDataTable
+                    data={projects}
+                    columns={columns}
+                    actions={actions}
+                    loading={loading}
+                    pagination={{
+                        currentPage: page,
+                        totalPages,
+                        pageSize: limit,
+                        totalItems,
+                        onPageChange: setPage
+                    }}
+                    noDataMessage="No projects found matching your criteria"
+                    searchPlaceholder="Search projects..."
+                />
+            </EnhancedCard>
         </div>
     );
 }

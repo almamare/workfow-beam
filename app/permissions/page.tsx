@@ -270,7 +270,7 @@ export default function PermissionsPage() {
                             <div className="space-y-3">
                                 <div>
                                     <span className="text-sm font-medium text-muted-foreground">Module:</span>
-                                    <Badge variant="secondary" className="mr-2">
+                                    <Badge variant="outline" className="mr-2">
                                         {permission.module}
                                     </Badge>
                                 </div>

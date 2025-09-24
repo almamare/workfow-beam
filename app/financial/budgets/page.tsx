@@ -1,17 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BarChart3, Plus, Search, Eye, Edit, Trash2, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
+import { BarChart3, Plus, Eye, Edit, Trash2, TrendingUp, TrendingDown, AlertTriangle, Download, Filter, CheckCircle, PlayCircle, StopCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/ui/page-header';
+import { FilterBar } from '@/components/ui/filter-bar';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
 
 interface Budget {
     id: string;
@@ -44,7 +46,7 @@ const mockBudgets: Budget[] = [
         allocatedAmount: 500000,
         spentAmount: 350000,
         remainingAmount: 150000,
-        currency: 'SAR',
+        currency: '',
         status: 'active',
         startDate: '2024-01-01',
         endDate: '2024-12-31',
@@ -63,7 +65,7 @@ const mockBudgets: Budget[] = [
         allocatedAmount: 200000,
         spentAmount: 180000,
         remainingAmount: 20000,
-        currency: 'SAR',
+        currency: '',
         status: 'active',
         startDate: '2024-01-01',
         endDate: '2024-12-31',
@@ -82,7 +84,7 @@ const mockBudgets: Budget[] = [
         allocatedAmount: 100000,
         spentAmount: 105000,
         remainingAmount: -5000,
-        currency: 'SAR',
+        currency: '',
         status: 'exceeded',
         startDate: '2024-01-01',
         endDate: '2024-12-31',
@@ -101,7 +103,7 @@ const mockBudgets: Budget[] = [
         allocatedAmount: 75000,
         spentAmount: 25000,
         remainingAmount: 50000,
-        currency: 'SAR',
+        currency: '',
         status: 'active',
         startDate: '2024-01-01',
         endDate: '2024-12-31',
@@ -115,22 +117,6 @@ const mockBudgets: Budget[] = [
 const departments = ['Information Technology', 'Marketing', 'Administration', 'Human Resources', 'Finance', 'Operations'];
 const categories = ['Technology', 'Marketing', 'Infrastructure', 'Human Resources', 'Operations', 'Maintenance', 'Utilities'];
 const fiscalYears = ['2024', '2023', '2025'];
-
-const statusLabels = {
-    draft: 'Draft',
-    approved: 'Approved',
-    active: 'Active',
-    closed: 'Closed',
-    exceeded: 'Exceeded'
-};
-
-const statusColors = {
-    draft: 'bg-gray-100 text-gray-800',
-    approved: 'bg-blue-100 text-blue-800',
-    active: 'bg-green-100 text-green-800',
-    closed: 'bg-gray-100 text-gray-800',
-    exceeded: 'bg-red-100 text-red-800'
-};
 
 export default function BudgetsPage() {
     const [budgets, setBudgets] = useState<Budget[]>(mockBudgets);
@@ -148,7 +134,7 @@ export default function BudgetsPage() {
         category: '',
         fiscalYear: '2024',
         allocatedAmount: '',
-        currency: 'SAR',
+        currency: '',
         startDate: '',
         endDate: '',
         description: ''
@@ -200,7 +186,7 @@ export default function BudgetsPage() {
             category: '',
             fiscalYear: '2024',
             allocatedAmount: '',
-            currency: 'SAR',
+            currency: '',
             startDate: '',
             endDate: '',
             description: ''
@@ -260,7 +246,7 @@ export default function BudgetsPage() {
             category: '',
             fiscalYear: '2024',
             allocatedAmount: '',
-            currency: 'SAR',
+            currency: '',
             startDate: '',
             endDate: '',
             description: ''
@@ -300,10 +286,8 @@ export default function BudgetsPage() {
         toast.success('Budget closed');
     };
 
-    const formatCurrency = (amount: number, currency: string) => {
-        return new Intl.NumberFormat('en-SA', {
-            style: 'currency',
-            currency: currency,
+    const formatNumber = (amount: number) => {
+        return new Intl.NumberFormat('en-US', {
             minimumFractionDigits: 0
         }).format(amount);
     };
@@ -313,357 +297,412 @@ export default function BudgetsPage() {
     const totalRemaining = filteredBudgets.reduce((sum, budget) => sum + budget.remainingAmount, 0);
     const exceededBudgets = filteredBudgets.filter(b => b.status === 'exceeded').length;
 
+    const columns = [
+        {
+            key: 'budgetNumber' as keyof Budget,
+            header: 'Budget Number',
+            render: (value: any) => <span className="font-mono text-sm text-slate-600">{value}</span>,
+            sortable: true,
+            width: '140px'
+        },
+        {
+            key: 'name' as keyof Budget,
+            header: 'Budget Name',
+            render: (value: any) => <span className="font-semibold text-slate-800">{value}</span>,
+            sortable: true
+        },
+        {
+            key: 'department' as keyof Budget,
+            header: 'Department',
+            render: (value: any) => (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    {value}
+                </Badge>
+            ),
+            sortable: true
+        },
+        {
+            key: 'category' as keyof Budget,
+            header: 'Category',
+            render: (value: any) => <span className="text-slate-700">{value}</span>,
+            sortable: true
+        },
+        {
+            key: 'fiscalYear' as keyof Budget,
+            header: 'Fiscal Year',
+            render: (value: any) => <span className="font-semibold text-slate-600">{value}</span>,
+            sortable: true
+        },
+        {
+            key: 'allocatedAmount' as keyof Budget,
+            header: 'Allocated',
+            render: (value: any, budget: Budget) => (
+                <span className="font-semibold text-slate-800">
+                    {formatNumber(value)}
+                </span>
+            ),
+            sortable: true
+        },
+        {
+            key: 'spentAmount' as keyof Budget,
+            header: 'Spent',
+            render: (value: any, budget: Budget) => (
+                <span className="font-semibold text-red-600">
+                    {formatNumber(value)}
+                </span>
+            ),
+            sortable: true
+        },
+        {
+            key: 'remainingAmount' as keyof Budget,
+            header: 'Remaining',
+            render: (value: any, budget: Budget) => {
+                const isNegative = value < 0;
+                return (
+                    <span className={`font-semibold ${isNegative ? 'text-red-600' : 'text-green-600'}`}>
+                        {formatNumber(value)}
+                    </span>
+                );
+            },
+            sortable: true
+        },
+        {
+            key: 'status' as keyof Budget,
+            header: 'Status',
+            render: (value: any) => {
+                const statusColors = {
+                    'draft': 'bg-gray-100 text-gray-700 border-gray-200',
+                    'approved': 'bg-blue-100 text-blue-700 border-blue-200',
+                    'active': 'bg-green-100 text-green-700 border-green-200',
+                    'closed': 'bg-gray-100 text-gray-700 border-gray-200',
+                    'exceeded': 'bg-red-100 text-red-700 border-red-200'
+                };
+                
+                return (
+                    <Badge variant="outline" className={`${statusColors[value as keyof typeof statusColors]} font-medium`}>
+                        {value.charAt(0).toUpperCase() + value.slice(1)}
+                    </Badge>
+                );
+            },
+            sortable: true
+        }
+    ];
+
+    const actions = [
+        {
+            label: 'View Details',
+            onClick: (budget: Budget) => toast.info('View details feature coming soon'),
+            icon: <Eye className="h-4 w-4" />
+        },
+        {
+            label: 'Edit Budget',
+            onClick: (budget: Budget) => handleEdit(budget),
+            icon: <Edit className="h-4 w-4" />
+        },
+        {
+            label: 'Approve Budget',
+            onClick: (budget: Budget) => handleApprove(budget.id),
+            icon: <CheckCircle className="h-4 w-4" />,
+            hidden: (budget: Budget) => budget.status !== 'draft'
+        },
+        {
+            label: 'Activate Budget',
+            onClick: (budget: Budget) => handleActivate(budget.id),
+            icon: <PlayCircle className="h-4 w-4" />,
+            hidden: (budget: Budget) => budget.status !== 'approved'
+        },
+        {
+            label: 'Close Budget',
+            onClick: (budget: Budget) => handleClose(budget.id),
+            icon: <StopCircle className="h-4 w-4" />,
+            hidden: (budget: Budget) => budget.status !== 'active'
+        },
+        {
+            label: 'Delete Budget',
+            onClick: (budget: Budget) => handleDelete(budget.id),
+            icon: <Trash2 className="h-4 w-4" />,
+            variant: 'destructive' as const
+        }
+    ];
+
+    const stats = [
+        {
+            label: 'Total Allocated',
+            value: formatNumber(totalAllocated),
+            change: '+12%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Total Spent',
+            value: formatNumber(totalSpent),
+            change: '+8%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Total Remaining',
+            value: formatNumber(totalRemaining),
+            change: '+15%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Exceeded Budgets',
+            value: exceededBudgets,
+            change: '-2%',
+            trend: 'down' as const
+        }
+    ];
+
+    const filterOptions = [
+        {
+            key: 'department',
+            label: 'Department',
+            value: departmentFilter,
+            options: [
+                { key: 'all', label: 'All Departments', value: 'all' },
+                ...departments.map(dept => ({ key: dept, label: dept, value: dept }))
+            ],
+            onValueChange: setDepartmentFilter
+        },
+        {
+            key: 'category',
+            label: 'Category',
+            value: categoryFilter,
+            options: [
+                { key: 'all', label: 'All Categories', value: 'all' },
+                ...categories.map(cat => ({ key: cat, label: cat, value: cat }))
+            ],
+            onValueChange: setCategoryFilter
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            value: statusFilter,
+            options: [
+                { key: 'all', label: 'All Statuses', value: 'all' },
+                { key: 'draft', label: 'Draft', value: 'draft' },
+                { key: 'approved', label: 'Approved', value: 'approved' },
+                { key: 'active', label: 'Active', value: 'active' },
+                { key: 'closed', label: 'Closed', value: 'closed' },
+                { key: 'exceeded', label: 'Exceeded', value: 'exceeded' }
+            ],
+            onValueChange: setStatusFilter
+        },
+        {
+            key: 'fiscalYear',
+            label: 'Fiscal Year',
+            value: fiscalYearFilter,
+            options: [
+                { key: 'all', label: 'All Years', value: 'all' },
+                ...fiscalYears.map(year => ({ key: year, label: year, value: year }))
+            ],
+            onValueChange: setFiscalYearFilter
+        }
+    ];
+
+    const activeFilters = [];
+    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
+    if (departmentFilter !== 'all') activeFilters.push(`Department: ${departmentFilter}`);
+    if (categoryFilter !== 'all') activeFilters.push(`Category: ${categoryFilter}`);
+    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
+    if (fiscalYearFilter !== 'all') activeFilters.push(`Year: ${fiscalYearFilter}`);
+
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-foreground">Budgets Management</h1>
-                    <p className="text-muted-foreground">Manage department budgets and financial planning</p>
-                </div>
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-primary hover:bg-primary/90">
-                            <Plus className="h-4 w-4 mr-2" />
-                            New Budget
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>Create New Budget</DialogTitle>
-                            <DialogDescription>
-                                Create a new budget for a department or project
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="name">Budget Name</Label>
-                                <Input
-                                    id="name"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                    placeholder="Budget name"
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="department">Department</Label>
-                                    <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Department" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {departments.map(dept => (
-                                                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label htmlFor="category">Category</Label>
-                                    <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Category" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {categories.map(category => (
-                                                <SelectItem key={category} value={category}>{category}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="fiscalYear">Fiscal Year</Label>
-                                    <Select value={formData.fiscalYear} onValueChange={(value) => setFormData(prev => ({ ...prev, fiscalYear: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {fiscalYears.map(year => (
-                                                <SelectItem key={year} value={year}>{year}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label htmlFor="currency">Currency</Label>
-                                    <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="SAR">Saudi Riyal</SelectItem>
-                                            <SelectItem value="USD">US Dollar</SelectItem>
-                                            <SelectItem value="EUR">Euro</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="allocatedAmount">Allocated Amount</Label>
-                                <Input
-                                    id="allocatedAmount"
-                                    type="number"
-                                    value={formData.allocatedAmount}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, allocatedAmount: e.target.value }))}
-                                    placeholder="0"
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="startDate">Start Date</Label>
-                                    <Input
-                                        id="startDate"
-                                        type="date"
-                                        value={formData.startDate}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="endDate">End Date</Label>
-                                    <Input
-                                        id="endDate"
-                                        type="date"
-                                        value={formData.endDate}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="description">Description</Label>
-                                <Textarea
-                                    id="description"
-                                    value={formData.description}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                    placeholder="Budget description"
-                                    rows={3}
-                                />
-                            </div>
-                            <div className="flex justify-end space-x-2">
-                                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button onClick={handleCreate}>
-                                    <BarChart3 className="h-4 w-4 mr-2" />
-                                    Create Budget
-                                </Button>
-                            </div>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            </div>
+            {/* Page Header */}
+            <PageHeader
+                title="Budgets Management"
+                description="Manage department budgets and financial planning with comprehensive budget tracking and analysis tools"
+                stats={stats}
+                actions={{
+                    primary: {
+                        label: 'Create Budget',
+                        onClick: () => setIsCreateDialogOpen(true),
+                        icon: <Plus className="h-4 w-4" />
+                    },
+                    secondary: [
+                        {
+                            label: 'Export Report',
+                            onClick: () => toast.info('Export feature coming soon'),
+                            icon: <Download className="h-4 w-4" />
+                        },
+                        {
+                            label: 'Budget Analysis',
+                            onClick: () => toast.info('Analysis feature coming soon'),
+                            icon: <Filter className="h-4 w-4" />
+                        }
+                    ]
+                }}
+            />
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Allocated</CardTitle>
-                        <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(totalAllocated, 'SAR')}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-                        <TrendingDown className="h-4 w-4 text-red-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-red-600">{formatCurrency(totalSpent, 'SAR')}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Remaining</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-green-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-600">{formatCurrency(totalRemaining, 'SAR')}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Exceeded Budgets</CardTitle>
-                        <AlertTriangle className="h-4 w-4 text-red-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-red-600">{exceededBudgets}</div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                        placeholder="Search budgets..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pr-10"
-                    />
-                </div>
-                <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Departments</SelectItem>
-                        {departments.map(dept => (
-                            <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categories.map(category => (
-                            <SelectItem key={category} value={category}>{category}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        {Object.entries(statusLabels).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Select value={fiscalYearFilter} onValueChange={setFiscalYearFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Fiscal Year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Years</SelectItem>
-                        {fiscalYears.map(year => (
-                            <SelectItem key={year} value={year}>{year}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
+            {/* Filter Bar */}
+            <FilterBar
+                searchPlaceholder="Search by budget name, number, or department..."
+                searchValue={searchTerm}
+                onSearchChange={setSearchTerm}
+                filters={filterOptions}
+                activeFilters={activeFilters}
+                onClearFilters={() => {
+                    setSearchTerm('');
+                    setDepartmentFilter('all');
+                    setCategoryFilter('all');
+                    setStatusFilter('all');
+                    setFiscalYearFilter('all');
+                }}
+            />
 
             {/* Budgets Table */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <BarChart3 className="h-5 w-5" />
-                        Budgets List
-                    </CardTitle>
-                    <CardDescription>
-                        {filteredBudgets.length} budgets out of {budgets.length}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Budget Number</TableHead>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Department</TableHead>
-                                    <TableHead>Category</TableHead>
-                                    <TableHead>Fiscal Year</TableHead>
-                                    <TableHead>Allocated</TableHead>
-                                    <TableHead>Spent</TableHead>
-                                    <TableHead>Remaining</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredBudgets.map((budget) => (
-                                    <TableRow key={budget.id}>
-                                        <TableCell className="font-medium">{budget.budgetNumber}</TableCell>
-                                        <TableCell className="max-w-xs truncate">{budget.name}</TableCell>
-                                        <TableCell>{budget.department}</TableCell>
-                                        <TableCell>{budget.category}</TableCell>
-                                        <TableCell>{budget.fiscalYear}</TableCell>
-                                        <TableCell className="font-semibold">
-                                            {formatCurrency(budget.allocatedAmount, budget.currency)}
-                                        </TableCell>
-                                        <TableCell className="font-semibold text-red-600">
-                                            {formatCurrency(budget.spentAmount, budget.currency)}
-                                        </TableCell>
-                                        <TableCell className={`font-semibold ${budget.remainingAmount < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                            {formatCurrency(budget.remainingAmount, budget.currency)}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={`${statusColors[budget.status]} w-fit`}>
-                                                {statusLabels[budget.status]}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleEdit(budget)}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                {budget.status === 'draft' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleApprove(budget.id)}
-                                                        className="text-green-600 hover:text-green-700"
-                                                    >
-                                                        Approve
-                                                    </Button>
-                                                )}
-                                                {budget.status === 'approved' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleActivate(budget.id)}
-                                                        className="text-blue-600 hover:text-blue-700"
-                                                    >
-                                                        Activate
-                                                    </Button>
-                                                )}
-                                                {budget.status === 'active' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleClose(budget.id)}
-                                                        className="text-gray-600 hover:text-gray-700"
-                                                    >
-                                                        Close
-                                                    </Button>
-                                                )}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleDelete(budget.id)}
-                                                    className="text-destructive hover:text-destructive"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+            <EnhancedCard
+                title="Budget Overview"
+                description={`${filteredBudgets.length} budgets out of ${budgets.length} total`}
+                variant="gradient"
+                size="lg"
+                stats={{
+                    total: budgets.length,
+                    badge: 'Active Budgets',
+                    badgeColor: 'success'
+                }}
+            >
+                <EnhancedDataTable
+                    data={filteredBudgets}
+                    columns={columns}
+                    actions={actions}
+                    loading={false}
+                    noDataMessage="No budgets found matching your criteria"
+                    searchPlaceholder="Search budgets..."
+                />
+            </EnhancedCard>
+
+            {/* Create Dialog */}
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Create New Budget</DialogTitle>
+                        <DialogDescription>
+                            Create a new budget for a department or project
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="name">Budget Name</Label>
+                            <Input
+                                id="name"
+                                value={formData.name}
+                                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                                placeholder="Budget name"
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="department">Department</Label>
+                                <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue placeholder="Select Department" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {departments.map(dept => (
+                                            <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label htmlFor="category">Category</Label>
+                                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue placeholder="Select Category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map(category => (
+                                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="fiscalYear">Fiscal Year</Label>
+                                <Select value={formData.fiscalYear} onValueChange={(value) => setFormData(prev => ({ ...prev, fiscalYear: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {fiscalYears.map(year => (
+                                            <SelectItem key={year} value={year}>{year}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label htmlFor="currency">Currency</Label>
+                                <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="USD">US Dollar</SelectItem>
+                                        <SelectItem value="EUR">Euro</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div>
+                            <Label htmlFor="allocatedAmount">Allocated Amount</Label>
+                            <Input
+                                id="allocatedAmount"
+                                type="number"
+                                value={formData.allocatedAmount}
+                                onChange={(e) => setFormData(prev => ({ ...prev, allocatedAmount: e.target.value }))}
+                                placeholder="0"
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="startDate">Start Date</Label>
+                                <Input
+                                    id="startDate"
+                                    type="date"
+                                    value={formData.startDate}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="endDate">End Date</Label>
+                                <Input
+                                    id="endDate"
+                                    type="date"
+                                    value={formData.endDate}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                                    className="mt-1"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea
+                                id="description"
+                                value={formData.description}
+                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                placeholder="Budget description"
+                                rows={3}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="flex justify-end space-x-2 pt-4">
+                            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleCreate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                                <BarChart3 className="h-4 w-4 mr-2" />
+                                Create Budget
+                            </Button>
+                        </div>
                     </div>
-                </CardContent>
-            </Card>
+                </DialogContent>
+            </Dialog>
 
             {/* Edit Dialog */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -671,7 +710,7 @@ export default function BudgetsPage() {
                     <DialogHeader>
                         <DialogTitle>Edit Budget</DialogTitle>
                         <DialogDescription>
-                            Update budget data
+                            Update budget information and settings
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -681,13 +720,14 @@ export default function BudgetsPage() {
                                 id="edit-name"
                                 value={formData.name}
                                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                                className="mt-1"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="edit-department">Department</Label>
                                 <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -700,7 +740,7 @@ export default function BudgetsPage() {
                             <div>
                                 <Label htmlFor="edit-category">Category</Label>
                                 <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -715,7 +755,7 @@ export default function BudgetsPage() {
                             <div>
                                 <Label htmlFor="edit-fiscalYear">Fiscal Year</Label>
                                 <Select value={formData.fiscalYear} onValueChange={(value) => setFormData(prev => ({ ...prev, fiscalYear: value }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -728,11 +768,10 @@ export default function BudgetsPage() {
                             <div>
                                 <Label htmlFor="edit-currency">Currency</Label>
                                 <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="SAR">Saudi Riyal</SelectItem>
                                         <SelectItem value="USD">US Dollar</SelectItem>
                                         <SelectItem value="EUR">Euro</SelectItem>
                                     </SelectContent>
@@ -746,6 +785,7 @@ export default function BudgetsPage() {
                                 type="number"
                                 value={formData.allocatedAmount}
                                 onChange={(e) => setFormData(prev => ({ ...prev, allocatedAmount: e.target.value }))}
+                                className="mt-1"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
@@ -756,6 +796,7 @@ export default function BudgetsPage() {
                                     type="date"
                                     value={formData.startDate}
                                     onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                                    className="mt-1"
                                 />
                             </div>
                             <div>
@@ -765,6 +806,7 @@ export default function BudgetsPage() {
                                     type="date"
                                     value={formData.endDate}
                                     onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                                    className="mt-1"
                                 />
                             </div>
                         </div>
@@ -775,13 +817,14 @@ export default function BudgetsPage() {
                                 value={formData.description}
                                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                                 rows={3}
+                                className="mt-1"
                             />
                         </div>
-                        <div className="flex justify-end space-x-2">
+                        <div className="flex justify-end space-x-2 pt-4">
                             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleUpdate}>
+                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
                                 <BarChart3 className="h-4 w-4 mr-2" />
                                 Save Changes
                             </Button>

@@ -11,8 +11,8 @@ const alexandria = Alexandria({
 });
 
 export const metadata: Metadata = {
-    title: 'WorkFlow - Enterprise Management System',
-    description: 'Complete enterprise workflow management system for corporate operations',
+    title: 'Shuaa Al-Ranou Trade & General Contracting - Enterprise Management System',
+    description: 'Complete enterprise management system for construction, trade, and general contracting operations',
 };
 
 export default function RootLayout({

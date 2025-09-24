@@ -1,149 +1,185 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Bell, Plus, Search, Eye, Edit, Trash2, Send, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Bell, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, AlertTriangle, Info, CheckCircle2, XCircle as XCircleIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/ui/page-header';
+import { FilterBar } from '@/components/ui/filter-bar';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
 
 interface Notification {
     id: string;
     title: string;
     message: string;
-    type: 'info' | 'warning' | 'error' | 'success';
-    priority: 'low' | 'medium' | 'high' | 'urgent';
-    status: 'draft' | 'sent' | 'delivered' | 'read' | 'failed';
-    recipients: string[];
-    recipientType: 'all' | 'department' | 'role' | 'specific';
-    department?: string;
-    role?: string;
-    scheduledDate?: string;
-    sentDate?: string;
+    type: 'info' | 'warning' | 'error' | 'success' | 'urgent';
+    priority: 'low' | 'medium' | 'high' | 'critical';
+    category: 'system' | 'project' | 'financial' | 'inventory' | 'employee' | 'contractor' | 'other';
+    targetUsers: string[];
+    targetRoles: string[];
+    isRead: boolean;
+    isActive: boolean;
+    scheduledDate: string;
+    expiryDate: string;
     createdBy: string;
     createdAt: string;
     readBy: string[];
-    attachments?: string[];
+    readAt: string[];
+    attachments: string[];
+    actions: string[];
+    metadata: Record<string, any>;
 }
 
 const mockNotifications: Notification[] = [
     {
         id: '1',
-        title: 'System Maintenance Notice',
-        message: 'The system will be under maintenance from 2:00 AM to 4:00 AM tomorrow. Please save your work and log out before this time.',
-        type: 'info',
-        priority: 'medium',
-        status: 'sent',
-        recipients: ['all'],
-        recipientType: 'all',
-        sentDate: '2024-01-15 10:30:00',
-        createdBy: 'System Administrator',
-        createdAt: '2024-01-15 10:00:00',
-        readBy: ['user1', 'user2', 'user3']
+        title: 'Project Deadline Approaching',
+        message: 'The Office Building Construction project deadline is approaching in 3 days. Please ensure all tasks are completed on time.',
+        type: 'warning',
+        priority: 'high',
+        category: 'project',
+        targetUsers: ['Ahmed Ali', 'Fatima Mohamed', 'Omar Hassan'],
+        targetRoles: ['project_manager', 'supervisor'],
+        isRead: false,
+        isActive: true,
+        scheduledDate: '2024-01-15',
+        expiryDate: '2024-01-25',
+        createdBy: 'System',
+        createdAt: '2024-01-15T10:00:00Z',
+        readBy: [],
+        readAt: [],
+        attachments: [],
+        actions: ['view_project', 'update_status'],
+        metadata: { projectId: 'PRJ-001', deadline: '2024-01-18' }
     },
     {
         id: '2',
-        title: 'Budget Approval Required',
-        message: 'The IT department budget for Q1 2024 is pending your approval. Please review and approve within 48 hours.',
+        title: 'Low Stock Alert',
+        message: 'A4 Paper stock is running low. Current stock: 5 reams, minimum required: 20 reams. Please reorder soon.',
         type: 'warning',
-        priority: 'high',
-        status: 'delivered',
-        recipients: ['manager1', 'manager2'],
-        recipientType: 'role',
-        role: 'Manager',
-        sentDate: '2024-01-14 14:20:00',
-        createdBy: 'Financial Manager',
-        createdAt: '2024-01-14 14:00:00',
-        readBy: ['manager1']
+        priority: 'medium',
+        category: 'inventory',
+        targetUsers: ['Sara Ahmed', 'Mohammed Saleh'],
+        targetRoles: ['inventory_manager', 'purchaser'],
+        isRead: true,
+        isActive: true,
+        scheduledDate: '2024-01-16',
+        expiryDate: '2024-01-26',
+        createdBy: 'Inventory System',
+        createdAt: '2024-01-16T08:30:00Z',
+        readBy: ['Sara Ahmed'],
+        readAt: ['2024-01-16T09:15:00Z'],
+        attachments: [],
+        actions: ['view_item', 'create_order'],
+        metadata: { itemId: 'ITM-002', currentStock: 5, minimumStock: 20 }
     },
     {
         id: '3',
-        title: 'Security Alert',
-        message: 'Multiple failed login attempts detected from an unknown IP address. Please change your password immediately if you notice any suspicious activity.',
-        type: 'error',
-        priority: 'urgent',
-        status: 'sent',
-        recipients: ['all'],
-        recipientType: 'all',
-        sentDate: '2024-01-16 09:15:00',
-        createdBy: 'Security Team',
-        createdAt: '2024-01-16 09:00:00',
-        readBy: []
+        title: 'Payment Approved',
+        message: 'Payment request PAY-002 for ABC Construction Ltd. has been approved and is ready for processing.',
+        type: 'success',
+        priority: 'medium',
+        category: 'financial',
+        targetUsers: ['Fatima Mohamed', 'Ahmed Ali'],
+        targetRoles: ['finance_manager', 'accountant'],
+        isRead: false,
+        isActive: true,
+        scheduledDate: '2024-01-17',
+        expiryDate: '2024-01-27',
+        createdBy: 'Omar Hassan',
+        createdAt: '2024-01-17T14:20:00Z',
+        readBy: [],
+        readAt: [],
+        attachments: ['payment_approval.pdf'],
+        actions: ['view_payment', 'process_payment'],
+        metadata: { paymentId: 'PAY-002', amount: 25000 }
     },
     {
         id: '4',
-        title: 'Project Completion',
-        message: 'Congratulations! The new website project has been completed successfully and is now live.',
-        type: 'success',
-        priority: 'low',
-        status: 'read',
-        recipients: ['dev1', 'dev2', 'manager1'],
-        recipientType: 'specific',
-        sentDate: '2024-01-13 16:45:00',
-        createdBy: 'Project Manager',
-        createdAt: '2024-01-13 16:30:00',
-        readBy: ['dev1', 'dev2', 'manager1']
+        title: 'System Maintenance Scheduled',
+        message: 'System maintenance is scheduled for tomorrow (January 18, 2024) from 2:00 AM to 4:00 AM. The system will be temporarily unavailable.',
+        type: 'info',
+        priority: 'high',
+        category: 'system',
+        targetUsers: [],
+        targetRoles: ['admin', 'user'],
+        isRead: true,
+        isActive: true,
+        scheduledDate: '2024-01-17',
+        expiryDate: '2024-01-19',
+        createdBy: 'System Administrator',
+        createdAt: '2024-01-17T16:00:00Z',
+        readBy: ['Ahmed Ali', 'Fatima Mohamed', 'Omar Hassan', 'Sara Ahmed'],
+        readAt: ['2024-01-17T16:05:00Z', '2024-01-17T16:10:00Z', '2024-01-17T16:15:00Z', '2024-01-17T16:20:00Z'],
+        attachments: [],
+        actions: [],
+        metadata: { maintenanceStart: '2024-01-18T02:00:00Z', maintenanceEnd: '2024-01-18T04:00:00Z' }
+    },
+    {
+        id: '5',
+        title: 'Employee Leave Request',
+        message: 'Sara Ahmed has submitted a leave request for January 20-22, 2024. Please review and approve.',
+        type: 'info',
+        priority: 'medium',
+        category: 'employee',
+        targetUsers: ['Ahmed Ali'],
+        targetRoles: ['hr_manager', 'supervisor'],
+        isRead: false,
+        isActive: true,
+        scheduledDate: '2024-01-17',
+        expiryDate: '2024-01-19',
+        createdBy: 'Sara Ahmed',
+        createdAt: '2024-01-17T11:30:00Z',
+        readBy: [],
+        readAt: [],
+        attachments: ['leave_request.pdf'],
+        actions: ['view_request', 'approve_leave', 'reject_leave'],
+        metadata: { employeeId: 'EMP-002', leaveStart: '2024-01-20', leaveEnd: '2024-01-22' }
     }
 ];
 
-const notificationTypes = {
-    info: 'Information',
-    warning: 'Warning',
-    error: 'Error',
-    success: 'Success'
-};
+const notificationTypes = [
+    { value: 'info', label: 'Information', icon: <Info className="h-4 w-4" /> },
+    { value: 'warning', label: 'Warning', icon: <AlertTriangle className="h-4 w-4" /> },
+    { value: 'error', label: 'Error', icon: <XCircleIcon className="h-4 w-4" /> },
+    { value: 'success', label: 'Success', icon: <CheckCircle2 className="h-4 w-4" /> },
+    { value: 'urgent', label: 'Urgent', icon: <AlertTriangle className="h-4 w-4" /> }
+];
 
-const priorities = {
-    low: 'Low',
-    medium: 'Medium',
-    high: 'High',
-    urgent: 'Urgent'
-};
+const priorities = [
+    { value: 'low', label: 'Low' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'high', label: 'High' },
+    { value: 'critical', label: 'Critical' }
+];
 
-const statusLabels = {
-    draft: 'Draft',
-    sent: 'Sent',
-    delivered: 'Delivered',
-    read: 'Read',
-    failed: 'Failed'
-};
+const categories = [
+    { value: 'system', label: 'System' },
+    { value: 'project', label: 'Project' },
+    { value: 'financial', label: 'Financial' },
+    { value: 'inventory', label: 'Inventory' },
+    { value: 'employee', label: 'Employee' },
+    { value: 'contractor', label: 'Contractor' },
+    { value: 'other', label: 'Other' }
+];
 
-const statusColors = {
-    draft: 'bg-gray-100 text-gray-800',
-    sent: 'bg-blue-100 text-blue-800',
-    delivered: 'bg-green-100 text-green-800',
-    read: 'bg-green-100 text-green-800',
-    failed: 'bg-red-100 text-red-800'
-};
-
-const typeColors = {
-    info: 'bg-blue-100 text-blue-800',
-    warning: 'bg-yellow-100 text-yellow-800',
-    error: 'bg-red-100 text-red-800',
-    success: 'bg-green-100 text-green-800'
-};
-
-const priorityColors = {
-    low: 'bg-gray-100 text-gray-800',
-    medium: 'bg-yellow-100 text-yellow-800',
-    high: 'bg-orange-100 text-orange-800',
-    urgent: 'bg-red-100 text-red-800'
-};
-
-const departments = ['IT', 'Finance', 'HR', 'Marketing', 'Operations', 'Administration'];
-const roles = ['Manager', 'Employee', 'Admin', 'Supervisor', 'Director'];
+const users = ['Ahmed Ali', 'Fatima Mohamed', 'Omar Hassan', 'Sara Ahmed', 'Mohammed Saleh'];
+const roles = ['admin', 'project_manager', 'finance_manager', 'hr_manager', 'inventory_manager', 'supervisor', 'accountant', 'purchaser', 'user'];
 
 export default function NotificationsPage() {
     const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
     const [searchTerm, setSearchTerm] = useState('');
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [priorityFilter, setPriorityFilter] = useState<string>('all');
+    const [categoryFilter, setCategoryFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -151,53 +187,59 @@ export default function NotificationsPage() {
     const [formData, setFormData] = useState({
         title: '',
         message: '',
-        type: 'info' as Notification['type'],
-        priority: 'medium' as Notification['priority'],
-        recipientType: 'all' as Notification['recipientType'],
-        department: '',
-        role: '',
-        recipients: '',
-        scheduledDate: ''
+        type: 'info',
+        priority: 'medium',
+        category: 'other',
+        targetUsers: [] as string[],
+        targetRoles: [] as string[],
+        scheduledDate: '',
+        expiryDate: '',
+        attachments: [] as string[],
+        actions: [] as string[]
     });
 
     const filteredNotifications = notifications.filter(notification => {
         const matchesSearch = notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            notification.message.toLowerCase().includes(searchTerm.toLowerCase());
+                            notification.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            notification.category.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesType = typeFilter === 'all' || notification.type === typeFilter;
         const matchesPriority = priorityFilter === 'all' || notification.priority === priorityFilter;
-        const matchesStatus = statusFilter === 'all' || notification.status === statusFilter;
+        const matchesCategory = categoryFilter === 'all' || notification.category === categoryFilter;
+        const matchesStatus = statusFilter === 'all' || 
+                             (statusFilter === 'read' && notification.isRead) ||
+                             (statusFilter === 'unread' && !notification.isRead) ||
+                             (statusFilter === 'active' && notification.isActive) ||
+                             (statusFilter === 'inactive' && !notification.isActive);
         
-        return matchesSearch && matchesType && matchesPriority && matchesStatus;
+        return matchesSearch && matchesType && matchesPriority && matchesCategory && matchesStatus;
     });
 
     const handleCreate = () => {
-        if (!formData.title || !formData.message) {
+        if (!formData.title || !formData.message || !formData.scheduledDate) {
             toast.error('Please fill in all required fields');
             return;
-        }
-
-        let recipients: string[] = [];
-        if (formData.recipientType === 'specific') {
-            recipients = formData.recipients.split(',').map(r => r.trim()).filter(r => r);
-        } else {
-            recipients = [formData.recipientType];
         }
 
         const newNotification: Notification = {
             id: Date.now().toString(),
             title: formData.title,
             message: formData.message,
-            type: formData.type,
-            priority: formData.priority,
-            status: 'draft',
-            recipients: recipients,
-            recipientType: formData.recipientType,
-            department: formData.department || undefined,
-            role: formData.role || undefined,
-            scheduledDate: formData.scheduledDate || undefined,
+            type: formData.type as Notification['type'],
+            priority: formData.priority as Notification['priority'],
+            category: formData.category as Notification['category'],
+            targetUsers: formData.targetUsers,
+            targetRoles: formData.targetRoles,
+            isRead: false,
+            isActive: true,
+            scheduledDate: formData.scheduledDate,
+            expiryDate: formData.expiryDate,
             createdBy: 'Current User',
             createdAt: new Date().toISOString(),
-            readBy: []
+            readBy: [],
+            readAt: [],
+            attachments: formData.attachments,
+            actions: formData.actions,
+            metadata: {}
         };
 
         setNotifications([...notifications, newNotification]);
@@ -207,11 +249,13 @@ export default function NotificationsPage() {
             message: '',
             type: 'info',
             priority: 'medium',
-            recipientType: 'all',
-            department: '',
-            role: '',
-            recipients: '',
-            scheduledDate: ''
+            category: 'other',
+            targetUsers: [],
+            targetRoles: [],
+            scheduledDate: '',
+            expiryDate: '',
+            attachments: [],
+            actions: []
         });
         toast.success('Notification created successfully');
     };
@@ -223,11 +267,13 @@ export default function NotificationsPage() {
             message: notification.message,
             type: notification.type,
             priority: notification.priority,
-            recipientType: notification.recipientType,
-            department: notification.department || '',
-            role: notification.role || '',
-            recipients: notification.recipientType === 'specific' ? notification.recipients.join(', ') : '',
-            scheduledDate: notification.scheduledDate || ''
+            category: notification.category,
+            targetUsers: notification.targetUsers,
+            targetRoles: notification.targetRoles,
+            scheduledDate: notification.scheduledDate,
+            expiryDate: notification.expiryDate,
+            attachments: notification.attachments,
+            actions: notification.actions
         });
         setIsEditDialogOpen(true);
     };
@@ -235,25 +281,20 @@ export default function NotificationsPage() {
     const handleUpdate = () => {
         if (!editingNotification) return;
 
-        let recipients: string[] = [];
-        if (formData.recipientType === 'specific') {
-            recipients = formData.recipients.split(',').map(r => r.trim()).filter(r => r);
-        } else {
-            recipients = [formData.recipientType];
-        }
-
         const updatedNotifications = notifications.map(n =>
             n.id === editingNotification.id ? { 
                 ...n, 
                 title: formData.title,
                 message: formData.message,
-                type: formData.type,
-                priority: formData.priority,
-                recipientType: formData.recipientType,
-                recipients: recipients,
-                department: formData.department || undefined,
-                role: formData.role || undefined,
-                scheduledDate: formData.scheduledDate || undefined
+                type: formData.type as Notification['type'],
+                priority: formData.priority as Notification['priority'],
+                category: formData.category as Notification['category'],
+                targetUsers: formData.targetUsers,
+                targetRoles: formData.targetRoles,
+                scheduledDate: formData.scheduledDate,
+                expiryDate: formData.expiryDate,
+                attachments: formData.attachments,
+                actions: formData.actions
             } : n
         );
 
@@ -265,11 +306,13 @@ export default function NotificationsPage() {
             message: '',
             type: 'info',
             priority: 'medium',
-            recipientType: 'all',
-            department: '',
-            role: '',
-            recipients: '',
-            scheduledDate: ''
+            category: 'other',
+            targetUsers: [],
+            targetRoles: [],
+            scheduledDate: '',
+            expiryDate: '',
+            attachments: [],
+            actions: []
         });
         toast.success('Notification updated successfully');
     };
@@ -279,396 +322,504 @@ export default function NotificationsPage() {
         toast.success('Notification deleted successfully');
     };
 
-    const handleSend = (id: string) => {
+    const handleToggleRead = (id: string) => {
         setNotifications(prev => prev.map(notification => 
             notification.id === id 
                 ? { 
                     ...notification, 
-                    status: 'sent' as const,
-                    sentDate: new Date().toISOString()
+                    isRead: !notification.isRead,
+                    readBy: !notification.isRead ? [...notification.readBy, 'Current User'] : notification.readBy.filter(user => user !== 'Current User'),
+                    readAt: !notification.isRead ? [...notification.readAt, new Date().toISOString()] : notification.readAt.slice(0, -1)
                 }
                 : notification
         ));
-        toast.success('Notification sent successfully');
+        toast.success('Notification status updated');
     };
 
-    const handleMarkAsRead = (id: string) => {
+    const handleToggleActive = (id: string) => {
         setNotifications(prev => prev.map(notification => 
             notification.id === id 
-                ? { 
-                    ...notification, 
-                    status: 'read' as const,
-                    readBy: [...notification.readBy, 'current-user']
-                }
+                ? { ...notification, isActive: !notification.isActive }
                 : notification
         ));
-        toast.success('Notification marked as read');
+        toast.success('Notification status updated');
     };
 
-    const getTypeIcon = (type: Notification['type']) => {
-        switch (type) {
-            case 'info':
-                return <Info className="h-4 w-4" />;
-            case 'warning':
-                return <AlertCircle className="h-4 w-4" />;
-            case 'error':
-                return <AlertCircle className="h-4 w-4" />;
-            case 'success':
-                return <CheckCircle className="h-4 w-4" />;
-            default:
-                return <Bell className="h-4 w-4" />;
-        }
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     };
 
     const totalNotifications = filteredNotifications.length;
-    const unreadNotifications = filteredNotifications.filter(n => n.status !== 'read').length;
-    const urgentNotifications = filteredNotifications.filter(n => n.priority === 'urgent').length;
-    const sentNotifications = filteredNotifications.filter(n => n.status === 'sent' || n.status === 'delivered' || n.status === 'read').length;
+    const unreadNotifications = filteredNotifications.filter(n => !n.isRead).length;
+    const activeNotifications = filteredNotifications.filter(n => n.isActive).length;
+    const urgentNotifications = filteredNotifications.filter(n => n.priority === 'critical' || n.priority === 'high').length;
+
+    const columns = [
+        {
+            key: 'title' as keyof Notification,
+            header: 'Title',
+            render: (value: any, notification: Notification) => (
+                <div className="flex items-center space-x-2">
+                    <div>
+                        <div className={`font-semibold ${notification.isRead ? 'text-slate-600' : 'text-slate-800'}`}>
+                            {notification.title}
+                        </div>
+                        <div className="text-sm text-slate-600 truncate max-w-xs">
+                            {notification.message}
+                        </div>
+                    </div>
+                    {!notification.isRead && (
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    )}
+                </div>
+            ),
+            sortable: true
+        },
+        {
+            key: 'type' as keyof Notification,
+            header: 'Type',
+            render: (value: any) => {
+                const typeConfig = notificationTypes.find(t => t.value === value);
+                const typeColors = {
+                    'info': 'bg-blue-50 text-blue-700 border-blue-200',
+                    'warning': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+                    'error': 'bg-red-50 text-red-700 border-red-200',
+                    'success': 'bg-green-50 text-green-700 border-green-200',
+                    'urgent': 'bg-red-50 text-red-700 border-red-200'
+                };
+                
+                return (
+                    <Badge variant="outline" className={`${typeColors[value as keyof typeof typeColors]} font-medium`}>
+                        {typeConfig?.icon}
+                        <span className="ml-1">{typeConfig?.label}</span>
+                    </Badge>
+                );
+            },
+            sortable: true
+        },
+        {
+            key: 'priority' as keyof Notification,
+            header: 'Priority',
+            render: (value: any) => {
+                const priorityColors = {
+                    'low': 'bg-gray-50 text-gray-700 border-gray-200',
+                    'medium': 'bg-blue-50 text-blue-700 border-blue-200',
+                    'high': 'bg-orange-50 text-orange-700 border-orange-200',
+                    'critical': 'bg-red-50 text-red-700 border-red-200'
+                };
+                
+                return (
+                    <Badge variant="outline" className={`${priorityColors[value as keyof typeof priorityColors]} font-medium`}>
+                        {value.charAt(0).toUpperCase() + value.slice(1)}
+                    </Badge>
+                );
+            },
+            sortable: true
+        },
+        {
+            key: 'category' as keyof Notification,
+            header: 'Category',
+            render: (value: any) => (
+                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                    {value.charAt(0).toUpperCase() + value.slice(1)}
+                </Badge>
+            ),
+            sortable: true
+        },
+        {
+            key: 'targetUsers' as keyof Notification,
+            header: 'Target Users',
+            render: (value: any) => (
+                <div className="text-sm text-slate-700">
+                    {value.length > 0 ? `${value.length} user(s)` : 'All users'}
+                </div>
+            ),
+            sortable: true
+        },
+        {
+            key: 'scheduledDate' as keyof Notification,
+            header: 'Scheduled',
+            render: (value: any) => <span className="text-slate-700">{formatDate(value)}</span>,
+            sortable: true
+        },
+        {
+            key: 'isRead' as keyof Notification,
+            header: 'Status',
+            render: (value: any, notification: Notification) => (
+                <div className="flex space-x-2">
+                    <Badge variant="outline" className={`${notification.isRead ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'} font-medium`}>
+                        {notification.isRead ? 'Read' : 'Unread'}
+                    </Badge>
+                    <Badge variant="outline" className={`${notification.isActive ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-700 border-gray-200'} font-medium`}>
+                        {notification.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                </div>
+            ),
+            sortable: true
+        }
+    ];
+
+    const actions = [
+        {
+            label: 'View Details',
+            onClick: (notification: Notification) => toast.info('View details feature coming soon'),
+            icon: <Eye className="h-4 w-4" />
+        },
+        {
+            label: 'Edit Notification',
+            onClick: (notification: Notification) => handleEdit(notification),
+            icon: <Edit className="h-4 w-4" />
+        },
+        {
+            label: 'Mark as Read',
+            onClick: (notification: Notification) => handleToggleRead(notification.id),
+            icon: <CheckCircle className="h-4 w-4" />,
+            hidden: (notification: Notification) => notification.isRead
+        },
+        {
+            label: 'Mark as Unread',
+            onClick: (notification: Notification) => handleToggleRead(notification.id),
+            icon: <XCircle className="h-4 w-4" />,
+            hidden: (notification: Notification) => !notification.isRead
+        },
+        {
+            label: 'Activate',
+            onClick: (notification: Notification) => handleToggleActive(notification.id),
+            icon: <CheckCircle className="h-4 w-4" />,
+            hidden: (notification: Notification) => notification.isActive
+        },
+        {
+            label: 'Deactivate',
+            onClick: (notification: Notification) => handleToggleActive(notification.id),
+            icon: <XCircle className="h-4 w-4" />,
+            hidden: (notification: Notification) => !notification.isActive
+        },
+        {
+            label: 'Delete Notification',
+            onClick: (notification: Notification) => handleDelete(notification.id),
+            icon: <Trash2 className="h-4 w-4" />,
+            variant: 'destructive' as const
+        }
+    ];
+
+    const stats = [
+        {
+            label: 'Total Notifications',
+            value: totalNotifications,
+            change: '+12%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Unread',
+            value: unreadNotifications,
+            change: '-5%',
+            trend: 'down' as const
+        },
+        {
+            label: 'Active',
+            value: activeNotifications,
+            change: '+8%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Urgent',
+            value: urgentNotifications,
+            change: '+3%',
+            trend: 'up' as const
+        }
+    ];
+
+    const filterOptions = [
+        {
+            key: 'type',
+            label: 'Type',
+            value: typeFilter,
+            options: [
+                { key: 'all', label: 'All Types', value: 'all' },
+                ...notificationTypes.map(type => ({ key: type.value, label: type.label, value: type.value }))
+            ],
+            onValueChange: setTypeFilter
+        },
+        {
+            key: 'priority',
+            label: 'Priority',
+            value: priorityFilter,
+            options: [
+                { key: 'all', label: 'All Priorities', value: 'all' },
+                ...priorities.map(priority => ({ key: priority.value, label: priority.label, value: priority.value }))
+            ],
+            onValueChange: setPriorityFilter
+        },
+        {
+            key: 'category',
+            label: 'Category',
+            value: categoryFilter,
+            options: [
+                { key: 'all', label: 'All Categories', value: 'all' },
+                ...categories.map(category => ({ key: category.value, label: category.label, value: category.value }))
+            ],
+            onValueChange: setCategoryFilter
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            value: statusFilter,
+            options: [
+                { key: 'all', label: 'All Statuses', value: 'all' },
+                { key: 'read', label: 'Read', value: 'read' },
+                { key: 'unread', label: 'Unread', value: 'unread' },
+                { key: 'active', label: 'Active', value: 'active' },
+                { key: 'inactive', label: 'Inactive', value: 'inactive' }
+            ],
+            onValueChange: setStatusFilter
+        }
+    ];
+
+    const activeFilters = [];
+    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
+    if (typeFilter !== 'all') activeFilters.push(`Type: ${notificationTypes.find(t => t.value === typeFilter)?.label}`);
+    if (priorityFilter !== 'all') activeFilters.push(`Priority: ${priorities.find(p => p.value === priorityFilter)?.label}`);
+    if (categoryFilter !== 'all') activeFilters.push(`Category: ${categories.find(c => c.value === categoryFilter)?.label}`);
+    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-foreground">Notifications</h1>
-                    <p className="text-muted-foreground">Manage system notifications and alerts</p>
-                </div>
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-primary hover:bg-primary/90">
-                            <Plus className="h-4 w-4 mr-2" />
-                            New Notification
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>Create New Notification</DialogTitle>
-                            <DialogDescription>
-                                Send a notification to users
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
+            {/* Page Header */}
+            <PageHeader
+                title="Notifications Management"
+                description="Manage system notifications with comprehensive targeting and scheduling"
+                stats={stats}
+                actions={{
+                    primary: {
+                        label: 'New Notification',
+                        onClick: () => setIsCreateDialogOpen(true),
+                        icon: <Plus className="h-4 w-4" />
+                    },
+                    secondary: [
+                        {
+                            label: 'Export Report',
+                            onClick: () => toast.info('Export feature coming soon'),
+                            icon: <Download className="h-4 w-4" />
+                        },
+                        {
+                            label: 'Notification Analytics',
+                            onClick: () => toast.info('Analytics feature coming soon'),
+                            icon: <Filter className="h-4 w-4" />
+                        }
+                    ]
+                }}
+            />
+
+            {/* Filter Bar */}
+            <FilterBar
+                searchPlaceholder="Search by title, message, or category..."
+                searchValue={searchTerm}
+                onSearchChange={setSearchTerm}
+                filters={filterOptions}
+                activeFilters={activeFilters}
+                onClearFilters={() => {
+                    setSearchTerm('');
+                    setTypeFilter('all');
+                    setPriorityFilter('all');
+                    setCategoryFilter('all');
+                    setStatusFilter('all');
+                }}
+            />
+
+            {/* Notifications Table */}
+            <EnhancedCard
+                title="Notifications Overview"
+                description={`${filteredNotifications.length} notifications out of ${notifications.length} total`}
+                variant="gradient"
+                size="lg"
+                stats={{
+                    total: notifications.length,
+                    badge: 'Active Notifications',
+                    badgeColor: 'success'
+                }}
+            >
+                <EnhancedDataTable
+                    data={filteredNotifications}
+                    columns={columns}
+                    actions={actions}
+                    loading={false}
+                    noDataMessage="No notifications found matching your criteria"
+                    searchPlaceholder="Search notifications..."
+                />
+            </EnhancedCard>
+
+            {/* Create Dialog */}
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Create New Notification</DialogTitle>
+                        <DialogDescription>
+                            Create a new notification with targeting and scheduling
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="title">Title</Label>
+                            <Input
+                                id="title"
+                                value={formData.title}
+                                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                                placeholder="Notification title"
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="message">Message</Label>
+                            <Textarea
+                                id="message"
+                                value={formData.message}
+                                onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+                                placeholder="Notification message"
+                                rows={4}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="title">Title</Label>
-                                <Input
-                                    id="title"
-                                    value={formData.title}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                                    placeholder="Notification title"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="message">Message</Label>
-                                <Textarea
-                                    id="message"
-                                    value={formData.message}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
-                                    placeholder="Notification message"
-                                    rows={4}
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="type">Type</Label>
-                                    <Select value={formData.type} onValueChange={(value: Notification['type']) => setFormData(prev => ({ ...prev, type: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {Object.entries(notificationTypes).map(([key, label]) => (
-                                                <SelectItem key={key} value={key}>{label}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label htmlFor="priority">Priority</Label>
-                                    <Select value={formData.priority} onValueChange={(value: Notification['priority']) => setFormData(prev => ({ ...prev, priority: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {Object.entries(priorities).map(([key, label]) => (
-                                                <SelectItem key={key} value={key}>{label}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="recipientType">Recipient Type</Label>
-                                <Select value={formData.recipientType} onValueChange={(value: Notification['recipientType']) => setFormData(prev => ({ ...prev, recipientType: value, department: '', role: '', recipients: '' }))}>
-                                    <SelectTrigger>
+                                <Label htmlFor="type">Type</Label>
+                                <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Users</SelectItem>
-                                        <SelectItem value="department">Department</SelectItem>
-                                        <SelectItem value="role">Role</SelectItem>
-                                        <SelectItem value="specific">Specific Users</SelectItem>
+                                        {notificationTypes.map(type => (
+                                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
-                            {formData.recipientType === 'department' && (
-                                <div>
-                                    <Label htmlFor="department">Department</Label>
-                                    <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Department" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {departments.map(dept => (
-                                                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            )}
-                            {formData.recipientType === 'role' && (
-                                <div>
-                                    <Label htmlFor="role">Role</Label>
-                                    <Select value={formData.role} onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Role" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {roles.map(role => (
-                                                <SelectItem key={role} value={role}>{role}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            )}
-                            {formData.recipientType === 'specific' && (
-                                <div>
-                                    <Label htmlFor="recipients">Recipients</Label>
-                                    <Input
-                                        id="recipients"
-                                        value={formData.recipients}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, recipients: e.target.value }))}
-                                        placeholder="Enter usernames separated by commas"
-                                    />
-                                </div>
-                            )}
                             <div>
-                                <Label htmlFor="scheduledDate">Schedule Date (Optional)</Label>
+                                <Label htmlFor="priority">Priority</Label>
+                                <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {priorities.map(priority => (
+                                            <SelectItem key={priority.value} value={priority.value}>{priority.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div>
+                            <Label htmlFor="category">Category</Label>
+                            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {categories.map(category => (
+                                        <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="targetUsers">Target Users</Label>
+                            <Select value="" onValueChange={(value) => {
+                                if (value && !formData.targetUsers.includes(value)) {
+                                    setFormData(prev => ({ ...prev, targetUsers: [...prev.targetUsers, value] }));
+                                }
+                            }}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue placeholder="Select users" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {users.map(user => (
+                                        <SelectItem key={user} value={user}>{user}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                {formData.targetUsers.map(user => (
+                                    <Badge key={user} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                        {user}
+                                        <button
+                                            onClick={() => setFormData(prev => ({ ...prev, targetUsers: prev.targetUsers.filter(u => u !== user) }))}
+                                            className="ml-1 text-blue-500 hover:text-blue-700"
+                                        >
+                                            ×
+                                        </button>
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <Label htmlFor="targetRoles">Target Roles</Label>
+                            <Select value="" onValueChange={(value) => {
+                                if (value && !formData.targetRoles.includes(value)) {
+                                    setFormData(prev => ({ ...prev, targetRoles: [...prev.targetRoles, value] }));
+                                }
+                            }}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue placeholder="Select roles" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {roles.map(role => (
+                                        <SelectItem key={role} value={role}>{role}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                {formData.targetRoles.map(role => (
+                                    <Badge key={role} variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                        {role}
+                                        <button
+                                            onClick={() => setFormData(prev => ({ ...prev, targetRoles: prev.targetRoles.filter(r => r !== role) }))}
+                                            className="ml-1 text-green-500 hover:text-green-700"
+                                        >
+                                            ×
+                                        </button>
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="scheduledDate">Scheduled Date</Label>
                                 <Input
                                     id="scheduledDate"
                                     type="datetime-local"
                                     value={formData.scheduledDate}
                                     onChange={(e) => setFormData(prev => ({ ...prev, scheduledDate: e.target.value }))}
+                                    className="mt-1"
                                 />
                             </div>
-                            <div className="flex justify-end space-x-2">
-                                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button onClick={handleCreate}>
-                                    <Bell className="h-4 w-4 mr-2" />
-                                    Create Notification
-                                </Button>
+                            <div>
+                                <Label htmlFor="expiryDate">Expiry Date</Label>
+                                <Input
+                                    id="expiryDate"
+                                    type="datetime-local"
+                                    value={formData.expiryDate}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
+                                    className="mt-1"
+                                />
                             </div>
                         </div>
-                    </DialogContent>
-                </Dialog>
-            </div>
-
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Notifications</CardTitle>
-                        <Bell className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{totalNotifications}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Unread</CardTitle>
-                        <AlertCircle className="h-4 w-4 text-yellow-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-yellow-600">{unreadNotifications}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Urgent</CardTitle>
-                        <AlertCircle className="h-4 w-4 text-red-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-red-600">{urgentNotifications}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Sent</CardTitle>
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-600">{sentNotifications}</div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                        placeholder="Search notifications..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pr-10"
-                    />
-                </div>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
-                        {Object.entries(notificationTypes).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Priorities</SelectItem>
-                        {Object.entries(priorities).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        {Object.entries(statusLabels).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-
-            {/* Notifications Table */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Bell className="h-5 w-5" />
-                        Notifications List
-                    </CardTitle>
-                    <CardDescription>
-                        {filteredNotifications.length} notifications out of {notifications.length}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Title</TableHead>
-                                    <TableHead>Message</TableHead>
-                                    <TableHead>Priority</TableHead>
-                                    <TableHead>Recipients</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Created</TableHead>
-                                    <TableHead>Sent</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredNotifications.map((notification) => (
-                                    <TableRow key={notification.id}>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                {getTypeIcon(notification.type)}
-                                                <Badge className={`${typeColors[notification.type]} w-fit`}>
-                                                    {notificationTypes[notification.type]}
-                                                </Badge>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="font-medium max-w-xs truncate">{notification.title}</TableCell>
-                                        <TableCell className="max-w-xs truncate">{notification.message}</TableCell>
-                                        <TableCell>
-                                            <Badge className={`${priorityColors[notification.priority]} w-fit`}>
-                                                {priorities[notification.priority]}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-sm">
-                                            {notification.recipientType === 'all' ? 'All Users' :
-                                             notification.recipientType === 'department' ? notification.department :
-                                             notification.recipientType === 'role' ? notification.role :
-                                             `${notification.recipients.length} users`}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={`${statusColors[notification.status]} w-fit`}>
-                                                {statusLabels[notification.status]}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-sm">{notification.createdAt.split('T')[0]}</TableCell>
-                                        <TableCell className="text-sm">{notification.sentDate ? notification.sentDate.split('T')[0] : '-'}</TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleEdit(notification)}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                {notification.status === 'draft' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleSend(notification.id)}
-                                                        className="text-green-600 hover:text-green-700"
-                                                    >
-                                                        <Send className="h-4 w-4" />
-                                                    </Button>
-                                                )}
-                                                {notification.status === 'sent' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleMarkAsRead(notification.id)}
-                                                        className="text-blue-600 hover:text-blue-700"
-                                                    >
-                                                        Mark as Read
-                                                    </Button>
-                                                )}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleDelete(notification.id)}
-                                                    className="text-destructive hover:text-destructive"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                        <div className="flex justify-end space-x-2 pt-4">
+                            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleCreate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                                <Bell className="h-4 w-4 mr-2" />
+                                Create Notification
+                            </Button>
+                        </div>
                     </div>
-                </CardContent>
-            </Card>
+                </DialogContent>
+            </Dialog>
 
             {/* Edit Dialog */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -676,7 +827,7 @@ export default function NotificationsPage() {
                     <DialogHeader>
                         <DialogTitle>Edit Notification</DialogTitle>
                         <DialogDescription>
-                            Update notification data
+                            Update notification information and targeting
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -686,6 +837,7 @@ export default function NotificationsPage() {
                                 id="edit-title"
                                 value={formData.title}
                                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                                className="mt-1"
                             />
                         </div>
                         <div>
@@ -695,104 +847,137 @@ export default function NotificationsPage() {
                                 value={formData.message}
                                 onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
                                 rows={4}
+                                className="mt-1"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="edit-type">Type</Label>
-                                <Select value={formData.type} onValueChange={(value: Notification['type']) => setFormData(prev => ({ ...prev, type: value }))}>
-                                    <SelectTrigger>
+                                <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {Object.entries(notificationTypes).map(([key, label]) => (
-                                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                                        {notificationTypes.map(type => (
+                                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div>
                                 <Label htmlFor="edit-priority">Priority</Label>
-                                <Select value={formData.priority} onValueChange={(value: Notification['priority']) => setFormData(prev => ({ ...prev, priority: value }))}>
-                                    <SelectTrigger>
+                                <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {Object.entries(priorities).map(([key, label]) => (
-                                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                                        {priorities.map(priority => (
+                                            <SelectItem key={priority.value} value={priority.value}>{priority.label}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="edit-recipientType">Recipient Type</Label>
-                            <Select value={formData.recipientType} onValueChange={(value: Notification['recipientType']) => setFormData(prev => ({ ...prev, recipientType: value, department: '', role: '', recipients: '' }))}>
-                                <SelectTrigger>
+                            <Label htmlFor="edit-category">Category</Label>
+                            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                                <SelectTrigger className="mt-1">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All Users</SelectItem>
-                                    <SelectItem value="department">Department</SelectItem>
-                                    <SelectItem value="role">Role</SelectItem>
-                                    <SelectItem value="specific">Specific Users</SelectItem>
+                                    {categories.map(category => (
+                                        <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
-                        {formData.recipientType === 'department' && (
-                            <div>
-                                <Label htmlFor="edit-department">Department</Label>
-                                <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {departments.map(dept => (
-                                            <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                        <div>
+                            <Label htmlFor="edit-targetUsers">Target Users</Label>
+                            <Select value="" onValueChange={(value) => {
+                                if (value && !formData.targetUsers.includes(value)) {
+                                    setFormData(prev => ({ ...prev, targetUsers: [...prev.targetUsers, value] }));
+                                }
+                            }}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue placeholder="Select users" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {users.map(user => (
+                                        <SelectItem key={user} value={user}>{user}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                {formData.targetUsers.map(user => (
+                                    <Badge key={user} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                        {user}
+                                        <button
+                                            onClick={() => setFormData(prev => ({ ...prev, targetUsers: prev.targetUsers.filter(u => u !== user) }))}
+                                            className="ml-1 text-blue-500 hover:text-blue-700"
+                                        >
+                                            ×
+                                        </button>
+                                    </Badge>
+                                ))}
                             </div>
-                        )}
-                        {formData.recipientType === 'role' && (
-                            <div>
-                                <Label htmlFor="edit-role">Role</Label>
-                                <Select value={formData.role} onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {roles.map(role => (
-                                            <SelectItem key={role} value={role}>{role}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-targetRoles">Target Roles</Label>
+                            <Select value="" onValueChange={(value) => {
+                                if (value && !formData.targetRoles.includes(value)) {
+                                    setFormData(prev => ({ ...prev, targetRoles: [...prev.targetRoles, value] }));
+                                }
+                            }}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue placeholder="Select roles" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {roles.map(role => (
+                                        <SelectItem key={role} value={role}>{role}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                {formData.targetRoles.map(role => (
+                                    <Badge key={role} variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                        {role}
+                                        <button
+                                            onClick={() => setFormData(prev => ({ ...prev, targetRoles: prev.targetRoles.filter(r => r !== role) }))}
+                                            className="ml-1 text-green-500 hover:text-green-700"
+                                        >
+                                            ×
+                                        </button>
+                                    </Badge>
+                                ))}
                             </div>
-                        )}
-                        {formData.recipientType === 'specific' && (
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="edit-recipients">Recipients</Label>
+                                <Label htmlFor="edit-scheduledDate">Scheduled Date</Label>
                                 <Input
-                                    id="edit-recipients"
-                                    value={formData.recipients}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, recipients: e.target.value }))}
+                                    id="edit-scheduledDate"
+                                    type="datetime-local"
+                                    value={formData.scheduledDate}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, scheduledDate: e.target.value }))}
+                                    className="mt-1"
                                 />
                             </div>
-                        )}
-                        <div>
-                            <Label htmlFor="edit-scheduledDate">Schedule Date (Optional)</Label>
-                            <Input
-                                id="edit-scheduledDate"
-                                type="datetime-local"
-                                value={formData.scheduledDate}
-                                onChange={(e) => setFormData(prev => ({ ...prev, scheduledDate: e.target.value }))}
-                            />
+                            <div>
+                                <Label htmlFor="edit-expiryDate">Expiry Date</Label>
+                                <Input
+                                    id="edit-expiryDate"
+                                    type="datetime-local"
+                                    value={formData.expiryDate}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
+                                    className="mt-1"
+                                />
+                            </div>
                         </div>
-                        <div className="flex justify-end space-x-2">
+                        <div className="flex justify-end space-x-2 pt-4">
                             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleUpdate}>
+                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
                                 <Bell className="h-4 w-4 mr-2" />
                                 Save Changes
                             </Button>

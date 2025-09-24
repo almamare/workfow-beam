@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // In a real app, validate token with server
             setUser({
                 id: '1',
-                email: 'admin@company.com',
+                email: 'admin@shuarano.com',
                 firstName: 'John',
                 lastName: 'Doe',
                 role: 'Administrator',
@@ -48,10 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 1000));
 
-            if (email === 'admin@company.com' && password === 'password') {
+            if (email === 'admin@shuarano.com' && password === 'password') {
                 const mockUser = {
                     id: '1',
-                    email: 'admin@company.com',
+                    email: 'admin@shuarano.com',
                     firstName: 'John',
                     lastName: 'Doe',
                     role: 'Administrator',

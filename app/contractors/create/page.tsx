@@ -201,7 +201,7 @@ const CreateContractorPage: React.FC = () => {
                                 id="name"
                                 label="Name *"
                                 value={form.name}
-                                placeholder="e.g. Al-Amal Company"
+                                placeholder="e.g. Shuaa Al-Ranou Trade & General Contracting"
                                 error={errors.name}
                                 onChange={(v) => updateField('name', v)}
                             />
@@ -244,7 +244,7 @@ const CreateContractorPage: React.FC = () => {
                                 id="email"
                                 label="Email"
                                 value={form.email ?? ''}
-                                placeholder="e.g. info@company.com"
+                                placeholder="e.g. info@shuarano.com"
                                 error={errors.email}
                                 onChange={(v) => updateField('email', v)}
                             />

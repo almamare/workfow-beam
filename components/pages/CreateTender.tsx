@@ -448,7 +448,7 @@ const CreateTenderPage: React.FC = () => {
                             <Button
                                 type="button"
                                 size="sm"
-                                variant="secondary"
+                                variant="outline"
                                 onClick={recalcAll}
                             >
                                 <Calculator className="h-4 w-4 mr-2" />

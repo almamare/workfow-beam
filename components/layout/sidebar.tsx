@@ -69,7 +69,6 @@ const menuItems: MenuItem[] = [
         title: 'Requests & Approvals',
         icon: <FileText className="h-5 w-5" />,
         color: 'text-yellow-600',
-        badge: '3',
         children: [
             { title: 'Tasks Requests', icon: <FileText className="h-4 w-4" />, href: '/requests/tasks', color: 'text-yellow-600' },
             { title: 'Financial Requests', icon: <FileText className="h-4 w-4" />, href: '/requests/financial', color: 'text-green-600' },
@@ -108,7 +107,6 @@ const menuItems: MenuItem[] = [
         icon: <Megaphone className="h-5 w-5" />,
         href: '/notifications',
         color: 'text-pink-600',
-        badge: '5'
     },
     {
         title: 'Settings',
@@ -204,7 +202,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                 collapsed && !mobileOpen ? "lg:w-20" : "lg:w-72"
             )}>
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-6 border-b border-slate-700">
+                <div className="flex items-center justify-between px-4 py-[14px] border-b border-slate-700">
                     {(!collapsed || mobileOpen) && (
                         <div className="flex items-center gap-3">
                             <div className="relative">
@@ -217,7 +215,6 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                     className="shrink-0"
                                     style={{ width: "32px", height: "40px" }}
                                 />
-                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900"></div>
                             </div>
 
                             <div
@@ -230,7 +227,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                     Shuaa Al-Ranou
                                 </span>
                                 <span className="block text-xs text-slate-400 font-medium">
-                                    Trade & Contracting
+                                    Trade & General Contracting
                                 </span>
                             </div>
                         </div>
@@ -256,27 +253,35 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
 
                 {/* Stats Bar */}
                 {(!collapsed || mobileOpen) && (
-                    <div className="px-6 py-4 border-b border-slate-700">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-gradient-to-r from-green-500/20 to-green-600/20 rounded-lg p-3 border border-green-500/20">
+                    <div className="px-3 py-3 border-b border-slate-700">
+                        <div className="grid grid-cols-3 gap-2">
+                            <div className="bg-gradient-to-r from-green-500/20 to-green-600/20 rounded-lg p-2 border border-green-500/20">
                                 <div className="flex items-center gap-2">
-                                    <TrendingUp className="h-4 w-4 text-green-400" />
-                                    <span className="text-xs text-green-300 font-medium">Active</span>
+                                    <TrendingUp className="h-3 w-3 text-green-400" />
+                                    <span className="text-[10px] text-green-300 font-medium">Active</span>
                                 </div>
-                                <p className="text-lg font-bold text-white mt-1">24</p>
-                                <p className="text-xs text-slate-400">Projects</p>
+                                <p className="text-md font-bold text-white mt-1">24</p>
+                                <p className="text-[10px] text-slate-400">Projects</p>
                             </div>
-                            <div className="bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-lg p-3 border border-blue-500/20">
+                            <div className="bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 rounded-lg p-2 border border-yellow-500/20">
                                 <div className="flex items-center gap-2">
-                                    <Activity className="h-4 w-4 text-blue-400" />
-                                    <span className="text-xs text-blue-300 font-medium">Pending</span>
+                                    <TrendingUp className="h-3 w-3 text-yellow-400" />
+                                    <span className="text-[10px] text-yellow-300 font-medium">Available</span>
                                 </div>
-                                <p className="text-lg font-bold text-white mt-1">8</p>
-                                <p className="text-xs text-slate-400">Tasks</p>
+                                <p className="text-md font-bold text-white mt-1">12</p>
+                                <p className="text-[10px] text-slate-400">Notifications</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-lg p-2 border border-blue-500/20">
+                                <div className="flex items-center gap-2">
+                                    <Activity className="h-3 w-3 text-blue-400" />
+                                    <span className="text-[10px] text-blue-300 font-medium">Pending</span>
+                                </div>
+                                <p className="text-md font-bold text-white mt-1">8</p>
+                                <p className="text-[10px] text-slate-400">Tasks</p>
                             </div>
                         </div>
                     </div>
-                )}
+                )} 
 
                 {/* Navigation */}
                 <nav className="p-4 flex-1 overflow-y-auto pb-6 scrollbar-thin">

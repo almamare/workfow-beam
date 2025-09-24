@@ -1,193 +1,266 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Users, Plus, Search, Eye, Edit, Trash2, Calendar as CalendarIcon } from 'lucide-react';
+import { Users, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, Clock, UserCheck, UserX } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { PageHeader } from '@/components/ui/page-header';
+import { FilterBar } from '@/components/ui/filter-bar';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
 
 interface EmployeeRequest {
     id: string;
     requestNumber: string;
-    type: 'vacation' | 'sick_leave' | 'overtime' | 'training' | 'transfer' | 'resignation';
+    employeeId: string;
+    employeeName: string;
+    requestType: 'leave' | 'overtime' | 'advance' | 'training' | 'equipment' | 'other';
     title: string;
     description: string;
-    employee: string;
-    department: string;
     startDate: string;
-    endDate?: string;
-    days?: number;
-    status: 'pending' | 'approved' | 'rejected' | 'processing';
-    priority: 'low' | 'medium' | 'high';
-    createdAt: string;
-    approvedAt?: string;
-    approver?: string;
-    comments?: string;
+    endDate: string;
+    amount?: number;
+    currency?: string;
+    status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    department: string;
+    position: string;
+    supervisor: string;
+    submittedDate: string;
+    reviewedDate: string;
+    reviewedBy: string;
+    comments: string;
+    attachments: string[];
+    metadata: Record<string, any>;
 }
 
 const mockRequests: EmployeeRequest[] = [
     {
         id: '1',
-        requestNumber: 'EMP-001',
-        type: 'vacation',
+        requestNumber: 'REQ-EMP-001',
+        employeeId: 'EMP-001',
+        employeeName: 'Ahmed Ali',
+        requestType: 'leave',
         title: 'Annual Leave Request',
-        description: 'Request for annual leave for 15 days',
-        employee: 'Ahmed Mohamed',
-        department: 'Sales',
-        startDate: '2024-02-01',
-        endDate: '2024-02-15',
-        days: 15,
+        description: 'Request for annual leave from January 20-25, 2024 for personal reasons.',
+        startDate: '2024-01-20',
+        endDate: '2024-01-25',
         status: 'pending',
         priority: 'medium',
-        createdAt: '2024-01-15',
+        department: 'Project Management',
+        position: 'Project Manager',
+        supervisor: 'Fatima Mohamed',
+        submittedDate: '2024-01-15',
+        reviewedDate: '',
+        reviewedBy: '',
+        comments: '',
+        attachments: ['leave_application.pdf'],
+        metadata: { leaveType: 'annual', days: 5 }
     },
     {
         id: '2',
-        requestNumber: 'EMP-002',
-        type: 'sick_leave',
-        title: 'Sick Leave Request',
-        description: 'Request for sick leave for 3 days',
-        employee: 'Sara Ahmed',
-        department: 'Accounting',
-        startDate: '2024-01-20',
-        endDate: '2024-01-22',
-        days: 3,
+        requestNumber: 'REQ-EMP-002',
+        employeeId: 'EMP-002',
+        employeeName: 'Sara Ahmed',
+        requestType: 'overtime',
+        title: 'Overtime Request',
+        description: 'Request for overtime work on January 18, 2024 from 6:00 PM to 10:00 PM for project completion.',
+        startDate: '2024-01-18',
+        endDate: '2024-01-18',
         status: 'approved',
         priority: 'high',
-        createdAt: '2024-01-19',
-        approvedAt: '2024-01-20',
-        approver: 'Mohamed Ali',
-        comments: 'Request approved'
+        department: 'IT Department',
+        position: 'Software Developer',
+        supervisor: 'Omar Hassan',
+        submittedDate: '2024-01-17',
+        reviewedDate: '2024-01-17',
+        reviewedBy: 'Omar Hassan',
+        comments: 'Approved for project completion',
+        attachments: [],
+        metadata: { hours: 4, rate: 50 }
     },
     {
         id: '3',
-        requestNumber: 'EMP-003',
-        type: 'training',
+        requestNumber: 'REQ-EMP-003',
+        employeeId: 'EMP-003',
+        employeeName: 'Mohammed Saleh',
+        requestType: 'advance',
+        title: 'Salary Advance Request',
+        description: 'Request for salary advance of SAR 5,000 for emergency medical expenses.',
+        startDate: '2024-01-19',
+        endDate: '2024-01-19',
+        amount: 5000,
+        currency: 'USD',
+        status: 'pending',
+        priority: 'urgent',
+        department: 'Finance',
+        position: 'Accountant',
+        supervisor: 'Ahmed Ali',
+        submittedDate: '2024-01-18',
+        reviewedDate: '',
+        reviewedBy: '',
+        comments: '',
+        attachments: ['medical_bills.pdf'],
+        metadata: { reason: 'medical', repaymentPlan: 'monthly' }
+    },
+    {
+        id: '4',
+        requestNumber: 'REQ-EMP-004',
+        employeeId: 'EMP-004',
+        employeeName: 'Fatima Mohamed',
+        requestType: 'training',
         title: 'Training Course Request',
-        description: 'Request to participate in project management training course',
-        employee: 'Khalid Hassan',
-        department: 'Development',
-        startDate: '2024-03-01',
-        endDate: '2024-03-05',
-        days: 5,
+        description: 'Request to attend PMP certification course from February 1-5, 2024.',
+        startDate: '2024-02-01',
+        endDate: '2024-02-05',
+        status: 'approved',
+        priority: 'medium',
+        department: 'Project Management',
+        position: 'Senior Project Manager',
+        supervisor: 'Ahmed Ali',
+        submittedDate: '2024-01-10',
+        reviewedDate: '2024-01-12',
+        reviewedBy: 'Ahmed Ali',
+        comments: 'Approved for professional development',
+        attachments: ['course_brochure.pdf'],
+        metadata: { courseName: 'PMP Certification', cost: 2500, currency: 'USD' }
+    },
+    {
+        id: '5',
+        requestNumber: 'REQ-EMP-005',
+        employeeId: 'EMP-005',
+        employeeName: 'Omar Hassan',
+        requestType: 'equipment',
+        title: 'Equipment Request',
+        description: 'Request for new laptop computer for software development work.',
+        startDate: '2024-01-20',
+        endDate: '2024-01-20',
         status: 'rejected',
         priority: 'low',
-        createdAt: '2024-01-18',
-        approvedAt: '2024-01-19',
-        approver: 'Fatima Mohamed',
-        comments: 'Budget not available at the moment'
+        department: 'IT Department',
+        position: 'IT Manager',
+        supervisor: 'Ahmed Ali',
+        submittedDate: '2024-01-15',
+        reviewedDate: '2024-01-16',
+        reviewedBy: 'Ahmed Ali',
+        comments: 'Current laptop is sufficient for current workload',
+        attachments: ['laptop_specs.pdf'],
+        metadata: { equipmentType: 'laptop', estimatedCost: 3000, currency: 'USD' }
     }
 ];
 
-const requestTypes = {
-    vacation: 'Annual Leave',
-    sick_leave: 'Sick Leave',
-    overtime: 'Overtime',
-    training: 'Training Course',
-    transfer: 'Transfer',
-    resignation: 'Resignation'
-};
+const requestTypes = [
+    { value: 'leave', label: 'Leave Request', icon: <Calendar className="h-4 w-4" /> },
+    { value: 'overtime', label: 'Overtime Request', icon: <Clock className="h-4 w-4" /> },
+    { value: 'advance', label: 'Salary Advance', icon: <Users className="h-4 w-4" /> },
+    { value: 'training', label: 'Training Request', icon: <UserCheck className="h-4 w-4" /> },
+    { value: 'equipment', label: 'Equipment Request', icon: <Users className="h-4 w-4" /> },
+    { value: 'other', label: 'Other Request', icon: <Users className="h-4 w-4" /> }
+];
 
-const statusLabels = {
-    pending: 'Pending',
-    approved: 'Approved',
-    rejected: 'Rejected',
-    processing: 'Processing'
-};
+const priorities = [
+    { value: 'low', label: 'Low' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'high', label: 'High' },
+    { value: 'urgent', label: 'Urgent' }
+];
 
-const priorityLabels = {
-    low: 'Low',
-    medium: 'Medium',
-    high: 'High'
-};
-
-const statusColors = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    approved: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800',
-    processing: 'bg-blue-100 text-blue-800'
-};
-
-const priorityColors = {
-    low: 'bg-gray-100 text-gray-800',
-    medium: 'bg-blue-100 text-blue-800',
-    high: 'bg-red-100 text-red-800'
-};
-
-const departments = ['Sales', 'Accounting', 'Development', 'Human Resources', 'Marketing', 'Production'];
+const departments = ['Project Management', 'IT Department', 'Finance', 'HR', 'Operations', 'Sales', 'Marketing'];
+const employees = ['Ahmed Ali', 'Sara Ahmed', 'Mohammed Saleh', 'Fatima Mohamed', 'Omar Hassan'];
+const supervisors = ['Ahmed Ali', 'Fatima Mohamed', 'Omar Hassan'];
 
 export default function EmployeeRequestsPage() {
     const [requests, setRequests] = useState<EmployeeRequest[]>(mockRequests);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<string>('all');
     const [typeFilter, setTypeFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [priorityFilter, setPriorityFilter] = useState<string>('all');
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [editingRequest, setEditingRequest] = useState<EmployeeRequest | null>(null);
     const [formData, setFormData] = useState({
-        type: 'vacation' as EmployeeRequest['type'],
+        employeeId: '',
+        employeeName: '',
+        requestType: 'leave',
         title: '',
         description: '',
-        department: '',
         startDate: '',
         endDate: '',
-        days: '',
-        priority: 'medium' as 'low' | 'medium' | 'high'
+        amount: '',
+        currency: 'USD',
+        priority: 'medium',
+        department: '',
+        position: '',
+        supervisor: '',
+        comments: ''
     });
 
     const filteredRequests = requests.filter(request => {
-        const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            request.employee.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            request.requestNumber.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = request.requestNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            request.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            request.description.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesType = typeFilter === 'all' || request.requestType === typeFilter;
         const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
-        const matchesType = typeFilter === 'all' || request.type === typeFilter;
+        const matchesPriority = priorityFilter === 'all' || request.priority === priorityFilter;
         
-        return matchesSearch && matchesStatus && matchesType;
+        return matchesSearch && matchesType && matchesStatus && matchesPriority;
     });
 
     const handleCreate = () => {
-        if (!formData.title || !formData.startDate || !formData.department) {
+        if (!formData.employeeName || !formData.title || !formData.description || !formData.startDate) {
             toast.error('Please fill in all required fields');
             return;
         }
 
         const newRequest: EmployeeRequest = {
             id: Date.now().toString(),
-            requestNumber: `EMP-${String(requests.length + 1).padStart(3, '0')}`,
-            type: formData.type,
+            requestNumber: `REQ-EMP-${String(requests.length + 1).padStart(3, '0')}`,
+            employeeId: formData.employeeId,
+            employeeName: formData.employeeName,
+            requestType: formData.requestType as EmployeeRequest['requestType'],
             title: formData.title,
             description: formData.description,
-            employee: 'Current User',
-            department: formData.department,
             startDate: formData.startDate,
-            endDate: formData.endDate || undefined,
-            days: formData.days ? parseInt(formData.days) : undefined,
+            endDate: formData.endDate,
+            amount: formData.amount ? parseFloat(formData.amount) : undefined,
+            currency: formData.currency,
             status: 'pending',
-            priority: formData.priority,
-            createdAt: new Date().toISOString().split('T')[0]
+            priority: formData.priority as EmployeeRequest['priority'],
+            department: formData.department,
+            position: formData.position,
+            supervisor: formData.supervisor,
+            submittedDate: new Date().toISOString().split('T')[0],
+            reviewedDate: '',
+            reviewedBy: '',
+            comments: formData.comments,
+            attachments: [],
+            metadata: {}
         };
 
         setRequests([...requests, newRequest]);
         setIsCreateDialogOpen(false);
         setFormData({
-            type: 'vacation',
+            employeeId: '',
+            employeeName: '',
+            requestType: 'leave',
             title: '',
             description: '',
-            department: '',
             startDate: '',
             endDate: '',
-            days: '',
-            priority: 'medium'
+            amount: '',
+            currency: 'USD',
+            priority: 'medium',
+            department: '',
+            position: '',
+            supervisor: '',
+            comments: ''
         });
         toast.success('Employee request created successfully');
     };
@@ -195,14 +268,20 @@ export default function EmployeeRequestsPage() {
     const handleEdit = (request: EmployeeRequest) => {
         setEditingRequest(request);
         setFormData({
-            type: request.type,
+            employeeId: request.employeeId,
+            employeeName: request.employeeName,
+            requestType: request.requestType,
             title: request.title,
             description: request.description,
-            department: request.department,
             startDate: request.startDate,
-            endDate: request.endDate || '',
-            days: request.days?.toString() || '',
-            priority: request.priority
+            endDate: request.endDate,
+            amount: request.amount?.toString() || '',
+            currency: request.currency || 'USD',
+            priority: request.priority,
+            department: request.department,
+            position: request.position,
+            supervisor: request.supervisor,
+            comments: request.comments
         });
         setIsEditDialogOpen(true);
     };
@@ -213,14 +292,20 @@ export default function EmployeeRequestsPage() {
         const updatedRequests = requests.map(r =>
             r.id === editingRequest.id ? { 
                 ...r, 
-                type: formData.type,
+                employeeId: formData.employeeId,
+                employeeName: formData.employeeName,
+                requestType: formData.requestType as EmployeeRequest['requestType'],
                 title: formData.title,
                 description: formData.description,
-                department: formData.department,
                 startDate: formData.startDate,
-                endDate: formData.endDate || undefined,
-                days: formData.days ? parseInt(formData.days) : undefined,
-                priority: formData.priority
+                endDate: formData.endDate,
+                amount: formData.amount ? parseFloat(formData.amount) : undefined,
+                currency: formData.currency,
+                priority: formData.priority as EmployeeRequest['priority'],
+                department: formData.department,
+                position: formData.position,
+                supervisor: formData.supervisor,
+                comments: formData.comments
             } : r
         );
 
@@ -228,14 +313,20 @@ export default function EmployeeRequestsPage() {
         setIsEditDialogOpen(false);
         setEditingRequest(null);
         setFormData({
-            type: 'vacation',
+            employeeId: '',
+            employeeName: '',
+            requestType: 'leave',
             title: '',
             description: '',
-            department: '',
             startDate: '',
             endDate: '',
-            days: '',
-            priority: 'medium'
+            amount: '',
+            currency: 'USD',
+            priority: 'medium',
+            department: '',
+            position: '',
+            supervisor: '',
+            comments: ''
         });
         toast.success('Employee request updated successfully');
     };
@@ -245,74 +336,457 @@ export default function EmployeeRequestsPage() {
         toast.success('Employee request deleted successfully');
     };
 
-    const calculateDays = (startDate: string, endDate: string) => {
-        if (!startDate || !endDate) return 0;
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        const diffTime = Math.abs(end.getTime() - start.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-        return diffDays;
+    const handleStatusChange = (id: string, status: EmployeeRequest['status']) => {
+        setRequests(prev => prev.map(request => 
+            request.id === id 
+                ? { 
+                    ...request, 
+                    status: status,
+                    reviewedDate: status === 'approved' || status === 'rejected' ? new Date().toISOString().split('T')[0] : '',
+                    reviewedBy: status === 'approved' || status === 'rejected' ? 'Current User' : ''
+                }
+                : request
+        ));
+        toast.success(`Request ${status} successfully`);
     };
+
+    const formatNumber = (amount: number) => {
+        return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 0
+        }).format(amount);
+    };
+
+    const totalRequests = filteredRequests.length;
+    const pendingRequests = filteredRequests.filter(r => r.status === 'pending').length;
+    const approvedRequests = filteredRequests.filter(r => r.status === 'approved').length;
+    const rejectedRequests = filteredRequests.filter(r => r.status === 'rejected').length;
+
+    const columns = [
+        {
+            key: 'requestNumber' as keyof EmployeeRequest,
+            header: 'Request Number',
+            render: (value: any) => <span className="font-mono text-sm text-slate-600">{value}</span>,
+            sortable: true,
+            width: '140px'
+        },
+        {
+            key: 'employeeName' as keyof EmployeeRequest,
+            header: 'Employee',
+            render: (value: any, request: EmployeeRequest) => (
+                <div>
+                    <div className="font-semibold text-slate-800">{request.employeeName}</div>
+                    <div className="text-sm text-slate-600">{request.employeeId}</div>
+                </div>
+            ),
+            sortable: true
+        },
+        {
+            key: 'requestType' as keyof EmployeeRequest,
+            header: 'Request Type',
+            render: (value: any) => {
+                const typeConfig = requestTypes.find(t => t.value === value);
+                const typeColors = {
+                    'leave': 'bg-blue-50 text-blue-700 border-blue-200',
+                    'overtime': 'bg-green-50 text-green-700 border-green-200',
+                    'advance': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+                    'training': 'bg-purple-50 text-purple-700 border-purple-200',
+                    'equipment': 'bg-orange-50 text-orange-700 border-orange-200',
+                    'other': 'bg-gray-50 text-gray-700 border-gray-200'
+                };
+                
+                return (
+                    <Badge variant="outline" className={`${typeColors[value as keyof typeof typeColors]} font-medium`}>
+                        {typeConfig?.icon}
+                        <span className="ml-1">{typeConfig?.label}</span>
+                    </Badge>
+                );
+            },
+            sortable: true
+        },
+        {
+            key: 'title' as keyof EmployeeRequest,
+            header: 'Title',
+            render: (value: any, request: EmployeeRequest) => (
+                <div>
+                    <div className="font-semibold text-slate-800">{request.title}</div>
+                    <div className="text-sm text-slate-600 truncate max-w-xs">{request.description}</div>
+                </div>
+            ),
+            sortable: true
+        },
+        {
+            key: 'amount' as keyof EmployeeRequest,
+            header: 'Amount',
+            render: (value: any, request: EmployeeRequest) => (
+                <span className="font-semibold text-slate-800">
+                    {value ? formatNumber(value) : '-'}
+                </span>
+            ),
+            sortable: true
+        },
+        {
+            key: 'startDate' as keyof EmployeeRequest,
+            header: 'Date Range',
+            render: (value: any, request: EmployeeRequest) => (
+                <div>
+                    <div className="text-sm text-slate-700">{request.startDate}</div>
+                    <div className="text-xs text-slate-500">to {request.endDate}</div>
+                </div>
+            ),
+            sortable: true
+        },
+        {
+            key: 'priority' as keyof EmployeeRequest,
+            header: 'Priority',
+            render: (value: any) => {
+                const priorityColors = {
+                    'low': 'bg-gray-50 text-gray-700 border-gray-200',
+                    'medium': 'bg-blue-50 text-blue-700 border-blue-200',
+                    'high': 'bg-orange-50 text-orange-700 border-orange-200',
+                    'urgent': 'bg-red-50 text-red-700 border-red-200'
+                };
+                
+                return (
+                    <Badge variant="outline" className={`${priorityColors[value as keyof typeof priorityColors]} font-medium`}>
+                        {value.charAt(0).toUpperCase() + value.slice(1)}
+                    </Badge>
+                );
+            },
+            sortable: true
+        },
+        {
+            key: 'department' as keyof EmployeeRequest,
+            header: 'Department',
+            render: (value: any) => <span className="text-slate-700">{value}</span>,
+            sortable: true
+        },
+        {
+            key: 'status' as keyof EmployeeRequest,
+            header: 'Status',
+            render: (value: any) => {
+                const statusColors = {
+                    'pending': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                    'approved': 'bg-green-100 text-green-700 border-green-200',
+                    'rejected': 'bg-red-100 text-red-700 border-red-200',
+                    'cancelled': 'bg-gray-100 text-gray-700 border-gray-200'
+                };
+                
+                return (
+                    <Badge variant="outline" className={`${statusColors[value as keyof typeof statusColors]} font-medium`}>
+                        {value.charAt(0).toUpperCase() + value.slice(1)}
+                    </Badge>
+                );
+            },
+            sortable: true
+        }
+    ];
+
+    const actions = [
+        {
+            label: 'View Details',
+            onClick: (request: EmployeeRequest) => toast.info('View details feature coming soon'),
+            icon: <Eye className="h-4 w-4" />
+        },
+        {
+            label: 'Edit Request',
+            onClick: (request: EmployeeRequest) => handleEdit(request),
+            icon: <Edit className="h-4 w-4" />
+        },
+        {
+            label: 'Approve Request',
+            onClick: (request: EmployeeRequest) => handleStatusChange(request.id, 'approved'),
+            icon: <CheckCircle className="h-4 w-4" />,
+            hidden: (request: EmployeeRequest) => request.status !== 'pending'
+        },
+        {
+            label: 'Reject Request',
+            onClick: (request: EmployeeRequest) => handleStatusChange(request.id, 'rejected'),
+            icon: <XCircle className="h-4 w-4" />,
+            hidden: (request: EmployeeRequest) => request.status === 'approved' || request.status === 'rejected'
+        },
+        {
+            label: 'Cancel Request',
+            onClick: (request: EmployeeRequest) => handleStatusChange(request.id, 'cancelled'),
+            icon: <UserX className="h-4 w-4" />,
+            hidden: (request: EmployeeRequest) => request.status === 'approved' || request.status === 'rejected'
+        },
+        {
+            label: 'Delete Request',
+            onClick: (request: EmployeeRequest) => handleDelete(request.id),
+            icon: <Trash2 className="h-4 w-4" />,
+            variant: 'destructive' as const
+        }
+    ];
+
+    const stats = [
+        {
+            label: 'Total Requests',
+            value: totalRequests,
+            change: '+15%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Pending',
+            value: pendingRequests,
+            change: '+8%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Approved',
+            value: approvedRequests,
+            change: '+12%',
+            trend: 'up' as const
+        },
+        {
+            label: 'Rejected',
+            value: rejectedRequests,
+            change: '-5%',
+            trend: 'down' as const
+        }
+    ];
+
+    const filterOptions = [
+        {
+            key: 'type',
+            label: 'Request Type',
+            value: typeFilter,
+            options: [
+                { key: 'all', label: 'All Types', value: 'all' },
+                ...requestTypes.map(type => ({ key: type.value, label: type.label, value: type.value }))
+            ],
+            onValueChange: setTypeFilter
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            value: statusFilter,
+            options: [
+                { key: 'all', label: 'All Statuses', value: 'all' },
+                { key: 'pending', label: 'Pending', value: 'pending' },
+                { key: 'approved', label: 'Approved', value: 'approved' },
+                { key: 'rejected', label: 'Rejected', value: 'rejected' },
+                { key: 'cancelled', label: 'Cancelled', value: 'cancelled' }
+            ],
+            onValueChange: setStatusFilter
+        },
+        {
+            key: 'priority',
+            label: 'Priority',
+            value: priorityFilter,
+            options: [
+                { key: 'all', label: 'All Priorities', value: 'all' },
+                ...priorities.map(priority => ({ key: priority.value, label: priority.label, value: priority.value }))
+            ],
+            onValueChange: setPriorityFilter
+        }
+    ];
+
+    const activeFilters = [];
+    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
+    if (typeFilter !== 'all') activeFilters.push(`Type: ${requestTypes.find(t => t.value === typeFilter)?.label}`);
+    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
+    if (priorityFilter !== 'all') activeFilters.push(`Priority: ${priorities.find(p => p.value === priorityFilter)?.label}`);
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-foreground">Employee Requests</h1>
-                    <p className="text-muted-foreground">Manage employee requests and leaves</p>
-                </div>
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-primary hover:bg-primary/90">
-                            <Plus className="h-4 w-4 mr-2" />
-                            New Employee Request
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>Create New Employee Request</DialogTitle>
-                            <DialogDescription>
-                                Create a new employee request with details
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
+            {/* Page Header */}
+            <PageHeader
+                title="Employee Requests"
+                description="Manage employee requests with comprehensive tracking and approval workflow"
+                stats={stats}
+                actions={{
+                    primary: {
+                        label: 'New Request',
+                        onClick: () => setIsCreateDialogOpen(true),
+                        icon: <Plus className="h-4 w-4" />
+                    },
+                    secondary: [
+                        {
+                            label: 'Export Report',
+                            onClick: () => toast.info('Export feature coming soon'),
+                            icon: <Download className="h-4 w-4" />
+                        },
+                        {
+                            label: 'Request Analytics',
+                            onClick: () => toast.info('Analytics feature coming soon'),
+                            icon: <Filter className="h-4 w-4" />
+                        }
+                    ]
+                }}
+            />
+
+            {/* Filter Bar */}
+            <FilterBar
+                searchPlaceholder="Search by request number, employee name, or title..."
+                searchValue={searchTerm}
+                onSearchChange={setSearchTerm}
+                filters={filterOptions}
+                activeFilters={activeFilters}
+                onClearFilters={() => {
+                    setSearchTerm('');
+                    setTypeFilter('all');
+                    setStatusFilter('all');
+                    setPriorityFilter('all');
+                }}
+            />
+
+            {/* Requests Table */}
+            <EnhancedCard
+                title="Employee Requests Overview"
+                description={`${filteredRequests.length} requests out of ${requests.length} total`}
+                variant="gradient"
+                size="lg"
+                stats={{
+                    total: requests.length,
+                    badge: 'Active Requests',
+                    badgeColor: 'success'
+                }}
+            >
+                <EnhancedDataTable
+                    data={filteredRequests}
+                    columns={columns}
+                    actions={actions}
+                    loading={false}
+                    noDataMessage="No requests found matching your criteria"
+                    searchPlaceholder="Search requests..."
+                />
+            </EnhancedCard>
+
+            {/* Create Dialog */}
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Create New Employee Request</DialogTitle>
+                        <DialogDescription>
+                            Add a new employee request with comprehensive details
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="employeeName">Employee Name</Label>
+                            <Select value={formData.employeeName} onValueChange={(value) => setFormData(prev => ({ ...prev, employeeName: value }))}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue placeholder="Select Employee" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {employees.map(employee => (
+                                        <SelectItem key={employee} value={employee}>{employee}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="employeeId">Employee ID</Label>
+                            <Input
+                                id="employeeId"
+                                value={formData.employeeId}
+                                onChange={(e) => setFormData(prev => ({ ...prev, employeeId: e.target.value }))}
+                                placeholder="Employee ID"
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="requestType">Request Type</Label>
+                            <Select value={formData.requestType} onValueChange={(value) => setFormData(prev => ({ ...prev, requestType: value }))}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {requestTypes.map(type => (
+                                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="title">Title</Label>
+                            <Input
+                                id="title"
+                                value={formData.title}
+                                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                                placeholder="Request title"
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea
+                                id="description"
+                                value={formData.description}
+                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                placeholder="Request description"
+                                rows={4}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="type">Request Type</Label>
-                                <Select value={formData.type} onValueChange={(value: EmployeeRequest['type']) => setFormData(prev => ({ ...prev, type: value }))}>
-                                    <SelectTrigger>
+                                <Label htmlFor="startDate">Start Date</Label>
+                                <Input
+                                    id="startDate"
+                                    type="date"
+                                    value={formData.startDate}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="endDate">End Date</Label>
+                                <Input
+                                    id="endDate"
+                                    type="date"
+                                    value={formData.endDate}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                                    className="mt-1"
+                                />
+                            </div>
+                        </div>
+                        {(formData.requestType === 'advance' || formData.requestType === 'equipment') && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="amount">Amount</Label>
+                                    <Input
+                                        id="amount"
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.amount}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                                        placeholder="0.00"
+                                        className="mt-1"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="currency">Currency</Label>
+                                    <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
+                                        <SelectTrigger className="mt-1">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="USD">US Dollar</SelectItem>
+                                            <SelectItem value="EUR">Euro</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="priority">Priority</Label>
+                                <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {Object.entries(requestTypes).map(([key, label]) => (
-                                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                                        {priorities.map(priority => (
+                                            <SelectItem key={priority.value} value={priority.value}>{priority.label}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div>
-                                <Label htmlFor="title">Request Title</Label>
-                                <Input
-                                    id="title"
-                                    value={formData.title}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                                    placeholder="e.g., Annual Leave Request"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="description">Description</Label>
-                                <Textarea
-                                    id="description"
-                                    value={formData.description}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                    placeholder="Detailed description of the request"
-                                    rows={3}
-                                />
-                            </div>
-                            <div>
                                 <Label htmlFor="department">Department</Label>
                                 <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="Select Department" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -322,187 +796,55 @@ export default function EmployeeRequestsPage() {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="startDate">Start Date</Label>
-                                    <Input
-                                        id="startDate"
-                                        type="date"
-                                        value={formData.startDate}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="endDate">End Date</Label>
-                                    <Input
-                                        id="endDate"
-                                        type="date"
-                                        value={formData.endDate}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                                    />
-                                </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="position">Position</Label>
+                                <Input
+                                    id="position"
+                                    value={formData.position}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
+                                    placeholder="Employee position"
+                                    className="mt-1"
+                                />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="days">Number of Days</Label>
-                                    <Input
-                                        id="days"
-                                        type="number"
-                                        value={formData.days}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, days: e.target.value }))}
-                                        placeholder="0"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="priority">Priority</Label>
-                                    <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high') => setFormData(prev => ({ ...prev, priority: value }))}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="low">Low</SelectItem>
-                                            <SelectItem value="medium">Medium</SelectItem>
-                                            <SelectItem value="high">High</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div className="flex justify-end space-x-2">
-                                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button onClick={handleCreate}>
-                                    <Users className="h-4 w-4 mr-2" />
-                                    Create Request
-                                </Button>
+                            <div>
+                                <Label htmlFor="supervisor">Supervisor</Label>
+                                <Select value={formData.supervisor} onValueChange={(value) => setFormData(prev => ({ ...prev, supervisor: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue placeholder="Select Supervisor" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {supervisors.map(supervisor => (
+                                            <SelectItem key={supervisor} value={supervisor}>{supervisor}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
-                    </DialogContent>
-                </Dialog>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                        placeholder="Search employee requests..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pr-10"
-                    />
-                </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Request Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
-                        <SelectItem value="processing">Processing</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Request Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
-                        {Object.entries(requestTypes).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-
-            {/* Requests Table */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Users className="h-5 w-5" />
-                        Employee Requests List
-                    </CardTitle>
-                    <CardDescription>
-                        {filteredRequests.length} requests out of {requests.length}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Request Number</TableHead>
-                                    <TableHead>Request Type</TableHead>
-                                    <TableHead>Title</TableHead>
-                                    <TableHead>Employee</TableHead>
-                                    <TableHead>Department</TableHead>
-                                    <TableHead>Duration</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Priority</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredRequests.map((request) => (
-                                    <TableRow key={request.id}>
-                                        <TableCell className="font-medium">{request.requestNumber}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline">
-                                                {requestTypes[request.type]}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="max-w-xs truncate">{request.title}</TableCell>
-                                        <TableCell>{request.employee}</TableCell>
-                                        <TableCell>{request.department}</TableCell>
-                                        <TableCell>
-                                            {request.days ? `${request.days} days` : 'Not specified'}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={`${statusColors[request.status]} w-fit`}>
-                                                {statusLabels[request.status]}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={`${priorityColors[request.priority]} w-fit`}>
-                                                {priorityLabels[request.priority]}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>{request.createdAt}</TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleEdit(request)}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleDelete(request.id)}
-                                                    className="text-destructive hover:text-destructive"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                        <div>
+                            <Label htmlFor="comments">Comments</Label>
+                            <Textarea
+                                id="comments"
+                                value={formData.comments}
+                                onChange={(e) => setFormData(prev => ({ ...prev, comments: e.target.value }))}
+                                placeholder="Additional comments"
+                                rows={3}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="flex justify-end space-x-2 pt-4">
+                            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleCreate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                                <Users className="h-4 w-4 mr-2" />
+                                Create Request
+                            </Button>
+                        </div>
                     </div>
-                </CardContent>
-            </Card>
+                </DialogContent>
+            </Dialog>
 
             {/* Edit Dialog */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -510,29 +852,52 @@ export default function EmployeeRequestsPage() {
                     <DialogHeader>
                         <DialogTitle>Edit Employee Request</DialogTitle>
                         <DialogDescription>
-                            Update employee request data
+                            Update employee request information and details
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="edit-type">Request Type</Label>
-                            <Select value={formData.type} onValueChange={(value: EmployeeRequest['type']) => setFormData(prev => ({ ...prev, type: value }))}>
-                                <SelectTrigger>
+                            <Label htmlFor="edit-employeeName">Employee Name</Label>
+                            <Select value={formData.employeeName} onValueChange={(value) => setFormData(prev => ({ ...prev, employeeName: value }))}>
+                                <SelectTrigger className="mt-1">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {Object.entries(requestTypes).map(([key, label]) => (
-                                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                                    {employees.map(employee => (
+                                        <SelectItem key={employee} value={employee}>{employee}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="edit-title">Request Title</Label>
+                            <Label htmlFor="edit-employeeId">Employee ID</Label>
+                            <Input
+                                id="edit-employeeId"
+                                value={formData.employeeId}
+                                onChange={(e) => setFormData(prev => ({ ...prev, employeeId: e.target.value }))}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-requestType">Request Type</Label>
+                            <Select value={formData.requestType} onValueChange={(value) => setFormData(prev => ({ ...prev, requestType: value }))}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {requestTypes.map(type => (
+                                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-title">Title</Label>
                             <Input
                                 id="edit-title"
                                 value={formData.title}
                                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                                className="mt-1"
                             />
                         </div>
                         <div>
@@ -541,21 +906,9 @@ export default function EmployeeRequestsPage() {
                                 id="edit-description"
                                 value={formData.description}
                                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                rows={3}
+                                rows={4}
+                                className="mt-1"
                             />
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-department">Department</Label>
-                            <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {departments.map(department => (
-                                        <SelectItem key={department} value={department}>{department}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -565,6 +918,7 @@ export default function EmployeeRequestsPage() {
                                     type="date"
                                     value={formData.startDate}
                                     onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                                    className="mt-1"
                                 />
                             </div>
                             <div>
@@ -574,38 +928,104 @@ export default function EmployeeRequestsPage() {
                                     type="date"
                                     value={formData.endDate}
                                     onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                                    className="mt-1"
                                 />
                             </div>
                         </div>
+                        {(formData.requestType === 'advance' || formData.requestType === 'equipment') && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="edit-amount">Amount</Label>
+                                    <Input
+                                        id="edit-amount"
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.amount}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                                        className="mt-1"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="edit-currency">Currency</Label>
+                                    <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
+                                        <SelectTrigger className="mt-1">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="USD">US Dollar</SelectItem>
+                                            <SelectItem value="EUR">Euro</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        )}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="edit-days">Number of Days</Label>
-                                <Input
-                                    id="edit-days"
-                                    type="number"
-                                    value={formData.days}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, days: e.target.value }))}
-                                />
-                            </div>
-                            <div>
                                 <Label htmlFor="edit-priority">Priority</Label>
-                                <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high') => setFormData(prev => ({ ...prev, priority: value }))}>
-                                    <SelectTrigger>
+                                <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="low">Low</SelectItem>
-                                        <SelectItem value="medium">Medium</SelectItem>
-                                        <SelectItem value="high">High</SelectItem>
+                                        {priorities.map(priority => (
+                                            <SelectItem key={priority.value} value={priority.value}>{priority.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label htmlFor="edit-department">Department</Label>
+                                <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {departments.map(department => (
+                                            <SelectItem key={department} value={department}>{department}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
-                        <div className="flex justify-end space-x-2">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="edit-position">Position</Label>
+                                <Input
+                                    id="edit-position"
+                                    value={formData.position}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="edit-supervisor">Supervisor</Label>
+                                <Select value={formData.supervisor} onValueChange={(value) => setFormData(prev => ({ ...prev, supervisor: value }))}>
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {supervisors.map(supervisor => (
+                                            <SelectItem key={supervisor} value={supervisor}>{supervisor}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-comments">Comments</Label>
+                            <Textarea
+                                id="edit-comments"
+                                value={formData.comments}
+                                onChange={(e) => setFormData(prev => ({ ...prev, comments: e.target.value }))}
+                                rows={3}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="flex justify-end space-x-2 pt-4">
                             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleUpdate}>
+                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
                                 <Users className="h-4 w-4 mr-2" />
                                 Save Changes
                             </Button>
