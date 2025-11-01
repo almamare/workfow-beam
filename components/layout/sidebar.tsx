@@ -96,7 +96,7 @@ const menuItems: MenuItem[] = [
             { title: 'Transactions', icon: <FileText className="h-4 w-4" />, href: '/inventory/transactions', color: 'text-amber-600' }
         ]
     },
-    {
+    { 
         title: 'Contractors',
         icon: <Building className="h-5 w-5" />,
         href: '/contractors',
@@ -151,7 +151,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
 
     const hideText = collapsed && !mobileOpen;
 
-    // ✅ Fixed isActive to also handle sub URLs
+    // Fixed isActive to also handle sub URLs
     const isActive = (href: string) =>
         pathname === href || pathname.startsWith(href + '/');
 
@@ -184,6 +184,17 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [mobileOpen, setMobileOpen]);
+
+    // Hide sidebar entirely on dashboard
+    if (pathname === '/dashboard') {
+        return null;
+    }
+
+    // Determine contextual parent for current route
+    const contextualParent = menuItems.find(item => item.children?.some(child => child.href && pathname.startsWith(child.href)));
+
+    // When inside a section, only show that section's children
+    const itemsToRender = contextualParent ? [contextualParent] : menuItems;
 
     return (
         <>
@@ -284,9 +295,9 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                 )} 
 
                 {/* Navigation */}
-                <nav className="p-4 flex-1 overflow-y-auto pb-6 scrollbar-thin">
+                <nav className="p-4 flex-1 overflow-y-auto pb-6 scrollbar-thin">  
                     <div className="space-y-2">
-                        {menuItems.map((item, index) => (
+                        {itemsToRender.map((item, index) => (
                             <div key={item.title}>
                                 {item.href ? (
                                     <Link
