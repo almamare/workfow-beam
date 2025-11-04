@@ -24,7 +24,7 @@ export function EnhancedLayout({ children, className = '' }: EnhancedLayoutProps
         {/* Page Content */}
         <main className="relative">
           <div className={cn(
-            'mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8',
+            'mx-auto max-w-7xl px-4 py-4 sm:px-4 lg:px-4',
             'animate-in fade-in duration-500',
             className
           )}>

@@ -1,10 +1,8 @@
 'use client';
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/stores/store';
 import {
     Home,
     Users,
@@ -17,437 +15,264 @@ import {
     Wallet,
     Megaphone,
     Settings,
-    TrendingUp,
-    TrendingDown,
+    Building,
     Activity,
-    Clock,
-    CheckCircle,
-    AlertTriangle,
+    ClipboardList,
+    History,
+    UserCircle,
+    Briefcase,
+    Calculator,
     BarChart3,
-    PieChart,
-    Calendar,
-    Bell,
-    Star,
-    ArrowRight,
-    Plus,
-    Eye,
-    Edit,
-    Trash2,
+    CreditCard,
+    Banknote,
+    FileCheck,
+    UserCheck,
+    ShoppingCart,
+    Archive,
+    FileEdit,
+    Layers,
+    TrendingUp
 } from 'lucide-react';
 import Link from 'next/link';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
 
-const menuItems = [
+const allMenuItems = [
     {
-        title: 'Dashboard',
-        icon: Home,
-        href: '/dashboard',
-        color: 'from-blue-500 to-blue-600',
-        description: 'Main overview'
+        number: 1,
+        title: 'Clients',
+        icon: Briefcase,
+        href: '/clients',
+        color: 'from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700'
     },
     {
-        title: 'Projects & Tasks',
+        number: 2,
+        title: 'Projects',
         icon: FolderOpen,
-        children: [
-            { title: 'Clients', icon: Users, href: '/clients', color: 'from-purple-500 to-purple-600' },
-            { title: 'Projects', icon: FolderOpen, href: '/projects', color: 'from-indigo-500 to-indigo-600' },
-            { title: 'Budgets', icon: Wallet, href: '/budgets', color: 'from-green-500 to-green-600' },
-            { title: 'Task Orders', icon: FileText, href: '/tasks', color: 'from-orange-500 to-orange-600' },
-        ],
-        color: 'from-indigo-500 to-indigo-600',
-        description: 'Project management'
+        href: '/projects',
+        color: 'from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700'
     },
     {
-        title: 'User Management',
+        number: 3,
+        title: 'Budgets',
+        icon: Calculator,
+        href: '/budgets',
+        color: 'from-green-500 to-green-600 dark:from-green-600 dark:to-green-700'
+    },
+    {
+        number: 4,
+        title: 'Task Orders',
+        icon: ClipboardList,
+        href: '/tasks',
+        color: 'from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700'
+    },
+    {
+        number: 5,
+        title: 'Users',
         icon: Users,
-        children: [
-            { title: 'Users', icon: Users, href: '/users', color: 'from-blue-500 to-blue-600' },
-            { title: 'Permissions', icon: Shield, href: '/permissions', color: 'from-red-500 to-red-600' },
-            { title: 'Employees', icon: Contact, href: '/employees', color: 'from-green-500 to-green-600' },
-        ],
-        color: 'from-blue-500 to-blue-600',
-        description: 'User administration'
+        href: '/users',
+        color: 'from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700'
     },
     {
-        title: 'Requests & Approvals',
-        icon: FileText,
-        children: [
-            { title: 'Tasks Requests', icon: FileText, href: '/requests/tasks', color: 'from-yellow-500 to-yellow-600' },
-            { title: 'Financial Requests', icon: FileText, href: '/requests/financial', color: 'from-green-500 to-green-600' },
-            { title: 'Employees Requests', icon: FileText, href: '/requests/employees', color: 'from-purple-500 to-purple-600' },
-            { title: 'Approvals', icon: Shield, href: '/approvals', color: 'from-red-500 to-red-600' },
-        ],
-        color: 'from-yellow-500 to-yellow-600',
-        description: 'Request management'
+        number: 6,
+        title: 'Permissions',
+        icon: Shield,
+        href: '/permissions',
+        color: 'from-red-500 to-red-600 dark:from-red-600 dark:to-red-700'
     },
     {
-        title: 'Financial',
-        icon: Wallet,
-        children: [
-            { title: 'Contractor Payments', icon: DollarSign, href: '/financial/contractor-payments', color: 'from-green-500 to-green-600' },
-            { title: 'Cash Ledger', icon: DollarSign, href: '/financial/cash-ledger', color: 'from-emerald-500 to-emerald-600' },
-            { title: 'Project Budgets', icon: DollarSign, href: '/financial/budgets', color: 'from-teal-500 to-teal-600' },
-            { title: 'Loans', icon: DollarSign, href: '/financial/loans', color: 'from-cyan-500 to-cyan-600' },
-        ],
-        color: 'from-green-500 to-green-600',
-        description: 'Financial operations'
+        number: 7,
+        title: 'Employees',
+        icon: UserCheck,
+        href: '/employees',
+        color: 'from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700'
     },
     {
-        title: 'Inventory',
+        number: 8,
+        title: 'Tasks Requests',
+        icon: FileEdit,
+        href: '/requests/tasks',
+        color: 'from-yellow-500 to-yellow-600 dark:from-yellow-600 dark:to-yellow-700'
+    },
+    {
+        number: 9,
+        title: 'Financial Requests',
+        icon: CreditCard,
+        href: '/requests/financial',
+        color: 'from-teal-500 to-teal-600 dark:from-teal-600 dark:to-teal-700'
+    },
+    {
+        number: 10,
+        title: 'Employees Requests',
+        icon: Contact,
+        href: '/requests/employees',
+        color: 'from-violet-500 to-violet-600 dark:from-violet-600 dark:to-violet-700'
+    },
+    {
+        number: 11,
+        title: 'Approvals',
+        icon: FileCheck,
+        href: '/approvals',
+        color: 'from-rose-500 to-rose-600 dark:from-rose-600 dark:to-rose-700'
+    },
+    {
+        number: 12,
+        title: 'Contractor Payments',
+        icon: Banknote,
+        href: '/financial/contractor-payments',
+        color: 'from-lime-500 to-lime-600 dark:from-lime-600 dark:to-lime-700'
+    },
+    {
+        number: 13,
+        title: 'Cash Ledger',
+        icon: BarChart3,
+        href: '/financial/cash-ledger',
+        color: 'from-cyan-500 to-cyan-600 dark:from-cyan-600 dark:to-cyan-700'
+    },
+    {
+        number: 14,
+        title: 'Project Budgets',
+        icon: TrendingUp,
+        href: '/financial/budgets',
+        color: 'from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700'
+    },
+    {
+        number: 15,
+        title: 'Loans',
+        icon: DollarSign,
+        href: '/financial/loans',
+        color: 'from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700'
+    },
+    {
+        number: 16,
+        title: 'Items',
         icon: Package,
-        children: [
-            { title: 'Items', icon: Package, href: '/inventory/items', color: 'from-orange-500 to-orange-600' },
-            { title: 'Transactions', icon: FileText, href: '/inventory/transactions', color: 'from-amber-500 to-amber-600' },
-        ],
-        color: 'from-orange-500 to-orange-600',
-        description: 'Inventory management'
+        href: '/inventory/items',
+        color: 'from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700'
     },
     {
+        number: 17,
+        title: 'Transactions',
+        icon: ShoppingCart,
+        href: '/inventory/transactions',
+        color: 'from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700'
+    },
+    {
+        number: 18,
         title: 'Contractors',
-        icon: Users,
+        icon: Building,
         href: '/contractors',
-        color: 'from-purple-500 to-purple-600',
-        description: 'Contractor management'
+        color: 'from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700'
     },
     {
+        number: 19,
+        title: 'Forms',
+        icon: FileText,
+        href: '/forms',
+        color: 'from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700'
+    },
+    {
+        number: 20,
+        title: 'History',
+        icon: History,
+        href: '/history',
+        color: 'from-slate-500 to-slate-600 dark:from-slate-600 dark:to-slate-700'
+    },
+    {
+        number: 21,
+        title: 'Profile',
+        icon: UserCircle,
+        href: '/profile',
+        color: 'from-pink-500 to-pink-600 dark:from-pink-600 dark:to-pink-700'
+    },
+    {
+        number: 22,
         title: 'Notifications',
         icon: Megaphone,
         href: '/notifications',
-        color: 'from-pink-500 to-pink-600',
-        description: 'System notifications'
+        color: 'from-fuchsia-500 to-fuchsia-600 dark:from-fuchsia-600 dark:to-fuchsia-700'
     },
     {
+        number: 23,
         title: 'Settings',
         icon: Settings,
         href: '/settings',
-        color: 'from-gray-500 to-gray-600',
-        description: 'System settings'
+        color: 'from-gray-500 to-gray-600 dark:from-gray-600 dark:to-gray-700'
     },
 ];
-
-// Mock data for dashboard statistics
-const dashboardStats = [
-    {
-        title: 'Total Projects',
-        value: '24',
-        change: '+12%',
-        trend: 'up',
-        icon: FolderOpen,
-        color: 'from-blue-500 to-blue-600',
-        description: 'Active projects this month'
-    },
-    {
-        title: 'Active Tasks',
-        value: '156',
-        change: '+8%',
-        trend: 'up',
-        icon: CheckCircle,
-        color: 'from-green-500 to-green-600',
-        description: 'Tasks in progress'
-    },
-    {
-        title: 'Budget Used',
-        value: '78%',
-        change: '-3%',
-        trend: 'down',
-        icon: BarChart3,
-        color: 'from-orange-500 to-orange-600',
-        description: 'Of total budget'
-    },
-    {
-        title: 'Team Members',
-        value: '45',
-        change: '+5%',
-        trend: 'up',
-        icon: Users,
-        color: 'from-purple-500 to-purple-600',
-        description: 'Active team members'
-    }
-];
-
-const recentActivities = [
-    {
-        id: 1,
-        type: 'project',
-        title: 'New project created',
-        description: 'Office Building Renovation project has been created',
-        time: '2 hours ago',
-        icon: FolderOpen,
-        color: 'text-blue-600'
-    },
-    {
-        id: 2,
-        type: 'task',
-        title: 'Task completed',
-        description: 'Budget review task has been completed by Ahmed Ali',
-        time: '4 hours ago',
-        icon: CheckCircle,
-        color: 'text-green-600'
-    },
-    {
-        id: 3,
-        type: 'payment',
-        title: 'Payment processed',
-        description: 'Contractor payment of 50,000 has been processed',
-        time: '6 hours ago',
-        icon: DollarSign,
-        color: 'text-green-600'
-    },
-    {
-        id: 4,
-        type: 'alert',
-        title: 'Low stock alert',
-        description: 'Office supplies inventory is running low',
-        time: '8 hours ago',
-        icon: AlertTriangle,
-        color: 'text-yellow-600'
-    },
-    {
-        id: 5,
-        type: 'user',
-        title: 'New user added',
-        description: 'Sarah Ahmed has been added to the team',
-        time: '12 hours ago',
-        icon: Users,
-        color: 'text-purple-600'
-    }
-];
-
-const quickActions = [
-    {
-        title: 'Create Project',
-        description: 'Start a new project',
-        icon: Plus,
-        href: '/projects',
-        color: 'from-blue-500 to-blue-600'
-    },
-    {
-        title: 'Add Task',
-        description: 'Create a new task',
-        icon: FileText,
-        href: '/tasks',
-        color: 'from-green-500 to-green-600'
-    },
-    {
-        title: 'Process Payment',
-        description: 'Handle contractor payments',
-        icon: DollarSign,
-        href: '/financial/contractor-payments',
-        color: 'from-emerald-500 to-emerald-600'
-    },
-    {
-        title: 'View Reports',
-        description: 'Access system reports',
-        icon: BarChart3,
-        href: '/reports',
-        color: 'from-purple-500 to-purple-600'
-    }
-];
-
-const flattenMenu = (items: any[]) => {
-    let flat: any[] = [];
-    items.forEach((item) => {
-        if (item.href) {
-            flat.push(item);
-        }
-        if (item.children) {
-            flat = flat.concat(flattenMenu(item.children));
-        }
-    });
-    return flat;
-};
 
 export default function DashboardPage() {
-    const flatMenu = flattenMenu(menuItems);
+    // Explicitly type state as RootState to avoid 'unknown' type error
+    const user = useSelector((state: RootState) => (state as RootState).login.user);
+    const [userName, setUserName] = useState('User');
+
+    useEffect(() => {
+        if (user && typeof user.name === 'string') {
+            setUserName(user.name + ' ' + user.surname);
+        }
+    }, [user]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+        <div className="bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-300 p-3 sm:p-4 md:p-6">
             {/* Header Section */}
-            <div className="mb-8">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                            Welcome Back!
-                        </h1>
-                        <p className="text-slate-600 mt-2 text-lg">
-                            Here's what's happening with your projects today
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <Badge variant="outline" className="px-4 py-2 text-sm">
-                            <Clock className="w-4 h-4 mr-2" />
-                            Last updated: 2 min ago
-                        </Badge>
-                        <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Quick Add
-                        </Button>
-                    </div>
+            <div className="mb-4 md:mb-6">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-600 via-orange-500 to-orange-400 dark:from-orange-400 dark:via-orange-300 dark:to-orange-500 bg-clip-text text-transparent mb-2 leading-tight">
+                    Welcome to Shuaa Al-Ranou Trade & General Contracting
+                </h1>
+                <p className="text-base sm:text-lg md:text-xl text-slate-700 dark:text-slate-300 font-medium">
+                    Welcome, <span className="text-orange-600 dark:text-orange-400 font-semibold">{userName}</span>
+                </p>
+            </div>
+
+            {/* Navigation Grid */} 
+            <EnhancedCard 
+                title={'Choose the section you want to access'} 
+                description={'Navigate to the section you want to access'} 
+                variant="default" 
+                size="sm"
+                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700"
+            >
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 sm:gap-3 md:gap-4">
+                    {allMenuItems.map((item) => (
+                        <Link 
+                            key={item.href} 
+                            href={item.href}
+                            className="block group"
+                        >
+                            <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:border-orange-400 dark:hover:border-orange-500 hover:shadow-lg dark:hover:shadow-orange-500/10 transition-all duration-300 cursor-pointer h-full active:scale-95">
+                                {/* Background gradient on hover */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-white/50 dark:from-slate-700/30 dark:to-slate-800/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                
+                                {/* Content */}
+                                <div className="relative p-3 sm:p-4 flex flex-col items-center justify-center text-center h-full min-h-[100px] sm:min-h-[120px] md:min-h-[140px]">
+                                    {/* Icon Container */}
+                                    <div className="mb-2 sm:mb-3">
+                                        <div className={`p-2.5 sm:p-3 md:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r ${item.color} group-hover:scale-110 dark:group-hover:shadow-lg transition-all duration-300 inline-block shadow-md dark:shadow-lg`}>
+                                            {item.icon ? (
+                                                <item.icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
+                                            ) : (
+                                                <Activity className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Number and Title */}
+                                    <div className="w-full">
+                                        <h3 className="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors leading-tight line-clamp-2 px-1">
+                                            <span className="text-[9px] sm:text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 mr-1">
+                                                {String(item.number).padStart(2, '0')}.
+                                            </span>
+                                            {item.title}
+                                        </h3>
+                                    </div>
+                                </div>
+                                
+                                {/* Hover effect overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl sm:rounded-2xl" />
+                            </div>
+                        </Link>
+                    ))}
                 </div>
-            </div>
-
-            {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {dashboardStats.map((stat, index) => (
-                    <Card key={index} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-slate-600 text-sm font-medium mb-1">{stat.title}</p>
-                                    <p className="text-3xl font-bold text-slate-800 mb-1">{stat.value}</p>
-                                    <div className="flex items-center gap-2">
-                                        {stat.trend === 'up' ? (
-                                            <TrendingUp className="w-4 h-4 text-green-500" />
-                                        ) : (
-                                            <TrendingDown className="w-4 h-4 text-red-500" />
-                                        )}
-                                        <span className={`text-sm font-medium ${
-                                            stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                                        }`}>
-                                            {stat.change}
-                                        </span>
-                                        <span className="text-slate-500 text-sm">vs last month</span>
-                                    </div>
-                                </div>
-                                <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                                    <stat.icon className="w-6 h-6 text-white" />
-                                </div>
-                            </div>
-                            <p className="text-slate-500 text-xs mt-3">{stat.description}</p>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                {/* Quick Actions */}
-                <Card className="lg:col-span-2 shadow-lg border-0">
-                    <CardHeader className="bg-gradient-to-r from-slate-800 to-slate-700 text-white rounded-t-lg">
-                        <CardTitle className="flex items-center gap-2">
-                            <Star className="w-5 h-5" />
-                            Quick Actions
-                        </CardTitle>
-                        <CardDescription className="text-slate-200">
-                            Common tasks and shortcuts
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {quickActions.map((action, index) => (
-                                <Link key={index} href={action.href}>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full h-auto p-6 flex flex-col items-center gap-3 hover:shadow-lg transition-all duration-300 border-2 hover:border-orange-200 group"
-                                    >
-                                        <div className={`p-3 rounded-xl bg-gradient-to-r ${action.color} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                                            <action.icon className="w-6 h-6 text-white" />
-                                        </div>
-                                        <div className="text-center">
-                                            <p className="font-semibold text-slate-800">{action.title}</p>
-                                            <p className="text-sm text-slate-600">{action.description}</p>
-                                        </div>
-                                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors" />
-                                    </Button>
-                                </Link>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Recent Activities */}
-                <Card className="shadow-lg border-0">
-                    <CardHeader className="bg-gradient-to-r from-slate-800 to-slate-700 text-white rounded-t-lg">
-                        <CardTitle className="flex items-center gap-2">
-                            <Activity className="w-5 h-5" />
-                            Recent Activities
-                        </CardTitle>
-                        <CardDescription className="text-slate-200">
-                            Latest system updates
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <div className="space-y-4">
-                            {recentActivities.map((activity) => (
-                                <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
-                                    <div className={`p-2 rounded-lg bg-slate-100 ${activity.color}`}>
-                                        <activity.icon className="w-4 h-4" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-slate-800 text-sm">{activity.title}</p>
-                                        <p className="text-slate-600 text-xs mt-1 line-clamp-2">{activity.description}</p>
-                                        <p className="text-slate-400 text-xs mt-1">{activity.time}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <Button variant="ghost" className="w-full mt-4 text-orange-600 hover:text-orange-700 hover:bg-orange-50">
-                            View All Activities
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Navigation Menu */}
-            <Card className="shadow-lg border-0">
-                <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
-                    <CardTitle className="flex items-center gap-2">
-                        <Activity className="w-5 h-5" />
-                        System Navigation
-                    </CardTitle>
-                    <CardDescription className="text-orange-100">
-                        Access all system modules and features
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {menuItems.map((item, index) => (
-                            <div key={index} className="group">
-                                {item.children ? (
-                                    <div className="space-y-2">
-                                        <div className={`p-4 rounded-xl bg-gradient-to-r ${item.color} text-white shadow-lg group-hover:shadow-xl transition-all duration-300`}>
-                                            <div className="flex items-center gap-3">
-                                                <item.icon className="w-6 h-6" />
-                                                <div>
-                                                    <h3 className="font-semibold">{item.title}</h3>
-                                                    <p className="text-sm opacity-90">{item.description}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-1 gap-2 ml-4">
-                                            {item.children.map((child, childIndex) => (
-                                                <Link key={childIndex} href={child.href}>
-                                                    <Button
-                                                        variant="outline"
-                                                        className="w-full justify-start h-auto p-3 hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-orange-400"
-                                                    >
-                                                        <child.icon className={`w-4 h-4 mr-3 text-${child.color.split('-')[1]}-500`} />
-                                                        <span className="text-sm">{child.title}</span>
-                                                    </Button>
-                                                </Link>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <Link href={item.href}>
-                                        <Button
-                                            variant="outline"
-                                            className="w-full h-auto p-4 flex flex-col items-center gap-3 hover:shadow-lg transition-all duration-300 group border-2 hover:border-orange-200"
-                                        >
-                                            <div className={`p-3 rounded-xl bg-gradient-to-r ${item.color} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                                                <item.icon className="w-6 h-6 text-white" />
-                                            </div>
-                                            <div className="text-center">
-                                                <p className="font-semibold text-slate-800">{item.title}</p>
-                                                <p className="text-sm text-slate-600">{item.description}</p>
-                                            </div>
-                                        </Button>
-                                    </Link>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
+            </EnhancedCard>
         </div>
     );
 }
