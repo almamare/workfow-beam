@@ -191,30 +191,11 @@ export default function ClientsPage() {
                     title="Clients"
                     description="Manage your client relationships and track project assignments with comprehensive client management tools"
                     stats={stats}
-                    actions={{
-                        primary: {
-                            label: 'Add Client',
-                            onClick: () => router.push('/clients/create'),
-                            icon: <Plus className="h-4 w-4" />
-                        },
-                        secondary: [
-                            {
-                                label: 'Export Data',
-                                onClick: () => toast.info('Export feature coming soon'),
-                                icon: <Download className="h-4 w-4" />
-                            },
-                            {
-                                label: 'Advanced Filters',
-                                onClick: () => toast.info('Advanced filters coming soon'),
-                                icon: <Filter className="h-4 w-4" />
-                            }
-                        ]
-                    }}
                 />
 
                 {/* Filter Bar */}
                 <FilterBar
-                    searchPlaceholder="Search by client name, number, or location..."
+                    searchPlaceholder="Search by client number ..."
                     searchValue={search}
                     onSearchChange={(value) => {
                         setSearch(value);
@@ -232,7 +213,7 @@ export default function ClientsPage() {
                     title="Clients List"
                     description={`${total} client${total !== 1 ? 's' : ''} found`}
                     variant="gradient"
-                    size="lg"
+                    size="sm"
                     stats={{
                         total: total,
                         badge: 'Active Clients',

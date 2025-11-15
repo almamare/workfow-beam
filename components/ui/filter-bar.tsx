@@ -29,6 +29,7 @@ interface FilterBarProps {
   onRefresh?: () => void;
   loading?: boolean;
   className?: string;
+  actions?: React.ReactNode;
 }
 
 export function FilterBar({
@@ -40,7 +41,8 @@ export function FilterBar({
   onClearFilters,
   onRefresh,
   loading = false,
-  className = ''
+  className = '',
+  actions
 }: FilterBarProps) {
   return (
     <div className={`bg-white rounded-xl border border-slate-200 p-4 shadow-sm ${className}`}>
@@ -79,6 +81,8 @@ export function FilterBar({
 
           {/* Action Buttons */}
           <div className="flex gap-2">
+            {actions && actions}
+            
             {onRefresh && (
               <Button
                 variant="outline"

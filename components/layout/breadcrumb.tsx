@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronRight, Home } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type Crumb = {
     label: string;
@@ -35,7 +36,7 @@ export function Breadcrumb() {
         {
             label: 'Home',
             href: '/dashboard',
-            icon: <Home className="h-4 w-4 shrink-0" />,
+            icon: <Home className="h-3.5 w-3.5 shrink-0" />,
         },
     ];
 
@@ -49,7 +50,7 @@ export function Breadcrumb() {
 
     return (
         <nav
-            className="flex items-center space-x-1 text-sm text-muted-foreground"
+            className="flex items-center gap-1.5 text-sm"
             aria-label="Breadcrumb"
         >
             {items.map((item, idx) => {
@@ -57,20 +58,29 @@ export function Breadcrumb() {
                 return (
                     <React.Fragment key={item.href}>
                         {idx > 0 && (
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                            <ChevronRight 
+                                className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 shrink-0" 
+                                aria-hidden="true" 
+                            />
                         )}
                         {isLast ? (
-                            <span className="font-medium text-foreground flex items-center gap-1 truncate">
+                            <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 truncate px-2 py-1 rounded-md bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/10 border border-orange-200/50 dark:border-orange-800/30">
                                 {item.icon ?? null}
-                                {item.label}
+                                <span className="text-orange-700 dark:text-orange-300">{item.label}</span>
                             </span>
                         ) : (
                             <Link
                                 href={item.href}
-                                className="hover:text-foreground flex items-center gap-1 truncate"
+                                className={cn(
+                                    "flex items-center gap-1.5 truncate px-2 py-1 rounded-md transition-all duration-200",
+                                    "text-slate-600 dark:text-slate-400",
+                                    "hover:text-orange-600 dark:hover:text-orange-400",
+                                    "hover:bg-slate-100 dark:hover:bg-slate-800/50",
+                                    "hover:shadow-sm"
+                                )}
                             >
                                 {item.icon ?? null}
-                                {item.label}
+                                <span>{item.label}</span>
                             </Link>
                         )}
                     </React.Fragment>

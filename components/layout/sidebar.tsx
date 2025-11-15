@@ -11,8 +11,6 @@ import {
     FolderOpen,
     Package,
     Shield,
-    ChevronDown,
-    ChevronRight,
     X,
     Wallet,
     Contact,
@@ -31,10 +29,14 @@ import {
     Banknote,
     BarChart3,
     History,
-    UserCircle
+    UserCircle,
+    Plus,
+    Eye,
+    List,
+    Edit,
+    Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
@@ -45,151 +47,153 @@ interface MenuItem {
     color?: string;
 }
 
-// Dynamic route configuration - maps routes to their children and icons
-const routeConfig: Record<string, { title: string; icon: any; color: string; children?: { href: string; title: string; icon: any; color: string }[] }> = {
-    '/clients': {
-        title: 'Clients',
-        icon: Building,
-        color: 'text-purple-400',
-        children: [
-            { href: '/clients/create', title: 'Create Client', icon: Users, color: 'text-purple-400' },
-        ]
-    },
+// General icon library - reusable icons that can be used anywhere
+const iconLibrary: Record<string, any> = {
+    Home, Users, FileText, DollarSign, FolderOpen, Package, Shield,
+    Wallet, Contact, Settings, Megaphone, Building, TrendingUp,
+    Activity, Calculator, ClipboardList, UserCheck, FileEdit,
+    CreditCard, FileCheck, Banknote, BarChart3, History, UserCircle,
+    Plus, Eye, List, Edit, Trash2
+};
+
+// Flexible route configuration - completely flexible system
+// Each route can have ANY pages added to its sidebar menu
+// No dependency on path or hierarchy - add any page to any page
+
+// Route mapping - maps related pages to their parent route config
+// Pages in this map will use the same sidebar menu as their parent route
+const routeMapping: Record<string, string> = {
+    // Projects related pages
+    '/clients': '/projects',
+    '/clients/create': '/projects',
+    '/clients/update': '/projects',
+    '/clients/details': '/projects',
+    '/budgets': '/projects',
+    '/contractors': '/projects',
+    '/contractors/create': '/projects',
+    '/contractors/update': '/projects',
+    '/contractors/details': '/projects',
+    '/tasks': '/projects',
+    
+    // Tasks related pages
+    '/tasks/create': '/projects',
+    '/tasks/update': '/projects',
+    '/tasks/details': '/projects',
+    
+    // Users related pages
+    '/users/create': '/users',
+    '/users/update': '/users',
+    '/employees': '/users',
+    '/employees/create': '/users',
+    '/employees/update': '/users',
+    '/employees/details': '/users',
+    '/permissions': '/users',
+    '/roles': '/users',
+    
+    // Departments related pages
+    '/departments': '/users',
+    
+    // Requests related pages
+    '/requests/tasks': '/requests',
+    '/requests/financial': '/requests',
+    '/requests/employees': '/requests',
+    '/approvals': '/requests',
+    
+    // Financial related pages
+    '/financial/contractor-payments': '/financial',
+    '/financial/cash-ledger': '/financial',
+    '/financial/budgets': '/financial',
+    '/financial/loans': '/financial',
+    
+    // Inventory related pages
+    '/inventory/items': '/inventory',
+    '/inventory/transactions': '/inventory',
+    
+    // Settings related pages
+    '/profile': '/settings',
+    '/notifications': '/settings',
+    '/history': '/settings',
+    
+    // Forms related pages
+    '/forms': '/requests'
+};
+
+const routeConfig: Record<string, { 
+    title: string; 
+    icon: string; 
+    color: string; 
+    menuItems: { href: string; title: string; icon: string; color: string }[] 
+}> = {
     '/projects': {
         title: 'Projects',
-        icon: FolderOpen,
+        icon: 'FolderOpen',
         color: 'text-indigo-400',
-        children: [
-            { href: '/projects/create', title: 'Create Project', icon: FolderOpen, color: 'text-indigo-400' },
-            { href: '/projects/update', title: 'Update Project', icon: FileEdit, color: 'text-indigo-400' },
-            { href: '/projects/details', title: 'Project Details', icon: Activity, color: 'text-indigo-400' },
-            { href: '/projects/tender', title: 'Tenders', icon: FileText, color: 'text-indigo-400' }
-        ]
-    },
-    '/tasks': {
-        title: 'Tasks',
-        icon: ClipboardList,
-        color: 'text-orange-400',
-        children: [
-            { href: '/tasks/create', title: 'Create Task', icon: ClipboardList, color: 'text-orange-400' },
-            { href: '/tasks/update', title: 'Update Task', icon: FileEdit, color: 'text-orange-400' },
-            { href: '/tasks/details', title: 'Task Details', icon: Activity, color: 'text-orange-400' }
-        ]
-    },
-    '/budgets': {
-        title: 'Budgets',
-        icon: Calculator,
-        color: 'text-green-400',
-        children: [
-            { href: '/budgets', title: 'All Budgets', icon: Calculator, color: 'text-green-400' }
+        menuItems: [
+            { href: '/projects', title: 'All Projects', icon: 'List', color: 'text-indigo-400' },
+            { href: '/projects/create', title: 'Create Project', icon: 'Plus', color: 'text-green-400' },
+            { href: '/clients', title: 'Clients', icon: 'Users', color: 'text-purple-400' },
+            { href: '/clients/create', title: 'Create Client', icon: 'Plus', color: 'text-purple-400' },
+            { href: '/budgets', title: 'Budgets', icon: 'Calculator', color: 'text-green-400' },
+            { href: '/contractors', title: 'Contractors', icon: 'Building', color: 'text-orange-400' },
+            { href: '/tasks', title: 'Tasks', icon: 'ClipboardList', color: 'text-yellow-400' }
         ]
     },
     '/users': {
         title: 'Users',
-        icon: Users,
+        icon: 'Users',
         color: 'text-blue-400',
-        children: [
-            { href: '/users/create', title: 'Create User', icon: Users, color: 'text-blue-400' },
-            { href: '/users/update', title: 'Update User', icon: FileEdit, color: 'text-blue-400' }
-        ]
-    },
-    '/employees': {
-        title: 'Employees',
-        icon: UserCheck,
-        color: 'text-emerald-400',
-        children: [
-            { href: '/employees', title: 'All Employees', icon: UserCheck, color: 'text-emerald-400' },
-            { href: '/employees/create', title: 'Create Employee', icon: UserCheck, color: 'text-emerald-400' },
-            { href: '/employees/update', title: 'Update Employee', icon: FileEdit, color: 'text-emerald-400' },
-            { href: '/employees/details', title: 'Employee Details', icon: Activity, color: 'text-emerald-400' }
-        ]
-    },
-    '/contractors': {
-        title: 'Contractors',
-        icon: Building,
-        color: 'text-purple-400',
-        children: [
-            { href: '/contractors', title: 'All Contractors', icon: Building, color: 'text-purple-400' },
-            { href: '/contractors/create', title: 'Create Contractor', icon: Building, color: 'text-purple-400' },
-            { href: '/contractors/update', title: 'Update Contractor', icon: FileEdit, color: 'text-purple-400' },
-            { href: '/contractors/details', title: 'Contractor Details', icon: Activity, color: 'text-purple-400' }
+        menuItems: [
+            { href: '/users', title: 'All Users', icon: 'List', color: 'text-blue-400' },
+            { href: '/users/create', title: 'Create User', icon: 'Plus', color: 'text-green-400' },
+            { href: '/users/update', title: 'Update User', icon: 'Edit', color: 'text-yellow-400' },
+            { href: '/employees', title: 'Employees', icon: 'UserCheck', color: 'text-emerald-400' },
+            { href: '/permissions', title: 'Permissions', icon: 'Shield', color: 'text-red-400' },
+            { href: '/roles', title: 'Roles', icon: 'Shield', color: 'text-indigo-400' }
         ]
     },
     '/requests': {
         title: 'Requests',
-        icon: FileText,
+        icon: 'FileText',
         color: 'text-yellow-400',
-        children: [
-            { href: '/requests/tasks', title: 'Task Requests', icon: FileEdit, color: 'text-yellow-400' },
-            { href: '/requests/financial', title: 'Financial Requests', icon: CreditCard, color: 'text-emerald-400' },
-            { href: '/requests/employees', title: 'Employee Requests', icon: Contact, color: 'text-purple-400' }
+        menuItems: [
+            { href: '/requests/tasks', title: 'Task Requests', icon: 'FileEdit', color: 'text-yellow-400' },
+            { href: '/requests/financial', title: 'Financial Requests', icon: 'CreditCard', color: 'text-emerald-400' },
+            { href: '/requests/employees', title: 'Employee Requests', icon: 'Contact', color: 'text-purple-400' },
+            { href: '/approvals', title: 'Approvals', icon: 'FileCheck', color: 'text-rose-400' }
         ]
     },
     '/financial': {
         title: 'Financial',
-        icon: Wallet,
+        icon: 'Wallet',
         color: 'text-green-400',
-        children: [
-            { href: '/financial/contractor-payments', title: 'Contractor Payments', icon: Banknote, color: 'text-green-400' },
-            { href: '/financial/cash-ledger', title: 'Cash Ledger', icon: BarChart3, color: 'text-emerald-400' },
-            { href: '/financial/budgets', title: 'Project Budgets', icon: TrendingUp, color: 'text-teal-400' },
-            { href: '/financial/loans', title: 'Loans', icon: DollarSign, color: 'text-cyan-400' }
+        menuItems: [
+            { href: '/financial/contractor-payments', title: 'Contractor Payments', icon: 'Banknote', color: 'text-green-400' },
+            { href: '/financial/cash-ledger', title: 'Cash Ledger', icon: 'BarChart3', color: 'text-emerald-400' },
+            { href: '/financial/budgets', title: 'Project Budgets', icon: 'TrendingUp', color: 'text-teal-400' },
+            { href: '/financial/loans', title: 'Loans', icon: 'DollarSign', color: 'text-cyan-400' }
         ]
     },
     '/inventory': {
         title: 'Inventory',
-        icon: Package,
+        icon: 'Package',
         color: 'text-orange-400',
-        children: [
-            { href: '/inventory/items', title: 'Items', icon: Package, color: 'text-orange-400' },
-            { href: '/inventory/transactions', title: 'Transactions', icon: FileText, color: 'text-amber-400' }
+        menuItems: [
+            { href: '/inventory/items', title: 'Items', icon: 'Package', color: 'text-orange-400' },
+            { href: '/inventory/transactions', title: 'Transactions', icon: 'FileText', color: 'text-amber-400' },
+            { href: '/inventory/items', title: 'Add Item', icon: 'Plus', color: 'text-green-400' }
         ]
-    },
-    '/permissions': {
-        title: 'Permissions',
-        icon: Shield,
-        color: 'text-red-400'
-    },
-    '/approvals': {
-        title: 'Approvals',
-        icon: FileCheck,
-        color: 'text-rose-400'
-    },
-    '/roles': {
-        title: 'Roles',
-        icon: Shield,
-        color: 'text-blue-400'
-    },
-    '/departments': {
-        title: 'Departments',
-        icon: Building,
-        color: 'text-indigo-400'
-    },
-    '/notifications': {
-        title: 'Notifications',
-        icon: Megaphone,
-        color: 'text-pink-400'
     },
     '/settings': {
         title: 'Settings',
-        icon: Settings,
-        color: 'text-gray-400'
+        icon: 'Settings',
+        color: 'text-gray-400',
+        menuItems: [
+            { href: '/settings', title: 'General Settings', icon: 'Settings', color: 'text-gray-400' },
+            { href: '/profile', title: 'Profile', icon: 'UserCircle', color: 'text-pink-400' },
+            { href: '/notifications', title: 'Notifications', icon: 'Megaphone', color: 'text-pink-400' },
+            { href: '/history', title: 'History', icon: 'History', color: 'text-slate-400' }
+        ]
     },
-    '/profile': {
-        title: 'Profile',
-        icon: UserCircle,
-        color: 'text-pink-400'
-    },
-    '/history': {
-        title: 'History',
-        icon: History,
-        color: 'text-slate-400'
-    },
-    '/forms': {
-        title: 'Forms',
-        icon: FileText,
-        color: 'text-blue-400'
-    }
 };
 
 interface SidebarProps {
@@ -207,55 +211,49 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
         return null;
     }
 
-    // Find current route and its configuration
+    // Find current route and its configuration - find parent route for sub-pages
     const currentRoute = useMemo(() => {
-        // Find the matching route (check exact match first, then parent routes)
-        let matchedRoute = '';
-        let routeConfigData = null;
+        // Check route mapping first (for pages that should use another route's config)
+        if (routeMapping[pathname] && routeConfig[routeMapping[pathname]]) {
+            return { path: routeMapping[pathname], config: routeConfig[routeMapping[pathname]] };
+        }
 
-        // Try exact match first
+        // Try exact match
         if (routeConfig[pathname]) {
-            matchedRoute = pathname;
-            routeConfigData = routeConfig[pathname];
-        } else {
-            // Find parent route
-            const pathSegments = pathname.split('/').filter(Boolean);
-            for (let i = pathSegments.length; i > 0; i--) {
-                const testPath = '/' + pathSegments.slice(0, i).join('/');
-                if (routeConfig[testPath]) {
-                    matchedRoute = testPath;
-                    routeConfigData = routeConfig[testPath];
-                    break;
-                }
+            return { path: pathname, config: routeConfig[pathname] };
+        }
+
+        // Find parent route by checking path segments for sub-pages
+        const pathSegments = pathname.split('/').filter(Boolean);
+        for (let i = pathSegments.length; i > 0; i--) {
+            const testPath = '/' + pathSegments.slice(0, i).join('/');
+            // Check if this path is mapped to another route
+            if (routeMapping[testPath] && routeConfig[routeMapping[testPath]]) {
+                return { path: routeMapping[testPath], config: routeConfig[routeMapping[testPath]] };
+            }
+            // Check if this path has its own config
+            if (routeConfig[testPath]) {
+                return { path: testPath, config: routeConfig[testPath] };
             }
         }
 
-        return { path: matchedRoute, config: routeConfigData };
+        return { path: '', config: null };
     }, [pathname]);
 
-    // Build menu items: current page + its children
+    // Build menu items from configuration - only sub-pages (menuItems), no base route
     const menuItems = useMemo<MenuItem[]>(() => {
         const items: MenuItem[] = [];
 
         if (currentRoute.config) {
-            // Add current page itself
-            const IconComponent = currentRoute.config.icon;
-            items.push({
-                title: currentRoute.config.title,
-                icon: <IconComponent className="h-5 w-5" />,
-                href: currentRoute.path,
-                color: currentRoute.config.color
-            });
-
-            // Add children if they exist
-            if (currentRoute.config.children) {
-                currentRoute.config.children.forEach(child => {
-                    const ChildIconComponent = child.icon;
+            // Only add menu items (sub-pages), no base route
+            if (currentRoute.config.menuItems) {
+                currentRoute.config.menuItems.forEach(menuItem => {
+                    const MenuIconComponent = iconLibrary[menuItem.icon] || Activity;
                     items.push({
-                        title: child.title,
-                        icon: <ChildIconComponent className="h-4 w-4" />,
-                        href: child.href,
-                        color: child.color
+                        title: menuItem.title,
+                        icon: <MenuIconComponent className="h-4 w-4" />,
+                        href: menuItem.href,
+                        color: menuItem.color
                     });
                 });
             }
@@ -266,12 +264,9 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
 
     const hideText = collapsed && !mobileOpen;
 
-    // Check if route is active
+    // Check if route is active - exact match only
     const isActive = (href: string) => {
-        if (href === pathname) return true;
-        // For parent routes, check if current path starts with it
-        if (pathname.startsWith(href + '/')) return true;
-        return false;
+        return href === pathname;
     };
 
     // Close mobile sidebar when clicking a link

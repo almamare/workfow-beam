@@ -11,10 +11,9 @@ import {
     selectTotalItems
 } from '@/stores/slices/projects';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import type { Project } from '@/stores/types/projects';
-import { Edit, HardDriveDownload, Eye, Plus, Filter, Download } from 'lucide-react';
+import { Edit, HardDriveDownload, Eye, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import {
     Select,
     SelectTrigger,
@@ -27,7 +26,8 @@ import axios from "@/utils/axios";
 import { PageHeader } from '@/components/ui/page-header';
 import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
-import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
+import { EnhancedDataTable, Action } from '@/components/ui/enhanced-data-table';
+import { Button } from '@/components/ui/button';
 
 export default function ProjectsPage() {
     const projects = useSelector(selectProjects);
@@ -39,10 +39,12 @@ export default function ProjectsPage() {
     const dispatch = useReduxDispatch<AppDispatch>();
 
     const [search, setSearch] = useState('');
-    const [type, setType] = useState<'Public' | 'Communications' | 'Restoration' | 'Referral'>('Public');
+    const [type, setType] = useState<'All' | 'Public' | 'Communications' | 'Restoration' | 'Referral'>('All');
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [projectIsDownload, setProjectIsDownload] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
     useEffect(() => {
         dispatch(fetchProjects({ page, limit, search, type }));
@@ -68,6 +70,73 @@ export default function ProjectsPage() {
             toast.error('Failed to download project');
         } finally {
             setProjectIsDownload(false);
+        }
+    }
+
+    const refreshTable = async () => {
+        setIsRefreshing(true);
+        try {
+            await dispatch(fetchProjects({ page, limit, search, type }));
+            toast.success('Table refreshed successfully');
+        } catch (err) {
+            toast.error('Failed to refresh table');
+        } finally {
+            setIsRefreshing(false);
+        }
+    }
+
+    const exportToExcel = async () => {
+        setIsExporting(true);
+        try {
+            // Fetch all projects without pagination for export
+            const { data } = await axios.get('/projects/fetch', {
+                params: {
+                    search,
+                    type: type !== 'All' ? type : undefined,
+                    limit: limit,
+                    page: 1
+                }
+            });
+
+            // Convert data to CSV format
+            const headers = ['ID', 'Project Code', 'Number', 'Project Name', 'Client', 'Status', 'Type', 'Created At'];
+            const csvHeaders = headers.join(',');
+            
+            const csvRows = data.body.projects.items.map((project: Project) => {
+                return [
+                    project.sequence || '',
+                    project.project_code || '',
+                    project.number || '',
+                    `"${(project.name || '').replace(/"/g, '""')}"`, // Escape quotes in names
+                    `"${(project.client_name || '').replace(/"/g, '""')}"`,
+                    project.status || '',
+                    project.type || '',
+                    project.created_at || ''
+                ].join(',');
+            });
+
+            const csvContent = [csvHeaders, ...csvRows].join('\n');
+            
+            // Add BOM for Excel UTF-8 support
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `projects_${new Date().toISOString().split('T')[0]}.csv`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            window.URL.revokeObjectURL(url);
+            link.remove();
+            
+            toast.success('Projects exported successfully');
+        } catch (err) {
+            console.error('Export error:', err);
+            toast.error('Failed to export projects');
+        } finally {
+            setIsExporting(false);
         }
     }
 
@@ -133,16 +202,16 @@ export default function ProjectsPage() {
             sortable: true
         },
         {
-            key: 'start_date' as keyof Project,
-            header: 'Start Date',
+            key: 'type' as keyof Project,
+            header: 'Type',
             render: (value: any) => (
                 <span className="text-slate-600">{value}</span>
             ),
             sortable: true
         },
         {
-            key: 'end_date' as keyof Project,
-            header: 'End Date',
+            key: 'created_at' as keyof Project,
+            header: 'Created At',
             render: (value: any) => (
                 <span className="text-slate-600">{value}</span>
             ),
@@ -150,9 +219,10 @@ export default function ProjectsPage() {
         }
     ];
 
-    const actions = [
+    const actions: Action<Project>[] = [
         {
             label: 'View Details',
+            variant: 'info' as const,
             onClick: (project: Project) => {
                 router.push(`/projects/details?id=${project.id}`);
             },
@@ -160,6 +230,7 @@ export default function ProjectsPage() {
         },
         {
             label: 'Edit Project',
+            variant: 'warning' as const,
             onClick: (project: Project) => {
                 router.push(`/projects/update?id=${project.id}`);
             },
@@ -167,42 +238,17 @@ export default function ProjectsPage() {
         },
         {
             label: 'Download PDF',
+            variant: 'success' as const,
             onClick: (project: Project) => {
                 downloadProject(project.id);
             },
-            icon: <HardDriveDownload className="h-4 w-4" />,
-            variant: 'outline' as const
+            icon: <HardDriveDownload className="h-4 w-4" />
         }
     ];
 
-    const stats = [
-        {
-            label: 'Total Projects',
-            value: totalItems,
-            change: '+12%',
-            trend: 'up' as const
-        },
-        {
-            label: 'Active Projects',
-            value: projects.filter(p => p.status === 'Active').length,
-            change: '+8%',
-            trend: 'up' as const
-        },
-        {
-            label: 'Completed',
-            value: projects.filter(p => p.status === 'Complete').length,
-            change: '+15%',
-            trend: 'up' as const
-        },
-        {
-            label: 'On Hold',
-            value: projects.filter(p => p.status === 'Onhold').length,
-            change: '-3%',
-            trend: 'down' as const
-        }
-    ];
 
     const projectTypeOptions = [
+        { key: 'All', label: 'All Projects', value: 'All' },
         { key: 'Public', label: 'Public Projects', value: 'Public' },
         { key: 'Communications', label: 'Communications', value: 'Communications' },
         { key: 'Restoration', label: 'Restoration', value: 'Restoration' },
@@ -211,39 +257,20 @@ export default function ProjectsPage() {
 
     const activeFilters = [];
     if (search) activeFilters.push(`Search: ${search}`);
-    if (type !== 'Public') activeFilters.push(`Type: ${type}`);
+    if (type !== 'All') activeFilters.push(`Type: ${type}`);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Page Header */}
             <PageHeader
                 title="Projects"
-                description="Browse and manage all system projects with comprehensive filtering and management tools"
-                stats={stats}
-                actions={{
-                    primary: {
-                        label: 'Create Project',
-                        onClick: () => router.push('/projects/create'),
-                        icon: <Plus className="h-4 w-4" />
-                    },
-                    secondary: [
-                        {
-                            label: 'Export Data',
-                            onClick: () => toast.info('Export feature coming soon'),
-                            icon: <Download className="h-4 w-4" />
-                        },
-                        {
-                            label: 'Advanced Filters',
-                            onClick: () => toast.info('Advanced filters coming soon'),
-                            icon: <Filter className="h-4 w-4" />
-                        }
-                    ]
-                }}
+                breadcrumb={true}
+                description="Manage all projects with comprehensive filtering and management tools"
             />
 
             {/* Filter Bar */}
             <FilterBar
-                searchPlaceholder="Search by project name, code, or client..."
+                searchPlaceholder="Search by project Number..."
                 searchValue={search}
                 onSearchChange={(value) => {
                     setSearch(value);
@@ -252,7 +279,7 @@ export default function ProjectsPage() {
                 filters={[
                     {
                         key: 'type',
-                        label: 'Project Type',
+                        label: 'Project Status',
                         value: type,
                         options: projectTypeOptions,
                         onValueChange: (value) => {
@@ -264,40 +291,76 @@ export default function ProjectsPage() {
                 activeFilters={activeFilters}
                 onClearFilters={() => {
                     setSearch('');
-                    setType('Public');
+                    setType('All');
                     setPage(1);
                 }}
+                actions={
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={refreshTable}
+                        disabled={isRefreshing}
+                        className="gap-2"
+                    >
+                        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        Refresh
+                    </Button>
+                }
             />
 
             {/* Projects Table */}
             <EnhancedCard
                 title="Projects List"
-                description={`${type} projects - ${totalItems} total projects found`}
-                variant="gradient"
-                size="lg"
+                description={`${type === 'All' ? 'All' : type} projects - ${totalItems} total projects found`}
+                variant="default"
+                size="sm"
                 stats={{
                     total: totalItems,
-                    badge: `${type} Projects`,
-                    badgeColor: type === 'Public' ? 'success' : 'default'
+                    badge: `${type === 'All' ? 'All' : type} Projects`,
+                    badgeColor: type === 'All'
+                        ? 'default'
+                        : type === 'Public'
+                        ? 'success'
+                        : type === 'Communications'
+                        ? 'info'
+                        : type === 'Restoration'
+                        ? 'warning'
+                        : type === 'Referral'
+                        ? 'success'
+                        : 'default'
                 }}
                 headerActions={
-                    <Select
-                        value={limit.toString()}
-                        onValueChange={(value) => {
-                            setLimit(parseInt(value, 10));
-                            setPage(1);
-                        }}
-                    >
-                        <SelectTrigger className="w-36 bg-white border-slate-200">
-                            <SelectValue placeholder="Items per page" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="10">10 per page</SelectItem>
-                            <SelectItem value="20">20 per page</SelectItem>
-                            <SelectItem value="50">50 per page</SelectItem>
-                            <SelectItem value="100">100 per page</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={exportToExcel}
+                            disabled={isExporting || loading}
+                            className="gap-2"
+                        >
+                            <FileSpreadsheet className={`h-4 w-4 ${isExporting ? 'animate-pulse' : ''}`} />
+                            {isExporting ? 'Exporting...' : 'Export Excel'}
+                        </Button>
+                        <Select
+                            value={limit.toString()}
+                            onValueChange={(value) => {
+                                setLimit(parseInt(value, 10));
+                                setPage(1);
+                            }}
+                        >
+                            <SelectTrigger className="w-36 bg-white border-slate-200">
+                                <SelectValue placeholder="Items per page" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="5">5 per page</SelectItem>
+                                <SelectItem value="10">10 per page</SelectItem>
+                                <SelectItem value="20">20 per page</SelectItem>
+                                <SelectItem value="50">50 per page</SelectItem>
+                                <SelectItem value="100">100 per page</SelectItem>
+                                <SelectItem value="200">200 per page</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 }
             >
                 <EnhancedDataTable
