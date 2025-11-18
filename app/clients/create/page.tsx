@@ -3,20 +3,13 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
-    CardFooter
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
 import { Loader2, Save, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
 
 type ClientPayload = {
     name: string;
@@ -142,13 +135,18 @@ const CreateClientPage: React.FC = () => {
             <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-end justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Create Client</h1>
-                    <p className="text-muted-foreground mt-2">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Create Client</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
                         Enter client details below, then submit to create a new client.
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button type="button" variant="outline" onClick={() => router.push('/clients')}>
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => router.push('/clients')}
+                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    >
                         Back to Clients
                     </Button>
                 </div>
@@ -156,80 +154,95 @@ const CreateClientPage: React.FC = () => {
 
             {/* Form */}
             <form id="client-create-form" onSubmit={handleSubmit} className="space-y-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Client Information</CardTitle>
-                        <CardDescription>Core identifying information for the client.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
+                <EnhancedCard
+                    title="Client Information"
+                    description="Core identifying information for the client."
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="space-y-4">
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             <div className="space-y-2">
-                                <Label htmlFor="name">Name *</Label>
+                                <Label htmlFor="name" className="text-slate-700 dark:text-slate-200">Name *</Label>
                                 <Input
                                     id="name"
                                     value={form.name}
                                     onChange={e => updateField('name', e.target.value)}
                                     placeholder="Client Name"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {fieldErrors.name && (
-                                    <p className="text-xs text-red-500">{fieldErrors.name}</p>
+                                    <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.name}</p>
                                 )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="state">State *</Label>
+                                <Label htmlFor="state" className="text-slate-700 dark:text-slate-200">State *</Label>
                                 <Input
                                     id="state"
                                     value={form.state}
                                     onChange={e => updateField('state', e.target.value)}
                                     placeholder="e.g., Nineveh"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {fieldErrors.state && (
-                                    <p className="text-xs text-red-500">{fieldErrors.state}</p>
+                                    <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.state}</p>
                                 )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="city">City *</Label>
+                                <Label htmlFor="city" className="text-slate-700 dark:text-slate-200">City *</Label>
                                 <Input
                                     id="city"
                                     value={form.city}
                                     onChange={e => updateField('city', e.target.value)}
                                     placeholder="e.g., Mosul"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {fieldErrors.city && (
-                                    <p className="text-xs text-red-500">{fieldErrors.city}</p>
+                                    <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.city}</p>
                                 )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="budget">Budget *</Label>
+                                <Label htmlFor="budget" className="text-slate-700 dark:text-slate-200">Budget *</Label>
                                 <Input
                                     id="budget"
                                     inputMode="decimal"
                                     value={form.budget}
                                     onChange={e => updateField('budget', e.target.value)}
                                     placeholder="0"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {fieldErrors.budget && (
-                                    <p className="text-xs text-red-500">{fieldErrors.budget}</p>
+                                    <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.budget}</p>
                                 )}
                             </div>
                         </div>
-                    </CardContent>
+                    </div>
 
-                    <CardFooter className="justify-end gap-3">
-                        <Button type="button" variant="outline" onClick={handleReset} disabled={loading}>
+                    <div className="flex justify-end gap-3 mt-6">
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={handleReset} 
+                            disabled={loading}
+                            className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        >
                             <RotateCcw className="h-4 w-4 mr-2" />
                             Reset
                         </Button>
-                        <Button type="submit" disabled={loading}>
+                        <Button 
+                            type="submit" 
+                            disabled={loading}
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-600 dark:to-orange-700 dark:hover:from-orange-700 dark:hover:to-orange-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        >
                             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                             <Save className="h-4 w-4 mr-2" />
                             {loading ? 'Saving...' : 'Create Client'}
                         </Button>
-                    </CardFooter>
-                </Card>
+                    </div>
+                </EnhancedCard>
             </form>
         </div>
     );

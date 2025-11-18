@@ -3,19 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardContent,
-    CardFooter
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
-import { Loader2, Save, RotateCcw, Calculator } from 'lucide-react';
+import { Loader2, Save, RotateCcw } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
 
 type TenderItem = {
     name: string;
@@ -133,12 +127,12 @@ const UpdateTenderPage: React.FC = () => {
         <div className="space-y-4">
 
             <Breadcrumb />
-            <div className="flex justify-between">
+            <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
                         Update Tender
                     </h1>
-                    <p className="text-muted-foreground mt-2">
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
                         Update the details of the tender item.
                     </p>
                 </div>
@@ -147,6 +141,7 @@ const UpdateTenderPage: React.FC = () => {
                         type="button"
                         variant="outline"
                         onClick={() => router.push('/projects/details?id=' + projectId)}
+                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                     >
                         Back to Details
                     </Button>
@@ -154,30 +149,41 @@ const UpdateTenderPage: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Tender Item</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
+                <EnhancedCard
+                    title="Tender Item"
+                    description="Update the tender item details"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                             <InputGroup label="Name *" value={item.name} onChange={val => updateField('name', val)} error={errors.name} />
                             <InputGroup label="Price *" value={item.price} onChange={val => updateField('price', val)} error={errors.price} />
                             <InputGroup label="Quantity *" value={item.quantity} onChange={val => updateField('quantity', val)} error={errors.quantity} />
                             <InputGroup label="Amount" value={item.amount} readOnly error={errors.amount} />
                         </div>
-                    </CardContent>
-
-                    <CardFooter className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={handleReset} disabled={loading}>
+                    </div>
+                    <div className="flex justify-end gap-3 mt-6">
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={handleReset} 
+                            disabled={loading}
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        >
                             <RotateCcw className="h-4 w-4 mr-2" /> Reset
                         </Button>
-                        <Button type="submit" disabled={loading}>
+                        <Button 
+                            type="submit" 
+                            disabled={loading}
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-600 dark:to-orange-700 dark:hover:from-orange-700 dark:hover:to-orange-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        >
                             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                             <Save className="h-4 w-4 mr-2" />
                             {loading ? 'Saving...' : 'Update Tender'}
                         </Button>
-                    </CardFooter>
-                </Card>
+                    </div>
+                </EnhancedCard>
             </form>
         </div>
     );
@@ -199,13 +205,17 @@ const InputGroup = ({
     readOnly?: boolean;
 }) => (
     <div className="space-y-1">
-        <Label>{label}</Label>
+        <Label className="text-slate-700 dark:text-slate-200">{label}</Label>
         <Input
             value={value}
             onChange={e => onChange?.(e.target.value)}
             readOnly={readOnly}
-            className={readOnly ? 'bg-muted cursor-not-allowed' : ''}
+            className={
+                readOnly
+                    ? 'bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100'
+                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500'
+            }
         />
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
     </div>
 );

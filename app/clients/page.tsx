@@ -17,14 +17,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DeleteDialog } from '@/components/delete-dialog';
-import { Trash2, SquarePen, Plus, Download, Filter } from 'lucide-react';
+import { Trash2, SquarePen, Plus, RefreshCw, FileSpreadsheet, Eye } from 'lucide-react';
 import type { Client } from '@/stores/types/clients';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
-import { PageHeader } from '@/components/ui/page-header';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
-import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
+import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 export default function ClientsPage() {
     const dispatch = useDispatch<AppDispatch>();
@@ -40,6 +41,8 @@ export default function ClientsPage() {
     const [debouncedSearch, setDebouncedSearch] = useState(search);
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
     // Delete dialog state
     const [open, setOpen] = useState(false);
@@ -63,31 +66,93 @@ export default function ClientsPage() {
         dispatch(fetchClients({ page, limit, search: debouncedSearch }));
     }, [dispatch, page, limit, debouncedSearch]);
 
-    const columns = [
+    const refreshTable = async () => {
+        setIsRefreshing(true);
+        try {
+            await dispatch(fetchClients({ page, limit, search: debouncedSearch }));
+            toast.success('Table refreshed successfully');
+        } catch (err) {
+            toast.error('Failed to refresh table');
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const exportToExcel = async () => {
+        setIsExporting(true);
+        try {
+            const { data } = await axios.get('/clients/fetch', {
+                params: {
+                    search: debouncedSearch,
+                    limit: 10000,
+                    page: 1
+                }
+            });
+
+            const headers = ['ID', 'Client Name', 'Client Number', 'State', 'City', 'Budget', 'Created At'];
+            const csvHeaders = headers.join(',');
+            
+            const csvRows = data.body?.clients?.items?.map((client: Client) => {
+                return [
+                    client.sequence || '',
+                    client.name || '',
+                    client.client_no || '',
+                    client.state || '',
+                    client.city || '',
+                    client.budget || 0,
+                    client.created_at || ''
+                ].join(',');
+            }) || [];
+
+            const csvContent = [csvHeaders, ...csvRows].join('\n');
+            
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `clients_${new Date().toISOString().split('T')[0]}.csv`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            window.URL.revokeObjectURL(url);
+            link.remove();
+            
+            toast.success('Clients exported successfully');
+        } catch (err) {
+            console.error('Export error:', err);
+            toast.error('Failed to export clients');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const columns: Column<Client>[] = [
         { 
             key: 'sequence' as keyof Client, 
             header: 'ID', 
-            render: (value: any) => <span className="text-slate-500 font-mono text-sm">{value}</span>,
+            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 font-mono text-sm">{value}</span>,
             sortable: true,
             width: '80px'
         },
         { 
             key: 'name' as keyof Client, 
             header: 'Client Name', 
-            render: (value: any) => <span className="font-semibold text-slate-800">{value}</span>,
+            render: (value: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{value}</span>,
             sortable: true 
         },
         { 
             key: 'client_no' as keyof Client, 
             header: 'Client Number', 
-            render: (value: any) => <span className="text-slate-600 font-mono">{value}</span>,
+            render: (value: any) => <span className="text-slate-600 dark:text-slate-400 font-mono">{value}</span>,
             sortable: true 
         },
         { 
             key: 'state' as keyof Client, 
             header: 'State', 
             render: (value: any) => (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                <Badge variant="outline" className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">
                     {value}
                 </Badge>
             ),
@@ -96,15 +161,15 @@ export default function ClientsPage() {
         { 
             key: 'city' as keyof Client, 
             header: 'City', 
-            render: (value: any) => <span className="text-slate-700">{value}</span>,
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300">{value}</span>,
             sortable: true 
         },
         { 
             key: 'budget' as keyof Client, 
             header: 'Budget', 
             render: (value: any) => (
-                <span className="font-semibold text-green-600">
-                    {value ? `$${Number(value).toLocaleString()}` : 'N/A'}
+                <span className="font-semibold text-green-600 dark:text-green-400">
+                    {value ? value : 'N/A'}
                 </span>
             ),
             sortable: true 
@@ -112,7 +177,7 @@ export default function ClientsPage() {
         { 
             key: 'created_at' as keyof Client, 
             header: 'Created', 
-            render: (value: any) => <span className="text-slate-500 text-sm">{new Date(value).toLocaleDateString()}</span>,
+            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 text-sm">{value}</span>,
             sortable: true 
         }
     ];
@@ -136,11 +201,12 @@ export default function ClientsPage() {
         [dispatch, page, limit, debouncedSearch]
     );
 
-    const actions = [
+    const actions: Action<Client>[] = [
         {
             label: 'Edit Client',
             icon: <SquarePen className="h-4 w-4" />,
             onClick: (client: Client) => router.push(`/clients/update?id=${client.id}`),
+            variant: 'warning' as const
         },
         {
             label: 'Delete Client',
@@ -153,49 +219,27 @@ export default function ClientsPage() {
         },
     ];
 
-    const stats = [
-        {
-            label: 'Total Clients',
-            value: total,
-            change: '+8%',
-            trend: 'up' as const
-        },
-        {
-            label: 'Active Projects',
-            value: Math.floor(total * 0.7),
-            change: '+12%',
-            trend: 'up' as const
-        },
-        {
-            label: 'Total Budget',
-            value: `$${(total * 150000).toLocaleString()}`,
-            change: '+5%',
-            trend: 'up' as const
-        },
-        {
-            label: 'Avg. Project Value',
-            value: '$150K',
-            change: '+3%',
-            trend: 'up' as const
-        }
-    ];
-
     const activeFilters = [];
     if (search) activeFilters.push(`Search: ${search}`);
 
     return (
         <>
-            <div className="space-y-6">
+            <div className="space-y-4">
+                {/* Breadcrumb */}
+                <Breadcrumb />
+                
                 {/* Page Header */}
-                <PageHeader
-                    title="Clients"
-                    description="Manage your client relationships and track project assignments with comprehensive client management tools"
-                    stats={stats}
-                />
-
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
+                    <div>
+                        <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-200">Clients</h1>
+                        <p className="text-slate-600 dark:text-slate-400 mt-1">
+                            Manage your client relationships and track project assignments
+                        </p>
+                    </div>
+                </div>
                 {/* Filter Bar */}
                 <FilterBar
-                    searchPlaceholder="Search by client number ..."
+                    searchPlaceholder="Search by client number..."
                     searchValue={search}
                     onSearchChange={(value) => {
                         setSearch(value);
@@ -206,19 +250,64 @@ export default function ClientsPage() {
                         setSearch('');
                         setPage(1);
                     }}
+                    actions={
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={exportToExcel}
+                                disabled={isExporting || loading}
+                                className="gap-2"
+                            >
+                                <FileSpreadsheet className={`h-4 w-4 ${isExporting ? 'animate-pulse' : ''}`} />
+                                {isExporting ? 'Exporting...' : 'Export Excel'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={refreshTable}
+                                disabled={isRefreshing}
+                                className="gap-2"
+                            >
+                                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                Refresh
+                            </Button>
+                        </div>
+                    }
                 />
 
                 {/* Clients Table */}
                 <EnhancedCard
                     title="Clients List"
                     description={`${total} client${total !== 1 ? 's' : ''} found`}
-                    variant="gradient"
+                    variant="default"
                     size="sm"
                     stats={{
                         total: total,
                         badge: 'Active Clients',
                         badgeColor: 'success'
                     }}
+                    headerActions={
+                        <Select
+                            value={String(limit)}
+                            onValueChange={(v) => {
+                                setLimit(Number(v));
+                                setPage(1);
+                            }}
+                        >
+                            <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                                <SelectValue placeholder="Items per page" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                <SelectItem value="5" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">5 per page</SelectItem>
+                                <SelectItem value="10" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">10 per page</SelectItem>
+                                <SelectItem value="20" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">20 per page</SelectItem>
+                                <SelectItem value="50" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">50 per page</SelectItem>
+                                <SelectItem value="100" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">100 per page</SelectItem>
+                                <SelectItem value="200" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">200 per page</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    }
                 >
                     <EnhancedDataTable
                         data={clients}

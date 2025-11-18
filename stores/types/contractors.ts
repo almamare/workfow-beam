@@ -35,3 +35,10 @@ export interface ContractorsResponse {
         };
     };
 }
+
+export interface SingleContractorResponse {
+    header: ContractorsResponse['header'];
+    body?: {
+        contractor: Contractor;
+    };
+}

@@ -133,7 +133,7 @@ export default function DepartmentsPage() {
             header: 'Budget',
             render: (value: any) => (
                 <span className="font-semibold text-green-600">
-                    ${value.toLocaleString()}
+                    {value.toLocaleString('en-US')}
                 </span>
             ),
             sortable: true

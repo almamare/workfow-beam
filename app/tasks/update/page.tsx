@@ -18,14 +18,6 @@ import {
     SelectItem,
     SelectValue
 } from '@/components/ui/select';
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
-    CardFooter
-} from '@/components/ui/card';
 import { DatePicker } from '@/components/DatePicker';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -37,8 +29,8 @@ import type { AppDispatch } from '@/stores/store';
 import {
     fetchContractors,
     selectContractors,
-    selectContractorsLoading,
-    selectContractorsError
+    selectLoading as selectContractorsLoading,
+    selectError as selectContractorsError
 } from '@/stores/slices/contractors';
 import type { Contractor } from '@/stores/types/contractors';
 import {
@@ -49,6 +41,7 @@ import {
 } from '@/stores/slices/projects';
 import type { Project } from '@/stores/types/projects';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
 
 /* ============================== Types ============================== */
 type ContractTerm = {
@@ -374,14 +367,14 @@ const UpdateTaskOrderPage: React.FC = () => {
         }
 
         // Load dropdown data
-        dispatch(fetchContractors());
+        dispatch(fetchContractors({ page: 1, limit: 100 }));
         dispatch(fetchProjects({ page: 1, limit: 100, search: '', type: 'Public' }));
 
         // Load existing task order
         const fetchTaskOrder = async () => {
             setInitialLoading(true);
             try {
-                const res = await axios.get(`/task-orders/${taskId}`);
+                const res = await axios.get(`/task-orders/fetch/${taskId}`);
                 if (res?.data?.header?.success) {
                     const dto = res.data?.body?.taskOrder ?? res.data?.body ?? res.data;
                     setForm(normalizeTaskOrder(dto));
@@ -446,14 +439,16 @@ const UpdateTaskOrderPage: React.FC = () => {
         <div className="space-y-4">
             <Breadcrumb />
 
-            <div className="flex flex-col md:flex-row md:items-end mb-4 justify-between">
+            <div className="flex flex-col md:flex-row md:items-end mb-2 justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Update Task Order</h1>
-                    <p className="text-muted-foreground">
-                        Edit the task order details, manage supporting documents, and save changes
-                    </p>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Update Task Order</h1>
+                    <p className="text-slate-600 dark:text-slate-400">Edit the task order details, manage supporting documents, and save changes</p>
                 </div>
-                <Button variant="outline" onClick={() => router.push('/tasks')}>
+                <Button 
+                    variant="outline" 
+                    onClick={() => router.push('/tasks')}
+                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                >
                     Back Task Orders
                 </Button>
             </div>
@@ -461,304 +456,166 @@ const UpdateTaskOrderPage: React.FC = () => {
             {/* Initial loading overlay */}
             {initialLoading ? (
                 <div className="flex items-center justify-center py-20">
-                    <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                    <span>Loading task order...</span>
+                    <Loader2 className="h-6 w-6 animate-spin mr-2 text-orange-500" />
+                    <span className="text-slate-600 dark:text-slate-400">Loading task order...</span>
                 </div>
             ) : (
                 <form id="taskorder-update-form" onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-3">
                         {/* ================= Left Column - Basic Info ================= */}
-                        <Card className="md:col-span-2">
-                            <CardHeader>
-                                <CardTitle>Core Information</CardTitle>
-                                <CardDescription>Essential details for the task order</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
+                        <EnhancedCard title="Core Information" description="Essential details for the task order" variant="default" size="sm" className="md:col-span-2">
+                            <div className="space-y-4">
                                 <div className="grid gap-4 md:grid-cols-2">
                                     {/* Contractor */}
                                     <div className="space-y-2">
-                                        <Label htmlFor="contractor_id">Contractor *</Label>
-                                        <Select
-                                            value={form.contractor_id}
-                                            onValueChange={(value) => updateField('contractor_id', value)}
-                                        >
-                                            <SelectTrigger id="contractor_id">
+                                        <Label htmlFor="contractor_id" className="text-slate-700 dark:text-slate-200">Contractor *</Label>
+                                        <Select value={form.contractor_id} onValueChange={(value) => updateField('contractor_id', value)}>
+                                            <SelectTrigger id="contractor_id" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100">
                                                 {contractorsLoading ? (
-                                                    <div className="flex items-center">
-                                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                                        Loading contractors...
-                                                    </div>
+                                                    <div className="flex items-center"><Loader2 className="h-4 w-4 mr-2 animate-spin" />Loading contractors...</div>
                                                 ) : (
                                                     <SelectValue placeholder="Select contractor" />
                                                 )}
                                             </SelectTrigger>
-                                            <SelectContent>
+                                            <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
                                                 {contractorOptions.length === 0 ? (
-                                                    <SelectItem value={EMPTY_CONTRACTOR_VALUE} disabled>
-                                                        No contractors available
-                                                    </SelectItem>
+                                                    <SelectItem value={EMPTY_CONTRACTOR_VALUE} disabled className="text-slate-500 dark:text-slate-400 cursor-not-allowed">No contractors available</SelectItem>
                                                 ) : (
                                                     contractorOptions.map((c) => (
-                                                        <SelectItem key={c.id} value={c.id}>
-                                                            {c.label}
-                                                        </SelectItem>
+                                                        <SelectItem key={c.id} value={c.id} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400">{c.label}</SelectItem>
                                                     ))
                                                 )}
                                             </SelectContent>
                                         </Select>
-                                        {fieldErrors.contractor_id && (
-                                            <p className="text-xs text-red-500">{fieldErrors.contractor_id}</p>
-                                        )}
-                                        {contractorsError && (
-                                            <p className="text-xs text-red-500">
-                                                Error loading contractors: {contractorsError}
-                                            </p>
-                                        )}
+                                        {fieldErrors.contractor_id && <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.contractor_id}</p>}
+                                        {contractorsError && <p className="text-xs text-red-500 dark:text-red-400">Error loading contractors: {contractorsError}</p>}
                                     </div>
 
                                     {/* Project */}
                                     <div className="space-y-2">
-                                        <Label htmlFor="project_id">Project *</Label>
-                                        <Select
-                                            value={form.project_id}
-                                            onValueChange={(value) => updateField('project_id', value)}
-                                        >
-                                            <SelectTrigger id="project_id">
+                                        <Label htmlFor="project_id" className="text-slate-700 dark:text-slate-200">Project *</Label>
+                                        <Select value={form.project_id} onValueChange={(value) => updateField('project_id', value)}>
+                                            <SelectTrigger id="project_id" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100">
                                                 {projectsLoading ? (
-                                                    <div className="flex items-center">
-                                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                                        Loading projects...
-                                                    </div>
+                                                    <div className="flex items-center"><Loader2 className="h-4 w-4 mr-2 animate-spin" />Loading projects...</div>
                                                 ) : (
                                                     <SelectValue placeholder="Select project" />
                                                 )}
                                             </SelectTrigger>
-                                            <SelectContent>
+                                            <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
                                                 {projectOptions.length === 0 ? (
-                                                    <SelectItem value={EMPTY_PROJECT_VALUE} disabled>
-                                                        No projects available
-                                                    </SelectItem>
+                                                    <SelectItem value={EMPTY_PROJECT_VALUE} disabled className="text-slate-500 dark:text-slate-400 cursor-not-allowed">No projects available</SelectItem>
                                                 ) : (
                                                     projectOptions.map((p) => (
-                                                        <SelectItem key={p.id} value={p.id}>
-                                                            {p.label}
-                                                        </SelectItem>
+                                                        <SelectItem key={p.id} value={p.id} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400">{p.label}</SelectItem>
                                                     ))
                                                 )}
                                             </SelectContent>
                                         </Select>
-                                        {fieldErrors.project_id && (
-                                            <p className="text-xs text-red-500">{fieldErrors.project_id}</p>
-                                        )}
-                                        {projectsError && (
-                                            <p className="text-xs text-red-500">
-                                                Error loading projects: {projectsError}
-                                            </p>
-                                        )}
+                                        {fieldErrors.project_id && <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.project_id}</p>}
+                                        {projectsError && <p className="text-xs text-red-500 dark:text-red-400">Error loading projects: {projectsError}</p>}
                                     </div>
 
                                     {/* Title */}
                                     <div className="space-y-2">
-                                        <Label htmlFor="title">Title *</Label>
-                                        <Input
-                                            id="title"
-                                            value={form.title}
-                                            onChange={(e) => updateField('title', e.target.value)}
-                                            placeholder="Task order title"
-                                        />
-                                        {fieldErrors.title && (
-                                            <p className="text-xs text-red-500">{fieldErrors.title}</p>
-                                        )}
+                                        <Label htmlFor="title" className="text-slate-700 dark:text-slate-200">Title *</Label>
+                                        <Input id="title" value={form.title} onChange={(e) => updateField('title', e.target.value)} placeholder="Task order title" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+                                        {fieldErrors.title && <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.title}</p>}
                                     </div>
 
                                     {/* Issue Date */}
                                     <div className="flex flex-col">
-                                        <Label htmlFor="issue_date" className="mb-3 mt-[6px]">
-                                            Issue Date *
-                                        </Label>
-                                        <DatePicker
-                                            value={form.issue_date}
-                                            onChange={(val: any) => updateField('issue_date', String(val))}
-                                        />
-                                        {fieldErrors.issue_date && (
-                                            <p className="mt-1 text-xs text-red-500">{fieldErrors.issue_date}</p>
-                                        )}
+                                        <Label htmlFor="issue_date" className="mb-3 mt-[6px] text-slate-700 dark:text-slate-200">Issue Date *</Label>
+                                        <DatePicker value={form.issue_date} onChange={(val: any) => updateField('issue_date', String(val))} />
+                                        {fieldErrors.issue_date && <p className="mt-1 text-xs text-red-500 dark:text-red-400">{fieldErrors.issue_date}</p>}
                                     </div>
 
                                     {/* Status */}
                                     <div className="space-y-2">
-                                        <Label htmlFor="status">Status *</Label>
-                                        <Select
-                                            value={form.status}
-                                            onValueChange={(value) => updateField('status', value)}
-                                        >
-                                            <SelectTrigger id="status">
+                                        <Label htmlFor="status" className="text-slate-700 dark:text-slate-200">Status *</Label>
+                                        <Select value={form.status} onValueChange={(value) => updateField('status', value)}>
+                                            <SelectTrigger id="status" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100">
                                                 <SelectValue placeholder="Select status" />
                                             </SelectTrigger>
-                                            <SelectContent>
+                                            <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
                                                 {statuses.map((s) => (
-                                                    <SelectItem key={s} value={s}>
-                                                        {s}
-                                                    </SelectItem>
+                                                    <SelectItem key={s} value={s} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400">{s}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        {fieldErrors.status && (
-                                            <p className="text-xs text-red-500">{fieldErrors.status}</p>
-                                        )}
+                                        {fieldErrors.status && <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.status}</p>}
                                     </div>
 
                                     {/* Estimated Cost */}
                                     <div className="space-y-2">
-                                        <Label htmlFor="est_cost">Estimated Cost (IQD) *</Label>
-                                        <Input
-                                            id="est_cost"
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            value={form.est_cost}
-                                            onChange={(e) => updateField('est_cost', e.target.value)}
-                                            placeholder="0"
-                                        />
-                                        {fieldErrors.est_cost && (
-                                            <p className="text-xs text-red-500">{fieldErrors.est_cost}</p>
-                                        )}
+                                        <Label htmlFor="est_cost" className="text-slate-700 dark:text-slate-200">Estimated Cost (IQD) *</Label>
+                                        <Input id="est_cost" type="number" min="0" step="0.01" value={form.est_cost} onChange={(e) => updateField('est_cost', e.target.value)} placeholder="0" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+                                        {fieldErrors.est_cost && <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.est_cost}</p>}
                                     </div>
                                 </div>
 
                                 {/* Description */}
                                 <div className="space-y-2">
-                                    <Label htmlFor="description">Description</Label>
-                                    <textarea
-                                        id="description"
-                                        className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                        value={form.description}
-                                        onChange={(e) => updateField('description', e.target.value)}
-                                        placeholder="Detailed description of the task order..."
-                                    />
+                                    <Label htmlFor="description" className="text-slate-700 dark:text-slate-200">Description</Label>
+                                    <textarea id="description" className="min-h-[100px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-100 dark:focus-visible:ring-orange-900/50 focus:border-orange-300 dark:focus:border-orange-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" value={form.description} onChange={(e) => updateField('description', e.target.value)} placeholder="Detailed description of the task order..." />
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </EnhancedCard>
 
                         {/* ================= Right Column - Contract Terms ================= */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Contract Terms</CardTitle>
-                                <CardDescription>Define terms and conditions for this task order</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
+                        <EnhancedCard title="Contract Terms" description="Define terms and conditions for this task order" variant="default" size="sm">
+                            <div className="space-y-4">
                                 {form.contract_terms.map((term, index) => (
-                                    <div key={index} className="rounded-lg border p-3 space-y-2">
+                                    <div key={index} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <Label className="font-medium">Term - ({index + 1})</Label>
-                                            <Button
-                                                type="button"
-                                                variant="destructive"
-                                                size="sm"
-                                                onClick={() => removeTerm(index)}
-                                                disabled={form.contract_terms.length <= 1}
-                                            >
-                                                <Trash2 className="h-4 w-4 me-1" />
-                                                Delete
+                                            <Label className="font-medium text-slate-700 dark:text-slate-200">Term - ({index + 1})</Label>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => removeTerm(index)} disabled={form.contract_terms.length <= 1} className="border-rose-200 dark:border-rose-800 hover:border-rose-300 dark:hover:border-rose-700 hover:text-rose-700 dark:hover:text-rose-300 text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/20">
+                                                <Trash2 className="h-4 w-4 me-1" /> Delete
                                             </Button>
                                         </div>
-                                        <Input
-                                            placeholder="Term title"
-                                            value={term.title}
-                                            onChange={(e) => updateTermField(index, 'title', e.target.value)}
-                                        />
-                                        <textarea
-                                            className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                            placeholder="Term description"
-                                            value={term.description}
-                                            onChange={(e) => updateTermField(index, 'description', e.target.value)}
-                                        />
-                                        {fieldErrors[`contract_terms_${index}`] && (
-                                            <p className="text-xs text-red-500">
-                                                {fieldErrors[`contract_terms_${index}`]}
-                                            </p>
-                                        )}
+                                        <Input placeholder="Term title" value={term.title} onChange={(e) => updateTermField(index, 'title', e.target.value)} className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+                                        <textarea className="min-h-[80px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-100 dark:focus-visible:ring-orange-900/50 focus:border-orange-300 dark:focus:border-orange-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder="Term description" value={term.description} onChange={(e) => updateTermField(index, 'description', e.target.value)} />
+                                        {fieldErrors[`contract_terms_${index}`] && <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors[`contract_terms_${index}`]}</p>}
                                     </div>
                                 ))}
-                                <Button type="button" variant="success" size="sm" onClick={addTerm}>
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Add Term
+                                <Button type="button" variant="outline" size="sm" onClick={addTerm} className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20">
+                                    <Plus className="h-4 w-4 mr-2" /> Add Term
                                 </Button>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </EnhancedCard>
                     </div>
 
                     {/* ================= Notes Section ================= */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Notes Task Order Requests</CardTitle>
-                            <CardDescription>Additional notes or instructions for this task order</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="notes">Notes</Label>
-                                <textarea
-                                    id="notes"
-                                    className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    value={form.notes}
-                                    onChange={(e) => updateField('notes', e.target.value)}
-                                    placeholder="Detailed notes of the task order..."
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <EnhancedCard title="Notes Task Order Requests" description="Additional notes or instructions for this task order" variant="default" size="sm">
+                        <div className="space-y-2">
+                            <Label htmlFor="notes" className="text-slate-700 dark:text-slate-200">Notes</Label>
+                            <textarea id="notes" className="min-h-[100px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-100 dark:focus-visible:ring-orange-900/50 focus:border-orange-300 dark:focus:border-orange-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" value={form.notes} onChange={(e) => updateField('notes', e.target.value)} placeholder="Detailed notes of the task order..." />
+                        </div>
+                    </EnhancedCard>
 
                     {/* ================= Documents Section ================= */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Supporting Documents</CardTitle>
-                            <CardDescription>Upload relevant files (PDF, JPG, PNG - max 5MB each)</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
+                    <EnhancedCard title="Supporting Documents" description="Upload relevant files (PDF, JPG, PNG - max 5MB each)" variant="default" size="sm">
+                        <div className="space-y-4">
                             <div className="grid gap-4 md:grid-cols-3">
                                 {form.documents.map((doc, index) => (
-                                    <div key={index} className="rounded-lg border p-3 space-y-2">
+                                    <div key={index} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <Label className="font-medium">Document - ({index + 1})</Label>
-                                            <Button
-                                                type="button"
-                                                variant="destructive"
-                                                size="sm"
-                                                onClick={() => removeDocument(index)}
-                                                disabled={form.documents.length <= 1}
-                                            >
-                                                <Trash2 className="h-4 w-4 me-1" />
-                                                Delete
+                                            <Label className="font-medium text-slate-700 dark:text-slate-200">Document - ({index + 1})</Label>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => removeDocument(index)} disabled={form.documents.length <= 1} className="border-rose-200 dark:border-rose-800 hover:border-rose-300 dark:hover:border-rose-700 hover:text-rose-700 dark:hover:text-rose-300 text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/20">
+                                                <Trash2 className="h-4 w-4 me-1" /> Delete
                                             </Button>
                                         </div>
-
-                                        <Input
-                                            placeholder="Document title"
-                                            value={doc.title}
-                                            onChange={(e) => updateDocTitle(index, e.target.value)}
-                                        />
-
+                                        <Input placeholder="Document title" value={doc.title} onChange={(e) => updateDocTitle(index, e.target.value)} className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
                                         <div className="flex items-center gap-3">
-                                            <label
-                                                htmlFor={`file_${index}`}
-                                                className="inline-flex items-center gap-2 cursor-pointer rounded-md border px-3 py-2 text-sm hover:bg-accent"
-                                            >
+                                            <label htmlFor={`file_${index}`} className="inline-flex items-center gap-2 cursor-pointer rounded-md border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
                                                 <FileUp className="h-4 w-4" />
                                                 {doc.name ? 'Change File' : 'Select File'}
                                             </label>
-                                            <input
-                                                id={`file_${index}`}
-                                                type="file"
-                                                accept=".jpg,.jpeg,.png,.pdf"
-                                                className="hidden"
-                                                onChange={(e) => updateDocFile(index, e.target.files?.[0])}
-                                            />
+                                            <input id={`file_${index}`} type="file" accept=".jpg,.jpeg,.png,.pdf" className="hidden" onChange={(e) => updateDocFile(index, e.target.files?.[0])} />
                                             {doc.name ? (
-                                                <span className="text-sm text-muted-foreground truncate max-w-[200px]">
-                                                    {doc.name}
-                                                </span>
+                                                <span className="text-sm text-slate-600 dark:text-slate-400 truncate max-w-[200px]">{doc.name}</span>
                                             ) : (
-                                                <span className="text-sm text-muted-foreground">No file selected</span>
+                                                <span className="text-sm text-slate-600 dark:text-slate-400">No file selected</span>
                                             )}
                                         </div>
 
@@ -766,13 +623,9 @@ const UpdateTaskOrderPage: React.FC = () => {
                                         {doc.file && (
                                             <div className="mt-2">
                                                 {doc.type?.startsWith('image/') ? (
-                                                    <img
-                                                        src={doc.file}
-                                                        alt="Preview"
-                                                        className="h-24 object-contain border rounded"
-                                                    />
+                                                    <img src={doc.file} alt="Preview" className="h-24 object-contain border rounded" />
                                                 ) : doc.type === 'application/pdf' ? (
-                                                    <div className="flex items-center text-blue-500">
+                                                    <div className="flex items-center text-blue-600 dark:text-blue-400">
                                                         <FileUp className="h-6 w-6 mr-2" />
                                                         <span>PDF Document</span>
                                                     </div>
@@ -780,35 +633,48 @@ const UpdateTaskOrderPage: React.FC = () => {
                                             </div>
                                         )}
 
-                                        {fieldErrors[`documents_${index}`] && (
-                                            <p className="text-xs text-red-500">{fieldErrors[`documents_${index}`]}</p>
-                                        )}
+                                        {fieldErrors[`documents_${index}`] && <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors[`documents_${index}`]}</p>}
                                     </div>
                                 ))}
                             </div>
 
-                            <Button type="button" variant="success" size="sm" onClick={addDocument}>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addDocument}
+                                className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                            >
                                 <Plus className="h-4 w-4 mr-2" />
                                 Add Document
                             </Button>
-                        </CardContent>
+                        </div>
+                    </EnhancedCard>
 
-                        {/* ================= Form Actions (Update) ================= */}
-                        <CardFooter className="justify-end gap-3 pt-6">
-                            <Button type="button" variant="outline" onClick={handleReset} disabled={loading}>
-                                <RotateCcw className="h-4 w-4 mr-2" />
-                                Reset Form
-                            </Button>
-                            <Button type="submit" disabled={loading}>
-                                {loading ? (
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                ) : (
-                                    <Save className="h-4 w-4 mr-2" />
-                                )}
-                                {loading ? 'Updating...' : 'Update Task Order'}
-                            </Button>
-                        </CardFooter>
-                    </Card>
+                    {/* Form Actions */}
+                    <div className="flex justify-end gap-3 pt-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleReset}
+                            disabled={loading}
+                            className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        >
+                            <RotateCcw className="h-4 w-4 mr-2" /> Reset Form
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={loading}
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        >
+                            {loading ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                                <Save className="h-4 w-4 mr-2" />
+                            )}
+                            {loading ? 'Updating...' : 'Update Task Order'}
+                        </Button>
+                    </div>
                 </form>
             )}
         </div>

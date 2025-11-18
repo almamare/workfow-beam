@@ -25,6 +25,7 @@ import { Loader2, Save, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { DatePicker } from "@/components/DatePicker";
+import { EnhancedCard } from '@/components/ui/enhanced-card';
 
 
 /* =========================
@@ -160,8 +161,6 @@ const CreateProjectPage: React.FC = () => {
             'project_code',
             'name',
             'client_id',
-            'start_date',
-            'end_date',
             'type',
             'fiscal_year',
         ];
@@ -171,12 +170,6 @@ const CreateProjectPage: React.FC = () => {
                 errors[f] = 'Required';
             }
         });
-
-        if (form.start_date && form.end_date) {
-            const sd = new Date(form.start_date);
-            const ed = new Date(form.end_date);
-            if (ed < sd) errors.end_date = 'End date must be after or equal to start date';
-        }
 
         numberFields.forEach((f) => {
             const val = form[f];
@@ -255,13 +248,18 @@ const CreateProjectPage: React.FC = () => {
             <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Create Project</h1>
-                    <p className="text-muted-foreground mt-2">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Create Project</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
                         Enter the project details below, then submit to create a new project.
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button type="button" variant="outline" onClick={() => router.push('/projects')}>
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => router.push('/projects')} 
+                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    >
                         Back to Projects
                     </Button>
                 </div>
@@ -271,40 +269,38 @@ const CreateProjectPage: React.FC = () => {
             <form id="project-create-form" onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-3">
                     {/* Basic Information */}
-                    <Card className="md:col-span-2">
-                        <CardHeader>
-                            <CardTitle>Basic Information</CardTitle>
-                            <CardDescription>Core identifying information for the project.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
+                    <EnhancedCard title="Basic Information" description="Core identifying information for the project." variant="default" size="sm" className="md:col-span-2">
+                        <div className="space-y-4">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor="project_code">Project Code *</Label>
+                                    <Label htmlFor="project_code" className="text-slate-700 dark:text-slate-200">Project Code *</Label>
                                     <Input
                                         id="project_code"
                                         value={form.project_code}
                                         onChange={(e) => updateField('project_code', e.target.value)}
                                         placeholder="XXX-XXX-XXX"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     />
                                     {fieldErrors.project_code && (
-                                        <p className="text-xs text-red-500">{fieldErrors.project_code}</p>
+                                        <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.project_code}</p>
                                     )}
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="name">Name *</Label>
+                                    <Label htmlFor="name" className="text-slate-700 dark:text-slate-200">Name *</Label>
                                     <Input
                                         id="name"
                                         value={form.name}
                                         onChange={(e) => updateField('name', e.target.value)}
                                         placeholder="Project Name"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     />
-                                    {fieldErrors.name && <p className="text-xs text-red-500">{fieldErrors.name}</p>}
+                                    {fieldErrors.name && <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.name}</p>}
                                 </div>
 
                                 {/* Client dropdown from server */}
                                 <div className="space-y-2">
-                                    <Label htmlFor="client_id">Client *</Label>
+                                    <Label htmlFor="client_id" className="text-slate-700 dark:text-slate-200">Client *</Label>
                                     <Select
                                         value={form.client_id || ''}
                                         onValueChange={(val) => {
@@ -314,187 +310,186 @@ const CreateProjectPage: React.FC = () => {
                                         }}
                                         disabled={clientsLoading}
                                     >
-                                        <SelectTrigger id="client_id">
+                                        <SelectTrigger 
+                                            id="client_id" 
+                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200"
+                                        >
                                             <SelectValue placeholder={clientsLoading ? 'Loading clients...' : 'Select client'} />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
                                             {clients.map((c) => (
-                                                <SelectItem key={c.id} value={c.id}>
+                                                <SelectItem 
+                                                    key={c.id} 
+                                                    value={c.id}
+                                                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200"
+                                                >
                                                     {c.name} {c.client_no ? `(${c.client_no})` : ''}
                                                 </SelectItem>
                                             ))}
                                             {!clientsLoading && clients.length === 0 && (
-                                                <SelectItem value="__no__" disabled>
+                                                <SelectItem value="__no__" disabled className="text-slate-500 dark:text-slate-400 cursor-not-allowed">
                                                     No clients found
                                                 </SelectItem>
                                             )}
                                         </SelectContent>
                                     </Select>
                                     {fieldErrors.client_id && (
-                                        <p className="text-xs text-red-500">{fieldErrors.client_id}</p>
+                                        <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.client_id}</p>
                                     )}
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="type">Type *</Label>
+                                    <Label htmlFor="type" className="text-slate-700 dark:text-slate-200">Type *</Label>
                                     <Select value={form.type} onValueChange={(val) => updateField('type', val)}>
-                                        <SelectTrigger id="type">
+                                        <SelectTrigger 
+                                            id="type" 
+                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200"
+                                        >
                                             <SelectValue placeholder="Select type" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
                                             {projectTypes.map((t) => (
-                                                <SelectItem value={t} key={t}>
+                                                <SelectItem 
+                                                    value={t} 
+                                                    key={t}
+                                                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200"
+                                                >
                                                     {t}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    {fieldErrors.type && <p className="text-xs text-red-500">{fieldErrors.type}</p>}
+                                    {fieldErrors.type && <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.type}</p>}
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="fiscal_year">Fiscal Year *</Label>
+                                    <Label htmlFor="fiscal_year" className="text-slate-700 dark:text-slate-200">Fiscal Year *</Label>
                                     <Select
                                         value={form.fiscal_year}
                                         onValueChange={(val) => updateField('fiscal_year', val)}
                                     >
-                                        <SelectTrigger id="fiscal_year">
+                                        <SelectTrigger 
+                                            id="fiscal_year" 
+                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200"
+                                        >
                                             <SelectValue placeholder="Year" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
                                             {fiscalYears.map((y) => (
-                                                <SelectItem value={y} key={y}>
+                                                <SelectItem 
+                                                    value={y} 
+                                                    key={y}
+                                                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200"
+                                                >
                                                     {y}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                     {fieldErrors.fiscal_year && (
-                                        <p className="text-xs text-red-500">{fieldErrors.fiscal_year}</p>
+                                        <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.fiscal_year}</p>
                                     )}
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="description">Description (Optional)</Label>
+                                <Label htmlFor="description" className="text-slate-700 dark:text-slate-200">Description (Optional)</Label>
                                 <textarea
                                     id="description"
-                                    className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    className="min-h-[100px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-100 dark:focus-visible:ring-orange-900/50 focus:border-orange-300 dark:focus:border-orange-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     value={form.description}
                                     onChange={(e) => updateField('description', e.target.value)}
                                     placeholder="Short project description..."
                                 />
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </EnhancedCard>
 
-                    {/* Dates */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Dates</CardTitle>
-                            <CardDescription>Define the planned start and end dates.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
+                    {/* Budget & Costs (REPLACES DATES) */}
+                    <EnhancedCard title="Budget & Costs (Optional)" description="Leave any field blank if not applicable. Numbers must be ≥ 0 when provided." variant="default" size="sm">
+                        <div className="grid gap-4 md:grid-cols-1">
                             <div className="space-y-2">
-                                <Label htmlFor="start_date">Start Date *</Label>
-                                <DatePicker
-                                    value={form.start_date}
-                                    onChange={(val) => updateField('start_date', val)}
-                                />
-                                {fieldErrors.start_date && (
-                                    <p className="text-xs text-red-500">{fieldErrors.start_date}</p>
-                                )}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="end_date">End Date *</Label>
-                                <DatePicker
-                                    value={form.end_date}
-                                    onChange={(val) => updateField('end_date', val)}
-                                />
-                                {fieldErrors.end_date && (
-                                    <p className="text-xs text-red-500">{fieldErrors.end_date}</p>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Budget & Costs (OPTIONAL) */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Budget & Costs (Optional)</CardTitle>
-                        <CardDescription>
-                            Leave any field blank if not applicable. Numbers must be ≥ 0 when provided.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="original_budget">Original Budget</Label>
+                                <Label htmlFor="original_budget" className="text-slate-700 dark:text-slate-200">Original Budget</Label>
                                 <Input
                                     id="original_budget"
                                     inputMode="numeric"
                                     value={form.original_budget ?? ''}
                                     onChange={(e) => updateField('original_budget', e.target.value)}
                                     placeholder="0"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {fieldErrors.original_budget && (
-                                    <p className="text-xs text-red-500">{fieldErrors.original_budget}</p>
+                                    <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.original_budget}</p>
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="revised_budget">Revised Budget</Label>
+                                <Label htmlFor="revised_budget" className="text-slate-700 dark:text-slate-200">Revised Budget</Label>
                                 <Input
                                     id="revised_budget"
                                     inputMode="numeric"
                                     value={form.revised_budget ?? ''}
                                     onChange={(e) => updateField('revised_budget', e.target.value)}
                                     placeholder="0"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {fieldErrors.revised_budget && (
-                                    <p className="text-xs text-red-500">{fieldErrors.revised_budget}</p>
+                                    <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.revised_budget}</p>
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="committed_cost">Committed Cost</Label>
+                                <Label htmlFor="committed_cost" className="text-slate-700 dark:text-slate-200">Committed Cost</Label>
                                 <Input
                                     id="committed_cost"
                                     inputMode="numeric"
                                     value={form.committed_cost ?? ''}
                                     onChange={(e) => updateField('committed_cost', e.target.value)}
                                     placeholder="0"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {fieldErrors.committed_cost && (
-                                    <p className="text-xs text-red-500">{fieldErrors.committed_cost}</p>
+                                    <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.committed_cost}</p>
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="actual_cost">Actual Cost</Label>
+                                <Label htmlFor="actual_cost" className="text-slate-700 dark:text-slate-200">Actual Cost</Label>
                                 <Input
                                     id="actual_cost"
                                     inputMode="numeric"
                                     value={form.actual_cost ?? ''}
                                     onChange={(e) => updateField('actual_cost', e.target.value)}
                                     placeholder="0"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {fieldErrors.actual_cost && (
-                                    <p className="text-xs text-red-500">{fieldErrors.actual_cost}</p>
+                                    <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.actual_cost}</p>
                                 )}
                             </div>
                         </div>
-                    </CardContent>
-                    <CardFooter className="justify-end gap-3">
-                        <Button type="button" variant="outline" onClick={handleReset} disabled={loading}>
-                            <RotateCcw className="h-4 w-4 mr-2" />
-                            Reset
-                        </Button>
-                        <Button type="submit" disabled={loading}>
-                            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                            <Save className="h-4 w-4 mr-2" />
-                            {loading ? 'Saving...' : 'Create Project'}
-                        </Button>
-                    </CardFooter>
-                </Card>
+                        <div className="flex justify-end gap-3 mt-4">
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                onClick={handleReset} 
+                                disabled={loading} 
+                                className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                            >
+                                <RotateCcw className="h-4 w-4 mr-2" />
+                                Reset
+                            </Button>
+                            <Button 
+                                type="submit" 
+                                disabled={loading} 
+                                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-600 dark:to-orange-700 dark:hover:from-orange-700 dark:hover:to-orange-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                            >
+                                {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                                <Save className="h-4 w-4 mr-2" />
+                                {loading ? 'Saving...' : 'Create Project'}
+                            </Button>
+                        </div>
+                    </EnhancedCard>
+                </div>
+
+                {/* Removed the separate Budget card below */}
             </form>
         </div>
     );

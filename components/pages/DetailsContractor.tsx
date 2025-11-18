@@ -1,52 +1,31 @@
 /* =========================================================
-   src/app/contractors/details/page.tsx
-   Contractor Details – same pattern used in “Project Details”
+   Contractor Details – Branded design (orange + slate), dark mode
 =========================================================== */
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import axios from '@/utils/axios';
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch } from '@/stores/store';
 import { toast } from 'sonner';
 
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { DeleteDialog } from '@/components/delete-dialog';
-import { Loader2, SquarePen, Trash2, ArrowLeft, Phone, Mail, Building } from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { DeleteDialog } from '@/components/delete-dialog';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
 
-/* ---------- Types ---------- */
-type Contractor = {
-    id: string;
-    number: string;
-    name: string;
-    phone: string;
-    email: string;
-    province: string;
-    address: string;
-    status: 'Active' | 'Inactive' | string;
-    bank_name: string;
-    bank_account: string | number;
-    note: string;
-    created_at: string;
-    updated_at: string;
-};
+import { Loader2, SquarePen, Trash2 } from 'lucide-react';
 
-/* ---------- Helper badge variants ---------- */
-const statusVariant = (s: Contractor['status']) =>
-    s === 'Active'
-        ? 'completed'
-        : s === 'Inactive'
-            ? 'rejected'
-            : 'outline';
+import {
+    fetchContractor,
+    selectSelectedContractor,
+    selectLoading,
+    selectError,
+    clearSelectedContractor
+} from '@/stores/slices/contractors';
+import type { Contractor } from '@/stores/types/contractors';
 
 /* =========================================================
    Component
@@ -54,45 +33,51 @@ const statusVariant = (s: Contractor['status']) =>
 export default function ContractorDetails() {
     const router = useRouter();
     const params = useSearchParams();
-    const id = params.get('id');
+    const id = params.get('id') || '';
 
-    const [data, setData] = useState<Contractor | null>(null);
-    const [loading, setLoading] = useState(true);
+    const dispatch = useDispatch<AppDispatch>();
+    const loading = useSelector(selectLoading);
+    const error = useSelector(selectError);
+    const contractor = useSelector(selectSelectedContractor);
+
     const [open, setOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
-    /* ---------- Fetch contractor ---------- */
-    const load = useCallback(async () => {
+    // Fetch contractor
+    useEffect(() => {
         if (!id) {
             toast.error('Missing contractor id');
             router.push('/contractors');
             return;
         }
-        setLoading(true);
-        try {
-            const res = await axios.get(`/contractors/fetch/contractor/${id}`);
-            const c =
-                res?.data?.contractor ||
-                res?.data?.body?.contractor ||
-                res?.data?.data;
-            if (!c?.id) throw new Error('Contractor not found');
-            setData(c);
-        } catch (err: any) {
-            toast.error(err?.response?.data?.message || err?.message || 'Unable to load contractor');
-            router.push('/contractors');
-        } finally {
-            setLoading(false);
-        }
-    }, [id, router]);
+        dispatch(fetchContractor({ id }));
+        return () => {
+            dispatch(clearSelectedContractor());
+        };
+    }, [dispatch, id, router]);
 
-    useEffect(() => { load(); }, [load]);
+    useEffect(() => {
+        if (error) toast.error(error);
+    }, [error]);
 
-    /* ---------- Delete ---------- */
+    const statusBadge = useMemo(() => {
+        const status = contractor?.status || '-';
+        const classes =
+            status === 'Active'
+                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800'
+                : status === 'Inactive'
+                ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+                : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
+        return <Badge className={classes}>{status}</Badge>;
+    }, [contractor]);
+
+    // Delete (simple fetch placeholder; backend route may differ)
     const handleDelete = async () => {
         if (!id) return;
         try {
             setDeleting(true);
-            await axios.delete(`/contractors/delete/${id}`);
+            const res = await fetch(`/api/contractors/delete?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed');
             toast.success('Contractor deleted successfully');
             router.push('/contractors');
         } catch {
@@ -103,115 +88,137 @@ export default function ContractorDetails() {
         }
     };
 
-    /* ---------- Loading skeleton ---------- */
-    if (loading) {
+    if (loading && !contractor) {
         return (
-            <Centered>
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-muted-foreground">Loading contractor …</p>
-            </Centered>
+            <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                <p className="text-slate-500 dark:text-slate-400">Loading contractor…</p>
+            </div>
         );
     }
-    if (!data) return null;
+    if (!contractor) return null;
 
-    /* =========================================================
-       Render
-    ========================================================= */
     return (
         <div className="space-y-4">
+            {/* Breadcrumb */}
+            <Breadcrumb />
 
             {/* Header */}
-            <Breadcrumb />
-            <div className="flex items-center justify-between">
+            <div className="flex items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-                        Details Contractor
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
+                        Contractor Details
                     </h1>
-                    {data.number && (
-                        <p className="text-muted-foreground mt-1">No. {data.number}</p>
+                    {contractor.number && (
+                        <p className="text-slate-600 dark:text-slate-400 mt-1">
+                            No. {contractor.number}
+                        </p>
                     )}
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
+                        Review contractor information and manage actions.
+                    </p>
                 </div>
-                <Button variant="outline" onClick={() => router.push('/contractors')}>
-                    Back&nbsp;to&nbsp;Contractors
+                <Button
+                    variant="outline"
+                    onClick={() => router.push('/contractors')}
+                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                >
+                    Back to Contractors
                 </Button>
             </div>
 
-            {/* ——— Statistic cards (mirror project pattern) ——— */}
+            {/* Stat cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <StatCard
+                <EnhancedCard
                     title="Contractor Name"
-                    icon={Building}
-                    value={data.name}
-                    sub={`No. ${data.number}`}
-                />
-                <StatCard
-                    title="Phone"
-                    icon={Phone}
-                    value={data.phone}
-                    sub={data.email || 'No email'}
-                />
-                <StatCard
-                    title="Province"
-                    icon={Mail}
-                    value={data.province}
-                    sub={data.address || 'No address'}
-                />
-            </div>
-
-            {/* ——— Note section ——— */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Action</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            onClick={() => router.push(`/contractors/update?id=${data.id}`)}
-                        >
-                            <SquarePen className="h-4 w-4 mr-2" />
-                            Edit
-                        </Button>
-                        <Button variant="destructive" onClick={() => setOpen(true)}>
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                        </Button>
+                    description={contractor.number ? `No. ${contractor.number}` : undefined}
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100">
+                        {contractor.name}
                     </div>
-                </CardContent>
-            </Card>
+                </EnhancedCard>
 
-            {/* ——— Main grid (general / contact / bank) ——— */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <DataCard title="General Information">
-                    <Detail label="Status" value={<Badge variant={statusVariant(data.status)}>{data.status}</Badge>} />
-                    <Detail label="Province" value={data.province} />
-                    <Detail label="Address" value={data.address || '-'} />
-                    <Detail label="Created" value={fmt(data.created_at)} />
-                    <Detail label="Updated" value={fmt(data.updated_at)} />
-                </DataCard>
+                <EnhancedCard
+                    title="Phone"
+                    description={contractor.email || 'No email'}
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100">
+                        {contractor.phone}
+                    </div>
+                </EnhancedCard>
 
-                <DataCard title="Contact & Bank">
-                    <Detail label="Phone" value={data.phone} />
-                    <Detail label="Email" value={data.email || '-'} />
-                    <Detail label="Bank Name" value={data.bank_name || '-'} />
-                    <Detail label="Bank Account" value={String(data.bank_account) || '-'} />
-                </DataCard>
+                <EnhancedCard
+                    title="Province"
+                    description={contractor.address || 'No address'}
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100">
+                        {contractor.province}
+                    </div>
+                </EnhancedCard>
             </div>
 
-            {/* ——— Note section ——— */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Note</CardTitle>
-                    <CardDescription>Additional comments</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <p className="prose max-w-none text-sm md:text-base">
-                        {data.note || 'No note for this contractor.'}
-                    </p>
-                </CardContent>
-            </Card>
+            {/* Actions */}
+            <EnhancedCard
+                title="Actions"
+                description="Update or delete contractor"
+                variant="default"
+                size="sm"
+            >
+                <div className="flex flex-wrap gap-2">
+                    <Button
+                        onClick={() => router.push(`/contractors/update?id=${contractor.id}`)}
+                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                        <SquarePen className="h-4 w-4 mr-2" />
+                        Edit Contractor
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setOpen(true)}
+                        className="border-rose-200 dark:border-rose-800 hover:border-rose-300 dark:hover:border-rose-700 hover:text-rose-700 dark:hover:text-rose-300 text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                    >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                    </Button>
+                </div>
+            </EnhancedCard>
 
-            {/* ——— Delete Dialog ——— */}
+            {/* Information cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <EnhancedCard title="General Information" description="" variant="default" size="sm">
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                        <Detail label="Status" value={statusBadge} />
+                        <Detail label="Province" value={contractor.province} />
+                        <Detail label="Address" value={contractor.address || '-'} />
+                        <Detail label="Created" value={fmt(contractor.created_at)} />
+                        <Detail label="Updated" value={fmt(contractor.updated_at)} />
+                    </div>
+                </EnhancedCard>
+
+                <EnhancedCard title="Contact & Bank" description="" variant="default" size="sm">
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                        <Detail label="Phone" value={contractor.phone} />
+                        <Detail label="Email" value={contractor.email || '-'} />
+                        <Detail label="Bank Name" value={contractor.bank_name || '-'} />
+                        <Detail label="Bank Account" value={String(contractor.bank_account || '') || '-'} />
+                    </div>
+                </EnhancedCard>
+            </div>
+
+            {/* Note */}
+            <EnhancedCard title="Note" description="Additional comments" variant="default" size="sm">
+                <p className="text-sm md:text-base text-slate-600 dark:text-slate-400">
+                    {contractor.note || 'No note for this contractor.'}
+                </p>
+            </EnhancedCard>
+
+            {/* Delete Dialog */}
             <DeleteDialog
                 open={open}
                 onClose={() => !deleting && setOpen(false)}
@@ -222,62 +229,15 @@ export default function ContractorDetails() {
 }
 
 /* =========================================================
-   Reusable components (same pattern as project page)
+   Reusable
 =========================================================== */
-const Centered: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-3">
-        {children}
+const Detail: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
+    <div className="flex items-start justify-between gap-4 py-2">
+        <span className="font-medium text-slate-700 dark:text-slate-200">{label}</span>
+        <span className="text-slate-600 dark:text-slate-400 text-right">{value}</span>
     </div>
 );
 
-interface StatProps {
-    title: string;
-    icon: React.ComponentType<{ className?: string }>;
-    value: React.ReactNode;
-    sub?: string;
-}
-const StatCard: React.FC<StatProps> = ({ title, icon: Icon, value, sub }) => (
-    <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-base font-medium flex items-center gap-1">
-                <Icon className="h-5 w-5 text-muted-foreground" />
-                {title}
-            </CardTitle>
-        </CardHeader>
-        <CardContent>
-            <div className="text-2xl md:text-3xl font-bold">{value}</div>
-            {sub && (
-                <p className="text-xs text-muted-foreground mt-1 truncate">{sub}</p>
-            )}
-        </CardContent>
-    </Card>
-);
-
-const DataCard: React.FC<{ title: string; children: React.ReactNode }> = ({
-    title,
-    children,
-}) => (
-    <Card>
-        <CardHeader className="p-3">
-            <CardTitle className="text-lg md:text-xl font-semibold">{title}</CardTitle>
-        </CardHeader>
-        <CardContent>{children}</CardContent>
-    </Card>
-);
-
-const Detail: React.FC<{ label: string; value: React.ReactNode }> = ({
-    label,
-    value,
-}) => (
-    <div className="flex justify-between items-center py-2 border-b">
-        <span className="font-medium text-sm md:text-base">{label}:</span>
-        <span className="text-muted-foreground text-xs md:text-sm max-w-[250px] truncate text-right">
-            {value}
-        </span>
-    </div>
-);
-
-/* ---------- date helper ---------- */
 function fmt(date: string) {
     try {
         return new Date(date).toLocaleDateString('en-US', {

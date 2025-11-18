@@ -3,7 +3,7 @@
 import { useEffect, Suspense} from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '@/stores/store';
+import { AppDispatch } from '@/stores/store';
 import {
     fetchTaskOrder,
     clearSelectedTaskOrder,
@@ -15,16 +15,8 @@ import {
     selectTaskOrdersLoading as selectLoading,
     selectTaskOrdersError as selectError,
 } from '@/stores/slices/task-orders';
-import { toast } from 'sonner'; // For displaying notifications
+import { toast } from 'sonner';
 
-// UI Components
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
-} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,28 +29,35 @@ import {
     Calendar,
     CircleCheckBig
 } from 'lucide-react';
-import { Breadcrumb } from '@/components/layout/breadcrumb'; // Navigation breadcrumb component
+import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
 
 // Typed dispatch hook for Redux with TypeScript
 const useAppDispatch = () => useDispatch<AppDispatch>();
 
-// Maps status values to corresponding visual variants for badges
-const statusVariant = (status: string) =>
-    status === 'Active' ? 'completed' :
-        status === 'Pending' ? 'pending' :
-            status === 'Onhold' ? 'onhold' :
-                status === 'Closed' ? 'draft' :
-                    status === 'Cancelled' ? 'rejected' : 'outline';
+// Maps status to badge classes (dark/light)
+const statusBadgeClasses = (status: string) =>
+    status === 'Active'
+        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800'
+        : status === 'Pending'
+        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+        : status === 'Onhold'
+        ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800'
+        : status === 'Closed'
+        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+        : status === 'Cancelled'
+        ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+        : 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
 
 // Main Component
- function TaskOrderDetails() {
+function TaskOrderDetails() {
     const router = useRouter();
     const params = useSearchParams();
-    const id = params.get('id'); // Get task order ID from URL query parameters
+    const id = params.get('id');
 
     const dispatch = useAppDispatch();
 
-    // Redux selectors to get data from the store
+    // Redux selectors
     const order = useSelector(selectSelectedTaskOrder);
     const contractor = useSelector(selectSelectedContractor);
     const project = useSelector(selectSelectedProject);
@@ -67,64 +66,53 @@ const statusVariant = (status: string) =>
     const loading = useSelector(selectLoading);
     const error = useSelector(selectError);
 
-    // Fetch task order on component mount
+    // Fetch task order on mount
     useEffect(() => {
         if (!id) {
             toast.error('Missing task order ID');
-            router.push('/orders/tasks');
+            router.push('/tasks');
             return;
         }
-
         dispatch(fetchTaskOrder({ id }));
-
-        // Cleanup: Clear selected task order when component unmounts
-        return () => {
-            dispatch(clearSelectedTaskOrder());
-        };
+        return () => { dispatch(clearSelectedTaskOrder()); };
     }, [id, router, dispatch]);
 
-    // Show error toast if there's an error
-    useEffect(() => {
-        if (error) toast.error(error);
-    }, [error]);
+    useEffect(() => { if (error) toast.error(error); }, [error]);
 
-    // Loading state
     if (loading) {
         return (
             <Centered>
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-muted-foreground">Loading task order...</p>
+                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                <p className="text-slate-500 dark:text-slate-400">Loading task order...</p>
             </Centered>
         );
     }
 
-    // Error state
     if (error) {
         return (
             <Centered>
-                <p className="text-destructive">{error}</p>
+                <p className="text-rose-600 dark:text-rose-400">{error}</p>
                 <Button
                     variant="outline"
-                    onClick={() => router.push('/orders/tasks')}
+                    onClick={() => router.push('/tasks')}
+                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                 >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Orders
+                    <ArrowLeft className="h-4 w-4 mr-2" /> Back to Tasks
                 </Button>
             </Centered>
         );
     }
 
-    // No order found state
     if (!order) {
         return (
             <Centered>
-                <p className="text-destructive">Task order not found</p>
+                <p className="text-rose-600 dark:text-rose-400">Task order not found</p>
                 <Button
                     variant="outline"
-                    onClick={() => router.push('/orders/tasks')}
+                    onClick={() => router.push('/tasks')}
+                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                 >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Orders
+                    <ArrowLeft className="h-4 w-4 mr-2" /> Back to Tasks
                 </Button>
             </Centered>
         );
@@ -132,65 +120,48 @@ const statusVariant = (status: string) =>
 
     return (
         <div className="space-y-4">
-            {/* Header Section */}
+            {/* Header */}
             <Breadcrumb />
-            <div className="flex items-center justify-between">
+            <div className="flex items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
                         Task Order Details
                     </h1>
                     {order.task_order_no && (
-                        <p className="text-muted-foreground mt-1">
-                            Order No: {order.task_order_no}
-                        </p>
+                        <p className="text-slate-600 dark:text-slate-400 mt-1">Order No: {order.task_order_no}</p>
                     )}
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Review task order data and related info.</p>
                 </div>
                 <Button
                     variant="outline"
                     onClick={() => router.push('/tasks')}
+                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                 >
-                    Back to Orders
+                    Back to Tasks
                 </Button>
             </div>
 
-            {/* Statistics Cards */}
+            {/* Stat cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard
-                    title="Order Title"
-                    icon={ClipboardList}
-                    value={order.title}
-                    sub={order.task_order_no}
-                />
-                <StatCard
-                    title="Status"
-                    icon={CircleCheckBig}
-                    value={<Badge variant={statusVariant(order.status)}>{order.status}</Badge>}
-                    sub={order.issue_date}
-                />
-                <StatCard
-                    title="Contractor"
-                    icon={User}
-                    value={order.contractor_name}
-                    sub={contractor?.number}
-                />
-                <StatCard
-                    title="Dates"
-                    icon={Calendar}
-                    value={formatDate(order.created_at)}
-                    sub={formatDate(order.updated_at)}
-                />
+                <EnhancedCard title="Order Title" description={order.task_order_no} variant="default" size="sm">
+                    <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">{order.title}</div>
+                </EnhancedCard>
+                <EnhancedCard title="Status" description={order.issue_date} variant="default" size="sm">
+                    <Badge className={statusBadgeClasses(order.status)}>{order.status}</Badge>
+                </EnhancedCard>
+                <EnhancedCard title="Contractor" description={contractor?.number} variant="default" size="sm">
+                    <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">{order.contractor_name}</div>
+                </EnhancedCard>
+                <EnhancedCard title="Dates" description={formatDate(order.updated_at)} variant="default" size="sm">
+                    <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">{formatDate(order.created_at)}</div>
+                </EnhancedCard>
             </div>
 
-            {/* Detailed Information Grid */}
+            {/* Detailed Information */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                {/* Project Information Card */}
                 {project && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Project Information</CardTitle>
-                            <CardDescription>Details about the associated project</CardDescription>
-                        </CardHeader>
-                        <CardContent>
+                    <EnhancedCard title="Project Information" description="Details about the associated project" variant="default" size="sm">
+                        <div className="divide-y divide-slate-200 dark:divide-slate-800">
                             <Detail label="Project Name" value={project.name} />
                             <Detail label="Client" value={project.client_name} />
                             <Detail label="Number" value={project.number} />
@@ -198,39 +169,29 @@ const statusVariant = (status: string) =>
                             <Detail label="Status" value={project.status} />
                             <Detail label="Start Date" value={formatDate(project.start_date)} />
                             <Detail label="End Date" value={formatDate(project.end_date)} />
-                            <Detail label="Created At" value={project.created_at} />
-                        </CardContent>
-                    </Card>
+                            <Detail label="Created At" value={formatDate(project.created_at)} />
+                        </div>
+                    </EnhancedCard>
                 )}
 
-                {/* Contractor Information Card */}
                 {contractor && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Contractor Information</CardTitle>
-                            <CardDescription>Details about the contractor</CardDescription>
-                        </CardHeader>
-                        <CardContent>
+                    <EnhancedCard title="Contractor Information" description="Details about the contractor" variant="default" size="sm">
+                        <div className="divide-y divide-slate-200 dark:divide-slate-800">
                             <Detail label="Name" value={contractor.name} />
                             <Detail label="Number" value={contractor.number} />
                             <Detail label="Email" value={contractor.email} />
                             <Detail label="Phone" value={contractor.phone} />
                             <Detail label="Status" value={contractor.status} />
                             <Detail label="Bank" value={contractor.bank_name} />
-                            <Detail label="Account" value={contractor.bank_account} />
-                            <Detail label="Created At" value={contractor.created_at} />
-                        </CardContent>
-                    </Card>
+                            <Detail label="Account" value={String(contractor.bank_account)} />
+                            <Detail label="Created At" value={formatDate(contractor.created_at)} />
+                        </div>
+                    </EnhancedCard>
                 )}
 
-                {/* Documents Card */}
                 {documents.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Documents</CardTitle>
-                            <CardDescription>Attached task order documents</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
+                    <EnhancedCard title="Documents" description="Attached task order documents" variant="default" size="sm">
+                        <div className="space-y-2">
                             {documents.map((doc) => (
                                 <Detail
                                     key={doc.id}
@@ -239,61 +200,36 @@ const statusVariant = (status: string) =>
                                         <a
                                             href={doc.file}
                                             target="_blank"
-                                            className="text-blue-600 hover:underline flex items-center gap-1"
+                                            className="text-blue-600 dark:text-blue-400 hover:underline"
                                         >
-                                            <ExternalLink className="h-4 w-4" />
                                             View File
                                         </a>
                                     }
                                 />
                             ))}
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </EnhancedCard>
                 )}
 
-                {/* Contract Terms Card */}
                 {contractTerms.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Contract Terms</CardTitle>
-                            <CardDescription>Terms associated with this order</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
+                    <EnhancedCard title="Contract Terms" description="Terms associated with this order" variant="default" size="sm">
+                        <div className="space-y-2">
                             {contractTerms.map((term) => (
-                                <Detail
-                                    key={term.id}
-                                    label={term.titel}
-                                    value={term.description}
-                                />
+                                <Detail key={term.id} label={term.titel} value={term.description} />
                             ))}
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </EnhancedCard>
                 )}
             </div>
 
-            {/* Description Cards */}
+            {/* Descriptions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                {/* Project Description */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Project Description</CardTitle>
-                        <CardDescription>Details about the associated project</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <p>{project?.description}</p>
-                    </CardContent>
-                </Card>
-
-                {/* Task Order Description */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Task Order Description</CardTitle>
-                        <CardDescription>Details about this task order</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <p>{order.description}</p>
-                    </CardContent>
-                </Card>
+                <EnhancedCard title="Project Description" description="Details about the associated project" variant="default" size="sm">
+                    <p className="text-slate-700 dark:text-slate-300">{project?.description || 'N/A'}</p>
+                </EnhancedCard>
+                <EnhancedCard title="Task Order Description" description="Details about this task order" variant="default" size="sm">
+                    <p className="text-slate-700 dark:text-slate-300">{order.description || 'N/A'}</p>
+                </EnhancedCard>
             </div>
         </div>
     );
@@ -306,41 +242,15 @@ const Centered: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     </div>
 );
 
-// Statistics Card Component
-interface StatProps {
-    title: string;
-    icon: React.ComponentType<{ className?: string }>;
-    value: React.ReactNode;
-    sub?: string;
-}
-const StatCard: React.FC<StatProps> = ({ title, icon: Icon, value, sub }) => (
-    <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-base font-medium flex items-center gap-1">
-                <Icon className="h-5 w-5 text-muted-foreground" />
-                {title}
-            </CardTitle>
-        </CardHeader>
-        <CardContent>
-            <div className="text-xl md:text-2xl font-bold">{value}</div>
-            {sub && (
-                <p className="text-xs text-muted-foreground mt-1 truncate">{sub}</p>
-            )}
-        </CardContent>
-    </Card>
-);
-
-// Detail Row Component
+// Detail Row Component (branded colors)
 const Detail: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-    <div className="flex justify-between items-center py-2 border-b">
-        <span className="font-medium text-sm md:text-base">{label}:</span>
-        <span className="text-muted-foreground text-xs md:text-sm max-w-[250px] truncate text-right">
-            {value || 'N/A'}
-        </span>
+    <div className="flex items-start justify-between gap-4 py-2">
+        <span className="font-medium text-slate-700 dark:text-slate-200">{label}</span>
+        <span className="text-slate-600 dark:text-slate-400 text-right">{value || 'N/A'}</span>
     </div>
 );
 
-// Date Formatting Helper
+// Date Formatting Helper (consistent locale)
 function formatDate(dateString?: string) {
     if (!dateString) return 'N/A';
     try {
@@ -362,8 +272,8 @@ export default function Page() {
         <Suspense
             fallback={
                 <Centered>
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-muted-foreground">Loading details…</p>
+                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                    <p className="text-slate-500 dark:text-slate-400">Loading details…</p>
                 </Centered>
             }
         >

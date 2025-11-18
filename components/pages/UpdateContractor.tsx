@@ -1,6 +1,6 @@
 /* =========================================================
    src/app/contractors/update/page.tsx
-   Update contractor (same layout as “Create Contractor”)
+   Update contractor (same layout as "Create Contractor")
 ========================================================= */
 
 'use client';
@@ -11,14 +11,6 @@ import axios from '@/utils/axios';
 import { toast } from 'sonner';
 import { Loader2, Save, RotateCcw } from 'lucide-react';
 
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
-    CardFooter,
-} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
@@ -29,6 +21,8 @@ import {
     SelectItem,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
 
 /* ---------- Types ---------- */
 type ContractorForm = {
@@ -56,7 +50,7 @@ const BLANK: ContractorForm = {
     note: '',
 };
 
-const STATUS_OPTIONS = ['Active', 'Inactive'];
+const STATUS_OPTIONS = ['Active', 'Inactive', 'Close'];
 
 /* =========================================================
    Component
@@ -211,31 +205,41 @@ export default function UpdateContractorPage() {
        Render
     ========================================================= */
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
+            {/* Breadcrumb */}
+            <Breadcrumb />
+
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
                         Update Contractor
                     </h1>
                     {contractorNo && (
-                        <p className="text-muted-foreground mt-1">No. {contractorNo}</p>
+                        <p className="text-slate-600 dark:text-slate-400 mt-1">No. {contractorNo}</p>
                     )}
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
+                        Update the contractor details, then save your changes.
+                    </p>
                 </div>
-                <Button variant="outline" onClick={() => router.push('/contractors')}>
-                    Back&nbsp;to&nbsp;Contractors
+                <Button 
+                    variant="outline" 
+                    onClick={() => router.push('/contractors')}
+                    className="border-orange-200 dark:border-orange-800 hover:border-orange-300 hover:text-orange-700 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                >
+                    Back to Contractors
                 </Button>
             </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Contractor Information</CardTitle>
-                        <CardDescription>Update contractor profile details.</CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="space-y-4">
+                <EnhancedCard
+                    title="Contractor Information"
+                    description="Update contractor profile details."
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="space-y-4">
                         <div className="grid gap-4 md:grid-cols-3">
                             {/* Name */}
                             <Field
@@ -245,21 +249,31 @@ export default function UpdateContractorPage() {
                                 placeholder="e.g. Shuaa Al-Ranou Trade & General Contracting"
                                 error={errors.name}
                                 onChange={(v) => updateField('name', v)}
+                                disabled={pageLoading}
                             />
 
                             {/* Status */}
                             <div className="space-y-2">
-                                <Label htmlFor="status">Status *</Label>
+                                <Label htmlFor="status" className="text-slate-700 dark:text-slate-200">Status *</Label>
                                 <Select
                                     value={form.status}
                                     onValueChange={(v) => updateField('status', v)}
+                                    disabled={pageLoading}
                                 >
-                                    <SelectTrigger id="status">
+                                    <SelectTrigger 
+                                        id="status"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400 transition-colors duration-200"
+                                        disabled={pageLoading}
+                                    >
                                         <SelectValue placeholder="Choose status" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
                                         {STATUS_OPTIONS.map((s) => (
-                                            <SelectItem key={s} value={s}>
+                                            <SelectItem 
+                                                key={s} 
+                                                value={s}
+                                                className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200"
+                                            >
                                                 {s}
                                             </SelectItem>
                                         ))}
@@ -276,6 +290,7 @@ export default function UpdateContractorPage() {
                                 placeholder="+964-770-123-4567"
                                 error={errors.phone}
                                 onChange={(v) => updateField('phone', v)}
+                                disabled={pageLoading}
                             />
 
                             {/* Email */}
@@ -286,6 +301,7 @@ export default function UpdateContractorPage() {
                                 placeholder="info@shuarano.com"
                                 error={errors.email}
                                 onChange={(v) => updateField('email', v)}
+                                disabled={pageLoading}
                             />
 
                             {/* Province */}
@@ -296,6 +312,7 @@ export default function UpdateContractorPage() {
                                 placeholder="Baghdad"
                                 error={errors.province}
                                 onChange={(v) => updateField('province', v)}
+                                disabled={pageLoading}
                             />
 
                             {/* Address */}
@@ -305,6 +322,7 @@ export default function UpdateContractorPage() {
                                 value={form.address}
                                 placeholder="Street / Area / Building"
                                 onChange={(v) => updateField('address', v)}
+                                disabled={pageLoading}
                             />
 
                             {/* Bank Name */}
@@ -314,6 +332,7 @@ export default function UpdateContractorPage() {
                                 value={form.bank_name}
                                 placeholder="Rafidain Bank"
                                 onChange={(v) => updateField('bank_name', v)}
+                                disabled={pageLoading}
                             />
 
                             {/* Bank Account */}
@@ -325,42 +344,49 @@ export default function UpdateContractorPage() {
                                 inputMode="numeric"
                                 error={errors.bank_account}
                                 onChange={(v) => updateField('bank_account', v)}
+                                disabled={pageLoading}
                             />
 
                             {/* Note */}
                             <div className="space-y-2 md:col-span-3">
-                                <Label htmlFor="note">Note</Label>
+                                <Label htmlFor="note" className="text-slate-700 dark:text-slate-200">Note</Label>
                                 <textarea
                                     id="note"
-                                    className="min-h-[90px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    className="min-h-[90px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-100 dark:focus-visible:ring-orange-900/50 focus:border-orange-300 dark:focus:border-orange-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400"
                                     placeholder="Additional comments..."
                                     value={form.note}
                                     onChange={(e) => updateField('note', e.target.value)}
+                                    disabled={pageLoading}
                                 />
                             </div>
                         </div>
-                    </CardContent>
+                    </div>
 
                     {/* Buttons */}
-                    <CardFooter className="justify-end gap-3">
+                    <div className="flex justify-end gap-3 mt-6">
                         <Button
                             type="button"
                             variant="outline"
                             onClick={handleReset}
                             disabled={loading || pageLoading}
+                            className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                         >
                             <RotateCcw className="h-4 w-4 mr-2" />
                             Reset
                         </Button>
-                        <Button type="submit" disabled={loading || pageLoading}>
+                        <Button 
+                            type="submit" 
+                            disabled={loading || pageLoading}
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-600 dark:to-orange-700 dark:hover:from-orange-700 dark:hover:to-orange-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        >
                             {loading && (
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                             )}
                             <Save className="h-4 w-4 mr-2" />
                             {loading ? 'Saving...' : 'Update Contractor'}
                         </Button>
-                    </CardFooter>
-                </Card>
+                    </div>
+                </EnhancedCard>
             </form>
         </div>
     );
@@ -389,16 +415,19 @@ function Field({
     error,
     inputMode = 'text',
     onChange,
-}: FieldProps) {
+    disabled,
+}: FieldProps & { disabled?: boolean }) {
     return (
         <div className="space-y-2">
-            <Label htmlFor={id}>{label}</Label>
+            <Label htmlFor={id} className="text-slate-700 dark:text-slate-200">{label}</Label>
             <Input
                 id={id}
                 inputMode={inputMode}
                 value={value}
                 placeholder={placeholder}
                 onChange={(e) => onChange(e.target.value)}
+                disabled={disabled}
+                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400"
             />
             {error && <ErrorText>{error}</ErrorText>}
         </div>
@@ -407,5 +436,5 @@ function Field({
 
 /* Red error helper text */
 const ErrorText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <p className="text-xs text-red-500">{children}</p>
+    <p className="text-xs text-red-500 dark:text-red-400">{children}</p>
 );

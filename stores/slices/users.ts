@@ -35,6 +35,8 @@ interface FetchUsersParams {
     limit?: number;
     search?: string;
     type?: string;
+    status?: string;
+    role?: string;
 }
 
 // ================== Async Thunks ==================

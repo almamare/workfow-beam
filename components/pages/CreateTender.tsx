@@ -3,14 +3,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
-    CardFooter
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
@@ -24,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
 
 
 type TenderItem = {
@@ -275,10 +268,10 @@ const CreateTenderPage: React.FC = () => {
 
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
                         Create Tender
                     </h1>
-                    <p className="text-muted-foreground mt-2">
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
                         Add unlimited tender line items, one per row, then submit.
                     </p>
                 </div>
@@ -287,6 +280,7 @@ const CreateTenderPage: React.FC = () => {
                         type="button"
                         variant="outline"
                         onClick={() => router.push('/projects/details?id=' + paramProjectId)}
+                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                     >
                         Back to Tenders
                     </Button>
@@ -295,55 +289,60 @@ const CreateTenderPage: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Project & Global Controls */}
-                <Card>
-                    <CardHeader className="flex flex-col gap-2 md:flex-row md:justify-between md:items-center">
-                        <div>
-                            <CardTitle>Tender Items</CardTitle>
-                            <CardDescription>
-                                Enter project ID and add line items (Name, Price, Quantity).
-                            </CardDescription>
+                <EnhancedCard
+                    title="Tender Items"
+                    description="Enter project ID and add line items (Name, Price, Quantity)."
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="flex flex-col gap-3">
+                        <div className="flex gap-2 flex-wrap justify-between">
+                            <div className="flex gap-2">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={recalcAll}
+                                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                >
+                                    <Calculator className="h-4 w-4 mr-2" />
+                                    Recalculate
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={addItem}
+                                    disabled={!form.project_id}
+                                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-600 dark:to-orange-700 dark:hover:from-orange-700 dark:hover:to-orange-800 text-white shadow-md"
+                                >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Add Item
+                                </Button>
+                            </div>
+                            <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                                Total: {fmt(subtotal)}
+                            </div>
                         </div>
-                        <div className="flex gap-2 flex-wrap">
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={recalcAll}
-                            >
-                                <Calculator className="h-4 w-4 mr-2" />
-                                Recalculate
-                            </Button>
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="success"
-                                onClick={addItem}
-                                disabled={!form.project_id}
-                            >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Item
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
+
                         {/* Items List */}
                         <div className="space-y-3">
                             {form.items.map((item, index) => {
                                 return (
                                     <div
                                         key={index}
-                                        className="rounded-md border p-3 bg-muted/20 flex flex-col gap-3"
+                                        className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 flex flex-col gap-3"
                                     >
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm font-medium">
+                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                                                 Item - ({index + 1})
                                             </span>
                                             {form.items.length > 1 && (
                                                 <Button
                                                     type="button"
-                                                    variant="destructive"
+                                                    variant="outline"
                                                     size="xs"
                                                     onClick={() => removeItem(index)}
+                                                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                                                 >
                                                     <Trash2 className="h-4 w-4 mr-1" />
                                                     Delete
@@ -355,7 +354,7 @@ const CreateTenderPage: React.FC = () => {
                                         <div className="grid gap-3 md:grid-cols-[2fr_1fr_1fr_1fr]">
                                             {/* Name */}
                                             <div className="space-y-1">
-                                                <Label htmlFor={`name_${index}`}>Name *</Label>
+                                                <Label htmlFor={`name_${index}`} className="text-slate-700 dark:text-slate-200">Name *</Label>
                                                 <Input
                                                     id={`name_${index}`}
                                                     value={item.name}
@@ -363,9 +362,10 @@ const CreateTenderPage: React.FC = () => {
                                                         updateItemField(index, 'name', e.target.value)
                                                     }
                                                     placeholder="Steel Beams"
+                                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                                 />
                                                 {errors[`items.${index}.name`] && (
-                                                    <p className="text-xs text-red-500">
+                                                    <p className="text-xs text-red-500 dark:text-red-400">
                                                         {errors[`items.${index}.name`]}
                                                     </p>
                                                 )}
@@ -373,7 +373,7 @@ const CreateTenderPage: React.FC = () => {
 
                                             {/* Price */}
                                             <div className="space-y-1">
-                                                <Label htmlFor={`price_${index}`}>Price *</Label>
+                                                <Label htmlFor={`price_${index}`} className="text-slate-700 dark:text-slate-200">Price *</Label>
                                                 <Input
                                                     id={`price_${index}`}
                                                     inputMode="numeric"
@@ -382,9 +382,10 @@ const CreateTenderPage: React.FC = () => {
                                                         updateItemField(index, 'price', e.target.value)
                                                     }
                                                     placeholder="0.00"
+                                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                                 />
                                                 {errors[`items.${index}.price`] && (
-                                                    <p className="text-xs text-red-500">
+                                                    <p className="text-xs text-red-500 dark:text-red-400">
                                                         {errors[`items.${index}.price`]}
                                                     </p>
                                                 )}
@@ -392,7 +393,7 @@ const CreateTenderPage: React.FC = () => {
 
                                             {/* Quantity */}
                                             <div className="space-y-1">
-                                                <Label htmlFor={`qty_${index}`}>Qty *</Label>
+                                                <Label htmlFor={`qty_${index}`} className="text-slate-700 dark:text-slate-200">Qty *</Label>
                                                 <Input
                                                     id={`qty_${index}`}
                                                     inputMode="numeric"
@@ -401,9 +402,10 @@ const CreateTenderPage: React.FC = () => {
                                                         updateItemField(index, 'quantity', e.target.value)
                                                     }
                                                     placeholder="0"
+                                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                                 />
                                                 {errors[`items.${index}.quantity`] && (
-                                                    <p className="text-xs text-red-500">
+                                                    <p className="text-xs text-red-500 dark:text-red-400">
                                                         {errors[`items.${index}.quantity`]}
                                                     </p>
                                                 )}
@@ -411,18 +413,18 @@ const CreateTenderPage: React.FC = () => {
 
                                             {/* Amount */}
                                             <div className="space-y-1">
-                                                <Label htmlFor={`amount_${index}`}>
+                                                <Label htmlFor={`amount_${index}`} className="text-slate-700 dark:text-slate-200">
                                                     Amount
                                                 </Label>
                                                 <Input
                                                     id={`amount_${index}`}
                                                     value={item.amount}
                                                     readOnly
-                                                    className="bg-muted/50 cursor-not-allowed"
+                                                    className="bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                                                     placeholder="0.00"
                                                 />
                                                 {errors[`items.${index}.amount`] && (
-                                                    <p className="text-xs text-red-500">
+                                                    <p className="text-xs text-red-500 dark:text-red-400">
                                                         {errors[`items.${index}.amount`]}
                                                     </p>
                                                 )}
@@ -432,36 +434,8 @@ const CreateTenderPage: React.FC = () => {
                                 );
                             })}
                         </div>
-                    </CardContent>
-                    <CardFooter className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
-                        <div className="flex gap-2">
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="success"
-                                onClick={addItem}
-                                disabled={!form.project_id}
-                            >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Item
-                            </Button>
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={recalcAll}
-                            >
-                                <Calculator className="h-4 w-4 mr-2" />
-                                Recalculate
-                            </Button>
-                        </div>
-                        <div className="text-sm flex flex-col items-end gap-1">
-                            <div className="font-semibold text-base">
-                                Total: {fmt(subtotal)}
-                            </div>
-                        </div>
-                    </CardFooter>
-                </Card>
+                    </div>
+                </EnhancedCard>
 
                 {/* Actions */}
                 <div className="flex justify-end gap-3">
@@ -470,11 +444,16 @@ const CreateTenderPage: React.FC = () => {
                         variant="outline"
                         onClick={handleReset}
                         disabled={loading}
+                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                     >
                         <RotateCcw className="h-4 w-4 mr-2" />
                         Reset
                     </Button>
-                    <Button type="submit" disabled={loading || !form.project_id}>
+                    <Button 
+                        type="submit" 
+                        disabled={loading || !form.project_id} 
+                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-600 dark:to-orange-700 dark:hover:from-orange-700 dark:hover:to-orange-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
                         {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                         <Save className="h-4 w-4 mr-2" />
                         {loading ? 'Saving...' : 'Create Tender'}

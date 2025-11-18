@@ -91,7 +91,7 @@ export function EnhancedCard({
                         {stats?.total !== undefined && (
                             <div className="flex items-center gap-2 mt-2">
                                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Total: {stats.total}
+                                    Total: {typeof stats.total === 'number' ? stats.total.toLocaleString('en-US') : stats.total}
                                 </span>
                                 <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse"></div>
                                 <span className="text-xs text-green-600 dark:text-green-400">Live</span>

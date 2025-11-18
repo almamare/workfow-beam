@@ -64,21 +64,27 @@ const iconLibrary: Record<string, any> = {
 // Pages in this map will use the same sidebar menu as their parent route
 const routeMapping: Record<string, string> = {
     // Projects related pages
-    '/clients': '/projects',
-    '/clients/create': '/projects',
-    '/clients/update': '/projects',
-    '/clients/details': '/projects',
+    '/projects/create': '/projects',
+    '/projects/update': '/projects',
+    '/projects/details': '/projects',
+    '/projects/tender/create': '/projects',
+    '/projects/tender/update': '/projects',
     '/budgets': '/projects',
-    '/contractors': '/projects',
-    '/contractors/create': '/projects',
-    '/contractors/update': '/projects',
-    '/contractors/details': '/projects',
-    '/tasks': '/projects',
+    
+    // Clients related pages
+    '/clients/create': '/clients',
+    '/clients/update': '/clients',
+    '/clients/details': '/clients',
+    
+    // Contractors related pages
+    '/contractors/create': '/contractors',
+    '/contractors/update': '/contractors',
+    '/contractors/details': '/contractors',
     
     // Tasks related pages
-    '/tasks/create': '/projects',
-    '/tasks/update': '/projects',
-    '/tasks/details': '/projects',
+    '/tasks/create': '/tasks',
+    '/tasks/update': '/tasks',
+    '/tasks/details': '/tasks',
     
     // Users related pages
     '/users/create': '/users',
@@ -129,13 +135,36 @@ const routeConfig: Record<string, {
         icon: 'FolderOpen',
         color: 'text-indigo-400',
         menuItems: [
-            { href: '/projects', title: 'All Projects', icon: 'List', color: 'text-indigo-400' },
+            { href: '/projects', title: 'Projects', icon: 'FolderOpen', color: 'text-indigo-400' },
             { href: '/projects/create', title: 'Create Project', icon: 'Plus', color: 'text-green-400' },
+            { href: '/budgets', title: 'Budgets', icon: 'TrendingUp', color: 'text-teal-400' },
+        ]
+    },
+    '/clients': {
+        title: 'Clients',
+        icon: 'Users',
+        color: 'text-purple-400',
+        menuItems: [
             { href: '/clients', title: 'Clients', icon: 'Users', color: 'text-purple-400' },
-            { href: '/clients/create', title: 'Create Client', icon: 'Plus', color: 'text-purple-400' },
-            { href: '/budgets', title: 'Budgets', icon: 'Calculator', color: 'text-green-400' },
+            { href: '/clients/create', title: 'Create Client', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/contractors': {
+        title: 'Contractors',
+        icon: 'Building',
+        color: 'text-orange-400',
+        menuItems: [
             { href: '/contractors', title: 'Contractors', icon: 'Building', color: 'text-orange-400' },
-            { href: '/tasks', title: 'Tasks', icon: 'ClipboardList', color: 'text-yellow-400' }
+            { href: '/contractors/create', title: 'Create Contractor', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/tasks': {
+        title: 'Task Orders',
+        icon: 'ClipboardList',
+        color: 'text-yellow-400',
+        menuItems: [
+            { href: '/tasks', title: 'Task Orders', icon: 'ClipboardList', color: 'text-yellow-400' },
+            { href: '/tasks/create', title: 'Create Task', icon: 'Plus', color: 'text-green-400' }
         ]
     },
     '/users': {
@@ -143,9 +172,8 @@ const routeConfig: Record<string, {
         icon: 'Users',
         color: 'text-blue-400',
         menuItems: [
-            { href: '/users', title: 'All Users', icon: 'List', color: 'text-blue-400' },
+            { href: '/users', title: 'Users', icon: 'Users', color: 'text-blue-400' },
             { href: '/users/create', title: 'Create User', icon: 'Plus', color: 'text-green-400' },
-            { href: '/users/update', title: 'Update User', icon: 'Edit', color: 'text-yellow-400' },
             { href: '/employees', title: 'Employees', icon: 'UserCheck', color: 'text-emerald-400' },
             { href: '/permissions', title: 'Permissions', icon: 'Shield', color: 'text-red-400' },
             { href: '/roles', title: 'Roles', icon: 'Shield', color: 'text-indigo-400' }

@@ -28,6 +28,7 @@ interface FetchProjectsParams {
     limit?: number;
     search?: string;
     type?: string;
+    status?: string;
 }
 
 export const fetchProject = createAsyncThunk<

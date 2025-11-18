@@ -13,25 +13,16 @@ import {
     SelectItem,
     SelectValue
 } from '@/components/ui/select';
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardContent,
-    CardFooter
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Save, RotateCcw } from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
-import { DatePicker } from "@/components/DatePicker";
+import { EnhancedCard } from '@/components/ui/enhanced-card';
 
 
 type ProjectPayload = {
     project_id?: string;
     project_code: string;
     name: string;
-    start_date: string;
-    end_date: string;
     type: string;
     fiscal_year: string;
     original_budget: number | string;
@@ -45,14 +36,12 @@ const initialValues: ProjectPayload = {
     project_id: '',
     project_code: '',
     name: '',
-    start_date: '',
-    end_date: '',
     type: '',
     fiscal_year: '',
-    original_budget: 0,
-    revised_budget: 0,
-    committed_cost: 0,
-    actual_cost: 0,
+    original_budget: '',
+    revised_budget: '',
+    committed_cost: '',
+    actual_cost: '',
     description: ''
 };
 
@@ -84,14 +73,12 @@ const UpdateProjectPage: React.FC = () => {
                     project_id: project.id,
                     project_code: project.project_code,
                     name: project.name,
-                    start_date: project.start_date.slice(0, 10),
-                    end_date: project.end_date.slice(0, 10),
                     type: project.type,
                     fiscal_year: budget.fiscal_year,
-                    original_budget: budget.original_budget,
-                    revised_budget: budget.revised_budget,
-                    committed_cost: budget.committed_cost,
-                    actual_cost: budget.actual_cost,
+                    original_budget: budget.original_budget || '',
+                    revised_budget: budget.revised_budget || '',
+                    committed_cost: budget.committed_cost || '',
+                    actual_cost: budget.actual_cost || '',
                     description: project.description || ''
                 });
             } catch {
@@ -118,7 +105,7 @@ const UpdateProjectPage: React.FC = () => {
     const validate = useCallback(() => {
         const errors: Record<string, string> = {};
         const required: (keyof ProjectPayload)[] = [
-            'project_code', 'name', 'start_date', 'end_date', 'type', 'fiscal_year'
+            'project_code', 'name', 'type', 'fiscal_year'
         ];
 
         required.forEach(f => {
@@ -127,29 +114,27 @@ const UpdateProjectPage: React.FC = () => {
             }
         });
 
-        if (form.start_date && form.end_date) {
-            const sd = new Date(form.start_date);
-            const ed = new Date(form.end_date);
-            if (ed < sd) errors.end_date = 'End date must be after or equal to start date';
-        }
-
-        if (!errors.original_budget && !errors.revised_budget) {
-            const original = Number(String(form.original_budget).replace(/,/g, ''));
-            const revised = Number(String(form.revised_budget).replace(/,/g, ''));
-            if (!(original > revised)) {
-                errors.revised_budget = 'Revised budget must be LESS than Original Budget';
-            }
-        }
+        numberFields.forEach(f => {
+            const val = form[f];
+            if (val === '' || val === null || val === undefined) return; // optional
+            const num = Number(String(val).replace(/,/g, ''));
+            if (Number.isNaN(num)) errors[f] = 'Invalid number';
+            else if (num < 0) errors[f] = 'Must be ≥ 0';
+        });
 
         setFieldErrors(errors);
         return Object.keys(errors).length === 0;
     }, [form]);
 
     const formattedPayload = useMemo(() => {
-        const payload: any = { ...form };
+        const payload: Record<string, any> = { ...form };
         numberFields.forEach(nf => {
-            const cleanValue = String(form[nf]).replace(/,/g, '').trim();
-            payload[nf] = cleanValue === '' ? 0 : Number(cleanValue);
+            const v = form[nf];
+            if (v === '' || v === null || v === undefined) {
+                delete payload[nf];
+            } else {
+                payload[nf] = Number(String(v).replace(/,/g, ''));
+            }
         });
         return payload as ProjectPayload;
     }, [form]);
@@ -188,19 +173,31 @@ const UpdateProjectPage: React.FC = () => {
             <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Update Project</h1>
-                    <p className="text-muted-foreground mt-2">Update the project details below, then save.</p>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Update Project</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Update the project details below, then save.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button type="button" variant="outline" onClick={() => router.push('/projects')}>Back to Projects</Button>
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => router.push('/projects')}
+                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    >
+                        Back to Projects
+                    </Button>
                 </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-3">
-                    <Card className="md:col-span-2">
-                        <CardHeader><CardTitle>Basic Information</CardTitle></CardHeader>
-                        <CardContent className="space-y-4">
+                    <EnhancedCard 
+                        title="Basic Information" 
+                        description="Core identifying information for the project." 
+                        variant="default" 
+                        size="sm" 
+                        className="md:col-span-2"
+                    >
+                        <div className="space-y-4">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <InputGroup label="Project Code *" value={form.project_code} name="project_code" error={fieldErrors.project_code} onChange={updateField} />
                                 <InputGroup label="Name *" value={form.name} name="name" error={fieldErrors.name} onChange={updateField} />
@@ -208,41 +205,60 @@ const UpdateProjectPage: React.FC = () => {
                                 <SelectGroup label="Fiscal Year *" value={form.fiscal_year} options={fiscalYears} name="fiscal_year" error={fieldErrors.fiscal_year} onChange={updateField} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="description">Description (Optional)</Label>
-                                <textarea id="description" className="w-full rounded-md border px-3 py-2 text-sm shadow-sm" value={form.description} onChange={e => updateField('description', e.target.value)} placeholder="Short description..." />
+                                <Label htmlFor="description" className="text-slate-700 dark:text-slate-200">Description (Optional)</Label>
+                                <textarea 
+                                    id="description" 
+                                    className="w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-100 dark:focus-visible:ring-orange-900/50 focus:border-orange-300 dark:focus:border-orange-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" 
+                                    value={form.description} 
+                                    onChange={e => updateField('description', e.target.value)} 
+                                    placeholder="Short description..." 
+                                />
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </EnhancedCard>
 
-                    <Card>
-                        <CardHeader><CardTitle>Dates</CardTitle></CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="start_date">Start Date *</Label>
-                                <DatePicker value={form.start_date} onChange={(val) => updateField('start_date', val)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="end_date">End Date *</Label>
-                                <DatePicker value={form.end_date} onChange={(val) => updateField('end_date', val)} />
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <Card>
-                    <CardHeader><CardTitle>Budget & Costs</CardTitle></CardHeader>
-                    <CardContent>
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    {/* Budget & Costs (REPLACES DATES) */}
+                    <EnhancedCard 
+                        title="Budget & Costs (Optional)" 
+                        description="Leave any field blank if not applicable. Numbers must be ≥ 0 when provided." 
+                        variant="default" 
+                        size="sm"
+                    >
+                        <div className="grid gap-4 md:grid-cols-1">
                             {numberFields.map(f => (
-                                <InputGroup key={f} label={`${f.replace('_', ' ')} *`} inputMode="numeric" value={form[f]} name={f} error={fieldErrors[f]} onChange={updateField} />
+                                <InputGroup 
+                                    key={f} 
+                                    label={f.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} 
+                                    inputMode="numeric" 
+                                    value={form[f]} 
+                                    name={f} 
+                                    error={fieldErrors[f]} 
+                                    onChange={updateField} 
+                                />
                             ))}
                         </div>
-                    </CardContent>
-                    <CardFooter className="justify-end gap-3">
-                        <Button type="button" variant="outline" onClick={handleReset} disabled={loading}><RotateCcw className="h-4 w-4 mr-2" /> Reset</Button>
-                        <Button type="submit" disabled={loading}>{loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}<Save className="h-4 w-4 mr-2" />{loading ? 'Saving...' : 'Update Project'}</Button>
-                    </CardFooter>
-                </Card>
+                        <div className="flex justify-end gap-3 mt-4">
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                onClick={handleReset} 
+                                disabled={loading}
+                                className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                            >
+                                <RotateCcw className="h-4 w-4 mr-2" /> Reset
+                            </Button>
+                            <Button 
+                                type="submit" 
+                                disabled={loading}
+                                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-600 dark:to-orange-700 dark:hover:from-orange-700 dark:hover:to-orange-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                            >
+                                {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                                <Save className="h-4 w-4 mr-2" />
+                                {loading ? 'Saving...' : 'Update Project'}
+                            </Button>
+                        </div>
+                    </EnhancedCard>
+                </div>
             </form>
         </div>
     );
@@ -252,19 +268,41 @@ export default UpdateProjectPage;
 
 const InputGroup = ({ label, value, name, error, onChange, type = 'text', inputMode }: any) => (
     <div className="space-y-2">
-        <Label htmlFor={name}>{label}</Label>
-        <Input id={name} type={type} inputMode={inputMode} value={value} onChange={e => onChange(name, e.target.value)} />
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        <Label htmlFor={name} className="text-slate-700 dark:text-slate-200">{label}</Label>
+        <Input 
+            id={name} 
+            type={type} 
+            inputMode={inputMode} 
+            value={value} 
+            onChange={e => onChange(name, e.target.value)}
+            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700  focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+        />
+        {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
     </div>
 );
 
 const SelectGroup = ({ label, value, options, name, error, onChange }: any) => (
     <div className="space-y-2">
-        <Label htmlFor={name}>{label}</Label>
+        <Label htmlFor={name} className="text-slate-700 dark:text-slate-200">{label}</Label>
         <Select value={value} onValueChange={val => onChange(name, val)}>
-            <SelectTrigger id={name}><SelectValue placeholder="Select" /></SelectTrigger>
-            <SelectContent>{options.map((o: string) => <SelectItem value={o} key={o}>{o}</SelectItem>)}</SelectContent>
+            <SelectTrigger 
+                id={name}
+                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200"
+            >
+                <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                {options.map((o: string) => (
+                    <SelectItem 
+                        value={o} 
+                        key={o}
+                        className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200"
+                    >
+                        {o}
+                    </SelectItem>
+                ))}
+            </SelectContent>
         </Select>
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
     </div>
 );

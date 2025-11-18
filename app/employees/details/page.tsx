@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 /* =========================================================
    src/app/employees/details/page.tsx
-   Employee Details
+   Employee Details – Branded design (orange + slate), dark mode
 =========================================================== */
 
 'use client';
@@ -11,24 +11,21 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import axios from '@/utils/axios';
 import { toast } from 'sonner';
 
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
-} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DeleteDialog } from '@/components/delete-dialog';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import {
     Loader2,
     SquarePen,
     Trash2,
     ArrowLeft,
-    ArrowDownToLine, // ✅ FIX: import download icon
+    ArrowDownToLine,
     Building,
     User,
+    Briefcase,
+    RefreshCw,
 } from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 
@@ -68,15 +65,26 @@ interface ApiResponse {
     user: User | null;
 }
 
-/* ---------- Badge Variant ---------- */
-const statusVariant = (s: string) =>
-    s === 'Active'
-        ? 'completed'
-        : s === 'Disabled'
-            ? 'rejected'
-            : s === 'Locked'
-                ? 'draft'
-                : 'outline';
+/* ---------- Badge Classes ---------- */
+const statusBadgeClasses = (status: string) => {
+    const statusMap: Record<string, string> = {
+        'Active': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+        'Disabled': 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+        'Locked': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+        'Inactive': 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
+    };
+    return statusMap[status] || statusMap['Active'];
+};
+
+const roleBadgeClasses = (role: string) => {
+    const roleMap: Record<string, string> = {
+        'Admin': 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+        'Manager': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        'Employee': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+        'Contractor': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800'
+    };
+    return roleMap[role] || roleMap['Employee'];
+};
 
 /* =========================================================
    Component
@@ -90,9 +98,9 @@ function EmployeeDetails() {
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
-
-    // ✅ FIX: state to track download status
     const [downloading, setDownloading] = useState(false);
+    const [selectedStatus, setSelectedStatus] = useState<string>('');
+    const [updatingStatus, setUpdatingStatus] = useState(false);
 
     /* ---------- Fetch employee ---------- */
     const load = useCallback(async () => {
@@ -107,6 +115,10 @@ function EmployeeDetails() {
             const d: ApiResponse = res?.data?.body;
             if (!d?.employee?.id) throw new Error('Employee not found');
             setData(d);
+            // Set initial status from user if exists
+            if (d?.user?.status) {
+                setSelectedStatus(d.user.status);
+            }
         } catch (err: any) {
             toast.error(err?.response?.data?.message || err?.message || 'Unable to load employee');
             router.push('/employees');
@@ -161,13 +173,45 @@ function EmployeeDetails() {
         }
     };
 
+    /* ---------- Change User Status ---------- */
+    const handleStatusChange = async () => {
+        if (!id || !data?.user?.id || !selectedStatus) {
+            toast.error('Missing required information');
+            return;
+        }
+
+        if (selectedStatus === data.user.status) {
+            toast.info('Status is already set to this value');
+            return;
+        }
+
+        setUpdatingStatus(true);
+        try {
+            const res = await axios.put(`/users/update/${data.user.id}`, {
+                status: selectedStatus
+            });
+
+            if (res?.data?.header?.success || res?.data?.success) {
+                toast.success('Status updated successfully');
+                // Reload employee data to get updated status
+                await load();
+            } else {
+                toast.error(res?.data?.header?.messages?.[0]?.message || 'Failed to update status');
+            }
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || err?.message || 'Failed to update status');
+        } finally {
+            setUpdatingStatus(false);
+        }
+    };
+
     /* ---------- Loading skeleton ---------- */
     if (loading) {
         return (
-            <Centered>
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-muted-foreground">Loading employee …</p>
-            </Centered>
+            <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                <p className="text-slate-500 dark:text-slate-400">Loading employee…</p>
+            </div>
         );
     }
     if (!data) return null;
@@ -179,131 +223,234 @@ function EmployeeDetails() {
     ========================================================= */
     return (
         <div className="space-y-4">
-            {/* Header */}
+            {/* Breadcrumb */}
             <Breadcrumb />
-            <div className="flex items-center justify-between">
+
+            {/* Header */}
+            <div className="flex items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
                         Employee Details
                     </h1>
                     {employee.employee_code && (
-                        <p className="text-muted-foreground mt-1">
+                        <p className="text-slate-600 dark:text-slate-400 mt-1">
                             Code: {employee.employee_code}
                         </p>
                     )}
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
+                        Review employee information and manage actions.
+                    </p>
                 </div>
-                <Button variant="outline" onClick={() => router.push('/employees')}>
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back&nbsp;to&nbsp;Employees
+                <Button
+                    variant="outline"
+                    onClick={() => router.push('/employees')}
+                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                >
+                    Back to Employees
                 </Button>
             </div>
 
-            {/* Employee Info */}
+            {/* Stat cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Profile Section */}
-                <Card>
-                    <CardContent className="flex items-center gap-4 py-4">
+                <EnhancedCard
+                    title="Employee Name"
+                    description={employee.employee_code || undefined}
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="flex items-center gap-4">
                         <img
                             src={employee.avatar || '/placeholder-avatar.png'}
                             alt={employee.name || 'Not Found'}
-                            className="h-24 w-24 rounded-md object-cover"
+                            className="h-20 w-20 rounded-lg object-cover border-2 border-slate-200 dark:border-slate-700"
                         />
                         <div>
-                            <h2 className="text-xl font-semibold">
+                            <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">
                                 {employee.name || 'Not Found'} {employee.surname || ''}
-                            </h2>
-                            <Badge variant="approved">{employee.role || 'Not Found'}</Badge>
+                            </div>
+                            <Badge variant="outline" className={`${roleBadgeClasses(employee.role || 'Employee')} mt-2`}>
+                                {employee.role || 'Not Found'}
+                            </Badge>
                         </div>
-                    </CardContent>
-                </Card>
-                <StatCard title="Job Title" icon={Building} value={employee.job_title || 'Not Found'} />
-                <StatCard title="Role" icon={User} value={employee.role} />
+                    </div>
+                </EnhancedCard>
+
+                <EnhancedCard
+                    title="Job Title"
+                    description="Current position"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                        <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">
+                            {employee.job_title || 'Not Found'}
+                        </div>
+                    </div>
+                </EnhancedCard>
+
+                <EnhancedCard
+                    title="Role"
+                    description="Employee role"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="flex items-center gap-2">
+                        <User className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                        <Badge variant="outline" className={roleBadgeClasses(employee.role || 'Employee')}>
+                            {employee.role || 'Not Found'}
+                        </Badge>
+                    </div>
+                </EnhancedCard>
             </div>
 
-            {/* Action buttons */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Action</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => router.push(`/employees/update?id=${employee.id}`)}>
-                            <SquarePen className="h-4 w-4 mr-2" />
-                            Edit
-                        </Button>
-                        <Button variant="destructive" onClick={() => setOpen(true)}>
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                        </Button>
+            {/* Actions */}
+            <EnhancedCard
+                title="Actions"
+                description="Update status, delete, or download employee card"
+                variant="default"
+                size="sm"
+            >
+                <div className="space-y-4">
+                    {/* Status Change Section */}
+                    {user && (
+                        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <div className="flex-1 space-y-2">
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    Change User Status
+                                </label>
+                                <Select
+                                    value={selectedStatus}
+                                    onValueChange={setSelectedStatus}
+                                    disabled={updatingStatus}
+                                >
+                                    <SelectTrigger className="w-full sm:w-[200px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                                        <SelectValue placeholder="Select Status" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        <SelectItem value="Active" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
+                                            Active
+                                        </SelectItem>
+                                        <SelectItem value="Disabled" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
+                                            Disabled
+                                        </SelectItem>
+                                        <SelectItem value="Locked" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
+                                            Locked
+                                        </SelectItem>
+                                        <SelectItem value="Inactive" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
+                                            Inactive
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <Button
+                                onClick={handleStatusChange}
+                                disabled={updatingStatus || !selectedStatus || selectedStatus === user.status}
+                                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {updatingStatus ? (
+                                    <>
+                                        <Loader2 className="animate-spin h-4 w-4 mr-2" /> Updating...
+                                    </>
+                                ) : (
+                                    <>
+                                        <RefreshCw className="h-4 w-4 mr-2" /> Change Status
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-2">
                         <Button
                             variant="outline"
-                            className="flex items-center gap-2"
                             onClick={() => employee.id && employeeCard(employee.id, 'EmployeeCard')}
                             disabled={downloading}
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                         >
                             {downloading ? (
                                 <>
-                                    <Loader2 className="animate-spin w-4 h-4" /> Loading...
+                                    <Loader2 className="animate-spin w-4 h-4 mr-2" /> Loading...
                                 </>
                             ) : (
                                 <>
-                                    <ArrowDownToLine className="w-4 h-4" /> Employee Card
+                                    <ArrowDownToLine className="w-4 h-4 mr-2" /> Employee Card
                                 </>
                             )}
                         </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => router.push(`/employees/update?id=${employee.id}`)}
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        >
+                            <SquarePen className="h-4 w-4 mr-2" />
+                            Edit Employee
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setOpen(true)}
+                            className="border-rose-200 dark:border-rose-800 hover:border-rose-300 dark:hover:border-rose-700 hover:text-rose-700 dark:hover:text-rose-300 text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                        >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                        </Button>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </EnhancedCard>
 
-            {/* User Info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                <DataCard title="Employee Info">
+            {/* Information cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <EnhancedCard title="Employee Information" description="" variant="default" size="sm">
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                        <Detail label="Employee Code" value={employee.employee_code || '-'} />
+                        <Detail label="Hire Date" value={employee.hire_date ? fmt(employee.hire_date) : '-'} />
+                        <Detail label="Job Title" value={employee.job_title || '-'} />
+                        <Detail
+                            label="Role"
+                            value={
+                                <Badge variant="outline" className={roleBadgeClasses(employee.role || 'Employee')}>
+                                    {employee.role || '-'}
+                                </Badge>
+                            }
+                        />
+                        <Detail label="Salary Grade" value={employee.salary_grade || '-'} />
+                        <Detail label="Created" value={fmt(employee.created_at)} />
+                        <Detail label="Updated" value={fmt(employee.updated_at)} />
+                    </div>
+                </EnhancedCard>
+
+                <EnhancedCard title="User Account" description={user ? "Associated user account details" : "No user account linked"} variant="default" size="sm">
                     {user ? (
-                        <>
-                            <Detail label="Employee Code" value={employee.employee_code || 'Not Found'} />
-                            <Detail label="Hire Date" value={employee.hire_date || 'Not Found'} />
-                            <Detail label="Job Title" value={employee.job_title || 'Not Found'} />
-                            <Detail label="Role" value={employee.role || 'Not Found'} />
-                            <Detail label="Salary Grade" value={employee.salary_grade || 'Not Found'} />
-                            <Detail label="Created" value={fmt(employee.created_at)} />
-                            <Detail label="Updated" value={fmt(employee.updated_at)} />
-                        </>
-                    ) : (
-                        <p className="text-muted-foreground">Not Found</p>
-                    )}
-                </DataCard>
-                <DataCard title="User Account">
-                    {user ? (
-                        <>
-                            <Detail label="Username" value={user.username || 'Not Found'} />
-                            <Detail label="Email" value={user.email || 'Not Found'} />
-                            <Detail label="Phone" value={user.phone || 'Not Found'} />
-                            <Detail label="Role" value={user.role || 'Not Found'} />
+                        <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                            <Detail label="Username" value={user.username || '-'} />
+                            <Detail label="Email" value={user.email || '-'} />
+                            <Detail label="Phone" value={user.phone || '-'} />
+                            <Detail label="Role" value={user.role || '-'} />
                             <Detail
                                 label="Status"
-                                value={<Badge variant={statusVariant(user.status)}>{user.status || 'Not Found'}</Badge>}
+                                value={
+                                    <Badge variant="outline" className={statusBadgeClasses(user.status || 'Active')}>
+                                        {user.status || '-'}
+                                    </Badge>
+                                }
                             />
                             <Detail label="Created" value={fmt(user.created_at)} />
                             <Detail label="Updated" value={fmt(user.updated_at)} />
-                        </>
+                        </div>
                     ) : (
-                        <p className="text-muted-foreground">Not Found</p>
+                        <p className="text-slate-600 dark:text-slate-400">No user account linked to this employee.</p>
                     )}
-                </DataCard>
+                </EnhancedCard>
             </div>
 
             {/* Note section */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Note</CardTitle>
-                    <CardDescription>Additional comments</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <p className="prose max-w-none text-sm md:text-base">
-                        {employee.notes || 'No note for this employee.'}
-                    </p>
-                </CardContent>
-            </Card>
+            <EnhancedCard title="Note" description="Additional comments" variant="default" size="sm">
+                <p className="text-sm md:text-base text-slate-600 dark:text-slate-400">
+                    {employee.notes || 'No note for this employee.'}
+                </p>
+            </EnhancedCard>
 
             {/* Delete Dialog */}
             <DeleteDialog
@@ -318,54 +465,13 @@ function EmployeeDetails() {
 /* =========================================================
    Reusable components
 =========================================================== */
-const Centered: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-3">
-        {children}
-    </div>
-);
-
-interface StatProps {
-    title: string;
-    icon: React.ComponentType<{ className?: string }>;
-    value: React.ReactNode;
-    sub?: string;
-}
-const StatCard: React.FC<StatProps> = ({ title, icon: Icon, value, sub }) => (
-    <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-base font-medium flex items-center gap-1">
-                <Icon className="h-5 w-5 text-muted-foreground" />
-                {title}
-            </CardTitle>
-        </CardHeader>
-        <CardContent>
-            <div className="text-2xl md:text-3xl font-bold">{value}</div>
-            {sub && <p className="text-xs text-muted-foreground mt-1 truncate">{sub}</p>}
-        </CardContent>
-    </Card>
-);
-
-const DataCard: React.FC<{ title: string; children: React.ReactNode }> = ({
-    title,
-    children,
-}) => (
-    <Card>
-        <CardHeader className="p-3">
-            <CardTitle className="text-lg md:text-xl font-semibold">{title}</CardTitle>
-        </CardHeader>
-        <CardContent>{children}</CardContent>
-    </Card>
-);
-
 const Detail: React.FC<{ label: string; value: React.ReactNode }> = ({
     label,
     value,
 }) => (
-    <div className="flex justify-between items-center py-2 border-b">
-        <span className="font-medium text-sm md:text-base">{label}:</span>
-        <span className="text-muted-foreground text-xs md:text-sm max-w-[250px] truncate text-right">
-            {value}
-        </span>
+    <div className="flex items-start justify-between gap-4 py-2">
+        <span className="font-medium text-slate-700 dark:text-slate-200">{label}</span>
+        <span className="text-slate-600 dark:text-slate-400 text-right">{value}</span>
     </div>
 );
 

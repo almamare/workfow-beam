@@ -19,13 +19,6 @@ import {
     selectTendersError,
 } from "@/stores/slices/tenders";
 import { AppDispatch } from "@/stores/store";
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
     Loader2,
@@ -38,8 +31,8 @@ import {
     ArrowDownToLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DataTable, Column, Action } from "@/components/ui/data-table";
-import { Input } from "@/components/ui/input";
+import { EnhancedDataTable, Column, Action } from "@/components/ui/enhanced-data-table";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Tender } from "@/stores/types/tenders";
 import { DeleteDialog } from '@/components/delete-dialog';
 import {
@@ -236,13 +229,15 @@ export default function ProjectDetailsPage() {
             label: "Edit",
             onClick: (t: Tender) => router.push(`/projects/tender/update?id=${t.id}`),
             icon: <Edit className="w-4 h-4" />,
+            variant: 'warning'
         },
         {
             label: "Delete",
             onClick: (t: Tender) => {
                 handleDeleteTender(t.id);
             },
-            icon: <Trash2 className="w-4 h-4 text-red-500" />,
+            icon: <Trash2 className="w-4 h-4" />,
+            variant: 'destructive'
         },
     ];
 
@@ -291,97 +286,104 @@ export default function ProjectDetailsPage() {
             {/* Header */}
             <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Project Details</h1>
-                    <p className="text-muted-foreground mt-2 text-sm md:text-base">
+                <div className="text-left">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Project Details</h1>
+                    <p className="mt-2 text-sm md:text-base text-slate-600 dark:text-slate-400 text-left">
                         Manage details for <span className="font-semibold">{project.name}</span>
                     </p>
                 </div>
-                <Button onClick={() => router.push(`/projects/tender/create?id=${projectId}`)} className="flex items-center gap-2">
+                <Button onClick={() => router.push(`/projects/tender/create?id=${projectId}`)} className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
                     + Create Tender
                 </Button>
             </div>
 
-            {/* Statistics */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <StatCard title="Project Name" icon={Building} value={project.name} sub={project.client_name} />
-                <StatCard title="Project Type" icon={Briefcase} value={project.type} sub={`#${project.sequence}`} />
-                <StatCard
-                    title="Project Status"
-                    icon={BadgeCheck}
-                    value={<Badge variant={statusVariants[status]}>{status}</Badge>}
-                    sub={project.created_at ? formatDate(project.created_at) : "N/A"}
-                />
-            </div>
-
             {/* Actions */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-lg">Project Actions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex flex-wrap gap-3 items-center">
-                        <Select value={status} onValueChange={(v) => setStatus(v as ProjectStatus)}>
-                            <SelectTrigger className="w-48">
-                                <SelectValue placeholder="Change Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {(["Active", "Inactive", "Complete", "Stopped", "Onhold"] as ProjectStatus[]).map((s) => (
-                                    <SelectItem key={s} value={s}>
-                                        {s}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+            <EnhancedCard
+                title="Project Actions"
+                variant="default"
+                size="sm"
+            >
+                <div className="flex flex-wrap gap-3 items-center justify-start">
+                    <Select value={status} onValueChange={(v) => setStatus(v as ProjectStatus)}>
+                        <SelectTrigger className="w-48 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                            <SelectValue placeholder="Change Status" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                            {["Active", "Inactive", "Complete", "Stopped", "Onhold"].map((s) => (
+                                <SelectItem 
+                                    key={s} 
+                                    value={s as ProjectStatus}
+                                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200"
+                                >
+                                    {s}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
 
-                        <Button onClick={handleStatusUpdate} className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4" /> Update Status
-                        </Button>
+                    {/* 1) Update first (primary) */}
+                    <Button onClick={handleStatusUpdate} className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                        <CheckCircle2 className="w-4 h-4" /> Update Status
+                    </Button>
 
-                        <Button variant="outline" className="flex items-center gap-2" onClick={() => projectId && downloadTender(projectId, 'tender')} disabled={tenderIsDownload}>
-                            {tenderIsDownload ? (
-                                <>
-                                    <Loader2 className="animate-spin w-4 h-4" /> Loading...
-                                </>
-                                    ) : (
-                                <>
-                                    <ArrowDownToLine className="w-4 h-4" /> Download Tender
-                                </>
-                            )}
-                        </Button>
-                        <Button variant="outline" className="flex items-center gap-2" onClick={() => projectId && downloadProject(projectId, 'project')} disabled={projectIsDownload}>
-                            {projectIsDownload ? (
-                                <>
-                                    <Loader2 className="animate-spin w-4 h-4" /> Loading...
-                                </>
-                            ) : (
-                                <>
-                                    <ArrowDownToLine className="w-4 h-4" /> Download Project
-                                </>
-                            )}
+                    {/* 2) Download Project (outline orange) */}
+                    <Button
+                        variant="outline"
+                        onClick={() => projectId && downloadProject(projectId, 'project')}
+                        disabled={projectIsDownload}
+                        className="border-orange-200 hover:border-orange-300 hover:text-orange-700 text-orange-700 hover:bg-orange-50"
+                    >
+                        {projectIsDownload ? (
+                            <>
+                                <Loader2 className="animate-spin w-4 h-4" /> Loading...
+                            </>
+                        ) : (
+                            <>
+                                <ArrowDownToLine className="w-4 h-4" /> Download Project
+                            </>
+                        )}
+                    </Button>
 
-                        </Button>
-                        <Button variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => { setOpen(true); }}>
-                            <Trash2 className="w-4 h-4" /> Delete Project
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+                    {/* 3) Download Tender (outline orange) */}
+                    <Button
+                        variant="outline"
+                        onClick={() => projectId && downloadTender(projectId, 'tender')}
+                        disabled={tenderIsDownload}
+                        className="border-orange-200 hover:border-orange-300 hover:text-orange-700 text-orange-700 hover:bg-orange-50"
+                    >
+                        {tenderIsDownload ? (
+                            <>
+                                <Loader2 className="animate-spin w-4 h-4" /> Loading...
+                            </>
+                        ) : (
+                            <>
+                                <ArrowDownToLine className="w-4 h-4" /> Download Tender
+                            </>
+                        )}
+                    </Button>
+
+                    {/* 4) Delete (outline red) */}
+                    <Button variant="outline" className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50" onClick={() => { setOpen(true); }}>
+                        <Trash2 className="w-4 h-4" /> Delete Project
+                    </Button>
+                </div>
+            </EnhancedCard>
 
             {/* Main grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Info */}
                 <div className="space-y-4">
-                    <DataCard title="Project Information">
+                    <EnhancedCard title="Project Information" variant="default" size="sm">
+                        <DetailItem label="Project Name" value={project.name} />
+                        <DetailItem label="Project Type" value={project.type} />
+                        <DetailItem label="Project Status" value={<Badge variant={statusVariants[status as ProjectStatus]}>{status}</Badge>} />
                         <DetailItem label="Project Code" value={project.project_code} />
                         <DetailItem label="Project Number" value={project.number} />
-                        <DetailItem label="Start Date" value={formatDate(project.start_date)} />
-                        <DetailItem label="End Date" value={formatDate(project.end_date)} />
                         <DetailItem label="Created At" value={formatDate(project.created_at)} />
                         <DetailItem label="Updated At" value={formatDate(project.updated_at)} />
-                    </DataCard>
+                    </EnhancedCard>
 
-                    <DataCard title="Budget Information">
+                    <EnhancedCard title="Budget Information" variant="default" size="sm">
                         {budget ? (
                             <>
                                 <BudgetItem label="Fiscal Year" value={budget.fiscal_year} />
@@ -393,78 +395,41 @@ export default function ProjectDetailsPage() {
                         ) : (
                             <p className="text-muted-foreground">No budget information available</p>
                         )}
-                    </DataCard>
+                    </EnhancedCard>
                 </div>
 
                 {/* Tenders */}
-                <Card>
-                    <CardHeader className="p-4">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div>
-                                <CardTitle className="text-lg">Tenders List</CardTitle>
-                                <CardDescription>Total {totalItems} tenders found</CardDescription>
-                            </div>
-                            <div className="flex gap-2">
-                                <Input
-                                    placeholder="Search tenders…"
-                                    value={search}
-                                    onChange={(e) => {
-                                        setSearch(e.target.value);
-                                        setPage(1);
-                                    }}
-                                    className="w-full md:w-48"
-                                />
-                                <Button onClick={() => (setPage(1), setSearch(""))} variant="outline">
-                                    Reset
-                                </Button>
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        {tendersError ? (
-                            <ErrorBox
-                                message={`Failed to load tenders: ${tendersError}`}
-                                onRetry={() =>
-                                    projectId &&
-                                    dispatch(fetchTenders({
-                                        projectId,
-                                        page,
-                                        limit,
-                                        search,
-                                    }))
-                                }
-                            />
-                        ) : (
-                            <DataTable
-                                data={tenders}
-                                columns={tenderColumns}
-                                actions={tenderActions}
-                                loading={tendersLoading}
-                                pagination={{
-                                    currentPage: page,
-                                    totalPages,
-                                    pageSize: limit,
-                                    totalItems,
-                                    onPageChange: setPage,
-                                }}
-                                noDataMessage="No tenders found"
-                            />
-                        )}
-                    </CardContent>
-                </Card>
+                <EnhancedCard
+                    title="Tenders List"
+                    description={`Total ${totalItems} tenders found`}
+                    variant="default"
+                    size="sm"
+                >
+                    <EnhancedDataTable
+                        data={tenders}
+                        columns={tenderColumns}
+                        actions={tenderActions}
+                        loading={tendersLoading}
+                        pagination={{
+                            currentPage: page,
+                            totalPages,
+                            pageSize: limit,
+                            totalItems,
+                            onPageChange: setPage,
+                        }}
+                        noDataMessage="No tenders found"
+                        onSearch={(term) => { setSearch(term); setPage(1); }}
+                        searchPlaceholder="Search tenders..."
+                    />
+                </EnhancedCard>
             </div>
 
             {/* Description */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Project Description</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="prose max-w-none text-sm md:text-base">
-                        {project.description || "No description available"}
-                    </p>
-                </CardContent>
-            </Card>
+            <EnhancedCard title="Project Description" variant="default" size="sm">
+                <p className="prose max-w-none text-sm md:text-base text-slate-700 dark:text-slate-300">
+                    {project.description || "No description available"}
+                </p>
+            </EnhancedCard>
 
             <DeleteDialog open={open} onClose={() => setOpen(false)} onConfirm={handleDeleteProject} />
         </div>
@@ -495,18 +460,15 @@ interface StatCardProps {
     sub?: string;
 }
 const StatCard: React.FC<StatCardProps> = ({ title, icon: Icon, value, sub }) => (
-    <Card className="h-full">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-base font-medium flex items-center gap-1">
-                <Icon className="h-5 w-5 text-muted-foreground" />
-                {title}
-            </CardTitle>
-        </CardHeader>
-        <CardContent>
-            <div className="text-2xl md:text-3xl font-bold">{value}</div>
-            {sub && <p className="text-xs text-muted-foreground mt-1 truncate">{sub}</p>}
-        </CardContent>
-    </Card>
+    <EnhancedCard title={title} variant="default" size="sm">
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                <Icon className="h-5 w-5" />
+            </div>
+            <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</div>
+        </div>
+        {sub && <p className="text-xs mt-2 truncate text-slate-500 dark:text-slate-400">{sub}</p>}
+    </EnhancedCard>
 );
 
 interface DataCardProps {
@@ -514,27 +476,24 @@ interface DataCardProps {
     children: React.ReactNode;
 }
 const DataCard: React.FC<DataCardProps> = ({ title, children }) => (
-    <Card>
-        <CardHeader className="p-3">
-            <CardTitle className="text-lg md:text-xl font-semibold">{title}</CardTitle>
-        </CardHeader>
-        <CardContent>{children}</CardContent>
-    </Card>
+    <EnhancedCard title={title} variant="default" size="sm">
+        {children}
+    </EnhancedCard>
 );
 
-const DetailItem: React.FC<{ label: string; value: string | number }> = ({ label, value }) => (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b">
-        <span className="font-medium text-gray-700 dark:text-gray-100 text-sm md:text-base">{label}:</span>
-        <span className="text-muted-foreground text-left sm:text-right truncate max-w-[200px] text-xs md:text-sm">
-            {value || "N/A"}
+const DetailItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b text-left">
+        <span className="font-medium text-slate-700 dark:text-slate-100 text-sm md:text-base">{label}:</span>
+        <span className="text-left truncate max-w-[200px] text-xs md:text-sm text-slate-600 dark:text-slate-400">
+            {value ?? "N/A"}
         </span>
     </div>
 );
 
 const BudgetItem: React.FC<{ label: string; value: string | number; className?: string }> = ({ label, value, className = "" }) => (
     <div className="flex justify-between items-center py-2 border-b">
-        <span className="font-medium text-gray-700 dark:text-gray-100 text-sm md:text-base">{label}:</span>
-        <span className={`font-semibold text-xs md:text-sm ${className}`}>{value || "0"}</span>
+        <span className="font-medium text-slate-700 dark:text-slate-100 text-sm md:text-base">{label}:</span>
+        <span className={`font-semibold text-xs md:text-sm ${className} text-slate-800 dark:text-slate-100`}>{value || "0"}</span>
     </div>
 );
 

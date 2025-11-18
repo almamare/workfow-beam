@@ -40,15 +40,16 @@ export default function ProjectsPage() {
 
     const [search, setSearch] = useState('');
     const [type, setType] = useState<'All' | 'Public' | 'Communications' | 'Restoration' | 'Referral'>('All');
+    const [status, setStatus] = useState<'All' | 'Active' | 'Inactive' | 'Complete' | 'Stopped' | 'Onhold'>('All');
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [projectIsDownload, setProjectIsDownload] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
 
-    useEffect(() => {
-        dispatch(fetchProjects({ page, limit, search, type }));
-    }, [dispatch, page, limit, search, type]);
+    useEffect(() => {   
+        dispatch(fetchProjects({ page, limit, search, type, status }));
+    }, [dispatch, page, limit, search, type, status]);
 
     const downloadProject = async (projectId: string, fileName = 'Project_merged') => {
         setProjectIsDownload(true);
@@ -76,7 +77,7 @@ export default function ProjectsPage() {
     const refreshTable = async () => {
         setIsRefreshing(true);
         try {
-            await dispatch(fetchProjects({ page, limit, search, type }));
+            await dispatch(fetchProjects({ page, limit, search, type, status }));
             toast.success('Table refreshed successfully');
         } catch (err) {
             toast.error('Failed to refresh table');
@@ -93,6 +94,7 @@ export default function ProjectsPage() {
                 params: {
                     search,
                     type: type !== 'All' ? type : undefined,
+                    status: status !== 'All' ? status : undefined,
                     limit: limit,
                     page: 1
                 }
@@ -144,7 +146,7 @@ export default function ProjectsPage() {
         {
             key: 'sequence' as keyof Project,
             header: 'ID',
-            render: (value: any) => <span className="text-slate-500 font-mono text-sm">{value}</span>,
+            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 font-mono text-sm">{value}</span>,
             sortable: true,
             width: '80px'
         },
@@ -152,21 +154,21 @@ export default function ProjectsPage() {
             key: 'project_code' as keyof Project,
             header: 'Project Code',
             render: (value: any) => (
-                <span className="font-semibold text-slate-800">{value}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{value}</span>
             ),
             sortable: true
         },
         {
             key: 'number' as keyof Project,
             header: 'Number',
-            render: (value: any) => <span className="text-slate-600">{value}</span>,
+            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value}</span>,
             sortable: true
         },
         {
             key: 'name' as keyof Project,
             header: 'Project Name',
             render: (value: any) => (
-                <span className="font-medium text-slate-800">{value}</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200">{value}</span>
             ),
             sortable: true
         },
@@ -174,7 +176,7 @@ export default function ProjectsPage() {
             key: 'client_name' as keyof Project,
             header: 'Client',
             render: (value: any) => (
-                <span className="text-slate-700">{value}</span>
+                <span className="text-slate-700 dark:text-slate-300">{value}</span>
             ),
             sortable: true
         },
@@ -183,11 +185,11 @@ export default function ProjectsPage() {
             header: 'Status',
             render: (value: any) => {
                 const statusColors = {
-                    'Active': 'bg-green-100 text-green-700 border-green-200',
-                    'Inactive': 'bg-slate-100 text-slate-700 border-slate-200',
-                    'Complete': 'bg-blue-100 text-blue-700 border-blue-200',
-                    'Stopped': 'bg-red-100 text-red-700 border-red-200',
-                    'Onhold': 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                    'Active': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+                    'Inactive': 'bg-slate-100 dark:bg-slate-800/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+                    'Complete': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+                    'Stopped': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
+                    'Onhold': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
                 };
                 
                 return (
@@ -205,7 +207,7 @@ export default function ProjectsPage() {
             key: 'type' as keyof Project,
             header: 'Type',
             render: (value: any) => (
-                <span className="text-slate-600">{value}</span>
+                <span className="text-slate-600 dark:text-slate-400">{value}</span>
             ),
             sortable: true
         },
@@ -213,7 +215,7 @@ export default function ProjectsPage() {
             key: 'created_at' as keyof Project,
             header: 'Created At',
             render: (value: any) => (
-                <span className="text-slate-600">{value}</span>
+                <span className="text-slate-600 dark:text-slate-400">{value}</span>
             ),
             sortable: true
         }
@@ -286,6 +288,23 @@ export default function ProjectsPage() {
                             setType(value as typeof type);
                             setPage(1);
                         }
+                    },
+                    {
+                        key: 'status',
+                        label: 'Project Status',
+                        value: status,
+                        options: [
+                            { key: 'All', label: 'All Statuses', value: 'All' },
+                            { key: 'Active', label: 'Active', value: 'Active' },
+                            { key: 'Inactive', label: 'Inactive', value: 'Inactive' },
+                            { key: 'Complete', label: 'Complete', value: 'Complete' },
+                            { key: 'Stopped', label: 'Stopped', value: 'Stopped' },
+                            { key: 'Onhold', label: 'Onhold', value: 'Onhold' }
+                        ],
+                        onValueChange: (value) => {
+                            setStatus(value as typeof status);
+                            setPage(1);
+                        }
                     }
                 ]}
                 activeFilters={activeFilters}
@@ -295,16 +314,29 @@ export default function ProjectsPage() {
                     setPage(1);
                 }}
                 actions={
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={refreshTable}
-                        disabled={isRefreshing}
-                        className="gap-2"
-                    >
-                        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                        Refresh
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={exportToExcel}
+                            disabled={isExporting || loading}
+                            className="gap-2"
+                        >
+                            <FileSpreadsheet className={`h-4 w-4 ${isExporting ? 'animate-pulse' : ''}`} />
+                            {isExporting ? 'Exporting...' : 'Export Excel'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={refreshTable}
+                            disabled={isRefreshing}
+                            className="gap-2"
+                        >
+                            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            Refresh
+                        </Button>
+                    </div>
+                    
                 }
             />
 
@@ -331,16 +363,6 @@ export default function ProjectsPage() {
                 }}
                 headerActions={
                     <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={exportToExcel}
-                            disabled={isExporting || loading}
-                            className="gap-2"
-                        >
-                            <FileSpreadsheet className={`h-4 w-4 ${isExporting ? 'animate-pulse' : ''}`} />
-                            {isExporting ? 'Exporting...' : 'Export Excel'}
-                        </Button>
                         <Select
                             value={limit.toString()}
                             onValueChange={(value) => {
@@ -348,16 +370,16 @@ export default function ProjectsPage() {
                                 setPage(1);
                             }}
                         >
-                            <SelectTrigger className="w-36 bg-white border-slate-200">
+                            <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                 <SelectValue placeholder="Items per page" />
                             </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="5">5 per page</SelectItem>
-                                <SelectItem value="10">10 per page</SelectItem>
-                                <SelectItem value="20">20 per page</SelectItem>
-                                <SelectItem value="50">50 per page</SelectItem>
-                                <SelectItem value="100">100 per page</SelectItem>
-                                <SelectItem value="200">200 per page</SelectItem>
+                            <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                <SelectItem value="5" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">5 per page</SelectItem>
+                                <SelectItem value="10" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">10 per page</SelectItem>
+                                <SelectItem value="20" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">20 per page</SelectItem>
+                                <SelectItem value="50" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">50 per page</SelectItem>
+                                <SelectItem value="100" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">100 per page</SelectItem>
+                                <SelectItem value="200" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">200 per page</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

@@ -1,132 +1,140 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import api from '@/utils/axios';
-import type { ContractorsResponse, Contractor } from '@/stores/types/contractors';
-import type { RootState } from '@/stores/store';
+import { Contractor, ContractorsResponse, SingleContractorResponse } from '@/stores/types/contractors';
 
-/* ---------- State ---------- */
 interface ContractorsState {
-    contractors: Contractor[];
-    total: number;
-    pages: number;
     loading: boolean;
     error: string | null;
-    lastKey?: string; // لمنع التكرار أثناء التحميل
+    contractors: Contractor[];
+    selectedContractor: Contractor | null;
+    total: number;
+    pages: number;
 }
 
 const initialState: ContractorsState = {
-    contractors: [],
-    total: 0,
-    pages: 0,
     loading: false,
     error: null,
-    lastKey: undefined,
+    contractors: [],
+    selectedContractor: null,
+    total: 0,
+    pages: 0,
 };
 
-/* ---------- Thunk (fetch) ---------- */
-export interface FetchContractorsParams {
+interface FetchContractorsParams {
     page?: number;
     limit?: number;
     search?: string;
+    status?: string;
 }
 
-const endpoint = '/contractors/fetch'; // غيّر المسار لو لزم
+export const fetchContractor = createAsyncThunk<
+    SingleContractorResponse,
+    { id: string },
+    { rejectValue: string }
+>('contractors/fetchContractor', async ({ id }, { rejectWithValue }) => {
+    try {
+        const response = await api.get<SingleContractorResponse>(`/contractors/fetch/contractor/${id}`);
+        const { header, body } = response.data;
+
+        if (!header.success || !body?.contractor) {
+            const message = header?.messages?.[0]?.message || header?.message || 'فشل في جلب بيانات المقاول';
+            return rejectWithValue(message);
+        }
+
+        return response.data;
+    } catch (error: any) {
+        const serverError = error.response?.data?.header;
+        const message = 
+            serverError?.messages?.[0]?.message || 
+            serverError?.message || 
+            'فشل في الاتصال بالخادم';
+        return rejectWithValue(message);
+    }
+});
 
 export const fetchContractors = createAsyncThunk<
     ContractorsResponse,
-    FetchContractorsParams | void,
-    { rejectValue: string; state: RootState }
->(
-    'contractors/fetchContractors',
-    async (params, { rejectWithValue, signal }) => {
-        try {
-            const { page = 1, limit = 10, search = '' } = params || {};
-            const res = await api.get<ContractorsResponse>(endpoint, {
-                params: { page, limit, search },
-                signal,
-            });
+    FetchContractorsParams,
+    { rejectValue: string }
+>('contractors/fetchContractors', async (params, { rejectWithValue }) => {
+    try {
+        const response = await api.get<ContractorsResponse>('/contractors/fetch', { params });
+        const { header, body } = response.data;
 
-            const { header } = res.data;
-            if (!header?.success) {
-                const msg =
-                    header?.messages?.[0]?.message ||
-                    header?.message ||
-                    'Failed to fetch contractors';
-                return rejectWithValue(msg);
-            }
-
-            return res.data;
-        } catch (err: any) {
-            if (err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED') {
-                return rejectWithValue('Request canceled');
-            }
-            const msg =
-                err?.response?.data?.header?.message ||
-                err?.message ||
-                'Network error while fetching contractors';
-            return rejectWithValue(msg);
+        if (!header.success || !body?.contractors) {
+            const message = header?.messages?.[0]?.message || header?.message || 'فشل في جلب قائمة المقاولين';
+            return rejectWithValue(message);
         }
-    },
-    {
-        // منع طلب مكرر بذات المفاتيح
-        condition: (params, { getState }) => {
-            const st = (getState() as RootState).contractors;
-            const key = JSON.stringify({
-                page: params?.page ?? 1,
-                limit: params?.limit ?? 10,
-                search: params?.search ?? '',
-            });
-            // إذا نفس الطلب قيد التحميل → لا تطلقه
-            if (st.loading && st.lastKey === key) return false;
-            return true;
-        },
-    }
-);
 
-/* ---------- Slice ---------- */
+        return response.data;
+    } catch (error: any) {
+        const serverError = error.response?.data?.header;
+        const message = 
+            serverError?.messages?.[0]?.message || 
+            serverError?.message || 
+            'فشل في الاتصال بالخادم';
+        return rejectWithValue(message);
+    }
+});
+
 const contractorsSlice = createSlice({
     name: 'contractors',
     initialState,
-    reducers: {},
+    reducers: {
+        clearSelectedContractor(state) {
+            state.selectedContractor = null;
+        },
+    },
     extraReducers: (builder) => {
         builder
-            .addCase(fetchContractors.pending, (state, action) => {
+            // Fetch Contractors
+            .addCase(fetchContractors.pending, (state) => {
                 state.loading = true;
                 state.error = null;
-                const { page = 1, limit = 10, search = '' } =
-                    (action.meta.arg || {}) as FetchContractorsParams;
-                state.lastKey = JSON.stringify({ page, limit, search });
             })
-            .addCase(
-                fetchContractors.fulfilled,
-                (state, action: PayloadAction<ContractorsResponse>) => {
-                    state.loading = false;
-                    const payload = action.payload.body?.contractors;
-                    state.contractors = payload?.items ?? [];
-                    state.total = payload?.total ?? 0;
-                    state.pages = payload?.pages ?? 0;
+            .addCase(fetchContractors.fulfilled, (state, action: PayloadAction<ContractorsResponse>) => {
+                state.loading = false;
+                if (action.payload.body?.contractors) {
+                    state.contractors = action.payload.body.contractors.items;
+                    state.total = action.payload.body.contractors.total;
+                    state.pages = action.payload.body.contractors.pages;
                 }
-            )
+            })
             .addCase(fetchContractors.rejected, (state, action) => {
                 state.loading = false;
-                const msg =
-                    (action.payload as string) ||
-                    action.error.message ||
-                    'حدث خطأ أثناء جلب بيانات المقاولين';
-                state.error = msg === 'Request canceled' ? null : msg;
+                state.error = action.payload || 'حدث خطأ غير متوقع';
+                state.contractors = [];
+                state.total = 0;
+                state.pages = 0;
+            })
+            
+            // Fetch Single Contractor
+            .addCase(fetchContractor.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+                state.selectedContractor = null;
+            })
+            .addCase(fetchContractor.fulfilled, (state, action: PayloadAction<SingleContractorResponse>) => {
+                state.loading = false;
+                if (action.payload.body) {
+                    state.selectedContractor = action.payload.body.contractor;
+                }
+            })
+            .addCase(fetchContractor.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || 'فشل في تحميل بيانات المقاول';
+                state.selectedContractor = null;
             });
     },
 });
 
+export const { clearSelectedContractor } = contractorsSlice.actions;
 export default contractorsSlice.reducer;
 
-/* ---------- Selectors ---------- */
-export const selectContractors = (state: RootState) =>
-    state.contractors.contractors;
-export const selectContractorsLoading = (state: RootState) =>
-    state.contractors.loading;
-export const selectContractorsTotal = (state: RootState) =>
-    state.contractors.total;
-export const selectContractorsPages = (state: RootState) =>
-    state.contractors.pages;
-export const selectContractorsError = (state: RootState) =>
-    state.contractors.error;
+// Selectors
+export const selectContractors = (state: { contractors: ContractorsState }) => state.contractors.contractors;
+export const selectLoading = (state: { contractors: ContractorsState }) => state.contractors.loading;
+export const selectTotalPages = (state: { contractors: ContractorsState }) => state.contractors.pages;
+export const selectTotalItems = (state: { contractors: ContractorsState }) => state.contractors.total;
+export const selectSelectedContractor = (state: { contractors: ContractorsState }) => state.contractors.selectedContractor;
+export const selectError = (state: { contractors: ContractorsState }) => state.contractors.error;
