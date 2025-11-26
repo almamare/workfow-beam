@@ -24,6 +24,17 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
     )
     const [open, setOpen] = React.useState(false)
 
+    React.useEffect(() => {
+        if (value) {
+            const parsed = new Date(value)
+            if (!isNaN(parsed.getTime())) {
+                setDate(parsed)
+            }
+        } else {
+            setDate(undefined)
+        }
+    }, [value])
+
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
@@ -45,21 +56,12 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
                     onSelect={(selectedDate) => {
                         if (selectedDate) {
                             setDate(selectedDate)
+                            onChange(format(selectedDate, 'yyyy-MM-dd'))
+                            setOpen(false)
                         }
                     }}
                     initialFocus
                 />
-                <Button
-                    className="w-full"
-                    onClick={() => {
-                        if (date) {
-                            onChange(format(date, 'yyyy-MM-dd'))
-                        }
-                        setOpen(false) // يغلق الـ DatePicker
-                    }}
-                >
-                    Select
-                </Button>
             </PopoverContent>
         </Popover>
     )

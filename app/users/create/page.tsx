@@ -295,6 +295,8 @@ const CreateUserPage: React.FC = () => {
                                 )}
                             </div>
 
+                            
+
                             {/* Type */}
                             <div className="space-y-2">
                                 <Label htmlFor="type" className="text-slate-700 dark:text-slate-300 font-medium">Type *</Label>

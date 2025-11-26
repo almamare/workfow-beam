@@ -11,14 +11,6 @@ import { useRouter } from 'next/navigation';
 import axios from '@/utils/axios';
 import { toast } from 'sonner';
 
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
-    CardFooter,
-} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -31,6 +23,9 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from '@/components/DatePicker';
 
 /* ---------- Types ---------- */
 type EmployeePayload = {
@@ -43,6 +38,8 @@ type EmployeePayload = {
     notes?: string;
     avatar?: string;
 };
+
+const JOB_TITLE_OPTIONS = ['Accounts', 'Employment', 'Contracts', 'General', 'Financial'];
 
 /* ---------- Initial-state template ---------- */
 const EMPTY: EmployeePayload = {
@@ -155,189 +152,208 @@ const CreateEmployeePage: React.FC = () => {
     ========================================================= */
     return (
         <div className="space-y-4">
-            {/* Page header */}
+            {/* Page Header */}
             <Breadcrumb />
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
                         Create Employee
                     </h1>
-                    <p className="text-muted-foreground mt-1">
-                        Fill the form and submit to register a new employee.
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
+                        Fill in the details below to add a new employee profile.
                     </p>
                 </div>
-                <Button variant="outline" onClick={() => router.push('/employees')}>
-                    Back&nbsp;to&nbsp;Employees
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push('/employees')}
+                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                >
+                    Back to Employees
                 </Button>
             </div>
 
-            {/* Form card */}
+            {/* Employee Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Employee Information</CardTitle>
-                        <CardDescription>Core profile details.</CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <Field
-                                id="name"
-                                label="First Name *"
-                                value={form.name}
-                                placeholder="e.g. Ahmed"
-                                error={errors.name}
-                                onChange={(v) => updateField('name', v)}
-                            />
-                            <Field
-                                id="surname"
-                                label="Last Name *"
-                                value={form.surname}
-                                placeholder="e.g. Saleh"
-                                error={errors.surname}
-                                onChange={(v) => updateField('surname', v)}
-                            />
-                            <Field
-                                id="job_title"
-                                label="Job Title *"
-                                value={form.job_title}
-                                placeholder="e.g. Senior Software Engineer"
-                                error={errors.job_title}
-                                onChange={(v) => updateField('job_title', v)}
-                            />
-                            <Field
-                                id="hire_date"
-                                label="Hire Date *"
-                                value={form.hire_date}
-                                placeholder="2025-08-17"
-                                error={errors.hire_date}
-                                onChange={(v) => updateField('hire_date', v)}
-                            />
-                            <Field
-                                id="salary_grade"
-                                label="Salary *"
-                                value={form.salary_grade}
-                                placeholder="e.g. 750000"
-                                error={errors.salary_grade}
-                                inputMode="numeric"
-                                onChange={(v) => updateField('salary_grade', v)}
-                            />
-
-                            {/* Role Select */}
+                <EnhancedCard
+                    title="Employee Information"
+                    description="Enter core profile details for the employee."
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="space-y-4">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             <div className="space-y-2">
-                                <Label htmlFor="role">Role *</Label>
+                                <Label htmlFor="name" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    First Name *
+                                </Label>
+                                <Input
+                                    id="name"
+                                    value={form.name}
+                                    placeholder="e.g. Ahmed"
+                                    onChange={(e) => updateField('name', e.target.value)}
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                />
+                                {errors.name && <ErrorText>{errors.name}</ErrorText>}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="surname" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    Last Name *
+                                </Label>
+                                <Input
+                                    id="surname"
+                                    value={form.surname}
+                                    placeholder="e.g. Saleh"
+                                    onChange={(e) => updateField('surname', e.target.value)}
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                />
+                                {errors.surname && <ErrorText>{errors.surname}</ErrorText>}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="job_title" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    Job Title *
+                                </Label>
+                                <Select
+                                    value={form.job_title}
+                                    onValueChange={(v) => updateField('job_title', v)}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                                        <SelectValue placeholder="Select job title" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        {JOB_TITLE_OPTIONS.map((title) => (
+                                            <SelectItem
+                                                key={title}
+                                                value={title}
+                                                className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200"
+                                            >
+                                                {title}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {errors.job_title && <ErrorText>{errors.job_title}</ErrorText>}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="hire_date" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    Hire Date *
+                                </Label>
+                                <DatePicker
+                                    value={form.hire_date}
+                                    onChange={(value) => updateField('hire_date', value)}
+                                />
+                                {errors.hire_date && <ErrorText>{errors.hire_date}</ErrorText>}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="salary_grade" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    Salary *
+                                </Label>
+                                <Input
+                                    id="salary_grade"
+                                    inputMode="numeric"
+                                    value={form.salary_grade}
+                                    placeholder="e.g. 750000"
+                                    onChange={(e) => updateField('salary_grade', e.target.value)}
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                />
+                                {errors.salary_grade && <ErrorText>{errors.salary_grade}</ErrorText>}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="role" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    Role *
+                                </Label>
                                 <Select
                                     value={form.role}
                                     onValueChange={(v) => updateField('role', v)}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                         <SelectValue placeholder="Select role" />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Manager">Manager</SelectItem>
-                                        <SelectItem value="Supervisor">Supervisor</SelectItem>
-                                        <SelectItem value="Employee">Employee</SelectItem>
-                                        <SelectItem value="Admin">Admin</SelectItem>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        <SelectItem value="Manager" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
+                                            Manager
+                                        </SelectItem>
+                                        <SelectItem value="Supervisor" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
+                                            Supervisor
+                                        </SelectItem>
+                                        <SelectItem value="Employee" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
+                                            Employee
+                                        </SelectItem>
+                                        <SelectItem value="Admin" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
+                                            Admin
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                                 {errors.role && <ErrorText>{errors.role}</ErrorText>}
                             </div>
                         </div>
 
-                        {/* Notes */}
                         <div className="space-y-2">
-                            <Label htmlFor="notes">Notes</Label>
-                            <textarea
+                            <Label htmlFor="notes" className="text-slate-700 dark:text-slate-300 font-medium">
+                                Notes
+                            </Label>
+                            <Textarea
                                 id="notes"
-                                className="min-h-[90px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
                                 placeholder="e.g. New hire with 5 years of fintech experience"
                                 value={form.notes ?? ''}
                                 onChange={(e) => updateField('notes', e.target.value)}
+                                className="min-h-[120px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                             />
                         </div>
 
-                        {/* Avatar Upload */}
                         <div className="space-y-2">
-                            <Label htmlFor="avatar">Avatar</Label>
+                            <Label htmlFor="avatar" className="text-slate-700 dark:text-slate-300 font-medium">
+                                Avatar
+                            </Label>
                             <Input
                                 id="avatar"
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) =>
-                                    e.target.files?.[0] && handleFileUpload(e.target.files[0])
-                                }
+                                onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50"
                             />
                             {form.avatar && (
                                 <img
                                     src={form.avatar}
                                     alt="Preview"
-                                    className="h-20 w-20 rounded-full mt-2 object-cover border"
+                                    className="h-20 w-20 rounded-full mt-2 object-cover border border-slate-200 dark:border-slate-700"
                                 />
                             )}
                         </div>
-                    </CardContent>
 
-                    {/* Footer buttons */}
-                    <CardFooter className="justify-end gap-3">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleReset}
-                            disabled={loading}
-                        >
-                            <RotateCcw className="h-4 w-4 mr-2" />
-                            Reset
-                        </Button>
-                        <Button type="submit" disabled={loading}>
-                            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                            <Save className="h-4 w-4 mr-2" />
-                            {loading ? 'Saving...' : 'Create Employee'}
-                        </Button>
-                    </CardFooter>
-                </Card>
+                        <div className="flex justify-end gap-3 pt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleReset}
+                                disabled={loading}
+                                className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                            >
+                                <RotateCcw className="h-4 w-4 mr-2" />
+                                Reset Form
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={loading}
+                                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                            >
+                                {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                                {loading ? 'Creating...' : 'Create Employee'}
+                            </Button>
+                        </div>
+                    </div>
+                </EnhancedCard>
             </form>
         </div>
     );
 };
 
 export default CreateEmployeePage;
-
-/* =========================================================
-   Reusable sub-components
-========================================================= */
-interface FieldProps {
-    id: string;
-    label: string;
-    value: string | number;
-    placeholder: string;
-    error?: string;
-    inputMode?: 'text' | 'numeric';
-    onChange: (v: string) => void;
-}
-
-function Field({
-    id,
-    label,
-    value,
-    placeholder,
-    error,
-    inputMode = 'text',
-    onChange,
-}: FieldProps) {
-    return (
-        <div className="space-y-2">
-            <Label htmlFor={id}>{label}</Label>
-            <Input
-                id={id}
-                inputMode={inputMode}
-                value={value}
-                placeholder={placeholder}
-                onChange={(e) => onChange(e.target.value)}
-            />
-            {error && <ErrorText>{error}</ErrorText>}
-        </div>
-    );
-}
 
 const ErrorText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <p className="text-xs text-red-500">{children}</p>

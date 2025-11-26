@@ -1,33 +1,24 @@
-import './globals.css';
 import type { Metadata } from 'next';
-import { Alexandria } from 'next/font/google';
-import { Toaster } from '@/components/ui/sonner';
 import { Providers } from '@/components/providers';
-
-const alexandria = Alexandria({
-    subsets: ['latin'],
-    weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
-    display: 'swap',
-});
+import './globals.css';
 
 export const metadata: Metadata = {
-    title: 'Shuaa Al-Ranou Trade & General Contracting - Enterprise Management System',
-    description: 'Complete enterprise management system for construction, trade, and general contracting operations',
+  title: 'Shuaa Al-Ranou Trade & General Contracting',
+  description: 'Project Management System',
 };
 
 export default function RootLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    return (
-        <html lang="en" suppressHydrationWarning>
-            <body className={alexandria.className}>
-                <Providers>
-                    {children}
-                </Providers>
-                <Toaster position="top-right" richColors />
-            </body>
-        </html>
-    );
+  return (
+    <html lang="en">
+      <body>
+        <Providers>
+          {children}
+        </Providers>
+      </body>
+    </html>
+  );
 }

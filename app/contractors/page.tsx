@@ -363,7 +363,7 @@ export default function ContractorsPage() {
                             label: 'Status',
                             value: status,
                             options: [
-                                { key: 'all', label: 'All', value: 'All' },
+                                { key: 'all', label: 'All Statuses', value: 'All' },
                                 { key: 'active', label: 'Active', value: 'Active' },
                                 { key: 'inactive', label: 'Inactive', value: 'Inactive' },
                                 { key: 'close', label: 'Close', value: 'Close' }
@@ -387,8 +387,8 @@ export default function ContractorsPage() {
                                 size="sm"
                                 onClick={exportToExcel}
                                 disabled={isExporting || loading}
-                                className="gap-2"
-                            >
+                                className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                >
                                 <FileSpreadsheet className={`h-4 w-4 ${isExporting ? 'animate-pulse' : ''}`} />
                                 {isExporting ? 'Exporting...' : 'Export Excel'}
                             </Button>
@@ -397,8 +397,8 @@ export default function ContractorsPage() {
                                 size="sm"
                                 onClick={refreshTable}
                                 disabled={isRefreshing}
-                                className="gap-2"
-                            >
+                                className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                >
                                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                                 Refresh
                             </Button>

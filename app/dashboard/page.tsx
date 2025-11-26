@@ -26,17 +26,17 @@ import { EnhancedCard } from '@/components/ui/enhanced-card';
 const allMenuItems = [
     {
         number: 1,
-        title: 'Projects',
-        icon: FolderOpen,
-        href: '/projects',
-        color: 'from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700'
-    },
-    {
-        number: 2,
         title: 'Clients',
         icon: UserCircle,
         href: '/clients',
         color: 'from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700'
+    },
+    {
+        number: 2,
+        title: 'Projects',
+        icon: FolderOpen,
+        href: '/projects',
+        color: 'from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700'
     },
     {
         number: 3,
@@ -63,7 +63,7 @@ const allMenuItems = [
         number: 6,
         title: 'Financial',
         icon: Wallet,
-        href: '/financial',
+        href: '/financial/contractor-payments',
         color: 'from-green-500 to-green-600 dark:from-green-600 dark:to-green-700'
     },
     {

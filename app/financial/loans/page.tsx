@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { AppDispatch } from '@/stores/store';
+import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -8,12 +10,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreditCard, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, TrendingUp, DollarSign, Clock } from 'lucide-react';
+import { CreditCard, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, TrendingUp, DollarSign, Clock, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
-import { PageHeader } from '@/components/ui/page-header';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
-import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
+import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
+import { fetchContractors, selectContractors, selectLoading as selectContractorsLoading } from '@/stores/slices/contractors';
+import { fetchEmployees, selectEmployees, selectLoading as selectEmployeesLoading } from '@/stores/slices/employees';
+import { fetchClients, selectClients, selectClientsLoading } from '@/stores/slices/clients';
+import axios from '@/utils/axios';
 
 interface Loan {
     id: string;
@@ -127,7 +133,6 @@ const mockLoans: Loan[] = [
     }
 ];
 
-const borrowers = ['Ahmed Ali', 'ABC Construction Ltd.', 'Sara Ahmed', 'XYZ Electrical Co.', 'Green Landscaping'];
 const borrowerTypes = [
     { value: 'employee', label: 'Employee' },
     { value: 'contractor', label: 'Contractor' },
@@ -142,7 +147,23 @@ const loanTypes = [
 ];
 const loanPurposes = ['Home purchase', 'Equipment purchase', 'Medical emergency', 'Education', 'Business expansion', 'Debt consolidation', 'Other'];
 
+const currencies = [
+    { value: 'USD', label: 'US Dollar (USD)' },
+    { value: 'EUR', label: 'Euro (EUR)' },
+    { value: 'SAR', label: 'Saudi Riyal (SAR)' },
+    { value: 'AED', label: 'UAE Dirham (AED)' },
+    { value: 'KWD', label: 'Kuwaiti Dinar (KWD)' }
+];
+
 export default function LoansPage() {
+    const dispatch = useReduxDispatch<AppDispatch>();
+    const contractors = useSelector(selectContractors);
+    const employees = useSelector(selectEmployees);
+    const clients = useSelector(selectClients);
+    const contractorsLoading = useSelector(selectContractorsLoading);
+    const employeesLoading = useSelector(selectEmployeesLoading);
+    const clientsLoading = useSelector(selectClientsLoading);
+
     const [loans, setLoans] = useState<Loan[]>(mockLoans);
     const [searchTerm, setSearchTerm] = useState('');
     const [borrowerTypeFilter, setBorrowerTypeFilter] = useState<string>('all');
@@ -151,13 +172,17 @@ export default function LoansPage() {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [editingLoan, setEditingLoan] = useState<Loan | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
     const [formData, setFormData] = useState({
         borrowerName: '',
         borrowerId: '',
         borrowerType: 'employee',
         principalAmount: '',
         interestRate: '',
-        currency: '',
+        currency: 'USD',
         loanPurpose: '',
         loanType: 'personal',
         startDate: '',
@@ -167,17 +192,55 @@ export default function LoansPage() {
         guarantor: ''
     });
 
-    const filteredLoans = loans.filter(loan => {
-        const matchesSearch = loan.loanNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            loan.borrowerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            loan.borrowerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            loan.loanPurpose.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesBorrowerType = borrowerTypeFilter === 'all' || loan.borrowerType === borrowerTypeFilter;
-        const matchesLoanType = loanTypeFilter === 'all' || loan.loanType === loanTypeFilter;
-        const matchesStatus = statusFilter === 'all' || loan.status === statusFilter;
-        
-        return matchesSearch && matchesBorrowerType && matchesLoanType && matchesStatus;
-    });
+    // Fetch borrowers data on mount
+    useEffect(() => {
+        dispatch(fetchContractors({ page: 1, limit: 1000 }));
+        dispatch(fetchEmployees({ page: 1, limit: 1000 }));
+        dispatch(fetchClients({ page: 1, limit: 1000 }));
+    }, [dispatch]);
+
+    // Get borrowers list based on type
+    const getBorrowersList = useMemo(() => {
+        switch (formData.borrowerType) {
+            case 'employee':
+                return employees.map(emp => ({ id: emp.id, name: `${emp.name} ${emp.surname}` }));
+            case 'contractor':
+                return contractors.map(ctr => ({ id: ctr.id, name: ctr.name }));
+            case 'client':
+                return clients.map(cli => ({ id: cli.id, name: cli.name }));
+            default:
+                return [];
+        }
+    }, [formData.borrowerType, employees, contractors, clients]);
+
+    const filteredLoans = useMemo(() => {
+        return loans.filter(loan => {
+            const matchesSearch = loan.loanNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                loan.borrowerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                loan.borrowerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                loan.loanPurpose.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesBorrowerType = borrowerTypeFilter === 'all' || loan.borrowerType === borrowerTypeFilter;
+            const matchesLoanType = loanTypeFilter === 'all' || loan.loanType === loanTypeFilter;
+            const matchesStatus = statusFilter === 'all' || loan.status === statusFilter;
+            
+            return matchesSearch && matchesBorrowerType && matchesLoanType && matchesStatus;
+        });
+    }, [loans, searchTerm, borrowerTypeFilter, loanTypeFilter, statusFilter]);
+
+    const activeFilters = useMemo(() => {
+        const arr: string[] = [];
+        if (searchTerm) arr.push(`Search: ${searchTerm}`);
+        if (borrowerTypeFilter !== 'all') {
+            const type = borrowerTypes.find(t => t.value === borrowerTypeFilter);
+            if (type) arr.push(`Borrower Type: ${type.label}`);
+        }
+        if (loanTypeFilter !== 'all') {
+            const type = loanTypes.find(t => t.value === loanTypeFilter);
+            if (type) arr.push(`Loan Type: ${type.label}`);
+        }
+        if (statusFilter !== 'all') arr.push(`Status: ${statusFilter}`);
+        return arr;
+    }, [searchTerm, borrowerTypeFilter, loanTypeFilter, statusFilter]);
 
     const calculateLoanDetails = (principal: number, interestRate: number, termMonths: number) => {
         const monthlyRate = interestRate / 100 / 12;
@@ -192,67 +255,90 @@ export default function LoansPage() {
         };
     };
 
-    const handleCreate = () => {
+    const handleCreate = async () => {
         if (!formData.borrowerName || !formData.principalAmount || !formData.startDate || !formData.termMonths) {
             toast.error('Please fill in all required fields');
             return;
         }
 
-        const principalAmount = parseFloat(formData.principalAmount);
-        const interestRate = parseFloat(formData.interestRate) || 0;
-        const termMonths = parseInt(formData.termMonths);
-        const startDate = new Date(formData.startDate);
-        const endDate = new Date(startDate);
-        endDate.setMonth(endDate.getMonth() + termMonths);
+        try {
+            // TODO: Replace with actual API call
+            // const response = await axios.post('/loans/create', {
+            //     borrower_name: formData.borrowerName,
+            //     borrower_id: formData.borrowerId,
+            //     borrower_type: formData.borrowerType,
+            //     principal_amount: parseFloat(formData.principalAmount),
+            //     interest_rate: parseFloat(formData.interestRate) || 0,
+            //     currency: formData.currency,
+            //     loan_purpose: formData.loanPurpose,
+            //     loan_type: formData.loanType,
+            //     start_date: formData.startDate,
+            //     term_months: parseInt(formData.termMonths),
+            //     notes: formData.notes,
+            //     collateral: formData.collateral,
+            //     guarantor: formData.guarantor
+            // });
 
-        const loanDetails = calculateLoanDetails(principalAmount, interestRate, termMonths);
+            const principalAmount = parseFloat(formData.principalAmount);
+            const interestRate = parseFloat(formData.interestRate) || 0;
+            const termMonths = parseInt(formData.termMonths);
+            const startDate = new Date(formData.startDate);
+            const endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + termMonths);
 
-        const newLoan: Loan = {
-            id: Date.now().toString(),
-            loanNumber: `LOAN-${String(loans.length + 1).padStart(3, '0')}`,
-            borrowerName: formData.borrowerName,
-            borrowerId: formData.borrowerId,
-            borrowerType: formData.borrowerType as Loan['borrowerType'],
-            principalAmount: principalAmount,
-            interestRate: interestRate,
-            currency: formData.currency,
-            loanPurpose: formData.loanPurpose,
-            loanType: formData.loanType as Loan['loanType'],
-            startDate: formData.startDate,
-            endDate: endDate.toISOString().split('T')[0],
-            termMonths: termMonths,
-            monthlyPayment: loanDetails.monthlyPayment,
-            totalInterest: loanDetails.totalInterest,
-            totalAmount: loanDetails.totalAmount,
-            paidAmount: 0,
-            remainingAmount: loanDetails.totalAmount,
-            status: 'active',
-            approvalDate: new Date().toISOString().split('T')[0],
-            approvedBy: 'Current User',
-            createdBy: 'Current User',
-            notes: formData.notes,
-            collateral: formData.collateral,
-            guarantor: formData.guarantor
-        };
+            const loanDetails = calculateLoanDetails(principalAmount, interestRate, termMonths);
 
-        setLoans([...loans, newLoan]);
-        setIsCreateDialogOpen(false);
-        setFormData({
-            borrowerName: '',
-            borrowerId: '',
-            borrowerType: 'employee',
-            principalAmount: '',
-            interestRate: '',
-            currency: '',
-            loanPurpose: '',
-            loanType: 'personal',
-            startDate: '',
-            termMonths: '',
-            notes: '',
-            collateral: '',
-            guarantor: ''
-        });
-        toast.success('Loan created successfully');
+            const borrower = getBorrowersList.find(b => b.id === formData.borrowerId);
+
+            const newLoan: Loan = {
+                id: Date.now().toString(),
+                loanNumber: `LOAN-${String(loans.length + 1).padStart(3, '0')}`,
+                borrowerName: borrower?.name || formData.borrowerName,
+                borrowerId: formData.borrowerId,
+                borrowerType: formData.borrowerType as Loan['borrowerType'],
+                principalAmount: principalAmount,
+                interestRate: interestRate,
+                currency: formData.currency,
+                loanPurpose: formData.loanPurpose,
+                loanType: formData.loanType as Loan['loanType'],
+                startDate: formData.startDate,
+                endDate: endDate.toISOString().split('T')[0],
+                termMonths: termMonths,
+                monthlyPayment: loanDetails.monthlyPayment,
+                totalInterest: loanDetails.totalInterest,
+                totalAmount: loanDetails.totalAmount,
+                paidAmount: 0,
+                remainingAmount: loanDetails.totalAmount,
+                status: 'active',
+                approvalDate: new Date().toISOString().split('T')[0],
+                approvedBy: 'Current User',
+                createdBy: 'Current User',
+                notes: formData.notes,
+                collateral: formData.collateral,
+                guarantor: formData.guarantor
+            };
+
+            setLoans([...loans, newLoan]);
+            setIsCreateDialogOpen(false);
+            setFormData({
+                borrowerName: '',
+                borrowerId: '',
+                borrowerType: 'employee',
+                principalAmount: '',
+                interestRate: '',
+                currency: 'USD',
+                loanPurpose: '',
+                loanType: 'personal',
+                startDate: '',
+                termMonths: '',
+                notes: '',
+                collateral: '',
+                guarantor: ''
+            });
+            toast.success('Loan created successfully');
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to create loan');
+        }
     };
 
     const handleEdit = (loan: Loan) => {
@@ -275,67 +361,179 @@ export default function LoansPage() {
         setIsEditDialogOpen(true);
     };
 
-    const handleUpdate = () => {
+    const handleUpdate = async () => {
         if (!editingLoan) return;
 
-        const principalAmount = parseFloat(formData.principalAmount);
-        const interestRate = parseFloat(formData.interestRate) || 0;
-        const termMonths = parseInt(formData.termMonths);
-        const startDate = new Date(formData.startDate);
-        const endDate = new Date(startDate);
-        endDate.setMonth(endDate.getMonth() + termMonths);
+        try {
+            // TODO: Replace with actual API call
+            // await axios.put(`/loans/update/${editingLoan.id}`, {
+            //     borrower_name: formData.borrowerName,
+            //     borrower_id: formData.borrowerId,
+            //     borrower_type: formData.borrowerType,
+            //     principal_amount: parseFloat(formData.principalAmount),
+            //     interest_rate: parseFloat(formData.interestRate) || 0,
+            //     currency: formData.currency,
+            //     loan_purpose: formData.loanPurpose,
+            //     loan_type: formData.loanType,
+            //     start_date: formData.startDate,
+            //     term_months: parseInt(formData.termMonths),
+            //     notes: formData.notes,
+            //     collateral: formData.collateral,
+            //     guarantor: formData.guarantor
+            // });
 
-        const loanDetails = calculateLoanDetails(principalAmount, interestRate, termMonths);
+            const principalAmount = parseFloat(formData.principalAmount);
+            const interestRate = parseFloat(formData.interestRate) || 0;
+            const termMonths = parseInt(formData.termMonths);
+            const startDate = new Date(formData.startDate);
+            const endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + termMonths);
 
-        const updatedLoans = loans.map(l =>
-            l.id === editingLoan.id ? { 
-                ...l, 
-                borrowerName: formData.borrowerName,
-                borrowerId: formData.borrowerId,
-                borrowerType: formData.borrowerType as Loan['borrowerType'],
-                principalAmount: principalAmount,
-                interestRate: interestRate,
-                currency: formData.currency,
-                loanPurpose: formData.loanPurpose,
-                loanType: formData.loanType as Loan['loanType'],
-                startDate: formData.startDate,
-                endDate: endDate.toISOString().split('T')[0],
-                termMonths: termMonths,
-                monthlyPayment: loanDetails.monthlyPayment,
-                totalInterest: loanDetails.totalInterest,
-                totalAmount: loanDetails.totalAmount,
-                remainingAmount: loanDetails.totalAmount - l.paidAmount,
-                notes: formData.notes,
-                collateral: formData.collateral,
-                guarantor: formData.guarantor
-            } : l
-        );
+            const loanDetails = calculateLoanDetails(principalAmount, interestRate, termMonths);
 
-        setLoans(updatedLoans);
-        setIsEditDialogOpen(false);
-        setEditingLoan(null);
-        setFormData({
-            borrowerName: '',
-            borrowerId: '',
-            borrowerType: 'employee',
-            principalAmount: '',
-            interestRate: '',
-            currency: '',
-            loanPurpose: '',
-            loanType: 'personal',
-            startDate: '',
-            termMonths: '',
-            notes: '',
-            collateral: '',
-            guarantor: ''
-        });
-        toast.success('Loan updated successfully');
+            const borrower = getBorrowersList.find(b => b.id === formData.borrowerId);
+
+            const updatedLoans = loans.map(l =>
+                l.id === editingLoan.id ? { 
+                    ...l, 
+                    borrowerName: borrower?.name || formData.borrowerName,
+                    borrowerId: formData.borrowerId,
+                    borrowerType: formData.borrowerType as Loan['borrowerType'],
+                    principalAmount: principalAmount,
+                    interestRate: interestRate,
+                    currency: formData.currency,
+                    loanPurpose: formData.loanPurpose,
+                    loanType: formData.loanType as Loan['loanType'],
+                    startDate: formData.startDate,
+                    endDate: endDate.toISOString().split('T')[0],
+                    termMonths: termMonths,
+                    monthlyPayment: loanDetails.monthlyPayment,
+                    totalInterest: loanDetails.totalInterest,
+                    totalAmount: loanDetails.totalAmount,
+                    remainingAmount: loanDetails.totalAmount - l.paidAmount,
+                    notes: formData.notes,
+                    collateral: formData.collateral,
+                    guarantor: formData.guarantor
+                } : l
+            );
+
+            setLoans(updatedLoans);
+            setIsEditDialogOpen(false);
+            setEditingLoan(null);
+            setFormData({
+                borrowerName: '',
+                borrowerId: '',
+                borrowerType: 'employee',
+                principalAmount: '',
+                interestRate: '',
+                currency: 'USD',
+                loanPurpose: '',
+                loanType: 'personal',
+                startDate: '',
+                termMonths: '',
+                notes: '',
+                collateral: '',
+                guarantor: ''
+            });
+            toast.success('Loan updated successfully');
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to update loan');
+        }
     };
 
-    const handleDelete = (id: string) => {
-        setLoans(loans.filter(l => l.id !== id));
-        toast.success('Loan deleted successfully');
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this loan?')) {
+            return;
+        }
+
+        try {
+            // TODO: Replace with actual API call
+            // await axios.delete(`/loans/delete/${id}`);
+
+            setLoans(loans.filter(l => l.id !== id));
+            toast.success('Loan deleted successfully');
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to delete loan');
+        }
     };
+
+    const refreshTable = async () => {
+        setIsRefreshing(true);
+        try {
+            // TODO: Replace with actual API call
+            // await dispatch(fetchLoans({ page, limit, search: searchTerm }));
+            await dispatch(fetchContractors({ page: 1, limit: 1000 }));
+            await dispatch(fetchEmployees({ page: 1, limit: 1000 }));
+            await dispatch(fetchClients({ page: 1, limit: 1000 }));
+            toast.success('Table refreshed successfully');
+        } catch {
+            toast.error('Failed to refresh table');
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const exportToExcel = async () => {
+        setIsExporting(true);
+        try {
+            // TODO: Replace with actual API call
+            // const { data } = await axios.get('/loans/fetch', {
+            //     params: {
+            //         search: searchTerm,
+            //         borrower_type: borrowerTypeFilter !== 'all' ? borrowerTypeFilter : undefined,
+            //         loan_type: loanTypeFilter !== 'all' ? loanTypeFilter : undefined,
+            //         status: statusFilter !== 'all' ? statusFilter : undefined,
+            //         limit: 10000,
+            //         page: 1
+            //     }
+            // });
+
+            const headers = ['Loan Number', 'Borrower Name', 'Borrower ID', 'Borrower Type', 'Principal Amount', 'Interest Rate', 'Currency', 'Loan Purpose', 'Loan Type', 'Start Date', 'End Date', 'Term Months', 'Monthly Payment', 'Total Amount', 'Paid Amount', 'Remaining Amount', 'Status'];
+            const csvHeaders = headers.join(',');
+            const csvRows = filteredLoans.map((l: Loan) => {
+                return [
+                    l.loanNumber,
+                    escapeCsv(l.borrowerName),
+                    l.borrowerId,
+                    l.borrowerType,
+                    l.principalAmount,
+                    l.interestRate,
+                    l.currency,
+                    escapeCsv(l.loanPurpose),
+                    l.loanType,
+                    l.startDate,
+                    l.endDate,
+                    l.termMonths,
+                    l.monthlyPayment,
+                    l.totalAmount,
+                    l.paidAmount,
+                    l.remainingAmount,
+                    l.status
+                ].join(',');
+            });
+            const csvContent = [csvHeaders, ...csvRows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `loans_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success('Data exported successfully');
+        } catch {
+            toast.error('Failed to export data');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    function escapeCsv(val: any) {
+        const str = String(val ?? '');
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+    }
 
     const handleStatusChange = (id: string, status: Loan['status']) => {
         setLoans(prev => prev.map(loan => 
@@ -352,26 +550,34 @@ export default function LoansPage() {
         }).format(amount);
     };
 
-    const totalLoans = filteredLoans.length;
-    const totalPrincipal = filteredLoans.reduce((sum, loan) => sum + loan.principalAmount, 0);
-    const totalOutstanding = filteredLoans.reduce((sum, loan) => sum + loan.remainingAmount, 0);
-    const activeLoans = filteredLoans.filter(l => l.status === 'active').length;
+    const totalLoans = useMemo(() => filteredLoans.length, [filteredLoans]);
+    const totalPrincipal = useMemo(() => 
+        filteredLoans.reduce((sum, loan) => sum + loan.principalAmount, 0),
+        [filteredLoans]
+    );
+    const totalOutstanding = useMemo(() => 
+        filteredLoans.reduce((sum, loan) => sum + loan.remainingAmount, 0),
+        [filteredLoans]
+    );
+    const activeLoans = useMemo(() => 
+        filteredLoans.filter(l => l.status === 'active').length,
+        [filteredLoans]
+    );
 
-    const columns = [
+    const columns: Column<Loan>[] = [
         {
             key: 'loanNumber' as keyof Loan,
             header: 'Loan Number',
-            render: (value: any) => <span className="font-mono text-sm text-slate-600">{value}</span>,
-            sortable: true,
-            width: '120px'
+            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{value}</span>,
+            sortable: true
         },
         {
             key: 'borrowerName' as keyof Loan,
             header: 'Borrower',
             render: (value: any, loan: Loan) => (
                 <div>
-                    <div className="font-semibold text-slate-800">{loan.borrowerName}</div>
-                    <div className="text-sm text-slate-600">{loan.borrowerId}</div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">{loan.borrowerName}</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">{loan.borrowerId}</div>
                 </div>
             ),
             sortable: true
@@ -399,9 +605,11 @@ export default function LoansPage() {
             key: 'principalAmount' as keyof Loan,
             header: 'Principal Amount',
             render: (value: any, loan: Loan) => (
-                <span className="font-semibold text-slate-800">
-                    {formatNumber(value)}
-                </span>
+                <div>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {formatNumber(value)} {loan.currency}
+                    </span>
+                </div>
             ),
             sortable: true
         },
@@ -409,7 +617,7 @@ export default function LoansPage() {
             key: 'interestRate' as keyof Loan,
             header: 'Interest Rate',
             render: (value: any) => (
-                <span className="text-slate-700">{value}%</span>
+                <span className="text-slate-700 dark:text-slate-300">{value}%</span>
             ),
             sortable: true
         },
@@ -417,9 +625,11 @@ export default function LoansPage() {
             key: 'monthlyPayment' as keyof Loan,
             header: 'Monthly Payment',
             render: (value: any, loan: Loan) => (
-                <span className="font-semibold text-slate-800">
-                    {formatNumber(value)}
-                </span>
+                <div>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {formatNumber(value)} {loan.currency}
+                    </span>
+                </div>
             ),
             sortable: true
         },
@@ -427,16 +637,22 @@ export default function LoansPage() {
             key: 'remainingAmount' as keyof Loan,
             header: 'Remaining',
             render: (value: any, loan: Loan) => (
-                <span className={`font-semibold ${value > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {formatNumber(value)}
-                </span>
+                <div>
+                    <span className={`font-semibold ${value > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                        {formatNumber(value)} {loan.currency}
+                    </span>
+                </div>
             ),
             sortable: true
         },
         {
             key: 'endDate' as keyof Loan,
             header: 'End Date',
-            render: (value: any) => <span className="text-slate-700">{value}</span>,
+            render: (value: any) => (
+                <span className="text-slate-700 dark:text-slate-300">
+                    {value ? new Date(value).toLocaleDateString('en-US') : '-'}
+                </span>
+            ),
             sortable: true
         },
         {
@@ -460,33 +676,38 @@ export default function LoansPage() {
         }
     ];
 
-    const actions = [
+    const actions: Action<Loan>[] = [
         {
             label: 'View Details',
             onClick: (loan: Loan) => toast.info('View details feature coming soon'),
-            icon: <Eye className="h-4 w-4" />
+            icon: <Eye className="h-4 w-4" />,
+            variant: 'info' as const
         },
         {
             label: 'Edit Loan',
             onClick: (loan: Loan) => handleEdit(loan),
-            icon: <Edit className="h-4 w-4" />
+            icon: <Edit className="h-4 w-4" />,
+            variant: 'warning' as const
         },
         {
             label: 'Mark as Completed',
             onClick: (loan: Loan) => handleStatusChange(loan.id, 'completed'),
             icon: <CheckCircle className="h-4 w-4" />,
+            variant: 'success' as const,
             hidden: (loan: Loan) => loan.status !== 'active'
         },
         {
             label: 'Mark as Defaulted',
             onClick: (loan: Loan) => handleStatusChange(loan.id, 'defaulted'),
             icon: <XCircle className="h-4 w-4" />,
+            variant: 'destructive' as const,
             hidden: (loan: Loan) => loan.status !== 'active'
         },
         {
             label: 'Cancel Loan',
             onClick: (loan: Loan) => handleStatusChange(loan.id, 'cancelled'),
             icon: <XCircle className="h-4 w-4" />,
+            variant: 'destructive' as const,
             hidden: (loan: Loan) => loan.status === 'completed' || loan.status === 'cancelled'
         },
         {
@@ -497,7 +718,7 @@ export default function LoansPage() {
         }
     ];
 
-    const stats = [
+    const stats = useMemo(() => [
         {
             label: 'Total Loans',
             value: totalLoans,
@@ -522,7 +743,7 @@ export default function LoansPage() {
             change: '+3%',
             trend: 'up' as const
         }
-    ];
+    ], [totalLoans, totalPrincipal, totalOutstanding, activeLoans]);
 
     const filterOptions = [
         {
@@ -560,45 +781,87 @@ export default function LoansPage() {
         }
     ];
 
-    const activeFilters = [];
-    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
-    if (borrowerTypeFilter !== 'all') activeFilters.push(`Borrower Type: ${borrowerTypes.find(t => t.value === borrowerTypeFilter)?.label}`);
-    if (loanTypeFilter !== 'all') activeFilters.push(`Loan Type: ${loanTypes.find(t => t.value === loanTypeFilter)?.label}`);
-    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
-
     return (
-        <div className="space-y-6">
-            {/* Page Header */}
-            <PageHeader
-                title="Loans Management"
-                description="Manage loans with comprehensive tracking and payment monitoring"
-                stats={stats}
-                actions={{
-                    primary: {
-                        label: 'New Loan',
-                        onClick: () => setIsCreateDialogOpen(true),
-                        icon: <Plus className="h-4 w-4" />
-                    },
-                    secondary: [
-                        {
-                            label: 'Export Report',
-                            onClick: () => toast.info('Export feature coming soon'),
-                            icon: <Download className="h-4 w-4" />
-                        },
-                        {
-                            label: 'Payment Analysis',
-                            onClick: () => toast.info('Payment analysis coming soon'),
-                            icon: <TrendingUp className="h-4 w-4" />
-                        }
-                    ]
-                }}
-            />
+        <div className="space-y-4">
+            {/* Header */}
+            <Breadcrumb />
+            <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Loans Management</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Manage loans with comprehensive tracking and payment monitoring</p>
+                </div>
+                <Button 
+                    onClick={() => setIsCreateDialogOpen(true)}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                    <Plus className="h-4 w-4 mr-2" /> New Loan
+                </Button>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <EnhancedCard
+                    title="Total Loans"
+                    description="All loans in the system"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: totalLoans,
+                        badge: 'Total',
+                        badgeColor: 'default'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Total Principal"
+                    description="Sum of all principal amounts"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: totalPrincipal,
+                        badge: formatNumber(totalPrincipal),
+                        badgeColor: 'default'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Outstanding Amount"
+                    description="Total remaining to be paid"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: totalOutstanding,
+                        badge: formatNumber(totalOutstanding),
+                        badgeColor: 'warning'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Active Loans"
+                    description="Currently active loans"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: activeLoans,
+                        badge: 'Active',
+                        badgeColor: 'success'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+            </div>
 
             {/* Filter Bar */}
             <FilterBar
                 searchPlaceholder="Search by loan number, borrower name, or purpose..."
                 searchValue={searchTerm}
-                onSearchChange={setSearchTerm}
+                onSearchChange={(value) => {
+                    setSearchTerm(value);
+                    setPage(1);
+                }}
                 filters={filterOptions}
                 activeFilters={activeFilters}
                 onClearFilters={() => {
@@ -606,27 +869,66 @@ export default function LoansPage() {
                     setBorrowerTypeFilter('all');
                     setLoanTypeFilter('all');
                     setStatusFilter('all');
+                    setPage(1);
                 }}
+                actions={
+                    <>
+                        <Button
+                            variant="outline"
+                            onClick={refreshTable}
+                            disabled={isRefreshing}
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        >
+                            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={exportToExcel}
+                            disabled={isExporting}
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        >
+                            <FileSpreadsheet className="h-4 w-4 mr-2" />
+                            {isExporting ? 'Exporting...' : 'Export Excel'}
+                        </Button>
+                    </>
+                }
             />
 
             {/* Loans Table */}
             <EnhancedCard
                 title="Loans Overview"
                 description={`${filteredLoans.length} loans out of ${loans.length} total`}
-                variant="gradient"
-                size="lg"
-                stats={{
-                    total: loans.length,
-                    badge: 'Active Loans',
-                    badgeColor: 'success'
-                }}
+                variant="default"
+                size="sm"
+                headerActions={
+                    <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
+                        <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                            <SelectValue placeholder="Items per page" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                            {[5, 10, 20, 50, 100, 200].map(n => (
+                                <SelectItem key={n} value={String(n)} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
+                                    {n} per page
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                }
             >
                 <EnhancedDataTable
                     data={filteredLoans}
                     columns={columns}
                     actions={actions}
                     loading={false}
-                    noDataMessage="No loans found matching your criteria"
+                    pagination={{
+                        currentPage: page,
+                        totalPages: Math.ceil(filteredLoans.length / limit),
+                        pageSize: limit,
+                        totalItems: filteredLoans.length,
+                        onPageChange: setPage
+                    }}
+                    noDataMessage="No loans found matching your search criteria"
                     searchPlaceholder="Search loans..."
                 />
             </EnhancedCard>
@@ -642,76 +944,83 @@ export default function LoansPage() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="borrowerName">Borrower Name</Label>
+                            <Label htmlFor="borrowerType">Borrower Type *</Label>
+                            <Select value={formData.borrowerType} onValueChange={(value) => setFormData(prev => ({ ...prev, borrowerType: value, borrowerId: '', borrowerName: '' }))}>
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {borrowerTypes.map(type => (
+                                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="borrowerId">Borrower *</Label>
+                            <Select 
+                                value={formData.borrowerId} 
+                                onValueChange={(value) => {
+                                    const borrower = getBorrowersList.find(b => b.id === value);
+                                    setFormData(prev => ({ ...prev, borrowerId: value, borrowerName: borrower?.name || '' }));
+                                }}
+                                disabled={!formData.borrowerType || getBorrowersList.length === 0}
+                            >
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
+                                    <SelectValue placeholder={formData.borrowerType ? "Select Borrower" : "Select borrower type first"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {(formData.borrowerType === 'employee' && employeesLoading) || 
+                                     (formData.borrowerType === 'contractor' && contractorsLoading) ||
+                                     (formData.borrowerType === 'client' && clientsLoading) ? (
+                                        <SelectItem value="loading" disabled>Loading...</SelectItem>
+                                    ) : getBorrowersList.length === 0 ? (
+                                        <SelectItem value="none" disabled>No {formData.borrowerType}s available</SelectItem>
+                                    ) : (
+                                        getBorrowersList.map(borrower => (
+                                            <SelectItem key={borrower.id} value={borrower.id}>{borrower.name}</SelectItem>
+                                        ))
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="principalAmount">Principal Amount *</Label>
                             <Input
-                                id="borrowerName"
-                                value={formData.borrowerName}
-                                onChange={(e) => setFormData(prev => ({ ...prev, borrowerName: e.target.value }))}
-                                placeholder="Borrower name"
-                                className="mt-1"
+                                id="principalAmount"
+                                type="number"
+                                step="0.01"
+                                value={formData.principalAmount}
+                                onChange={(e) => setFormData(prev => ({ ...prev, principalAmount: e.target.value }))}
+                                placeholder="0.00"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="borrowerId">Borrower ID</Label>
-                                <Input
-                                    id="borrowerId"
-                                    value={formData.borrowerId}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, borrowerId: e.target.value }))}
-                                    placeholder="Borrower ID"
-                                    className="mt-1"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="borrowerType">Borrower Type</Label>
-                                <Select value={formData.borrowerType} onValueChange={(value) => setFormData(prev => ({ ...prev, borrowerType: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {borrowerTypes.map(type => (
-                                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                        <div>
+                            <Label htmlFor="interestRate">Interest Rate (%)</Label>
+                            <Input
+                                id="interestRate"
+                                type="number"
+                                step="0.01"
+                                value={formData.interestRate}
+                                onChange={(e) => setFormData(prev => ({ ...prev, interestRate: e.target.value }))}
+                                placeholder="0.00"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
+                            />
+                        </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="principalAmount">Principal Amount</Label>
-                                <Input
-                                    id="principalAmount"
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.principalAmount}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, principalAmount: e.target.value }))}
-                                    placeholder="0.00"
-                                    className="mt-1"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="interestRate">Interest Rate (%)</Label>
-                                <Input
-                                    id="interestRate"
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.interestRate}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, interestRate: e.target.value }))}
-                                    placeholder="0.00"
-                                    className="mt-1"
-                                />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="currency">Currency</Label>
+                                <Label htmlFor="currency">Currency *</Label>
                                 <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="USD">US Dollar</SelectItem>
-                                        <SelectItem value="EUR">Euro</SelectItem>
+                                        {currencies.map(currency => (
+                                            <SelectItem key={currency.value} value={currency.value}>{currency.label}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -770,7 +1079,7 @@ export default function LoansPage() {
                                 value={formData.collateral}
                                 onChange={(e) => setFormData(prev => ({ ...prev, collateral: e.target.value }))}
                                 placeholder="Collateral description"
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div>
@@ -780,7 +1089,7 @@ export default function LoansPage() {
                                 value={formData.guarantor}
                                 onChange={(e) => setFormData(prev => ({ ...prev, guarantor: e.target.value }))}
                                 placeholder="Guarantor name"
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div>
@@ -791,7 +1100,7 @@ export default function LoansPage() {
                                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                                 placeholder="Additional notes"
                                 rows={3}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div className="flex justify-end space-x-2 pt-4">
@@ -818,48 +1127,52 @@ export default function LoansPage() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="edit-borrowerName">Borrower Name</Label>
-                            <Input
-                                id="edit-borrowerName"
-                                value={formData.borrowerName}
-                                onChange={(e) => setFormData(prev => ({ ...prev, borrowerName: e.target.value }))}
-                                className="mt-1"
-                            />
+                            <Label htmlFor="edit-borrowerType">Borrower Type *</Label>
+                            <Select value={formData.borrowerType} onValueChange={(value) => setFormData(prev => ({ ...prev, borrowerType: value, borrowerId: '', borrowerName: '' }))}>
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {borrowerTypes.map(type => (
+                                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-borrowerId">Borrower *</Label>
+                            <Select 
+                                value={formData.borrowerId} 
+                                onValueChange={(value) => {
+                                    const borrower = getBorrowersList.find(b => b.id === value);
+                                    setFormData(prev => ({ ...prev, borrowerId: value, borrowerName: borrower?.name || '' }));
+                                }}
+                                disabled={!formData.borrowerType || getBorrowersList.length === 0}
+                            >
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
+                                    <SelectValue placeholder={formData.borrowerType ? "Select Borrower" : "Select borrower type first"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {getBorrowersList.length === 0 ? (
+                                        <SelectItem value="none" disabled>No {formData.borrowerType}s available</SelectItem>
+                                    ) : (
+                                        getBorrowersList.map(borrower => (
+                                            <SelectItem key={borrower.id} value={borrower.id}>{borrower.name}</SelectItem>
+                                        ))
+                                    )}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="edit-borrowerId">Borrower ID</Label>
-                                <Input
-                                    id="edit-borrowerId"
-                                    value={formData.borrowerId}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, borrowerId: e.target.value }))}
-                                    className="mt-1"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="edit-borrowerType">Borrower Type</Label>
-                                <Select value={formData.borrowerType} onValueChange={(value) => setFormData(prev => ({ ...prev, borrowerType: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {borrowerTypes.map(type => (
-                                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="edit-principalAmount">Principal Amount</Label>
+                                <Label htmlFor="edit-principalAmount">Principal Amount *</Label>
                                 <Input
                                     id="edit-principalAmount"
                                     type="number"
                                     step="0.01"
                                     value={formData.principalAmount}
                                     onChange={(e) => setFormData(prev => ({ ...prev, principalAmount: e.target.value }))}
-                                    className="mt-1"
+                                    className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                                 />
                             </div>
                             <div>
@@ -870,38 +1183,39 @@ export default function LoansPage() {
                                     step="0.01"
                                     value={formData.interestRate}
                                     onChange={(e) => setFormData(prev => ({ ...prev, interestRate: e.target.value }))}
-                                    className="mt-1"
+                                    className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                                 />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="edit-currency">Currency</Label>
+                                <Label htmlFor="edit-currency">Currency *</Label>
                                 <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="USD">US Dollar</SelectItem>
-                                        <SelectItem value="EUR">Euro</SelectItem>
+                                        {currencies.map(currency => (
+                                            <SelectItem key={currency.value} value={currency.value}>{currency.label}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div>
-                                <Label htmlFor="edit-termMonths">Term (Months)</Label>
+                                <Label htmlFor="edit-termMonths">Term (Months) *</Label>
                                 <Input
                                     id="edit-termMonths"
                                     type="number"
                                     value={formData.termMonths}
                                     onChange={(e) => setFormData(prev => ({ ...prev, termMonths: e.target.value }))}
-                                    className="mt-1"
+                                    className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                                 />
                             </div>
                         </div>
                         <div>
                             <Label htmlFor="edit-loanPurpose">Loan Purpose</Label>
                             <Select value={formData.loanPurpose} onValueChange={(value) => setFormData(prev => ({ ...prev, loanPurpose: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -912,9 +1226,9 @@ export default function LoansPage() {
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="edit-loanType">Loan Type</Label>
+                            <Label htmlFor="edit-loanType">Loan Type *</Label>
                             <Select value={formData.loanType} onValueChange={(value) => setFormData(prev => ({ ...prev, loanType: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -925,13 +1239,13 @@ export default function LoansPage() {
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="edit-startDate">Start Date</Label>
+                            <Label htmlFor="edit-startDate">Start Date *</Label>
                             <Input
                                 id="edit-startDate"
                                 type="date"
                                 value={formData.startDate}
                                 onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div>
@@ -940,7 +1254,7 @@ export default function LoansPage() {
                                 id="edit-collateral"
                                 value={formData.collateral}
                                 onChange={(e) => setFormData(prev => ({ ...prev, collateral: e.target.value }))}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div>
@@ -949,7 +1263,7 @@ export default function LoansPage() {
                                 id="edit-guarantor"
                                 value={formData.guarantor}
                                 onChange={(e) => setFormData(prev => ({ ...prev, guarantor: e.target.value }))}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div>
@@ -959,7 +1273,7 @@ export default function LoansPage() {
                                 value={formData.notes}
                                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                                 rows={3}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div className="flex justify-end space-x-2 pt-4">

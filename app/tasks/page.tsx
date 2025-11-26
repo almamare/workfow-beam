@@ -237,6 +237,7 @@ export default function TaskOrdersPage() {
                             variant="outline"
                             onClick={refreshTable}
                             disabled={isRefreshing || loading}
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                         >
                             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                             {isRefreshing ? 'Refreshing...' : 'Refresh'}
@@ -245,6 +246,7 @@ export default function TaskOrdersPage() {
                             variant="outline"
                             onClick={exportToExcel}
                             disabled={isExporting}
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                         >
                             <FileSpreadsheet className="h-4 w-4 mr-2" />
                             {isExporting ? 'Exporting...' : 'Export Excel'}

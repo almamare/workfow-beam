@@ -142,7 +142,7 @@ export default function UsersPage() {
             onClick: (user) => router.push(`/users/update?id=${user.id}`),
             icon: <Edit className="h-4 w-4" />,
             variant: 'warning' as const
-        }
+        },
     ];
 
     const activeFilters = useMemo(() => {
@@ -219,8 +219,8 @@ export default function UsersPage() {
 
     return (
         <div className="space-y-4">
-            {/* Header */}
-            <Breadcrumb />
+                {/* Header */}
+                <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Users</h1>

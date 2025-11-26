@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { AppDispatch } from '@/stores/store';
+import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -8,12 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, Building2, CreditCard, TrendingUp } from 'lucide-react';
+import { DollarSign, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, Building2, CreditCard, TrendingUp, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
-import { PageHeader } from '@/components/ui/page-header';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
-import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
+import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
+import { fetchContractors, selectContractors, selectLoading as selectContractorsLoading } from '@/stores/slices/contractors';
+import { fetchProjects, selectProjects, selectLoading as selectProjectsLoading } from '@/stores/slices/projects';
+import axios from '@/utils/axios';
 
 interface ContractorPayment {
     id: string;
@@ -103,8 +108,6 @@ const mockPayments: ContractorPayment[] = [
     }
 ];
 
-const contractors = ['ABC Construction Ltd.', 'XYZ Electrical Co.', 'Green Landscaping', 'Modern Plumbing', 'Quality Painters'];
-const projects = ['Office Building Construction', 'Electrical Installation', 'Garden Design', 'Plumbing Work', 'Painting Services'];
 const paymentMethods = [
     { value: 'bank_transfer', label: 'Bank Transfer' },
     { value: 'cash', label: 'Cash' },
@@ -112,7 +115,21 @@ const paymentMethods = [
     { value: 'card', label: 'Credit Card' }
 ];
 
+const currencies = [
+    { value: 'USD', label: 'US Dollar (USD)' },
+    { value: 'EUR', label: 'Euro (EUR)' },
+    { value: 'SAR', label: 'Saudi Riyal (SAR)' },
+    { value: 'AED', label: 'UAE Dirham (AED)' },
+    { value: 'KWD', label: 'Kuwaiti Dinar (KWD)' }
+];
+
 export default function ContractorPaymentsPage() {
+    const dispatch = useReduxDispatch<AppDispatch>();
+    const contractors = useSelector(selectContractors);
+    const projects = useSelector(selectProjects);
+    const contractorsLoading = useSelector(selectContractorsLoading);
+    const projectsLoading = useSelector(selectProjectsLoading);
+
     const [payments, setPayments] = useState<ContractorPayment[]>(mockPayments);
     const [searchTerm, setSearchTerm] = useState('');
     const [contractorFilter, setContractorFilter] = useState<string>('all');
@@ -121,11 +138,15 @@ export default function ContractorPaymentsPage() {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [editingPayment, setEditingPayment] = useState<ContractorPayment | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
     const [formData, setFormData] = useState({
         contractorId: '',
         projectId: '',
         amount: '',
-        currency: '',
+        currency: 'USD',
         paymentMethod: 'bank_transfer',
         paymentDate: '',
         description: '',
@@ -134,61 +155,105 @@ export default function ContractorPaymentsPage() {
         notes: ''
     });
 
-    const filteredPayments = payments.filter(payment => {
-        const matchesSearch = payment.paymentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            payment.contractorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            payment.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            payment.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesContractor = contractorFilter === 'all' || payment.contractorId === contractorFilter;
-        const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
-        const matchesMethod = methodFilter === 'all' || payment.paymentMethod === methodFilter;
-        
-        return matchesSearch && matchesContractor && matchesStatus && matchesMethod;
-    });
+    // Fetch contractors and projects on mount
+    useEffect(() => {
+        dispatch(fetchContractors({ page: 1, limit: 1000 }));
+        dispatch(fetchProjects({ page: 1, limit: 1000 }));
+    }, [dispatch]);
 
-    const handleCreate = () => {
+    const filteredPayments = useMemo(() => {
+        return payments.filter(payment => {
+            const matchesSearch = payment.paymentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                payment.contractorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                payment.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                payment.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesContractor = contractorFilter === 'all' || payment.contractorId === contractorFilter;
+            const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
+            const matchesMethod = methodFilter === 'all' || payment.paymentMethod === methodFilter;
+            
+            return matchesSearch && matchesContractor && matchesStatus && matchesMethod;
+        });
+    }, [payments, searchTerm, contractorFilter, statusFilter, methodFilter]);
+
+    const activeFilters = useMemo(() => {
+        const arr: string[] = [];
+        if (searchTerm) arr.push(`Search: ${searchTerm}`);
+        if (contractorFilter !== 'all') {
+            const contractor = contractors.find(c => c.id === contractorFilter);
+            if (contractor) arr.push(`Contractor: ${contractor.name}`);
+        }
+        if (statusFilter !== 'all') arr.push(`Status: ${statusFilter}`);
+        if (methodFilter !== 'all') {
+            const method = paymentMethods.find(m => m.value === methodFilter);
+            if (method) arr.push(`Method: ${method.label}`);
+        }
+        return arr;
+    }, [searchTerm, contractorFilter, statusFilter, methodFilter, contractors]);
+
+    const handleCreate = async () => {
         if (!formData.contractorId || !formData.projectId || !formData.amount || !formData.paymentDate) {
             toast.error('Please fill in all required fields');
             return;
         }
 
-        const newPayment: ContractorPayment = {
-            id: Date.now().toString(),
-            paymentNumber: `PAY-${String(payments.length + 1).padStart(3, '0')}`,
-            contractorName: contractors.find(c => c === formData.contractorId) || '',
-            contractorId: formData.contractorId,
-            projectName: projects.find(p => p === formData.projectId) || '',
-            projectId: formData.projectId,
-            amount: parseFloat(formData.amount),
-            currency: formData.currency,
-            paymentMethod: formData.paymentMethod as ContractorPayment['paymentMethod'],
-            paymentDate: formData.paymentDate,
-            description: formData.description,
-            status: 'pending',
-            invoiceNumber: formData.invoiceNumber,
-            invoiceDate: formData.invoiceDate,
-            approvalDate: '',
-            approvedBy: '',
-            paymentReference: '',
-            createdBy: 'Current User',
-            notes: formData.notes
-        };
+        try {
+            // TODO: Replace with actual API call
+            // const response = await axios.post('/contractor-payments/create', {
+            //     contractor_id: formData.contractorId,
+            //     project_id: formData.projectId,
+            //     amount: parseFloat(formData.amount),
+            //     currency: formData.currency,
+            //     payment_method: formData.paymentMethod,
+            //     payment_date: formData.paymentDate,
+            //     description: formData.description,
+            //     invoice_number: formData.invoiceNumber,
+            //     invoice_date: formData.invoiceDate,
+            //     notes: formData.notes
+            // });
 
-        setPayments([...payments, newPayment]);
-        setIsCreateDialogOpen(false);
-        setFormData({
-            contractorId: '',
-            projectId: '',
-            amount: '',
-            currency: '',
-            paymentMethod: 'bank_transfer',
-            paymentDate: '',
-            description: '',
-            invoiceNumber: '',
-            invoiceDate: '',
-            notes: ''
-        });
-        toast.success('Payment request created successfully');
+            const contractor = contractors.find(c => c.id === formData.contractorId);
+            const project = projects.find(p => p.id === formData.projectId);
+
+            const newPayment: ContractorPayment = {
+                id: Date.now().toString(),
+                paymentNumber: `PAY-${String(payments.length + 1).padStart(3, '0')}`,
+                contractorName: contractor?.name || '',
+                contractorId: formData.contractorId,
+                projectName: project?.name || '',
+                projectId: formData.projectId,
+                amount: parseFloat(formData.amount),
+                currency: formData.currency,
+                paymentMethod: formData.paymentMethod as ContractorPayment['paymentMethod'],
+                paymentDate: formData.paymentDate,
+                description: formData.description,
+                status: 'pending',
+                invoiceNumber: formData.invoiceNumber,
+                invoiceDate: formData.invoiceDate,
+                approvalDate: '',
+                approvedBy: '',
+                paymentReference: '',
+                createdBy: 'Current User',
+                notes: formData.notes
+            };
+
+            setPayments([...payments, newPayment]);
+            setIsCreateDialogOpen(false);
+            setFormData({
+                contractorId: '',
+                projectId: '',
+                amount: '',
+                currency: 'USD',
+                paymentMethod: 'bank_transfer',
+                paymentDate: '',
+                description: '',
+                invoiceNumber: '',
+                invoiceDate: '',
+                notes: ''
+            });
+            toast.success('Payment request created successfully');
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to create payment');
+        }
     };
 
     const handleEdit = (payment: ContractorPayment) => {
@@ -208,47 +273,150 @@ export default function ContractorPaymentsPage() {
         setIsEditDialogOpen(true);
     };
 
-    const handleUpdate = () => {
+    const handleUpdate = async () => {
         if (!editingPayment) return;
 
-        const updatedPayments = payments.map(p =>
-            p.id === editingPayment.id ? { 
-                ...p, 
-                contractorId: formData.contractorId,
-                projectId: formData.projectId,
-                amount: parseFloat(formData.amount),
-                currency: formData.currency,
-                paymentMethod: formData.paymentMethod as ContractorPayment['paymentMethod'],
-                paymentDate: formData.paymentDate,
-                description: formData.description,
-                invoiceNumber: formData.invoiceNumber,
-                invoiceDate: formData.invoiceDate,
-                notes: formData.notes
-            } : p
-        );
+        try {
+            // TODO: Replace with actual API call
+            // await axios.put(`/contractor-payments/update/${editingPayment.id}`, {
+            //     contractor_id: formData.contractorId,
+            //     project_id: formData.projectId,
+            //     amount: parseFloat(formData.amount),
+            //     currency: formData.currency,
+            //     payment_method: formData.paymentMethod,
+            //     payment_date: formData.paymentDate,
+            //     description: formData.description,
+            //     invoice_number: formData.invoiceNumber,
+            //     invoice_date: formData.invoiceDate,
+            //     notes: formData.notes
+            // });
 
-        setPayments(updatedPayments);
-        setIsEditDialogOpen(false);
-        setEditingPayment(null);
-        setFormData({
-            contractorId: '',
-            projectId: '',
-            amount: '',
-            currency: '',
-            paymentMethod: 'bank_transfer',
-            paymentDate: '',
-            description: '',
-            invoiceNumber: '',
-            invoiceDate: '',
-            notes: ''
-        });
-        toast.success('Payment updated successfully');
+            const contractor = contractors.find(c => c.id === formData.contractorId);
+            const project = projects.find(p => p.id === formData.projectId);
+
+            const updatedPayments = payments.map(p =>
+                p.id === editingPayment.id ? { 
+                    ...p, 
+                    contractorId: formData.contractorId,
+                    contractorName: contractor?.name || p.contractorName,
+                    projectId: formData.projectId,
+                    projectName: project?.name || p.projectName,
+                    amount: parseFloat(formData.amount),
+                    currency: formData.currency,
+                    paymentMethod: formData.paymentMethod as ContractorPayment['paymentMethod'],
+                    paymentDate: formData.paymentDate,
+                    description: formData.description,
+                    invoiceNumber: formData.invoiceNumber,
+                    invoiceDate: formData.invoiceDate,
+                    notes: formData.notes
+                } : p
+            );
+
+            setPayments(updatedPayments);
+            setIsEditDialogOpen(false);
+            setEditingPayment(null);
+            setFormData({
+                contractorId: '',
+                projectId: '',
+                amount: '',
+                currency: 'USD',
+                paymentMethod: 'bank_transfer',
+                paymentDate: '',
+                description: '',
+                invoiceNumber: '',
+                invoiceDate: '',
+                notes: ''
+            });
+            toast.success('Payment updated successfully');
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to update payment');
+        }
     };
 
-    const handleDelete = (id: string) => {
-        setPayments(payments.filter(p => p.id !== id));
-        toast.success('Payment deleted successfully');
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this payment?')) {
+            return;
+        }
+
+        try {
+            // TODO: Replace with actual API call
+            // await axios.delete(`/contractor-payments/delete/${id}`);
+
+            setPayments(payments.filter(p => p.id !== id));
+            toast.success('Payment deleted successfully');
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to delete payment');
+        }
     };
+
+    const refreshTable = async () => {
+        setIsRefreshing(true);
+        try {
+            // TODO: Replace with actual API call
+            // await dispatch(fetchContractorPayments({ page, limit, search: searchTerm }));
+            await dispatch(fetchContractors({ page: 1, limit: 1000 }));
+            await dispatch(fetchProjects({ page: 1, limit: 1000 }));
+            toast.success('Table refreshed successfully');
+        } catch {
+            toast.error('Failed to refresh table');
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const exportToExcel = async () => {
+        setIsExporting(true);
+        try {
+            // TODO: Replace with actual API call
+            // const { data } = await axios.get('/contractor-payments/fetch', {
+            //     params: {
+            //         search: searchTerm,
+            //         status: statusFilter !== 'all' ? statusFilter : undefined,
+            //         method: methodFilter !== 'all' ? methodFilter : undefined,
+            //         limit: 10000,
+            //         page: 1
+            //     }
+            // });
+
+            const headers = ['Payment Number', 'Contractor', 'Project', 'Amount', 'Currency', 'Payment Method', 'Payment Date', 'Status', 'Invoice Number', 'Invoice Date'];
+            const csvHeaders = headers.join(',');
+            const csvRows = filteredPayments.map((p: ContractorPayment) => {
+                return [
+                    p.paymentNumber,
+                    escapeCsv(p.contractorName),
+                    escapeCsv(p.projectName),
+                    p.amount,
+                    p.currency,
+                    p.paymentMethod,
+                    p.paymentDate,
+                    p.status,
+                    p.invoiceNumber,
+                    p.invoiceDate
+                ].join(',');
+            });
+            const csvContent = [csvHeaders, ...csvRows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `contractor_payments_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success('Data exported successfully');
+        } catch {
+            toast.error('Failed to export data');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    function escapeCsv(val: any) {
+        const str = String(val ?? '');
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+    }
 
     const handleStatusChange = (id: string, status: ContractorPayment['status']) => {
         setPayments(prev => prev.map(payment => 
@@ -275,21 +443,20 @@ export default function ContractorPaymentsPage() {
     const pendingAmount = filteredPayments.filter(p => p.status === 'pending').reduce((sum, payment) => sum + payment.amount, 0);
     const approvedAmount = filteredPayments.filter(p => p.status === 'approved').reduce((sum, payment) => sum + payment.amount, 0);
 
-    const columns = [
+    const columns: Column<ContractorPayment>[] = [
         {
             key: 'paymentNumber' as keyof ContractorPayment,
             header: 'Payment Number',
-            render: (value: any) => <span className="font-mono text-sm text-slate-600">{value}</span>,
-            sortable: true,
-            width: '120px'
+            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{value}</span>,
+            sortable: true
         },
         {
             key: 'contractorName' as keyof ContractorPayment,
             header: 'Contractor',
             render: (value: any, payment: ContractorPayment) => (
                 <div>
-                    <div className="font-semibold text-slate-800">{payment.contractorName}</div>
-                    <div className="text-sm text-slate-600">{payment.contractorId}</div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">{payment.contractorName}</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">{payment.contractorId}</div>
                 </div>
             ),
             sortable: true
@@ -299,8 +466,8 @@ export default function ContractorPaymentsPage() {
             header: 'Project',
             render: (value: any, payment: ContractorPayment) => (
                 <div>
-                    <div className="font-semibold text-slate-800">{payment.projectName}</div>
-                    <div className="text-sm text-slate-600">{payment.projectId}</div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">{payment.projectName}</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">{payment.projectId}</div>
                 </div>
             ),
             sortable: true
@@ -309,9 +476,11 @@ export default function ContractorPaymentsPage() {
             key: 'amount' as keyof ContractorPayment,
             header: 'Amount',
             render: (value: any, payment: ContractorPayment) => (
-                <span className="font-semibold text-slate-800">
-                    {formatNumber(value)}
-                </span>
+                <div>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {formatNumber(value)} {payment.currency}
+                    </span>
+                </div>
             ),
             sortable: true
         },
@@ -337,7 +506,11 @@ export default function ContractorPaymentsPage() {
         {
             key: 'paymentDate' as keyof ContractorPayment,
             header: 'Payment Date',
-            render: (value: any) => <span className="text-slate-700">{value}</span>,
+            render: (value: any) => (
+                <span className="text-slate-700 dark:text-slate-300">
+                    {value ? new Date(value).toLocaleDateString('en-US') : '-'}
+                </span>
+            ),
             sortable: true
         },
         {
@@ -345,8 +518,10 @@ export default function ContractorPaymentsPage() {
             header: 'Invoice',
             render: (value: any, payment: ContractorPayment) => (
                 <div>
-                    <div className="font-semibold text-slate-800">{payment.invoiceNumber}</div>
-                    <div className="text-sm text-slate-600">{payment.invoiceDate}</div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">{payment.invoiceNumber || '-'}</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                        {payment.invoiceDate ? new Date(payment.invoiceDate).toLocaleDateString('en-US') : '-'}
+                    </div>
                 </div>
             ),
             sortable: true
@@ -373,33 +548,38 @@ export default function ContractorPaymentsPage() {
         }
     ];
 
-    const actions = [
+    const actions: Action<ContractorPayment>[] = [
         {
             label: 'View Details',
             onClick: (payment: ContractorPayment) => toast.info('View details feature coming soon'),
-            icon: <Eye className="h-4 w-4" />
+            icon: <Eye className="h-4 w-4" />,
+            variant: 'info' as const
         },
         {
             label: 'Edit Payment',
             onClick: (payment: ContractorPayment) => handleEdit(payment),
-            icon: <Edit className="h-4 w-4" />
+            icon: <Edit className="h-4 w-4" />,
+            variant: 'warning' as const
         },
         {
             label: 'Approve Payment',
             onClick: (payment: ContractorPayment) => handleStatusChange(payment.id, 'approved'),
             icon: <CheckCircle className="h-4 w-4" />,
+            variant: 'success' as const,
             hidden: (payment: ContractorPayment) => payment.status !== 'pending'
         },
         {
             label: 'Mark as Paid',
             onClick: (payment: ContractorPayment) => handleStatusChange(payment.id, 'paid'),
             icon: <DollarSign className="h-4 w-4" />,
+            variant: 'success' as const,
             hidden: (payment: ContractorPayment) => payment.status !== 'approved'
         },
         {
             label: 'Reject Payment',
             onClick: (payment: ContractorPayment) => handleStatusChange(payment.id, 'rejected'),
             icon: <XCircle className="h-4 w-4" />,
+            variant: 'destructive' as const,
             hidden: (payment: ContractorPayment) => payment.status === 'paid' || payment.status === 'rejected'
         },
         {
@@ -410,7 +590,7 @@ export default function ContractorPaymentsPage() {
         }
     ];
 
-    const stats = [
+    const stats = useMemo(() => [
         {
             label: 'Total Payments',
             value: filteredPayments.length,
@@ -435,7 +615,7 @@ export default function ContractorPaymentsPage() {
             change: '-5%',
             trend: 'down' as const
         }
-    ];
+    ], [filteredPayments, totalAmount, paidAmount, pendingAmount]);
 
     const filterOptions = [
         {
@@ -444,7 +624,7 @@ export default function ContractorPaymentsPage() {
             value: contractorFilter,
             options: [
                 { key: 'all', label: 'All Contractors', value: 'all' },
-                ...contractors.map(contractor => ({ key: contractor, label: contractor, value: contractor }))
+                ...contractors.map(contractor => ({ key: contractor.id, label: contractor.name, value: contractor.id }))
             ],
             onValueChange: setContractorFilter
         },
@@ -474,45 +654,88 @@ export default function ContractorPaymentsPage() {
         }
     ];
 
-    const activeFilters = [];
-    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
-    if (contractorFilter !== 'all') activeFilters.push(`Contractor: ${contractorFilter}`);
-    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
-    if (methodFilter !== 'all') activeFilters.push(`Method: ${paymentMethods.find(m => m.value === methodFilter)?.label}`);
 
     return (
-        <div className="space-y-6">
-            {/* Page Header */}
-            <PageHeader
-                title="Contractor Payments"
-                description="Manage contractor payments with comprehensive tracking and approval workflow"
-                stats={stats}
-                actions={{
-                    primary: {
-                        label: 'New Payment',
-                        onClick: () => setIsCreateDialogOpen(true),
-                        icon: <Plus className="h-4 w-4" />
-                    },
-                    secondary: [
-                        {
-                            label: 'Export Report',
-                            onClick: () => toast.info('Export feature coming soon'),
-                            icon: <Download className="h-4 w-4" />
-                        },
-                        {
-                            label: 'Payment Analysis',
-                            onClick: () => toast.info('Payment analysis coming soon'),
-                            icon: <TrendingUp className="h-4 w-4" />
-                        }
-                    ]
-                }}
-            />
+        <div className="space-y-4">
+            {/* Header */}
+            <Breadcrumb />
+            <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Contractor Payments</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Manage contractor payments with comprehensive tracking and approval workflow</p>
+                </div>
+                <Button 
+                    onClick={() => setIsCreateDialogOpen(true)}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                    <Plus className="h-4 w-4 mr-2" /> New Payment
+                </Button>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <EnhancedCard
+                    title="Total Payments"
+                    description="All payments in the system"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: filteredPayments.length,
+                        badge: 'Total',
+                        badgeColor: 'default'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Total Amount"
+                    description="Sum of all payments"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: totalAmount,
+                        badge: formatNumber(totalAmount),
+                        badgeColor: 'default'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Paid Amount"
+                    description="Successfully paid payments"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: paidAmount,
+                        badge: formatNumber(paidAmount),
+                        badgeColor: 'success'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Pending Amount"
+                    description="Awaiting approval"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: pendingAmount,
+                        badge: formatNumber(pendingAmount),
+                        badgeColor: 'warning'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+            </div>
 
             {/* Filter Bar */}
             <FilterBar
                 searchPlaceholder="Search by payment number, contractor, project, or invoice..."
                 searchValue={searchTerm}
-                onSearchChange={setSearchTerm}
+                onSearchChange={(value) => {
+                    setSearchTerm(value);
+                    setPage(1);
+                }}
                 filters={filterOptions}
                 activeFilters={activeFilters}
                 onClearFilters={() => {
@@ -520,27 +743,66 @@ export default function ContractorPaymentsPage() {
                     setContractorFilter('all');
                     setStatusFilter('all');
                     setMethodFilter('all');
+                    setPage(1);
                 }}
+                actions={
+                    <>
+                        <Button
+                            variant="outline"
+                            onClick={refreshTable}
+                            disabled={isRefreshing}
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        >
+                            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={exportToExcel}
+                            disabled={isExporting}
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        >
+                            <FileSpreadsheet className="h-4 w-4 mr-2" />
+                            {isExporting ? 'Exporting...' : 'Export Excel'}
+                        </Button>
+                    </>
+                }
             />
 
             {/* Payments Table */}
             <EnhancedCard
                 title="Payment Overview"
                 description={`${filteredPayments.length} payments out of ${payments.length} total`}
-                variant="gradient"
-                size="lg"
-                stats={{
-                    total: payments.length,
-                    badge: 'Active Payments',
-                    badgeColor: 'success'
-                }}
+                variant="default"
+                size="sm"
+                headerActions={
+                    <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
+                        <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                            <SelectValue placeholder="Items per page" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                            {[5, 10, 20, 50, 100, 200].map(n => (
+                                <SelectItem key={n} value={String(n)} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
+                                    {n} per page
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                }
             >
                 <EnhancedDataTable
                     data={filteredPayments}
                     columns={columns}
                     actions={actions}
                     loading={false}
-                    noDataMessage="No payments found matching your criteria"
+                    pagination={{
+                        currentPage: page,
+                        totalPages: Math.ceil(filteredPayments.length / limit),
+                        pageSize: limit,
+                        totalItems: filteredPayments.length,
+                        onPageChange: setPage
+                    }}
+                    noDataMessage="No payments found matching your search criteria"
                     searchPlaceholder="Search payments..."
                 />
             </EnhancedCard>
@@ -556,28 +818,40 @@ export default function ContractorPaymentsPage() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="contractorId">Contractor</Label>
+                            <Label htmlFor="contractorId">Contractor *</Label>
                             <Select value={formData.contractorId} onValueChange={(value) => setFormData(prev => ({ ...prev, contractorId: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue placeholder="Select Contractor" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {contractors.map(contractor => (
-                                        <SelectItem key={contractor} value={contractor}>{contractor}</SelectItem>
-                                    ))}
+                                    {contractorsLoading ? (
+                                        <SelectItem value="loading" disabled>Loading contractors...</SelectItem>
+                                    ) : contractors.length === 0 ? (
+                                        <SelectItem value="none" disabled>No contractors available</SelectItem>
+                                    ) : (
+                                        contractors.map(contractor => (
+                                            <SelectItem key={contractor.id} value={contractor.id}>{contractor.name}</SelectItem>
+                                        ))
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="projectId">Project</Label>
+                            <Label htmlFor="projectId">Project *</Label>
                             <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue placeholder="Select Project" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {projects.map(project => (
-                                        <SelectItem key={project} value={project}>{project}</SelectItem>
-                                    ))}
+                                    {projectsLoading ? (
+                                        <SelectItem value="loading" disabled>Loading projects...</SelectItem>
+                                    ) : projects.length === 0 ? (
+                                        <SelectItem value="none" disabled>No projects available</SelectItem>
+                                    ) : (
+                                        projects.map(project => (
+                                            <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
+                                        ))
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -595,22 +869,23 @@ export default function ContractorPaymentsPage() {
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="currency">Currency</Label>
+                                <Label htmlFor="currency">Currency *</Label>
                                 <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="USD">US Dollar</SelectItem>
-                                        <SelectItem value="EUR">Euro</SelectItem>
+                                        {currencies.map(currency => (
+                                            <SelectItem key={currency.value} value={currency.value}>{currency.label}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="paymentMethod">Payment Method</Label>
+                            <Label htmlFor="paymentMethod">Payment Method *</Label>
                             <Select value={formData.paymentMethod} onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -621,13 +896,13 @@ export default function ContractorPaymentsPage() {
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="paymentDate">Payment Date</Label>
+                            <Label htmlFor="paymentDate">Payment Date *</Label>
                             <Input
                                 id="paymentDate"
                                 type="date"
                                 value={formData.paymentDate}
                                 onChange={(e) => setFormData(prev => ({ ...prev, paymentDate: e.target.value }))}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div>
@@ -698,27 +973,27 @@ export default function ContractorPaymentsPage() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="edit-contractorId">Contractor</Label>
+                            <Label htmlFor="edit-contractorId">Contractor *</Label>
                             <Select value={formData.contractorId} onValueChange={(value) => setFormData(prev => ({ ...prev, contractorId: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {contractors.map(contractor => (
-                                        <SelectItem key={contractor} value={contractor}>{contractor}</SelectItem>
+                                        <SelectItem key={contractor.id} value={contractor.id}>{contractor.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="edit-projectId">Project</Label>
+                            <Label htmlFor="edit-projectId">Project *</Label>
                             <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {projects.map(project => (
-                                        <SelectItem key={project} value={project}>{project}</SelectItem>
+                                        <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -736,22 +1011,23 @@ export default function ContractorPaymentsPage() {
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="edit-currency">Currency</Label>
+                                <Label htmlFor="edit-currency">Currency *</Label>
                                 <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="USD">US Dollar</SelectItem>
-                                        <SelectItem value="EUR">Euro</SelectItem>
+                                        {currencies.map(currency => (
+                                            <SelectItem key={currency.value} value={currency.value}>{currency.label}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="edit-paymentMethod">Payment Method</Label>
+                            <Label htmlFor="edit-paymentMethod">Payment Method *</Label>
                             <Select value={formData.paymentMethod} onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -762,13 +1038,13 @@ export default function ContractorPaymentsPage() {
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="edit-paymentDate">Payment Date</Label>
+                            <Label htmlFor="edit-paymentDate">Payment Date *</Label>
                             <Input
                                 id="edit-paymentDate"
                                 type="date"
                                 value={formData.paymentDate}
                                 onChange={(e) => setFormData(prev => ({ ...prev, paymentDate: e.target.value }))}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div>

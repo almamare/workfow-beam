@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { AppDispatch } from '@/stores/store';
+import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -8,12 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Wallet, Plus, Eye, Edit, Trash2, TrendingUp, TrendingDown, Download, Filter, Calendar, CreditCard, DollarSign } from 'lucide-react';
+import { Wallet, Plus, Eye, Edit, Trash2, TrendingUp, TrendingDown, Download, Filter, Calendar, CreditCard, DollarSign, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
-import { PageHeader } from '@/components/ui/page-header';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
-import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
+import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
+import { fetchContractors, selectContractors, selectLoading as selectContractorsLoading } from '@/stores/slices/contractors';
+import { fetchProjects, selectProjects, selectLoading as selectProjectsLoading } from '@/stores/slices/projects';
+import axios from '@/utils/axios';
 
 interface CashLedgerEntry {
     id: string;
@@ -130,8 +135,6 @@ const mockEntries: CashLedgerEntry[] = [
 ];
 
 const categories = ['Rent', 'Contractor Payment', 'Client Payment', 'Equipment', 'Materials', 'Utilities', 'Salaries', 'Insurance', 'Transportation', 'Other'];
-const projects = ['Office Building', 'Warehouse Construction', 'Residential Complex', 'Shopping Mall', 'Hospital'];
-const contractors = ['ABC Construction', 'XYZ Electrical', 'Green Landscaping', 'Modern Plumbing', 'Quality Painters'];
 const paymentMethods = [
     { value: 'cash', label: 'Cash' },
     { value: 'bank_transfer', label: 'Bank Transfer' },
@@ -139,7 +142,21 @@ const paymentMethods = [
     { value: 'card', label: 'Credit Card' }
 ];
 
+const currencies = [
+    { value: 'USD', label: 'US Dollar (USD)' },
+    { value: 'EUR', label: 'Euro (EUR)' },
+    { value: 'SAR', label: 'Saudi Riyal (SAR)' },
+    { value: 'AED', label: 'UAE Dirham (AED)' },
+    { value: 'KWD', label: 'Kuwaiti Dinar (KWD)' }
+];
+
 export default function CashLedgerPage() {
+    const dispatch = useReduxDispatch<AppDispatch>();
+    const contractors = useSelector(selectContractors);
+    const projects = useSelector(selectProjects);
+    const contractorsLoading = useSelector(selectContractorsLoading);
+    const projectsLoading = useSelector(selectProjectsLoading);
+
     const [entries, setEntries] = useState<CashLedgerEntry[]>(mockEntries);
     const [searchTerm, setSearchTerm] = useState('');
     const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -148,13 +165,17 @@ export default function CashLedgerPage() {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [editingEntry, setEditingEntry] = useState<CashLedgerEntry | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
     const [formData, setFormData] = useState({
         date: '',
         description: '',
         type: 'expense',
         category: '',
         amount: '',
-        currency: '',
+        currency: 'USD',
         paymentMethod: 'cash',
         reference: '',
         projectId: '',
@@ -162,63 +183,102 @@ export default function CashLedgerPage() {
         notes: ''
     });
 
-    const filteredEntries = entries.filter(entry => {
-        const matchesSearch = entry.entryNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            entry.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            entry.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            entry.reference.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesType = typeFilter === 'all' || entry.type === typeFilter;
-        const matchesCategory = categoryFilter === 'all' || entry.category === categoryFilter;
-        const matchesStatus = statusFilter === 'all' || entry.status === statusFilter;
-        
-        return matchesSearch && matchesType && matchesCategory && matchesStatus;
-    });
+    // Fetch contractors and projects on mount
+    useEffect(() => {
+        dispatch(fetchContractors({ page: 1, limit: 1000 }));
+        dispatch(fetchProjects({ page: 1, limit: 1000 }));
+    }, [dispatch]);
 
-    const handleCreate = () => {
+    const filteredEntries = useMemo(() => {
+        return entries.filter(entry => {
+            const matchesSearch = entry.entryNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                entry.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                entry.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                entry.reference.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesType = typeFilter === 'all' || entry.type === typeFilter;
+            const matchesCategory = categoryFilter === 'all' || entry.category === categoryFilter;
+            const matchesStatus = statusFilter === 'all' || entry.status === statusFilter;
+            
+            return matchesSearch && matchesType && matchesCategory && matchesStatus;
+        });
+    }, [entries, searchTerm, typeFilter, categoryFilter, statusFilter]);
+
+    const activeFilters = useMemo(() => {
+        const arr: string[] = [];
+        if (searchTerm) arr.push(`Search: ${searchTerm}`);
+        if (typeFilter !== 'all') arr.push(`Type: ${typeFilter}`);
+        if (categoryFilter !== 'all') arr.push(`Category: ${categoryFilter}`);
+        if (statusFilter !== 'all') arr.push(`Status: ${statusFilter}`);
+        return arr;
+    }, [searchTerm, typeFilter, categoryFilter, statusFilter]);
+
+    const handleCreate = async () => {
         if (!formData.date || !formData.description || !formData.category || !formData.amount) {
             toast.error('Please fill in all required fields');
             return;
         }
 
-        const newEntry: CashLedgerEntry = {
-            id: Date.now().toString(),
-            entryNumber: `CL-${String(entries.length + 1).padStart(3, '0')}`,
-            date: formData.date,
-            description: formData.description,
-            type: formData.type as CashLedgerEntry['type'],
-            category: formData.category,
-            amount: parseFloat(formData.amount),
-            currency: formData.currency,
-            paymentMethod: formData.paymentMethod as CashLedgerEntry['paymentMethod'],
-            reference: formData.reference,
-            projectId: formData.projectId,
-            projectName: projects.find(p => p === formData.projectId) || '',
-            contractorId: formData.contractorId,
-            contractorName: contractors.find(c => c === formData.contractorId) || '',
-            status: 'pending',
-            createdBy: 'Current User',
-            approvedBy: '',
-            approvalDate: '',
-            notes: formData.notes,
-            balance: 0 // Will be calculated based on previous entries
-        };
+        try {
+            // TODO: Replace with actual API call
+            // const response = await axios.post('/cash-ledger/create', {
+            //     date: formData.date,
+            //     description: formData.description,
+            //     type: formData.type,
+            //     category: formData.category,
+            //     amount: parseFloat(formData.amount),
+            //     currency: formData.currency,
+            //     payment_method: formData.paymentMethod,
+            //     reference: formData.reference,
+            //     project_id: formData.projectId,
+            //     contractor_id: formData.contractorId,
+            //     notes: formData.notes
+            // });
 
-        setEntries([...entries, newEntry]);
-        setIsCreateDialogOpen(false);
-        setFormData({
-            date: '',
-            description: '',
-            type: 'expense',
-            category: '',
-            amount: '',
-            currency: '',
-            paymentMethod: 'cash',
-            reference: '',
-            projectId: '',
-            contractorId: '',
-            notes: ''
-        });
-        toast.success('Cash ledger entry created successfully');
+            const project = projects.find(p => p.id === formData.projectId);
+            const contractor = contractors.find(c => c.id === formData.contractorId);
+
+            const newEntry: CashLedgerEntry = {
+                id: Date.now().toString(),
+                entryNumber: `CL-${String(entries.length + 1).padStart(3, '0')}`,
+                date: formData.date,
+                description: formData.description,
+                type: formData.type as CashLedgerEntry['type'],
+                category: formData.category,
+                amount: parseFloat(formData.amount),
+                currency: formData.currency,
+                paymentMethod: formData.paymentMethod as CashLedgerEntry['paymentMethod'],
+                reference: formData.reference,
+                projectId: formData.projectId,
+                projectName: project?.name || '',
+                contractorId: formData.contractorId,
+                contractorName: contractor?.name || '',
+                status: 'pending',
+                createdBy: 'Current User',
+                approvedBy: '',
+                approvalDate: '',
+                notes: formData.notes,
+                balance: 0 // Will be calculated based on previous entries
+            };
+
+            setEntries([...entries, newEntry]);
+            setIsCreateDialogOpen(false);
+            setFormData({
+                date: '',
+                description: '',
+                type: 'expense',
+                category: '',
+                amount: '',
+                currency: 'USD',
+                paymentMethod: 'cash',
+                reference: '',
+                projectId: '',
+                contractorId: '',
+                notes: ''
+            });
+            toast.success('Cash ledger entry created successfully');
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to create entry');
+        }
     };
 
     const handleEdit = (entry: CashLedgerEntry) => {
@@ -239,51 +299,156 @@ export default function CashLedgerPage() {
         setIsEditDialogOpen(true);
     };
 
-    const handleUpdate = () => {
+    const handleUpdate = async () => {
         if (!editingEntry) return;
 
-        const updatedEntries = entries.map(e =>
-            e.id === editingEntry.id ? { 
-                ...e, 
-                date: formData.date,
-                description: formData.description,
-                type: formData.type as CashLedgerEntry['type'],
-                category: formData.category,
-                amount: parseFloat(formData.amount),
-                currency: formData.currency,
-                paymentMethod: formData.paymentMethod as CashLedgerEntry['paymentMethod'],
-                reference: formData.reference,
-                projectId: formData.projectId,
-                projectName: projects.find(p => p === formData.projectId) || '',
-                contractorId: formData.contractorId,
-                contractorName: contractors.find(c => c === formData.contractorId) || '',
-                notes: formData.notes
-            } : e
-        );
+        try {
+            // TODO: Replace with actual API call
+            // await axios.put(`/cash-ledger/update/${editingEntry.id}`, {
+            //     date: formData.date,
+            //     description: formData.description,
+            //     type: formData.type,
+            //     category: formData.category,
+            //     amount: parseFloat(formData.amount),
+            //     currency: formData.currency,
+            //     payment_method: formData.paymentMethod,
+            //     reference: formData.reference,
+            //     project_id: formData.projectId,
+            //     contractor_id: formData.contractorId,
+            //     notes: formData.notes
+            // });
 
-        setEntries(updatedEntries);
-        setIsEditDialogOpen(false);
-        setEditingEntry(null);
-        setFormData({
-            date: '',
-            description: '',
-            type: 'expense',
-            category: '',
-            amount: '',
-            currency: '',
-            paymentMethod: 'cash',
-            reference: '',
-            projectId: '',
-            contractorId: '',
-            notes: ''
-        });
-        toast.success('Cash ledger entry updated successfully');
+            const project = projects.find(p => p.id === formData.projectId);
+            const contractor = contractors.find(c => c.id === formData.contractorId);
+
+            const updatedEntries = entries.map(e =>
+                e.id === editingEntry.id ? { 
+                    ...e, 
+                    date: formData.date,
+                    description: formData.description,
+                    type: formData.type as CashLedgerEntry['type'],
+                    category: formData.category,
+                    amount: parseFloat(formData.amount),
+                    currency: formData.currency,
+                    paymentMethod: formData.paymentMethod as CashLedgerEntry['paymentMethod'],
+                    reference: formData.reference,
+                    projectId: formData.projectId,
+                    projectName: project?.name || e.projectName,
+                    contractorId: formData.contractorId,
+                    contractorName: contractor?.name || e.contractorName,
+                    notes: formData.notes
+                } : e
+            );
+
+            setEntries(updatedEntries);
+            setIsEditDialogOpen(false);
+            setEditingEntry(null);
+            setFormData({
+                date: '',
+                description: '',
+                type: 'expense',
+                category: '',
+                amount: '',
+                currency: 'USD',
+                paymentMethod: 'cash',
+                reference: '',
+                projectId: '',
+                contractorId: '',
+                notes: ''
+            });
+            toast.success('Cash ledger entry updated successfully');
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to update entry');
+        }
     };
 
-    const handleDelete = (id: string) => {
-        setEntries(entries.filter(e => e.id !== id));
-        toast.success('Cash ledger entry deleted successfully');
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this entry?')) {
+            return;
+        }
+
+        try {
+            // TODO: Replace with actual API call
+            // await axios.delete(`/cash-ledger/delete/${id}`);
+
+            setEntries(entries.filter(e => e.id !== id));
+            toast.success('Cash ledger entry deleted successfully');
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to delete entry');
+        }
     };
+
+    const refreshTable = async () => {
+        setIsRefreshing(true);
+        try {
+            // TODO: Replace with actual API call
+            // await dispatch(fetchCashLedgerEntries({ page, limit, search: searchTerm }));
+            await dispatch(fetchContractors({ page: 1, limit: 1000 }));
+            await dispatch(fetchProjects({ page: 1, limit: 1000 }));
+            toast.success('Table refreshed successfully');
+        } catch {
+            toast.error('Failed to refresh table');
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const exportToExcel = async () => {
+        setIsExporting(true);
+        try {
+            // TODO: Replace with actual API call
+            // const { data } = await axios.get('/cash-ledger/fetch', {
+            //     params: {
+            //         search: searchTerm,
+            //         type: typeFilter !== 'all' ? typeFilter : undefined,
+            //         category: categoryFilter !== 'all' ? categoryFilter : undefined,
+            //         status: statusFilter !== 'all' ? statusFilter : undefined,
+            //         limit: 10000,
+            //         page: 1
+            //     }
+            // });
+
+            const headers = ['Entry Number', 'Date', 'Description', 'Type', 'Category', 'Amount', 'Currency', 'Payment Method', 'Reference', 'Project', 'Contractor', 'Status'];
+            const csvHeaders = headers.join(',');
+            const csvRows = filteredEntries.map((e: CashLedgerEntry) => {
+                return [
+                    e.entryNumber,
+                    e.date,
+                    escapeCsv(e.description),
+                    e.type,
+                    escapeCsv(e.category),
+                    e.amount,
+                    e.currency,
+                    e.paymentMethod,
+                    e.reference,
+                    escapeCsv(e.projectName),
+                    escapeCsv(e.contractorName),
+                    e.status
+                ].join(',');
+            });
+            const csvContent = [csvHeaders, ...csvRows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cash_ledger_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success('Data exported successfully');
+        } catch {
+            toast.error('Failed to export data');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    function escapeCsv(val: any) {
+        const str = String(val ?? '');
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+    }
 
     const handleStatusChange = (id: string, status: CashLedgerEntry['status']) => {
         setEntries(prev => prev.map(entry => 
@@ -305,33 +470,44 @@ export default function CashLedgerPage() {
         }).format(amount);
     };
 
-    const totalIncome = filteredEntries.filter(e => e.type === 'income').reduce((sum, entry) => sum + entry.amount, 0);
-    const totalExpense = filteredEntries.filter(e => e.type === 'expense').reduce((sum, entry) => sum + entry.amount, 0);
-    const netBalance = totalIncome - totalExpense;
-    const pendingAmount = filteredEntries.filter(e => e.status === 'pending').reduce((sum, entry) => sum + entry.amount, 0);
+    const totalIncome = useMemo(() => 
+        filteredEntries.filter(e => e.type === 'income').reduce((sum, entry) => sum + entry.amount, 0),
+        [filteredEntries]
+    );
+    const totalExpense = useMemo(() => 
+        filteredEntries.filter(e => e.type === 'expense').reduce((sum, entry) => sum + entry.amount, 0),
+        [filteredEntries]
+    );
+    const netBalance = useMemo(() => totalIncome - totalExpense, [totalIncome, totalExpense]);
+    const pendingAmount = useMemo(() => 
+        filteredEntries.filter(e => e.status === 'pending').reduce((sum, entry) => sum + entry.amount, 0),
+        [filteredEntries]
+    );
 
-    const columns = [
+    const columns: Column<CashLedgerEntry>[] = [
         {
             key: 'entryNumber' as keyof CashLedgerEntry,
             header: 'Entry Number',
-            render: (value: any) => <span className="font-mono text-sm text-slate-600">{value}</span>,
-            sortable: true,
-            width: '120px'
+            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{value}</span>,
+            sortable: true
         },
         {
             key: 'date' as keyof CashLedgerEntry,
             header: 'Date',
-            render: (value: any) => <span className="text-slate-700">{value}</span>,
-            sortable: true,
-            width: '100px'
+            render: (value: any) => (
+                <span className="text-slate-700 dark:text-slate-300">
+                    {value ? new Date(value).toLocaleDateString('en-US') : '-'}
+                </span>
+            ),
+            sortable: true
         },
         {
             key: 'description' as keyof CashLedgerEntry,
             header: 'Description',
             render: (value: any, entry: CashLedgerEntry) => (
                 <div>
-                    <div className="font-semibold text-slate-800">{entry.description}</div>
-                    <div className="text-sm text-slate-600">{entry.category}</div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">{entry.description}</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">{entry.category}</div>
                 </div>
             ),
             sortable: true
@@ -365,9 +541,11 @@ export default function CashLedgerPage() {
             render: (value: any, entry: CashLedgerEntry) => {
                 const isIncome = entry.type === 'income';
                 return (
-                    <span className={`font-semibold ${isIncome ? 'text-green-600' : 'text-red-600'}`}>
-                        {isIncome ? '+' : '-'}{formatNumber(value)}
-                    </span>
+                    <div>
+                        <span className={`font-semibold ${isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                            {isIncome ? '+' : '-'}{formatNumber(value)} {entry.currency}
+                        </span>
+                    </div>
                 );
             },
             sortable: true
@@ -394,7 +572,7 @@ export default function CashLedgerPage() {
         {
             key: 'reference' as keyof CashLedgerEntry,
             header: 'Reference',
-            render: (value: any) => <span className="font-mono text-sm text-slate-600">{value}</span>,
+            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{value || '-'}</span>,
             sortable: true
         },
         {
@@ -402,8 +580,10 @@ export default function CashLedgerPage() {
             header: 'Project',
             render: (value: any, entry: CashLedgerEntry) => (
                 <div>
-                    <div className="font-semibold text-slate-800">{entry.projectName}</div>
-                    <div className="text-sm text-slate-600">{entry.projectId}</div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">{entry.projectName || '-'}</div>
+                    {entry.projectId && (
+                        <div className="text-sm text-slate-600 dark:text-slate-400">{entry.projectId}</div>
+                    )}
                 </div>
             ),
             sortable: true
@@ -428,27 +608,31 @@ export default function CashLedgerPage() {
         }
     ];
 
-    const actions = [
+    const actions: Action<CashLedgerEntry>[] = [
         {
             label: 'View Details',
             onClick: (entry: CashLedgerEntry) => toast.info('View details feature coming soon'),
-            icon: <Eye className="h-4 w-4" />
+            icon: <Eye className="h-4 w-4" />,
+            variant: 'info' as const
         },
         {
             label: 'Edit Entry',
             onClick: (entry: CashLedgerEntry) => handleEdit(entry),
-            icon: <Edit className="h-4 w-4" />
+            icon: <Edit className="h-4 w-4" />,
+            variant: 'warning' as const
         },
         {
             label: 'Approve Entry',
             onClick: (entry: CashLedgerEntry) => handleStatusChange(entry.id, 'approved'),
             icon: <TrendingUp className="h-4 w-4" />,
+            variant: 'success' as const,
             hidden: (entry: CashLedgerEntry) => entry.status !== 'pending'
         },
         {
             label: 'Reject Entry',
             onClick: (entry: CashLedgerEntry) => handleStatusChange(entry.id, 'rejected'),
             icon: <TrendingDown className="h-4 w-4" />,
+            variant: 'destructive' as const,
             hidden: (entry: CashLedgerEntry) => entry.status === 'approved' || entry.status === 'rejected'
         },
         {
@@ -459,7 +643,7 @@ export default function CashLedgerPage() {
         }
     ];
 
-    const stats = [
+    const stats = useMemo(() => [
         {
             label: 'Total Income',
             value: formatNumber(totalIncome),
@@ -484,7 +668,7 @@ export default function CashLedgerPage() {
             change: '-3%',
             trend: 'down' as const
         }
-    ];
+    ], [totalIncome, totalExpense, netBalance, pendingAmount]);
 
     const filterOptions = [
         {
@@ -522,45 +706,87 @@ export default function CashLedgerPage() {
         }
     ];
 
-    const activeFilters = [];
-    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
-    if (typeFilter !== 'all') activeFilters.push(`Type: ${typeFilter}`);
-    if (categoryFilter !== 'all') activeFilters.push(`Category: ${categoryFilter}`);
-    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
-
     return (
-        <div className="space-y-6">
-            {/* Page Header */}
-            <PageHeader
-                title="Cash Ledger"
-                description="Track all cash transactions with comprehensive income and expense management"
-                stats={stats}
-                actions={{
-                    primary: {
-                        label: 'New Entry',
-                        onClick: () => setIsCreateDialogOpen(true),
-                        icon: <Plus className="h-4 w-4" />
-                    },
-                    secondary: [
-                        {
-                            label: 'Export Report',
-                            onClick: () => toast.info('Export feature coming soon'),
-                            icon: <Download className="h-4 w-4" />
-                        },
-                        {
-                            label: 'Financial Analysis',
-                            onClick: () => toast.info('Financial analysis coming soon'),
-                            icon: <TrendingUp className="h-4 w-4" />
-                        }
-                    ]
-                }}
-            />
+        <div className="space-y-4">
+            {/* Header */}
+            <Breadcrumb />
+            <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Cash Ledger</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Track all cash transactions with comprehensive income and expense management</p>
+                </div>
+                <Button 
+                    onClick={() => setIsCreateDialogOpen(true)}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                    <Plus className="h-4 w-4 mr-2" /> New Entry
+                </Button>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <EnhancedCard
+                    title="Total Income"
+                    description="All income entries"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: totalIncome,
+                        badge: formatNumber(totalIncome),
+                        badgeColor: 'success'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Total Expenses"
+                    description="All expense entries"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: totalExpense,
+                        badge: formatNumber(totalExpense),
+                        badgeColor: 'error'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Net Balance"
+                    description="Income minus expenses"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: netBalance,
+                        badge: formatNumber(netBalance),
+                        badgeColor: netBalance >= 0 ? 'success' : 'error'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Pending Amount"
+                    description="Awaiting approval"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: pendingAmount,
+                        badge: formatNumber(pendingAmount),
+                        badgeColor: 'warning'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+            </div>
 
             {/* Filter Bar */}
             <FilterBar
                 searchPlaceholder="Search by entry number, description, category, or reference..."
                 searchValue={searchTerm}
-                onSearchChange={setSearchTerm}
+                onSearchChange={(value) => {
+                    setSearchTerm(value);
+                    setPage(1);
+                }}
                 filters={filterOptions}
                 activeFilters={activeFilters}
                 onClearFilters={() => {
@@ -568,27 +794,66 @@ export default function CashLedgerPage() {
                     setTypeFilter('all');
                     setCategoryFilter('all');
                     setStatusFilter('all');
+                    setPage(1);
                 }}
+                actions={
+                    <>
+                        <Button
+                            variant="outline"
+                            onClick={refreshTable}
+                            disabled={isRefreshing}
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        >
+                            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={exportToExcel}
+                            disabled={isExporting}
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        >
+                            <FileSpreadsheet className="h-4 w-4 mr-2" />
+                            {isExporting ? 'Exporting...' : 'Export Excel'}
+                        </Button>
+                    </>
+                }
             />
 
             {/* Entries Table */}
             <EnhancedCard
                 title="Cash Ledger Overview"
                 description={`${filteredEntries.length} entries out of ${entries.length} total`}
-                variant="gradient"
-                size="lg"
-                stats={{
-                    total: entries.length,
-                    badge: 'Active Entries',
-                    badgeColor: 'success'
-                }}
+                variant="default"
+                size="sm"
+                headerActions={
+                    <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
+                        <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                            <SelectValue placeholder="Items per page" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                            {[5, 10, 20, 50, 100, 200].map(n => (
+                                <SelectItem key={n} value={String(n)} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
+                                    {n} per page
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                }
             >
                 <EnhancedDataTable
                     data={filteredEntries}
                     columns={columns}
                     actions={actions}
                     loading={false}
-                    noDataMessage="No entries found matching your criteria"
+                    pagination={{
+                        currentPage: page,
+                        totalPages: Math.ceil(filteredEntries.length / limit),
+                        pageSize: limit,
+                        totalItems: filteredEntries.length,
+                        onPageChange: setPage
+                    }}
+                    noDataMessage="No entries found matching your search criteria"
                     searchPlaceholder="Search entries..."
                 />
             </EnhancedCard>
@@ -604,31 +869,31 @@ export default function CashLedgerPage() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="date">Date</Label>
+                            <Label htmlFor="date">Date *</Label>
                             <Input
                                 id="date"
                                 type="date"
                                 value={formData.date}
                                 onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div>
-                            <Label htmlFor="description">Description</Label>
+                            <Label htmlFor="description">Description *</Label>
                             <Textarea
                                 id="description"
                                 value={formData.description}
                                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                                 placeholder="Entry description"
                                 rows={3}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="type">Type</Label>
+                                <Label htmlFor="type">Type *</Label>
                                 <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -638,9 +903,9 @@ export default function CashLedgerPage() {
                                 </Select>
                             </div>
                             <div>
-                                <Label htmlFor="category">Category</Label>
+                                <Label htmlFor="category">Category *</Label>
                                 <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                         <SelectValue placeholder="Select Category" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -653,7 +918,7 @@ export default function CashLedgerPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="amount">Amount</Label>
+                                <Label htmlFor="amount">Amount *</Label>
                                 <Input
                                     id="amount"
                                     type="number"
@@ -661,26 +926,27 @@ export default function CashLedgerPage() {
                                     value={formData.amount}
                                     onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                                     placeholder="0.00"
-                                    className="mt-1"
+                                    className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="currency">Currency</Label>
+                                <Label htmlFor="currency">Currency *</Label>
                                 <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="USD">US Dollar</SelectItem>
-                                        <SelectItem value="EUR">Euro</SelectItem>
+                                        {currencies.map(currency => (
+                                            <SelectItem key={currency.value} value={currency.value}>{currency.label}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="paymentMethod">Payment Method</Label>
+                            <Label htmlFor="paymentMethod">Payment Method *</Label>
                             <Select value={formData.paymentMethod} onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -697,32 +963,44 @@ export default function CashLedgerPage() {
                                 value={formData.reference}
                                 onChange={(e) => setFormData(prev => ({ ...prev, reference: e.target.value }))}
                                 placeholder="Transaction reference"
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div>
                             <Label htmlFor="projectId">Project</Label>
                             <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue placeholder="Select Project" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {projects.map(project => (
-                                        <SelectItem key={project} value={project}>{project}</SelectItem>
-                                    ))}
+                                    {projectsLoading ? (
+                                        <SelectItem value="loading" disabled>Loading projects...</SelectItem>
+                                    ) : projects.length === 0 ? (
+                                        <SelectItem value="none" disabled>No projects available</SelectItem>
+                                    ) : (
+                                        projects.map(project => (
+                                            <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
+                                        ))
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div>
                             <Label htmlFor="contractorId">Contractor</Label>
                             <Select value={formData.contractorId} onValueChange={(value) => setFormData(prev => ({ ...prev, contractorId: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue placeholder="Select Contractor" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {contractors.map(contractor => (
-                                        <SelectItem key={contractor} value={contractor}>{contractor}</SelectItem>
-                                    ))}
+                                    {contractorsLoading ? (
+                                        <SelectItem value="loading" disabled>Loading contractors...</SelectItem>
+                                    ) : contractors.length === 0 ? (
+                                        <SelectItem value="none" disabled>No contractors available</SelectItem>
+                                    ) : (
+                                        contractors.map(contractor => (
+                                            <SelectItem key={contractor.id} value={contractor.id}>{contractor.name}</SelectItem>
+                                        ))
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -734,7 +1012,7 @@ export default function CashLedgerPage() {
                                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                                 placeholder="Additional notes"
                                 rows={2}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div className="flex justify-end space-x-2 pt-4">
@@ -761,30 +1039,30 @@ export default function CashLedgerPage() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="edit-date">Date</Label>
+                            <Label htmlFor="edit-date">Date *</Label>
                             <Input
                                 id="edit-date"
                                 type="date"
                                 value={formData.date}
                                 onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div>
-                            <Label htmlFor="edit-description">Description</Label>
+                            <Label htmlFor="edit-description">Description *</Label>
                             <Textarea
                                 id="edit-description"
                                 value={formData.description}
                                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                                 rows={3}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="edit-type">Type</Label>
+                                <Label htmlFor="edit-type">Type *</Label>
                                 <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -794,9 +1072,9 @@ export default function CashLedgerPage() {
                                 </Select>
                             </div>
                             <div>
-                                <Label htmlFor="edit-category">Category</Label>
+                                <Label htmlFor="edit-category">Category *</Label>
                                 <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -809,33 +1087,34 @@ export default function CashLedgerPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="edit-amount">Amount</Label>
+                                <Label htmlFor="edit-amount">Amount *</Label>
                                 <Input
                                     id="edit-amount"
                                     type="number"
                                     step="0.01"
                                     value={formData.amount}
                                     onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                                    className="mt-1"
+                                    className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="edit-currency">Currency</Label>
+                                <Label htmlFor="edit-currency">Currency *</Label>
                                 <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="USD">US Dollar</SelectItem>
-                                        <SelectItem value="EUR">Euro</SelectItem>
+                                        {currencies.map(currency => (
+                                            <SelectItem key={currency.value} value={currency.value}>{currency.label}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="edit-paymentMethod">Payment Method</Label>
+                            <Label htmlFor="edit-paymentMethod">Payment Method *</Label>
                             <Select value={formData.paymentMethod} onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -851,18 +1130,18 @@ export default function CashLedgerPage() {
                                 id="edit-reference"
                                 value={formData.reference}
                                 onChange={(e) => setFormData(prev => ({ ...prev, reference: e.target.value }))}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div>
                             <Label htmlFor="edit-projectId">Project</Label>
                             <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {projects.map(project => (
-                                        <SelectItem key={project} value={project}>{project}</SelectItem>
+                                        <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -870,12 +1149,12 @@ export default function CashLedgerPage() {
                         <div>
                             <Label htmlFor="edit-contractorId">Contractor</Label>
                             <Select value={formData.contractorId} onValueChange={(value) => setFormData(prev => ({ ...prev, contractorId: value }))}>
-                                <SelectTrigger className="mt-1">
+                                <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {contractors.map(contractor => (
-                                        <SelectItem key={contractor} value={contractor}>{contractor}</SelectItem>
+                                        <SelectItem key={contractor.id} value={contractor.id}>{contractor.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -887,7 +1166,7 @@ export default function CashLedgerPage() {
                                 value={formData.notes}
                                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                                 rows={2}
-                                className="mt-1"
+                                className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500"
                             />
                         </div>
                         <div className="flex justify-end space-x-2 pt-4">

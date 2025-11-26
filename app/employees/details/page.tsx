@@ -402,42 +402,42 @@ function EmployeeDetails() {
 
             {/* Information cards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <EnhancedCard title="Employee Information" description="" variant="default" size="sm">
+                <EnhancedCard title="Employee Information" description="Employee information" variant="default" size="sm">
                     <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                        <Detail label="Employee Code" value={employee.employee_code || '-'} />
-                        <Detail label="Hire Date" value={employee.hire_date ? fmt(employee.hire_date) : '-'} />
-                        <Detail label="Job Title" value={employee.job_title || '-'} />
+                        <Detail label="Employee Code" value={employee.employee_code || 'N/A'} />
+                        <Detail label="Hire Date" value={employee.hire_date ? employee.hire_date : 'N/A'} />
+                        <Detail label="Job Title" value={employee.job_title || 'N/A'} />
                         <Detail
                             label="Role"
                             value={
                                 <Badge variant="outline" className={roleBadgeClasses(employee.role || 'Employee')}>
-                                    {employee.role || '-'}
+                                    {employee.role || 'N/A'}
                                 </Badge>
                             }
                         />
-                        <Detail label="Salary Grade" value={employee.salary_grade || '-'} />
-                        <Detail label="Created" value={fmt(employee.created_at)} />
-                        <Detail label="Updated" value={fmt(employee.updated_at)} />
+                        <Detail label="Salary Grade" value={employee.salary_grade || 'N/A'} />
+                            <Detail label="Created" value={employee.created_at || 'N/A'} />
+                        <Detail label="Updated" value={employee.updated_at || 'N/A'} />
                     </div>
                 </EnhancedCard>
 
                 <EnhancedCard title="User Account" description={user ? "Associated user account details" : "No user account linked"} variant="default" size="sm">
                     {user ? (
                         <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                            <Detail label="Username" value={user.username || '-'} />
-                            <Detail label="Email" value={user.email || '-'} />
-                            <Detail label="Phone" value={user.phone || '-'} />
-                            <Detail label="Role" value={user.role || '-'} />
+                            <Detail label="Username" value={user.username || 'N/A'} />
+                            <Detail label="Email" value={user.email || 'N/A'} />
+                            <Detail label="Phone" value={user.phone || 'N/A'} />
+                            <Detail label="Role" value={user.role || 'N/A'} />
                             <Detail
                                 label="Status"
                                 value={
                                     <Badge variant="outline" className={statusBadgeClasses(user.status || 'Active')}>
-                                        {user.status || '-'}
+                                        {user.status || 'N/A'}
                                     </Badge>
                                 }
                             />
-                            <Detail label="Created" value={fmt(user.created_at)} />
-                            <Detail label="Updated" value={fmt(user.updated_at)} />
+                            <Detail label="Created" value={user.created_at || 'N/A'} />
+                            <Detail label="Updated" value={user.updated_at || 'N/A'} />
                         </div>
                     ) : (
                         <p className="text-slate-600 dark:text-slate-400">No user account linked to this employee.</p>

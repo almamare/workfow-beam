@@ -6,9 +6,10 @@ import budget from '@/stores/slices/budgets';            // Importing the Budget
 import taskOrders from '@/stores/slices/task-orders';    // Importing the TaskOrder type from the task-orders slice
 import Clients from '@/stores/slices/clients';           // Importing the Clients type from the clients slice
 import Contractors from '@/stores/slices/contractors';   // Importing the Contractors type from the contractors slice
-import UsersSil from '@/stores/slices/users';               
-import Employees from '@/stores/slices/employees';
-import TaskRequests from '@/stores/slices/tasks_requests';
+import UsersSil from '@/stores/slices/users';                // Importing the Users type from the users slice
+import Employees from '@/stores/slices/employees';            // Importing the Employees type from the employees slice
+import TaskRequests from '@/stores/slices/tasks_requests';    // Importing the TaskRequests type from the tasks_requests slice
+import Notifications from '@/stores/slices/notifications';    // Importing the Notifications slice
 
 
 // This is the Redux store configuration for the login functionality
@@ -24,7 +25,8 @@ const store = configureStore({
         contractors: Contractors,   // This is the slice for managing contractors
         users: UsersSil,
         employees: Employees,
-        taskRequests: TaskRequests
+        taskRequests: TaskRequests,
+        notifications: Notifications // This is the slice for managing notifications
     },
 });
 

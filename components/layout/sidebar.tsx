@@ -93,7 +93,6 @@ const routeMapping: Record<string, string> = {
     '/employees/create': '/users',
     '/employees/update': '/users',
     '/employees/details': '/users',
-    '/permissions': '/users',
     '/roles': '/users',
     
     // Departments related pages
@@ -175,8 +174,7 @@ const routeConfig: Record<string, {
             { href: '/users', title: 'Users', icon: 'Users', color: 'text-blue-400' },
             { href: '/users/create', title: 'Create User', icon: 'Plus', color: 'text-green-400' },
             { href: '/employees', title: 'Employees', icon: 'UserCheck', color: 'text-emerald-400' },
-            { href: '/permissions', title: 'Permissions', icon: 'Shield', color: 'text-red-400' },
-            { href: '/roles', title: 'Roles', icon: 'Shield', color: 'text-indigo-400' }
+            { href: '/employees/create', title: 'Create Employee', icon: 'Plus', color: 'text-green-400' },
         ]
     },
     '/requests': {

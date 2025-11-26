@@ -35,6 +35,7 @@ interface FetchEmployeesParams {
     limit?: number;
     search?: string;
     job_title?: string;
+    role?: string;
 }
 
 // ================== Async Thunks ==================

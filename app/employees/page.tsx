@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import type { Employee } from '@/stores/types/employees';
-import { Edit, Eye, Plus, RefreshCw, FileSpreadsheet } from 'lucide-react';
+import { Edit, Eye, Plus, RefreshCw, FileSpreadsheet, ArrowDownToLine } from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
@@ -37,10 +37,55 @@ export default function EmployeesPage() {
     const [limit, setLimit] = useState(10);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+    const [downloadingCardId, setDownloadingCardId] = useState<string | null>(null);
+    const [role, setRole] = useState<'All' | 'Admin' | 'Manager' | 'Employee' | 'Contractor'>('All');
+    const [jobTitle, setJobTitle] = useState<string>('All');
 
     useEffect(() => {
-        dispatch(fetchEmployees({ page, limit, search }));
-    }, [dispatch, page, limit, search]);
+        dispatch(fetchEmployees({ 
+            page, 
+            limit, 
+            search, 
+            job_title: jobTitle !== 'All' ? jobTitle : undefined,
+            role: role !== 'All' ? role : undefined
+        }));
+    }, [dispatch, page, limit, search, jobTitle, role]);
+
+    const jobTitleOptions = useMemo(() => {
+        const titles = Array.from(new Set(employees.map(emp => emp.job_title).filter(Boolean)));
+        return titles;
+    }, [employees]);
+
+    const roleCounts = useMemo(() => {
+        return employees.reduce<Record<string, number>>((acc, emp) => {
+            const roleKey = emp.role || 'Other';
+            acc[roleKey] = (acc[roleKey] || 0) + 1;
+            return acc;
+        }, {});
+    }, [employees]);
+
+    const roleCardConfigs: Record<string, { title: string; description: string; badgeColor: 'default' | 'info' | 'success' | 'warning' | 'error' }> = {
+        Admin: {
+            title: 'Admins',
+            description: 'Administrative employees',
+            badgeColor: 'warning',
+        },
+        Manager: {
+            title: 'Managers',
+            description: 'Management level employees',
+            badgeColor: 'info',
+        },
+        Employee: {
+            title: 'Employees',
+            description: 'General staff members',
+            badgeColor: 'success',
+        },
+        Contractor: {
+            title: 'Contractors',
+            description: 'External contractors',
+            badgeColor: 'default',
+        },
+    };
 
     const columns: Column<Employee>[] = [
         { 
@@ -96,7 +141,7 @@ export default function EmployeesPage() {
             header: 'Hire Date', 
             render: (value: any) => (
                 <span className="text-slate-600 dark:text-slate-400">
-                    {value ? new Date(value).toLocaleDateString('en-US') : '-'}
+                    {value ? value : '-'}
                 </span>
             ),
             sortable: true 
@@ -120,31 +165,25 @@ export default function EmployeesPage() {
         }
     ];
 
-    const actions: Action<Employee>[] = [
-        {
-            label: 'View Details',
-            onClick: (employee) => router.push(`/employees/details?id=${employee.id}`),
-            icon: <Eye className="h-4 w-4" />,
-            variant: 'info' as const
-        },
-        {
-            label: 'Edit Employee',
-            onClick: (employee) => router.push(`/employees/update?id=${employee.id}`),
-            icon: <Edit className="h-4 w-4" />,
-            variant: 'warning' as const
-        }
-    ];
 
     const activeFilters = useMemo(() => {
         const arr: string[] = [];
         if (search) arr.push(`Search: ${search}`);
+        if (role !== 'All') arr.push(`Role: ${role}`);
+        if (jobTitle !== 'All') arr.push(`Job Title: ${jobTitle}`);
         return arr;
-    }, [search]);
+    }, [search, role, jobTitle]);
 
     const refreshTable = async () => {
         setIsRefreshing(true);
         try {
-            await dispatch(fetchEmployees({ page, limit, search }));
+            await dispatch(fetchEmployees({ 
+                page, 
+                limit, 
+                search, 
+                job_title: jobTitle !== 'All' ? jobTitle : undefined,
+                role: role !== 'All' ? role : undefined
+            }));
             toast.success('Table refreshed successfully');
         } catch {
             toast.error('Failed to refresh table');
@@ -159,6 +198,8 @@ export default function EmployeesPage() {
             const { data } = await axios.get('/employees/fetch', {
                 params: {
                     search,
+                    job_title: jobTitle !== 'All' ? jobTitle : undefined,
+                    role: role !== 'All' ? role : undefined,
                     limit: 10000,
                     page: 1
                 }
@@ -194,6 +235,52 @@ export default function EmployeesPage() {
         }
     };
 
+    const downloadEmployeeCard = async (employee: Employee) => {
+        if (!employee?.id || downloadingCardId) return;
+        setDownloadingCardId(employee.id);
+        try {
+            const { data } = await axios.get(`/employees/card/${employee.id}`, {
+                responseType: 'blob',
+            });
+
+            const blob = new Blob([data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${employee.name || 'Employee'}_${employee.employee_code || 'card'}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            toast.success('Employee card downloaded');
+        } catch {
+            toast.error('Failed to download employee card');
+        } finally {
+            setDownloadingCardId(null);
+        }
+    };
+
+    const actions: Action<Employee>[] = [
+        {
+            label: 'View Details',
+            onClick: (employee) => router.push(`/employees/details?id=${employee.id}`),
+            icon: <Eye className="h-4 w-4" />,
+            variant: 'info'
+        },
+        {
+            label: 'Edit Employee',
+            onClick: (employee) => router.push(`/employees/update?id=${employee.id}`),
+            icon: <Edit className="h-4 w-4" />,
+            variant: 'warning'
+        },
+        {
+            label: 'Download Card',
+            onClick: (employee) => downloadEmployeeCard(employee),
+            icon: <ArrowDownToLine className="h-4 w-4" />,
+            variant: 'success'
+        }
+    ];
+
     return (
         <div className="space-y-4">
             {/* Header */}
@@ -212,7 +299,7 @@ export default function EmployeesPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <EnhancedCard
                     title="Total Employees"
                     description="All employees in the system"
@@ -226,45 +313,22 @@ export default function EmployeesPage() {
                 >
                     <></>
                 </EnhancedCard>
-                <EnhancedCard
-                    title="Managers"
-                    description="Management level employees"
-                    variant="default"
-                    size="sm"
-                    stats={{
-                        total: employees.filter(e => e.role === 'Manager').length,
-                        badge: 'Managers',
-                        badgeColor: 'info'
-                    }}
-                >
-                    <></>
-                </EnhancedCard>
-                <EnhancedCard
-                    title="Active Staff"
-                    description="Currently active employees"
-                    variant="default"
-                    size="sm"
-                    stats={{
-                        total: Math.floor(totalItems * 0.95),
-                        badge: 'Active',
-                        badgeColor: 'success'
-                    }}
-                >
-                    <></>
-                </EnhancedCard>
-                <EnhancedCard
-                    title="Admins"
-                    description="Administrative employees"
-                    variant="default"
-                    size="sm"
-                    stats={{
-                        total: employees.filter(e => e.role === 'Admin').length,
-                        badge: 'Admins',
-                        badgeColor: 'warning'
-                    }}
-                >
-                    <></>
-                </EnhancedCard>
+                {Object.keys(roleCardConfigs).map((roleKey) => (
+                    <EnhancedCard
+                        key={roleKey}
+                        title={roleCardConfigs[roleKey].title}
+                        description={roleCardConfigs[roleKey].description}
+                        variant="default"
+                        size="sm"
+                        stats={{
+                            total: roleCounts[roleKey] || 0,
+                            badge: roleCardConfigs[roleKey].title,
+                            badgeColor: roleCardConfigs[roleKey].badgeColor
+                        }}
+                    >
+                        <></>
+                    </EnhancedCard>
+                ))}
             </div>
 
             {/* Filter Bar */}
@@ -275,9 +339,46 @@ export default function EmployeesPage() {
                     setSearch(value);
                     setPage(1);
                 }}
+                filters={[
+                    {
+                        key: 'role',
+                        label: 'Role',
+                        value: role,
+                        options: [
+                            { key: 'All', value: 'All', label: 'All Roles' },
+                            { key: 'Admin', value: 'Admin', label: 'Admin' },
+                            { key: 'Manager', value: 'Manager', label: 'Manager' },
+                            { key: 'Employee', value: 'Employee', label: 'Employee' },
+                            { key: 'Contractor', value: 'Contractor', label: 'Contractor' }
+                        ],
+                        onValueChange: (value) => {
+                            setRole(value as typeof role);
+                            setPage(1);
+                        }
+                    },
+                    {
+                        key: 'job_title',
+                        label: 'Job Title',
+                        value: jobTitle,
+                        options: [
+                            { key: 'All', value: 'All', label: 'All Job Titles' },
+                            ...jobTitleOptions.map((title) => ({
+                                key: title,
+                                value: title,
+                                label: title
+                            }))
+                        ],
+                        onValueChange: (value) => {
+                            setJobTitle(value);
+                            setPage(1);
+                        }
+                    }
+                ]}
                 activeFilters={activeFilters}
                 onClearFilters={() => {
                     setSearch('');
+                    setRole('All');
+                    setJobTitle('All');
                     setPage(1);
                 }}
                 actions={
@@ -286,7 +387,7 @@ export default function EmployeesPage() {
                             variant="outline"
                             onClick={refreshTable}
                             disabled={isRefreshing || loading}
-                            className="h-10 px-3 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                         >
                             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                             {isRefreshing ? 'Refreshing...' : 'Refresh'}
@@ -295,7 +396,7 @@ export default function EmployeesPage() {
                             variant="outline"
                             onClick={exportToExcel}
                             disabled={isExporting}
-                            className="h-10 px-3 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                         >
                             <FileSpreadsheet className="h-4 w-4 mr-2" />
                             {isExporting ? 'Exporting...' : 'Export Excel'}

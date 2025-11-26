@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { AppDispatch } from '@/stores/store';
+import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,142 +11,30 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Bell, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, AlertTriangle, Info, CheckCircle2, XCircle as XCircleIcon } from 'lucide-react';
+import { Bell, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, AlertTriangle, Info, CheckCircle2, XCircle as XCircleIcon, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { PageHeader } from '@/components/ui/page-header';
 import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
-import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
-
-interface Notification {
-    id: string;
-    title: string;
-    message: string;
-    type: 'info' | 'warning' | 'error' | 'success' | 'urgent';
-    priority: 'low' | 'medium' | 'high' | 'critical';
-    category: 'system' | 'project' | 'financial' | 'inventory' | 'employee' | 'contractor' | 'other';
-    targetUsers: string[];
-    targetRoles: string[];
-    isRead: boolean;
-    isActive: boolean;
-    scheduledDate: string;
-    expiryDate: string;
-    createdBy: string;
-    createdAt: string;
-    readBy: string[];
-    readAt: string[];
-    attachments: string[];
-    actions: string[];
-    metadata: Record<string, any>;
-}
-
-const mockNotifications: Notification[] = [
-    {
-        id: '1',
-        title: 'Project Deadline Approaching',
-        message: 'The Office Building Construction project deadline is approaching in 3 days. Please ensure all tasks are completed on time.',
-        type: 'warning',
-        priority: 'high',
-        category: 'project',
-        targetUsers: ['Ahmed Ali', 'Fatima Mohamed', 'Omar Hassan'],
-        targetRoles: ['project_manager', 'supervisor'],
-        isRead: false,
-        isActive: true,
-        scheduledDate: '2024-01-15',
-        expiryDate: '2024-01-25',
-        createdBy: 'System',
-        createdAt: '2024-01-15T10:00:00Z',
-        readBy: [],
-        readAt: [],
-        attachments: [],
-        actions: ['view_project', 'update_status'],
-        metadata: { projectId: 'PRJ-001', deadline: '2024-01-18' }
-    },
-    {
-        id: '2',
-        title: 'Low Stock Alert',
-        message: 'A4 Paper stock is running low. Current stock: 5 reams, minimum required: 20 reams. Please reorder soon.',
-        type: 'warning',
-        priority: 'medium',
-        category: 'inventory',
-        targetUsers: ['Sara Ahmed', 'Mohammed Saleh'],
-        targetRoles: ['inventory_manager', 'purchaser'],
-        isRead: true,
-        isActive: true,
-        scheduledDate: '2024-01-16',
-        expiryDate: '2024-01-26',
-        createdBy: 'Inventory System',
-        createdAt: '2024-01-16T08:30:00Z',
-        readBy: ['Sara Ahmed'],
-        readAt: ['2024-01-16T09:15:00Z'],
-        attachments: [],
-        actions: ['view_item', 'create_order'],
-        metadata: { itemId: 'ITM-002', currentStock: 5, minimumStock: 20 }
-    },
-    {
-        id: '3',
-        title: 'Payment Approved',
-        message: 'Payment request PAY-002 for ABC Construction Ltd. has been approved and is ready for processing.',
-        type: 'success',
-        priority: 'medium',
-        category: 'financial',
-        targetUsers: ['Fatima Mohamed', 'Ahmed Ali'],
-        targetRoles: ['finance_manager', 'accountant'],
-        isRead: false,
-        isActive: true,
-        scheduledDate: '2024-01-17',
-        expiryDate: '2024-01-27',
-        createdBy: 'Omar Hassan',
-        createdAt: '2024-01-17T14:20:00Z',
-        readBy: [],
-        readAt: [],
-        attachments: ['payment_approval.pdf'],
-        actions: ['view_payment', 'process_payment'],
-        metadata: { paymentId: 'PAY-002', amount: 25000 }
-    },
-    {
-        id: '4',
-        title: 'System Maintenance Scheduled',
-        message: 'System maintenance is scheduled for tomorrow (January 18, 2024) from 2:00 AM to 4:00 AM. The system will be temporarily unavailable.',
-        type: 'info',
-        priority: 'high',
-        category: 'system',
-        targetUsers: [],
-        targetRoles: ['admin', 'user'],
-        isRead: true,
-        isActive: true,
-        scheduledDate: '2024-01-17',
-        expiryDate: '2024-01-19',
-        createdBy: 'System Administrator',
-        createdAt: '2024-01-17T16:00:00Z',
-        readBy: ['Ahmed Ali', 'Fatima Mohamed', 'Omar Hassan', 'Sara Ahmed'],
-        readAt: ['2024-01-17T16:05:00Z', '2024-01-17T16:10:00Z', '2024-01-17T16:15:00Z', '2024-01-17T16:20:00Z'],
-        attachments: [],
-        actions: [],
-        metadata: { maintenanceStart: '2024-01-18T02:00:00Z', maintenanceEnd: '2024-01-18T04:00:00Z' }
-    },
-    {
-        id: '5',
-        title: 'Employee Leave Request',
-        message: 'Sara Ahmed has submitted a leave request for January 20-22, 2024. Please review and approve.',
-        type: 'info',
-        priority: 'medium',
-        category: 'employee',
-        targetUsers: ['Ahmed Ali'],
-        targetRoles: ['hr_manager', 'supervisor'],
-        isRead: false,
-        isActive: true,
-        scheduledDate: '2024-01-17',
-        expiryDate: '2024-01-19',
-        createdBy: 'Sara Ahmed',
-        createdAt: '2024-01-17T11:30:00Z',
-        readBy: [],
-        readAt: [],
-        attachments: ['leave_request.pdf'],
-        actions: ['view_request', 'approve_leave', 'reject_leave'],
-        metadata: { employeeId: 'EMP-002', leaveStart: '2024-01-20', leaveEnd: '2024-01-22' }
-    }
-];
+import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
+import {
+    fetchNotifications,
+    createNotification,
+    updateNotification,
+    deleteNotification,
+    markNotificationAsRead,
+    markNotificationAsUnread,
+    toggleNotificationActive,
+    selectNotifications,
+    selectNotificationsLoading,
+    selectNotificationsTotal,
+    selectNotificationsPages,
+    selectNotificationsError,
+    type FetchNotificationsParams
+} from '@/stores/slices/notifications';
+import { fetchUsers, selectUsers, selectLoading as selectUsersLoading } from '@/stores/slices/users';
+import type { Notification, CreateNotificationPayload } from '@/stores/types/notifications';
 
 const notificationTypes = [
     { value: 'info', label: 'Information', icon: <Info className="h-4 w-4" /> },
@@ -171,11 +61,18 @@ const categories = [
     { value: 'other', label: 'Other' }
 ];
 
-const users = ['Ahmed Ali', 'Fatima Mohamed', 'Omar Hassan', 'Sara Ahmed', 'Mohammed Saleh'];
 const roles = ['admin', 'project_manager', 'finance_manager', 'hr_manager', 'inventory_manager', 'supervisor', 'accountant', 'purchaser', 'user'];
 
 export default function NotificationsPage() {
-    const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+    const dispatch = useReduxDispatch<AppDispatch>();
+    const notifications = useSelector(selectNotifications);
+    const loading = useSelector(selectNotificationsLoading);
+    const total = useSelector(selectNotificationsTotal);
+    const pages = useSelector(selectNotificationsPages);
+    const error = useSelector(selectNotificationsError);
+    const users = useSelector(selectUsers);
+    const usersLoading = useSelector(selectUsersLoading);
+
     const [searchTerm, setSearchTerm] = useState('');
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [priorityFilter, setPriorityFilter] = useState<string>('all');
@@ -184,12 +81,16 @@ export default function NotificationsPage() {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [editingNotification, setEditingNotification] = useState<Notification | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
     const [formData, setFormData] = useState({
         title: '',
         message: '',
-        type: 'info',
-        priority: 'medium',
-        category: 'other',
+        type: 'info' as Notification['type'],
+        priority: 'medium' as Notification['priority'],
+        category: 'other' as Notification['category'],
         targetUsers: [] as string[],
         targetRoles: [] as string[],
         scheduledDate: '',
@@ -198,167 +99,323 @@ export default function NotificationsPage() {
         actions: [] as string[]
     });
 
-    const filteredNotifications = notifications.filter(notification => {
-        const matchesSearch = notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            notification.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            notification.category.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesType = typeFilter === 'all' || notification.type === typeFilter;
-        const matchesPriority = priorityFilter === 'all' || notification.priority === priorityFilter;
-        const matchesCategory = categoryFilter === 'all' || notification.category === categoryFilter;
-        const matchesStatus = statusFilter === 'all' || 
-                             (statusFilter === 'read' && notification.isRead) ||
-                             (statusFilter === 'unread' && !notification.isRead) ||
-                             (statusFilter === 'active' && notification.isActive) ||
-                             (statusFilter === 'inactive' && !notification.isActive);
-        
-        return matchesSearch && matchesType && matchesPriority && matchesCategory && matchesStatus;
-    });
+    // Fetch notifications and users on mount
+    useEffect(() => {
+        dispatch(fetchUsers({ page: 1, limit: 1000 }));
+    }, [dispatch]);
 
-    const handleCreate = () => {
+    useEffect(() => {
+        const params: FetchNotificationsParams = {
+            page,
+            limit,
+            search: searchTerm || undefined,
+            type: typeFilter !== 'all' ? typeFilter : undefined,
+            priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+            category: categoryFilter !== 'all' ? categoryFilter : undefined,
+            status: statusFilter !== 'all' ? statusFilter : undefined,
+        };
+        dispatch(fetchNotifications(params));
+    }, [dispatch, page, limit, searchTerm, typeFilter, priorityFilter, categoryFilter, statusFilter]);
+
+    // Show error toast if there's an error
+    useEffect(() => {
+        if (error) {
+            toast.error(error);
+        }
+    }, [error]);
+
+    // Get users list for dropdown
+    const usersList = useMemo(() => {
+        return users.map(user => ({
+            id: user.id,
+            name: `${user.name} ${user.surname || ''}`.trim()
+        }));
+    }, [users]);
+
+    // Filtering is now handled by the API, but we can still filter client-side if needed
+    const filteredNotifications = useMemo(() => {
+        return notifications;
+    }, [notifications]);
+
+    const handleCreate = async () => {
         if (!formData.title || !formData.message || !formData.scheduledDate) {
             toast.error('Please fill in all required fields');
             return;
         }
 
-        const newNotification: Notification = {
-            id: Date.now().toString(),
-            title: formData.title,
-            message: formData.message,
-            type: formData.type as Notification['type'],
-            priority: formData.priority as Notification['priority'],
-            category: formData.category as Notification['category'],
-            targetUsers: formData.targetUsers,
-            targetRoles: formData.targetRoles,
-            isRead: false,
-            isActive: true,
-            scheduledDate: formData.scheduledDate,
-            expiryDate: formData.expiryDate,
-            createdBy: 'Current User',
-            createdAt: new Date().toISOString(),
-            readBy: [],
-            readAt: [],
-            attachments: formData.attachments,
-            actions: formData.actions,
-            metadata: {}
-        };
+        try {
+            const payload: CreateNotificationPayload = {
+                title: formData.title,
+                message: formData.message,
+                type: formData.type || 'info',
+                priority: formData.priority || 'medium',
+                category: formData.category || 'other',
+                targetUsers: formData.targetUsers.length > 0 ? formData.targetUsers : undefined,
+                targetRoles: formData.targetRoles.length > 0 ? formData.targetRoles : undefined,
+                scheduledDate: formData.scheduledDate,
+                expiryDate: formData.expiryDate || undefined,
+                attachments: formData.attachments.length > 0 ? formData.attachments : undefined,
+                actions: formData.actions.length > 0 ? formData.actions : undefined,
+            };
 
-        setNotifications([...notifications, newNotification]);
-        setIsCreateDialogOpen(false);
-        setFormData({
-            title: '',
-            message: '',
-            type: 'info',
-            priority: 'medium',
-            category: 'other',
-            targetUsers: [],
-            targetRoles: [],
-            scheduledDate: '',
-            expiryDate: '',
-            attachments: [],
-            actions: []
-        });
-        toast.success('Notification created successfully');
+            await dispatch(createNotification(payload)).unwrap();
+            setIsCreateDialogOpen(false);
+            setFormData({
+                title: '',
+                message: '',
+                type: 'info',
+                priority: 'medium',
+                category: 'other',
+                targetUsers: [],
+                targetRoles: [],
+                scheduledDate: '',
+                expiryDate: '',
+                attachments: [],
+                actions: []
+            });
+            toast.success('Notification created successfully');
+            // Refresh notifications with current filters
+            const params: FetchNotificationsParams = {
+                page,
+                limit,
+                search: searchTerm || undefined,
+                type: typeFilter !== 'all' ? typeFilter : undefined,
+                priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+                category: categoryFilter !== 'all' ? categoryFilter : undefined,
+                status: statusFilter !== 'all' ? statusFilter : undefined,
+            };
+            dispatch(fetchNotifications(params));
+        } catch (err: any) {
+            toast.error(err || 'Failed to create notification');
+        }
     };
 
     const handleEdit = (notification: Notification) => {
         setEditingNotification(notification);
         setFormData({
-            title: notification.title,
+            title: notification.title || '',
             message: notification.message,
-            type: notification.type,
-            priority: notification.priority,
-            category: notification.category,
-            targetUsers: notification.targetUsers,
-            targetRoles: notification.targetRoles,
-            scheduledDate: notification.scheduledDate,
-            expiryDate: notification.expiryDate,
-            attachments: notification.attachments,
-            actions: notification.actions
+            type: (notification.type || notification.notification_type || 'info') as Notification['type'],
+            priority: (notification.priority || 'medium') as Notification['priority'],
+            category: (notification.category || 'other') as Notification['category'],
+            targetUsers: notification.target_users || notification.targetUsers || [],
+            targetRoles: notification.target_roles || notification.targetRoles || [],
+            scheduledDate: notification.scheduled_date || notification.scheduledDate || '',
+            expiryDate: notification.expiry_date || notification.expiryDate || '',
+            attachments: notification.attachments || [],
+            actions: notification.actions || []
         });
         setIsEditDialogOpen(true);
     };
 
-    const handleUpdate = () => {
+    const handleUpdate = async () => {
         if (!editingNotification) return;
 
-        const updatedNotifications = notifications.map(n =>
-            n.id === editingNotification.id ? { 
-                ...n, 
+        try {
+            const payload = {
+                id: editingNotification.id,
                 title: formData.title,
                 message: formData.message,
-                type: formData.type as Notification['type'],
-                priority: formData.priority as Notification['priority'],
-                category: formData.category as Notification['category'],
-                targetUsers: formData.targetUsers,
-                targetRoles: formData.targetRoles,
+                type: formData.type,
+                priority: formData.priority,
+                category: formData.category,
+                targetUsers: formData.targetUsers.length > 0 ? formData.targetUsers : undefined,
+                targetRoles: formData.targetRoles.length > 0 ? formData.targetRoles : undefined,
                 scheduledDate: formData.scheduledDate,
-                expiryDate: formData.expiryDate,
-                attachments: formData.attachments,
-                actions: formData.actions
-            } : n
-        );
+                expiryDate: formData.expiryDate || undefined,
+                attachments: formData.attachments.length > 0 ? formData.attachments : undefined,
+                actions: formData.actions.length > 0 ? formData.actions : undefined,
+            };
 
-        setNotifications(updatedNotifications);
-        setIsEditDialogOpen(false);
-        setEditingNotification(null);
-        setFormData({
-            title: '',
-            message: '',
-            type: 'info',
-            priority: 'medium',
-            category: 'other',
-            targetUsers: [],
-            targetRoles: [],
-            scheduledDate: '',
-            expiryDate: '',
-            attachments: [],
-            actions: []
-        });
-        toast.success('Notification updated successfully');
+            await dispatch(updateNotification(payload)).unwrap();
+            setIsEditDialogOpen(false);
+            setEditingNotification(null);
+            setFormData({
+                title: '',
+                message: '',
+                type: 'info',
+                priority: 'medium',
+                category: 'other',
+                targetUsers: [],
+                targetRoles: [],
+                scheduledDate: '',
+                expiryDate: '',
+                attachments: [],
+                actions: []
+            });
+            toast.success('Notification updated successfully');
+            // Refresh notifications with current filters
+            const params: FetchNotificationsParams = {
+                page,
+                limit,
+                search: searchTerm || undefined,
+                type: typeFilter !== 'all' ? typeFilter : undefined,
+                priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+                category: categoryFilter !== 'all' ? categoryFilter : undefined,
+                status: statusFilter !== 'all' ? statusFilter : undefined,
+            };
+            dispatch(fetchNotifications(params));
+        } catch (err: any) {
+            toast.error(err || 'Failed to update notification');
+        }
     };
 
-    const handleDelete = (id: string) => {
-        setNotifications(notifications.filter(n => n.id !== id));
-        toast.success('Notification deleted successfully');
+    const handleDelete = async (id: string) => {
+        try {
+            await dispatch(deleteNotification(id)).unwrap();
+            toast.success('Notification deleted successfully');
+            // Refresh notifications with current filters
+            const params: FetchNotificationsParams = {
+                page,
+                limit,
+                search: searchTerm || undefined,
+                type: typeFilter !== 'all' ? typeFilter : undefined,
+                priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+                category: categoryFilter !== 'all' ? categoryFilter : undefined,
+                status: statusFilter !== 'all' ? statusFilter : undefined,
+            };
+            dispatch(fetchNotifications(params));
+        } catch (err: any) {
+            toast.error(err || 'Failed to delete notification');
+        }
     };
 
-    const handleToggleRead = (id: string) => {
-        setNotifications(prev => prev.map(notification => 
-            notification.id === id 
-                ? { 
-                    ...notification, 
-                    isRead: !notification.isRead,
-                    readBy: !notification.isRead ? [...notification.readBy, 'Current User'] : notification.readBy.filter(user => user !== 'Current User'),
-                    readAt: !notification.isRead ? [...notification.readAt, new Date().toISOString()] : notification.readAt.slice(0, -1)
-                }
-                : notification
-        ));
-        toast.success('Notification status updated');
+    const handleToggleRead = async (notification: Notification) => {
+        try {
+            if (notification.isRead) {
+                await dispatch(markNotificationAsUnread(notification.id)).unwrap();
+            } else {
+                await dispatch(markNotificationAsRead(notification.id)).unwrap();
+            }
+            toast.success('Notification status updated');
+            // Refresh notifications with current filters
+            const params: FetchNotificationsParams = {
+                page,
+                limit,
+                search: searchTerm || undefined,
+                type: typeFilter !== 'all' ? typeFilter : undefined,
+                priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+                category: categoryFilter !== 'all' ? categoryFilter : undefined,
+                status: statusFilter !== 'all' ? statusFilter : undefined,
+            };
+            dispatch(fetchNotifications(params));
+        } catch (err: any) {
+            toast.error(err || 'Failed to update notification status');
+        }
     };
 
-    const handleToggleActive = (id: string) => {
-        setNotifications(prev => prev.map(notification => 
-            notification.id === id 
-                ? { ...notification, isActive: !notification.isActive }
-                : notification
-        ));
-        toast.success('Notification status updated');
+    const handleToggleActive = async (notification: Notification) => {
+        try {
+            const currentActive = notification.is_active !== false;
+            await dispatch(toggleNotificationActive({
+                id: notification.id,
+                isActive: !currentActive
+            })).unwrap();
+            toast.success('Notification status updated');
+            // Refresh notifications with current filters
+            const params: FetchNotificationsParams = {
+                page,
+                limit,
+                search: searchTerm || undefined,
+                type: typeFilter !== 'all' ? typeFilter : undefined,
+                priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+                category: categoryFilter !== 'all' ? categoryFilter : undefined,
+                status: statusFilter !== 'all' ? statusFilter : undefined,
+            };
+            dispatch(fetchNotifications(params));
+        } catch (err: any) {
+            toast.error(err || 'Failed to update notification status');
+        }
+    };
+
+    const refreshTable = async () => {
+        setIsRefreshing(true);
+        try {
+            const params: FetchNotificationsParams = {
+                page,
+                limit,
+                search: searchTerm || undefined,
+                type: typeFilter !== 'all' ? typeFilter : undefined,
+                priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+                category: categoryFilter !== 'all' ? categoryFilter : undefined,
+                status: statusFilter !== 'all' ? statusFilter : undefined,
+            };
+            await dispatch(fetchNotifications(params)).unwrap();
+            toast.success('Notifications refreshed');
+        } catch (err: any) {
+            toast.error(err || 'Failed to refresh notifications');
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const exportToExcel = async () => {
+        setIsExporting(true);
+        try {
+            // TODO: Implement Excel export API call
+            // const response = await axios.get('/notifications/export', {
+            //     params: {
+            //         search: searchTerm || undefined,
+            //         type: typeFilter !== 'all' ? typeFilter : undefined,
+            //         priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+            //         category: categoryFilter !== 'all' ? categoryFilter : undefined,
+            //         status: statusFilter !== 'all' ? statusFilter : undefined,
+            //     },
+            //     responseType: 'blob'
+            // });
+            // const url = window.URL.createObjectURL(new Blob([response.data]));
+            // const link = document.createElement('a');
+            // link.href = url;
+            // link.setAttribute('download', `notifications-${new Date().toISOString()}.xlsx`);
+            // document.body.appendChild(link);
+            // link.click();
+            // link.remove();
+            toast.info('Export feature coming soon');
+        } catch (err: any) {
+            toast.error('Failed to export notifications');
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        try {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch {
+            return dateString;
+        }
     };
 
-    const totalNotifications = filteredNotifications.length;
+    const timeAgo = (dateString: string) => {
+        try {
+            const d = new Date(dateString);
+            const s = Math.floor((Date.now() - d.getTime()) / 1000);
+            if (s < 60) return `${s}s ago`;
+            const m = Math.floor(s / 60);
+            if (m < 60) return `${m}m ago`;
+            const h = Math.floor(m / 60);
+            if (h < 24) return `${h}h ago`;
+            const days = Math.floor(h / 24);
+            if (days < 30) return `${days}d ago`;
+            return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+        } catch {
+            return dateString;
+        }
+    };
+
+    const totalNotifications = total;
     const unreadNotifications = filteredNotifications.filter(n => !n.isRead).length;
-    const activeNotifications = filteredNotifications.filter(n => n.isActive).length;
-    const urgentNotifications = filteredNotifications.filter(n => n.priority === 'critical' || n.priority === 'high').length;
+    const activeNotifications = filteredNotifications.filter(n => n.is_active !== false).length;
+    const urgentNotifications = filteredNotifications.filter(n => {
+        const priority = n.priority || 'medium';
+        return priority === 'critical' || priority === 'high';
+    }).length;
 
     const columns = [
         {
@@ -384,8 +441,9 @@ export default function NotificationsPage() {
         {
             key: 'type' as keyof Notification,
             header: 'Type',
-            render: (value: any) => {
-                const typeConfig = notificationTypes.find(t => t.value === value);
+            render: (value: any, notification: Notification) => {
+                const notificationType = notification.type || notification.notification_type || 'info';
+                const typeConfig = notificationTypes.find(t => t.value === notificationType);
                 const typeColors = {
                     'info': 'bg-blue-50 text-blue-700 border-blue-200',
                     'warning': 'bg-yellow-50 text-yellow-700 border-yellow-200',
@@ -395,9 +453,9 @@ export default function NotificationsPage() {
                 };
                 
                 return (
-                    <Badge variant="outline" className={`${typeColors[value as keyof typeof typeColors]} font-medium`}>
+                    <Badge variant="outline" className={`${typeColors[notificationType as keyof typeof typeColors] || typeColors.info} font-medium`}>
                         {typeConfig?.icon}
-                        <span className="ml-1">{typeConfig?.label}</span>
+                        <span className="ml-1">{typeConfig?.label || notificationType}</span>
                     </Badge>
                 );
             },
@@ -406,7 +464,8 @@ export default function NotificationsPage() {
         {
             key: 'priority' as keyof Notification,
             header: 'Priority',
-            render: (value: any) => {
+            render: (value: any, notification: Notification) => {
+                const priority = notification.priority || 'medium';
                 const priorityColors = {
                     'low': 'bg-gray-50 text-gray-700 border-gray-200',
                     'medium': 'bg-blue-50 text-blue-700 border-blue-200',
@@ -415,8 +474,8 @@ export default function NotificationsPage() {
                 };
                 
                 return (
-                    <Badge variant="outline" className={`${priorityColors[value as keyof typeof priorityColors]} font-medium`}>
-                        {value.charAt(0).toUpperCase() + value.slice(1)}
+                    <Badge variant="outline" className={`${priorityColors[priority as keyof typeof priorityColors] || priorityColors.medium} font-medium`}>
+                        {priority.charAt(0).toUpperCase() + priority.slice(1)}
                     </Badge>
                 );
             },
@@ -425,27 +484,37 @@ export default function NotificationsPage() {
         {
             key: 'category' as keyof Notification,
             header: 'Category',
-            render: (value: any) => (
-                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                    {value.charAt(0).toUpperCase() + value.slice(1)}
-                </Badge>
-            ),
+            render: (value: any, notification: Notification) => {
+                const category = notification.category || 'other';
+                return (
+                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </Badge>
+                );
+            },
             sortable: true
         },
         {
             key: 'targetUsers' as keyof Notification,
             header: 'Target Users',
-            render: (value: any) => (
-                <div className="text-sm text-slate-700">
-                    {value.length > 0 ? `${value.length} user(s)` : 'All users'}
-                </div>
-            ),
+            render: (value: any, notification: Notification) => {
+                const targetUsers = notification.target_users || notification.targetUsers || [];
+                return (
+                    <div className="text-sm text-slate-700">
+                        {targetUsers.length > 0 ? `${targetUsers.length} user(s)` : 'All users'}
+                    </div>
+                );
+            },
             sortable: true
         },
         {
-            key: 'scheduledDate' as keyof Notification,
-            header: 'Scheduled',
-            render: (value: any) => <span className="text-slate-700">{formatDate(value)}</span>,
+            key: 'createdAt' as keyof Notification,
+            header: 'Created',
+            render: (value: any, notification: Notification) => (
+                <span className="text-slate-700" title={formatDate(value)}>
+                    {timeAgo(value)}
+                </span>
+            ),
             sortable: true
         },
         {
@@ -456,16 +525,18 @@ export default function NotificationsPage() {
                     <Badge variant="outline" className={`${notification.isRead ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'} font-medium`}>
                         {notification.isRead ? 'Read' : 'Unread'}
                     </Badge>
-                    <Badge variant="outline" className={`${notification.isActive ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-700 border-gray-200'} font-medium`}>
-                        {notification.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
+                    {notification.is_active !== undefined && (
+                        <Badge variant="outline" className={`${notification.is_active ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-700 border-gray-200'} font-medium`}>
+                            {notification.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
+                    )}
                 </div>
             ),
             sortable: true
         }
     ];
 
-    const actions = [
+    const actions: Action<Notification>[] = [
         {
             label: 'View Details',
             onClick: (notification: Notification) => toast.info('View details feature coming soon'),
@@ -478,27 +549,27 @@ export default function NotificationsPage() {
         },
         {
             label: 'Mark as Read',
-            onClick: (notification: Notification) => handleToggleRead(notification.id),
+            onClick: (notification: Notification) => handleToggleRead(notification),
             icon: <CheckCircle className="h-4 w-4" />,
             hidden: (notification: Notification) => notification.isRead
         },
         {
             label: 'Mark as Unread',
-            onClick: (notification: Notification) => handleToggleRead(notification.id),
+            onClick: (notification: Notification) => handleToggleRead(notification),
             icon: <XCircle className="h-4 w-4" />,
             hidden: (notification: Notification) => !notification.isRead
         },
         {
             label: 'Activate',
-            onClick: (notification: Notification) => handleToggleActive(notification.id),
+            onClick: (notification: Notification) => handleToggleActive(notification),
             icon: <CheckCircle className="h-4 w-4" />,
-            hidden: (notification: Notification) => notification.isActive
+            hidden: (notification: Notification) => notification.is_active !== false
         },
         {
             label: 'Deactivate',
-            onClick: (notification: Notification) => handleToggleActive(notification.id),
+            onClick: (notification: Notification) => handleToggleActive(notification),
             icon: <XCircle className="h-4 w-4" />,
-            hidden: (notification: Notification) => !notification.isActive
+            hidden: (notification: Notification) => notification.is_active === false
         },
         {
             label: 'Delete Notification',
@@ -590,11 +661,15 @@ export default function NotificationsPage() {
 
     return (
         <div className="space-y-6">
+            {/* Breadcrumb */}
+            <Breadcrumb />
+
             {/* Page Header */}
             <PageHeader
                 title="Notifications Management"
                 description="Manage system notifications with comprehensive targeting and scheduling"
                 stats={stats}
+                breadcrumb={false}
                 actions={{
                     primary: {
                         label: 'New Notification',
@@ -603,14 +678,14 @@ export default function NotificationsPage() {
                     },
                     secondary: [
                         {
-                            label: 'Export Report',
-                            onClick: () => toast.info('Export feature coming soon'),
-                            icon: <Download className="h-4 w-4" />
+                            label: 'Refresh',
+                            onClick: refreshTable,
+                            icon: <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                         },
                         {
-                            label: 'Notification Analytics',
-                            onClick: () => toast.info('Analytics feature coming soon'),
-                            icon: <Filter className="h-4 w-4" />
+                            label: 'Export Report',
+                            onClick: exportToExcel,
+                            icon: <FileSpreadsheet className={`h-4 w-4 ${isExporting ? 'animate-pulse' : ''}`} />
                         }
                     ]
                 }}
@@ -635,22 +710,46 @@ export default function NotificationsPage() {
             {/* Notifications Table */}
             <EnhancedCard
                 title="Notifications Overview"
-                description={`${filteredNotifications.length} notifications out of ${notifications.length} total`}
+                description={`${filteredNotifications.length} notifications out of ${total} total`}
                 variant="gradient"
                 size="lg"
                 stats={{
-                    total: notifications.length,
-                    badge: 'Active Notifications',
+                    total: total,
+                    badge: 'Total Notifications',
                     badgeColor: 'success'
                 }}
             >
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">Items per page:</span>
+                        <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
+                            <SelectTrigger className="w-[120px]">
+                                <SelectValue placeholder="Items per page" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {[10, 20, 50, 100].map(n => (
+                                    <SelectItem key={n} value={String(n)}>
+                                        {n} per page
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
                 <EnhancedDataTable
                     data={filteredNotifications}
                     columns={columns}
                     actions={actions}
-                    loading={false}
+                    loading={loading}
                     noDataMessage="No notifications found matching your criteria"
                     searchPlaceholder="Search notifications..."
+                    pagination={{
+                        currentPage: page,
+                        totalPages: pages,
+                        pageSize: limit,
+                        totalItems: total,
+                        onPageChange: setPage
+                    }}
                 />
             </EnhancedCard>
 
@@ -688,7 +787,7 @@ export default function NotificationsPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="type">Type</Label>
-                                <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                                <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as Notification['type'] }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -701,7 +800,7 @@ export default function NotificationsPage() {
                             </div>
                             <div>
                                 <Label htmlFor="priority">Priority</Label>
-                                <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
+                                <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value as Notification['priority'] }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -715,7 +814,7 @@ export default function NotificationsPage() {
                         </div>
                         <div>
                             <Label htmlFor="category">Category</Label>
-                            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as Notification['category'] }))}>
                                 <SelectTrigger className="mt-1">
                                     <SelectValue />
                                 </SelectTrigger>
@@ -728,32 +827,39 @@ export default function NotificationsPage() {
                         </div>
                         <div>
                             <Label htmlFor="targetUsers">Target Users</Label>
-                            <Select value="" onValueChange={(value) => {
-                                if (value && !formData.targetUsers.includes(value)) {
-                                    setFormData(prev => ({ ...prev, targetUsers: [...prev.targetUsers, value] }));
-                                }
-                            }}>
+                            <Select 
+                                value="" 
+                                onValueChange={(value) => {
+                                    if (value && !formData.targetUsers.includes(value)) {
+                                        setFormData(prev => ({ ...prev, targetUsers: [...prev.targetUsers, value] }));
+                                    }
+                                }}
+                                disabled={usersLoading}
+                            >
                                 <SelectTrigger className="mt-1">
-                                    <SelectValue placeholder="Select users" />
+                                    <SelectValue placeholder={usersLoading ? "Loading users..." : "Select users"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {users.map(user => (
-                                        <SelectItem key={user} value={user}>{user}</SelectItem>
+                                    {usersList.map(user => (
+                                        <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                             <div className="mt-2 flex flex-wrap gap-2">
-                                {formData.targetUsers.map(user => (
-                                    <Badge key={user} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                        {user}
-                                        <button
-                                            onClick={() => setFormData(prev => ({ ...prev, targetUsers: prev.targetUsers.filter(u => u !== user) }))}
-                                            className="ml-1 text-blue-500 hover:text-blue-700"
-                                        >
-                                            ×
-                                        </button>
-                                    </Badge>
-                                ))}
+                                {formData.targetUsers.map(userId => {
+                                    const user = usersList.find(u => u.id === userId);
+                                    return user ? (
+                                        <Badge key={userId} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                            {user.name}
+                                            <button
+                                                onClick={() => setFormData(prev => ({ ...prev, targetUsers: prev.targetUsers.filter(u => u !== userId) }))}
+                                                className="ml-1 text-blue-500 hover:text-blue-700"
+                                            >
+                                                ×
+                                            </button>
+                                        </Badge>
+                                    ) : null;
+                                })}
                             </div>
                         </div>
                         <div>
@@ -853,7 +959,7 @@ export default function NotificationsPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="edit-type">Type</Label>
-                                <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                                <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as Notification['type'] }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -866,7 +972,7 @@ export default function NotificationsPage() {
                             </div>
                             <div>
                                 <Label htmlFor="edit-priority">Priority</Label>
-                                <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
+                                <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value as Notification['priority'] }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -880,7 +986,7 @@ export default function NotificationsPage() {
                         </div>
                         <div>
                             <Label htmlFor="edit-category">Category</Label>
-                            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as Notification['category'] }))}>
                                 <SelectTrigger className="mt-1">
                                     <SelectValue />
                                 </SelectTrigger>
@@ -893,32 +999,39 @@ export default function NotificationsPage() {
                         </div>
                         <div>
                             <Label htmlFor="edit-targetUsers">Target Users</Label>
-                            <Select value="" onValueChange={(value) => {
-                                if (value && !formData.targetUsers.includes(value)) {
-                                    setFormData(prev => ({ ...prev, targetUsers: [...prev.targetUsers, value] }));
-                                }
-                            }}>
+                            <Select 
+                                value="" 
+                                onValueChange={(value) => {
+                                    if (value && !formData.targetUsers.includes(value)) {
+                                        setFormData(prev => ({ ...prev, targetUsers: [...prev.targetUsers, value] }));
+                                    }
+                                }}
+                                disabled={usersLoading}
+                            >
                                 <SelectTrigger className="mt-1">
-                                    <SelectValue placeholder="Select users" />
+                                    <SelectValue placeholder={usersLoading ? "Loading users..." : "Select users"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {users.map(user => (
-                                        <SelectItem key={user} value={user}>{user}</SelectItem>
+                                    {usersList.map(user => (
+                                        <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                             <div className="mt-2 flex flex-wrap gap-2">
-                                {formData.targetUsers.map(user => (
-                                    <Badge key={user} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                        {user}
-                                        <button
-                                            onClick={() => setFormData(prev => ({ ...prev, targetUsers: prev.targetUsers.filter(u => u !== user) }))}
-                                            className="ml-1 text-blue-500 hover:text-blue-700"
-                                        >
-                                            ×
-                                        </button>
-                                    </Badge>
-                                ))}
+                                {formData.targetUsers.map(userId => {
+                                    const user = usersList.find(u => u.id === userId);
+                                    return user ? (
+                                        <Badge key={userId} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                            {user.name}
+                                            <button
+                                                onClick={() => setFormData(prev => ({ ...prev, targetUsers: prev.targetUsers.filter(u => u !== userId) }))}
+                                                className="ml-1 text-blue-500 hover:text-blue-700"
+                                            >
+                                                ×
+                                            </button>
+                                        </Badge>
+                                    ) : null;
+                                })}
                             </div>
                         </div>
                         <div>
