@@ -18,8 +18,8 @@ const extractNotificationItems = (payload: NotificationsResponse['body']): Notif
     
     const { unread, read } = payload.notifications;
     
-    const unreadItems: NotificationItem[] = Array.isArray(unread?.items) ? unread.items : [];
-    const readItems: NotificationItem[] = Array.isArray(read?.items) ? read.items : [];
+    const unreadItems: NotificationItem[] = (unread && Array.isArray(unread.items)) ? unread.items : [];
+    const readItems: NotificationItem[] = (read && Array.isArray(read.items)) ? read.items : [];
     
     return [...unreadItems, ...readItems];
 };
