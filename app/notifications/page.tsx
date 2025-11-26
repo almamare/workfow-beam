@@ -1,40 +1,32 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { AppDispatch } from '@/stores/store';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
+import {
+    fetchNotifications,
+    markNotificationAsRead,
+    markNotificationAsUnread,
+    markAllNotificationsAsRead,
+    deleteNotification,
+    selectNotifications,
+    selectNotificationsCounts,
+    selectNotificationsLoading,
+    selectTotalCount,
+    selectUnreadCount,
+    selectReadCount,
+} from '@/stores/slices/notifications';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Bell, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, AlertTriangle, Info, CheckCircle2, XCircle as XCircleIcon, RefreshCw, FileSpreadsheet } from 'lucide-react';
-import { toast } from 'sonner';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Bell, Check, X, Trash2, RefreshCw, FileSpreadsheet, AlertTriangle, Info, CheckCircle2, XCircle as XCircleIcon } from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
-import { PageHeader } from '@/components/ui/page-header';
 import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
-import {
-    fetchNotifications,
-    createNotification,
-    updateNotification,
-    deleteNotification,
-    markNotificationAsRead,
-    markNotificationAsUnread,
-    toggleNotificationActive,
-    selectNotifications,
-    selectNotificationsLoading,
-    selectNotificationsTotal,
-    selectNotificationsPages,
-    selectNotificationsError,
-    type FetchNotificationsParams
-} from '@/stores/slices/notifications';
-import { fetchUsers, selectUsers, selectLoading as selectUsersLoading } from '@/stores/slices/users';
-import type { Notification, CreateNotificationPayload } from '@/stores/types/notifications';
+import { toast } from 'sonner';
+import axios from '@/utils/axios';
+import type { NotificationItem } from '@/stores/types/notifications';
 
 const notificationTypes = [
     { value: 'info', label: 'Information', icon: <Info className="h-4 w-4" /> },
@@ -44,304 +36,205 @@ const notificationTypes = [
     { value: 'urgent', label: 'Urgent', icon: <AlertTriangle className="h-4 w-4" /> }
 ];
 
-const priorities = [
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-    { value: 'critical', label: 'Critical' }
-];
-
-const categories = [
-    { value: 'system', label: 'System' },
-    { value: 'project', label: 'Project' },
-    { value: 'financial', label: 'Financial' },
-    { value: 'inventory', label: 'Inventory' },
-    { value: 'employee', label: 'Employee' },
-    { value: 'contractor', label: 'Contractor' },
-    { value: 'other', label: 'Other' }
-];
-
-const roles = ['admin', 'project_manager', 'finance_manager', 'hr_manager', 'inventory_manager', 'supervisor', 'accountant', 'purchaser', 'user'];
-
 export default function NotificationsPage() {
-    const dispatch = useReduxDispatch<AppDispatch>();
     const notifications = useSelector(selectNotifications);
+    const counts = useSelector(selectNotificationsCounts);
     const loading = useSelector(selectNotificationsLoading);
-    const total = useSelector(selectNotificationsTotal);
-    const pages = useSelector(selectNotificationsPages);
-    const error = useSelector(selectNotificationsError);
-    const users = useSelector(selectUsers);
-    const usersLoading = useSelector(selectUsersLoading);
+    const totalItems = useSelector(selectTotalCount);
+    const unreadCount = useSelector(selectUnreadCount);
+    const readCount = useSelector(selectReadCount);
 
-    const [searchTerm, setSearchTerm] = useState('');
-    const [typeFilter, setTypeFilter] = useState<string>('all');
-    const [priorityFilter, setPriorityFilter] = useState<string>('all');
-    const [categoryFilter, setCategoryFilter] = useState<string>('all');
-    const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-    const [editingNotification, setEditingNotification] = useState<Notification | null>(null);
+    const dispatch = useReduxDispatch<AppDispatch>();
+
+    const [search, setSearch] = useState('');
+    const [type, setType] = useState<'All' | 'info' | 'warning' | 'error' | 'success' | 'urgent'>('All');
+    const [status, setStatus] = useState<'All' | 'Read' | 'Unread'>('All');
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(10);
-    const [formData, setFormData] = useState({
-        title: '',
-        message: '',
-        type: 'info' as Notification['type'],
-        priority: 'medium' as Notification['priority'],
-        category: 'other' as Notification['category'],
-        targetUsers: [] as string[],
-        targetRoles: [] as string[],
-        scheduledDate: '',
-        expiryDate: '',
-        attachments: [] as string[],
-        actions: [] as string[]
-    });
 
-    // Fetch notifications and users on mount
     useEffect(() => {
-        dispatch(fetchUsers({ page: 1, limit: 1000 }));
+        dispatch(fetchNotifications());
     }, [dispatch]);
 
-    useEffect(() => {
-        const params: FetchNotificationsParams = {
-            page,
-            limit,
-            search: searchTerm || undefined,
-            type: typeFilter !== 'all' ? typeFilter : undefined,
-            priority: priorityFilter !== 'all' ? priorityFilter : undefined,
-            category: categoryFilter !== 'all' ? categoryFilter : undefined,
-            status: statusFilter !== 'all' ? statusFilter : undefined,
-        };
-        dispatch(fetchNotifications(params));
-    }, [dispatch, page, limit, searchTerm, typeFilter, priorityFilter, categoryFilter, statusFilter]);
-
-    // Show error toast if there's an error
-    useEffect(() => {
-        if (error) {
-            toast.error(error);
-        }
-    }, [error]);
-
-    // Get users list for dropdown
-    const usersList = useMemo(() => {
-        return users.map(user => ({
-            id: user.id,
-            name: `${user.name} ${user.surname || ''}`.trim()
-        }));
-    }, [users]);
-
-    // Filtering is now handled by the API, but we can still filter client-side if needed
+    // Filter notifications client-side
     const filteredNotifications = useMemo(() => {
-        return notifications;
-    }, [notifications]);
+        let filtered = notifications;
 
-    const handleCreate = async () => {
-        if (!formData.title || !formData.message || !formData.scheduledDate) {
-            toast.error('Please fill in all required fields');
-            return;
+        // Filter by search term
+        if (search) {
+            const searchLower = search.toLowerCase();
+            filtered = filtered.filter(n => 
+                (n.title || '').toLowerCase().includes(searchLower) ||
+                (n.message || '').toLowerCase().includes(searchLower) ||
+                (n.notification_type || '').toLowerCase().includes(searchLower)
+            );
         }
 
-        try {
-            const payload: CreateNotificationPayload = {
-                title: formData.title,
-                message: formData.message,
-                type: formData.type || 'info',
-                priority: formData.priority || 'medium',
-                category: formData.category || 'other',
-                targetUsers: formData.targetUsers.length > 0 ? formData.targetUsers : undefined,
-                targetRoles: formData.targetRoles.length > 0 ? formData.targetRoles : undefined,
-                scheduledDate: formData.scheduledDate,
-                expiryDate: formData.expiryDate || undefined,
-                attachments: formData.attachments.length > 0 ? formData.attachments : undefined,
-                actions: formData.actions.length > 0 ? formData.actions : undefined,
-            };
-
-            await dispatch(createNotification(payload)).unwrap();
-            setIsCreateDialogOpen(false);
-            setFormData({
-                title: '',
-                message: '',
-                type: 'info',
-                priority: 'medium',
-                category: 'other',
-                targetUsers: [],
-                targetRoles: [],
-                scheduledDate: '',
-                expiryDate: '',
-                attachments: [],
-                actions: []
-            });
-            toast.success('Notification created successfully');
-            // Refresh notifications with current filters
-            const params: FetchNotificationsParams = {
-                page,
-                limit,
-                search: searchTerm || undefined,
-                type: typeFilter !== 'all' ? typeFilter : undefined,
-                priority: priorityFilter !== 'all' ? priorityFilter : undefined,
-                category: categoryFilter !== 'all' ? categoryFilter : undefined,
-                status: statusFilter !== 'all' ? statusFilter : undefined,
-            };
-            dispatch(fetchNotifications(params));
-        } catch (err: any) {
-            toast.error(err || 'Failed to create notification');
+        // Filter by type
+        if (type !== 'All') {
+            filtered = filtered.filter(n => (n.notification_type || 'info') === type);
         }
-    };
 
-    const handleEdit = (notification: Notification) => {
-        setEditingNotification(notification);
-        setFormData({
-            title: notification.title || '',
-            message: notification.message,
-            type: (notification.type || notification.notification_type || 'info') as Notification['type'],
-            priority: (notification.priority || 'medium') as Notification['priority'],
-            category: (notification.category || 'other') as Notification['category'],
-            targetUsers: notification.target_users || notification.targetUsers || [],
-            targetRoles: notification.target_roles || notification.targetRoles || [],
-            scheduledDate: notification.scheduled_date || notification.scheduledDate || '',
-            expiryDate: notification.expiry_date || notification.expiryDate || '',
-            attachments: notification.attachments || [],
-            actions: notification.actions || []
-        });
-        setIsEditDialogOpen(true);
-    };
-
-    const handleUpdate = async () => {
-        if (!editingNotification) return;
-
-        try {
-            const payload = {
-                id: editingNotification.id,
-                title: formData.title,
-                message: formData.message,
-                type: formData.type,
-                priority: formData.priority,
-                category: formData.category,
-                targetUsers: formData.targetUsers.length > 0 ? formData.targetUsers : undefined,
-                targetRoles: formData.targetRoles.length > 0 ? formData.targetRoles : undefined,
-                scheduledDate: formData.scheduledDate,
-                expiryDate: formData.expiryDate || undefined,
-                attachments: formData.attachments.length > 0 ? formData.attachments : undefined,
-                actions: formData.actions.length > 0 ? formData.actions : undefined,
-            };
-
-            await dispatch(updateNotification(payload)).unwrap();
-            setIsEditDialogOpen(false);
-            setEditingNotification(null);
-            setFormData({
-                title: '',
-                message: '',
-                type: 'info',
-                priority: 'medium',
-                category: 'other',
-                targetUsers: [],
-                targetRoles: [],
-                scheduledDate: '',
-                expiryDate: '',
-                attachments: [],
-                actions: []
-            });
-            toast.success('Notification updated successfully');
-            // Refresh notifications with current filters
-            const params: FetchNotificationsParams = {
-                page,
-                limit,
-                search: searchTerm || undefined,
-                type: typeFilter !== 'all' ? typeFilter : undefined,
-                priority: priorityFilter !== 'all' ? priorityFilter : undefined,
-                category: categoryFilter !== 'all' ? categoryFilter : undefined,
-                status: statusFilter !== 'all' ? statusFilter : undefined,
-            };
-            dispatch(fetchNotifications(params));
-        } catch (err: any) {
-            toast.error(err || 'Failed to update notification');
+        // Filter by status
+        if (status === 'Read') {
+            filtered = filtered.filter(n => !!n.is_read);
+        } else if (status === 'Unread') {
+            filtered = filtered.filter(n => !n.is_read);
         }
-    };
 
-    const handleDelete = async (id: string) => {
-        try {
-            await dispatch(deleteNotification(id)).unwrap();
-            toast.success('Notification deleted successfully');
-            // Refresh notifications with current filters
-            const params: FetchNotificationsParams = {
-                page,
-                limit,
-                search: searchTerm || undefined,
-                type: typeFilter !== 'all' ? typeFilter : undefined,
-                priority: priorityFilter !== 'all' ? priorityFilter : undefined,
-                category: categoryFilter !== 'all' ? categoryFilter : undefined,
-                status: statusFilter !== 'all' ? statusFilter : undefined,
-            };
-            dispatch(fetchNotifications(params));
-        } catch (err: any) {
-            toast.error(err || 'Failed to delete notification');
-        }
-    };
+        return filtered;
+    }, [notifications, search, type, status]);
 
-    const handleToggleRead = async (notification: Notification) => {
-        try {
-            if (notification.isRead) {
-                await dispatch(markNotificationAsUnread(notification.id)).unwrap();
-            } else {
-                await dispatch(markNotificationAsRead(notification.id)).unwrap();
+    const columns: Column<NotificationItem>[] = [
+        { 
+            key: 'title', 
+            header: 'Title', 
+            sortable: true,
+            render: (value: any, notification: NotificationItem) => (
+                <div className="flex items-center space-x-2">
+                    <div className="flex-1">
+                        <div className={`font-semibold ${notification.is_read ? 'text-slate-600 dark:text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                            {notification.title || 'Notification'}
+                        </div>
+                        <div className="text-sm text-slate-600 dark:text-slate-400 truncate max-w-xs">
+                            {notification.message}
+                        </div>
+                    </div>
+                    {!notification.is_read && (
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    )}
+                </div>
+            )
+        },
+        { 
+            key: 'notification_type', 
+            header: 'Type', 
+            sortable: true,
+            render: (value: any, notification: NotificationItem) => {
+                const notificationType = notification.notification_type || 'info';
+                const typeConfig = notificationTypes.find(t => t.value === notificationType);
+                const typeColors: Record<string, string> = {
+                    'info': 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+                    'warning': 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800',
+                    'error': 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
+                    'success': 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+                    'urgent': 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800'
+                };
+                
+                return (
+                    <Badge variant="outline" className={`${typeColors[notificationType] || typeColors.info} font-medium`}>
+                        {typeConfig?.icon}
+                        <span className="ml-1">{typeConfig?.label || notificationType}</span>
+                    </Badge>
+                );
             }
-            toast.success('Notification status updated');
-            // Refresh notifications with current filters
-            const params: FetchNotificationsParams = {
-                page,
-                limit,
-                search: searchTerm || undefined,
-                type: typeFilter !== 'all' ? typeFilter : undefined,
-                priority: priorityFilter !== 'all' ? priorityFilter : undefined,
-                category: categoryFilter !== 'all' ? categoryFilter : undefined,
-                status: statusFilter !== 'all' ? statusFilter : undefined,
-            };
-            dispatch(fetchNotifications(params));
-        } catch (err: any) {
-            toast.error(err || 'Failed to update notification status');
+        },
+        { 
+            key: 'created_at', 
+            header: 'Created At', 
+            sortable: true,
+            render: (value: any, notification: NotificationItem) => {
+                const timeAgo = (dateString: string) => {
+                    try {
+                        const d = new Date(dateString);
+                        const s = Math.floor((Date.now() - d.getTime()) / 1000);
+                        if (s < 60) return `${s}s ago`;
+                        const m = Math.floor(s / 60);
+                        if (m < 60) return `${m}m ago`;
+                        const h = Math.floor(m / 60);
+                        if (h < 24) return `${h}h ago`;
+                        const days = Math.floor(h / 24);
+                        if (days < 30) return `${days}d ago`;
+                        return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+                    } catch {
+                        return dateString;
+                    }
+                };
+                return (
+                    <span className="text-slate-600 dark:text-slate-400" title={new Date(notification.created_at).toLocaleString()}>
+                        {timeAgo(notification.created_at)}
+                    </span>
+                );
+            }
+        },
+        {
+            key: 'is_read',
+            header: 'Status',
+            render: (value: any, notification: NotificationItem) => {
+                const statusColors: Record<string, string> = {
+                    'Read': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+                    'Unread': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800',
+                };
+                const status = notification.is_read ? 'Read' : 'Unread';
+                return (
+                    <Badge variant="outline" className={`${statusColors[status]} font-medium`}>
+                        {status}
+                    </Badge>
+                );
+            },
+            sortable: true
         }
-    };
+    ];
 
-    const handleToggleActive = async (notification: Notification) => {
-        try {
-            const currentActive = notification.is_active !== false;
-            await dispatch(toggleNotificationActive({
-                id: notification.id,
-                isActive: !currentActive
-            })).unwrap();
-            toast.success('Notification status updated');
-            // Refresh notifications with current filters
-            const params: FetchNotificationsParams = {
-                page,
-                limit,
-                search: searchTerm || undefined,
-                type: typeFilter !== 'all' ? typeFilter : undefined,
-                priority: priorityFilter !== 'all' ? priorityFilter : undefined,
-                category: categoryFilter !== 'all' ? categoryFilter : undefined,
-                status: statusFilter !== 'all' ? statusFilter : undefined,
-            };
-            dispatch(fetchNotifications(params));
-        } catch (err: any) {
-            toast.error(err || 'Failed to update notification status');
+    const actions: Action<NotificationItem>[] = [
+        {
+            label: 'Mark as Read',
+            onClick: async (notification: NotificationItem) => {
+                try {
+                    await dispatch(markNotificationAsRead(notification.id)).unwrap();
+                    toast.success('Notification marked as read');
+                } catch (err: any) {
+                    toast.error(err || 'Failed to mark notification as read');
+                }
+            },
+            icon: <Check className="h-4 w-4" />,
+            hidden: (notification: NotificationItem) => !!notification.is_read,
+            variant: 'info' as const
+        },
+        {
+            label: 'Mark as Unread',
+            onClick: async (notification: NotificationItem) => {
+                try {
+                    await dispatch(markNotificationAsUnread(notification.id)).unwrap();
+                    toast.success('Notification marked as unread');
+                } catch (err: any) {
+                    toast.error(err || 'Failed to mark notification as unread');
+                }
+            },
+            icon: <X className="h-4 w-4" />,
+            hidden: (notification: NotificationItem) => !notification.is_read,
+            variant: 'warning' as const
+        },
+        {
+            label: 'Delete Notification',
+            onClick: async (notification: NotificationItem) => {
+                if (confirm('Are you sure you want to delete this notification?')) {
+                    try {
+                        await dispatch(deleteNotification(notification.id)).unwrap();
+                        toast.success('Notification deleted successfully');
+                    } catch (err: any) {
+                        toast.error(err || 'Failed to delete notification');
+                    }
+                }
+            },
+            icon: <Trash2 className="h-4 w-4" />,
+            variant: 'destructive' as const
         }
-    };
+    ];
+
+    const activeFilters = useMemo(() => {
+        const arr: string[] = [];
+        if (search) arr.push(`Search: ${search}`);
+        if (type !== 'All') arr.push(`Type: ${type}`);
+        if (status !== 'All') arr.push(`Status: ${status}`);
+        return arr;
+    }, [search, type, status]);
 
     const refreshTable = async () => {
         setIsRefreshing(true);
         try {
-            const params: FetchNotificationsParams = {
-                page,
-                limit,
-                search: searchTerm || undefined,
-                type: typeFilter !== 'all' ? typeFilter : undefined,
-                priority: priorityFilter !== 'all' ? priorityFilter : undefined,
-                category: categoryFilter !== 'all' ? categoryFilter : undefined,
-                status: statusFilter !== 'all' ? statusFilter : undefined,
-            };
-            await dispatch(fetchNotifications(params)).unwrap();
-            toast.success('Notifications refreshed');
+            await dispatch(fetchNotifications()).unwrap();
+            toast.success('Notifications refreshed successfully');
         } catch (err: any) {
             toast.error(err || 'Failed to refresh notifications');
         } finally {
@@ -349,755 +242,208 @@ export default function NotificationsPage() {
         }
     };
 
+    const markAllRead = async () => {
+        try {
+            await dispatch(markAllNotificationsAsRead()).unwrap();
+            toast.success('All notifications marked as read');
+        } catch (err: any) {
+            toast.error(err || 'Failed to mark all notifications as read');
+        }
+    };
+
     const exportToExcel = async () => {
         setIsExporting(true);
         try {
-            // TODO: Implement Excel export API call
-            // const response = await axios.get('/notifications/export', {
-            //     params: {
-            //         search: searchTerm || undefined,
-            //         type: typeFilter !== 'all' ? typeFilter : undefined,
-            //         priority: priorityFilter !== 'all' ? priorityFilter : undefined,
-            //         category: categoryFilter !== 'all' ? categoryFilter : undefined,
-            //         status: statusFilter !== 'all' ? statusFilter : undefined,
-            //     },
-            //     responseType: 'blob'
-            // });
-            // const url = window.URL.createObjectURL(new Blob([response.data]));
-            // const link = document.createElement('a');
-            // link.href = url;
-            // link.setAttribute('download', `notifications-${new Date().toISOString()}.xlsx`);
-            // document.body.appendChild(link);
-            // link.click();
-            // link.remove();
-            toast.info('Export feature coming soon');
-        } catch (err: any) {
-            toast.error('Failed to export notifications');
+            const { data } = await axios.get('/notifications/fetch');
+
+            const headers = ['Title', 'Message', 'Type', 'Status', 'Created At'];
+            const csvHeaders = headers.join(',');
+            const csvRows = filteredNotifications.map((n: NotificationItem) => {
+                return [
+                    escapeCsv(n.title || 'Notification'),
+                    escapeCsv(n.message),
+                    escapeCsv(n.notification_type || 'info'),
+                    n.is_read ? 'Read' : 'Unread',
+                    n.created_at ? new Date(n.created_at).toLocaleDateString('en-US') : ''
+                ].join(',');
+            });
+            const csvContent = [csvHeaders, ...csvRows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `notifications_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success('Data exported successfully');
+        } catch {
+            toast.error('Failed to export data');
         } finally {
             setIsExporting(false);
         }
     };
 
-    const formatDate = (dateString: string) => {
-        try {
-            return new Date(dateString).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch {
-            return dateString;
-        }
-    };
-
-    const timeAgo = (dateString: string) => {
-        try {
-            const d = new Date(dateString);
-            const s = Math.floor((Date.now() - d.getTime()) / 1000);
-            if (s < 60) return `${s}s ago`;
-            const m = Math.floor(s / 60);
-            if (m < 60) return `${m}m ago`;
-            const h = Math.floor(m / 60);
-            if (h < 24) return `${h}h ago`;
-            const days = Math.floor(h / 24);
-            if (days < 30) return `${days}d ago`;
-            return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
-        } catch {
-            return dateString;
-        }
-    };
-
-    const totalNotifications = total;
-    const unreadNotifications = filteredNotifications.filter(n => !n.isRead).length;
-    const activeNotifications = filteredNotifications.filter(n => n.is_active !== false).length;
-    const urgentNotifications = filteredNotifications.filter(n => {
-        const priority = n.priority || 'medium';
-        return priority === 'critical' || priority === 'high';
-    }).length;
-
-    const columns = [
-        {
-            key: 'title' as keyof Notification,
-            header: 'Title',
-            render: (value: any, notification: Notification) => (
-                <div className="flex items-center space-x-2">
-                    <div>
-                        <div className={`font-semibold ${notification.isRead ? 'text-slate-600' : 'text-slate-800'}`}>
-                            {notification.title}
-                        </div>
-                        <div className="text-sm text-slate-600 truncate max-w-xs">
-                            {notification.message}
-                        </div>
-                    </div>
-                    {!notification.isRead && (
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    )}
-                </div>
-            ),
-            sortable: true
-        },
-        {
-            key: 'type' as keyof Notification,
-            header: 'Type',
-            render: (value: any, notification: Notification) => {
-                const notificationType = notification.type || notification.notification_type || 'info';
-                const typeConfig = notificationTypes.find(t => t.value === notificationType);
-                const typeColors = {
-                    'info': 'bg-blue-50 text-blue-700 border-blue-200',
-                    'warning': 'bg-yellow-50 text-yellow-700 border-yellow-200',
-                    'error': 'bg-red-50 text-red-700 border-red-200',
-                    'success': 'bg-green-50 text-green-700 border-green-200',
-                    'urgent': 'bg-red-50 text-red-700 border-red-200'
-                };
-                
-                return (
-                    <Badge variant="outline" className={`${typeColors[notificationType as keyof typeof typeColors] || typeColors.info} font-medium`}>
-                        {typeConfig?.icon}
-                        <span className="ml-1">{typeConfig?.label || notificationType}</span>
-                    </Badge>
-                );
-            },
-            sortable: true
-        },
-        {
-            key: 'priority' as keyof Notification,
-            header: 'Priority',
-            render: (value: any, notification: Notification) => {
-                const priority = notification.priority || 'medium';
-                const priorityColors = {
-                    'low': 'bg-gray-50 text-gray-700 border-gray-200',
-                    'medium': 'bg-blue-50 text-blue-700 border-blue-200',
-                    'high': 'bg-orange-50 text-orange-700 border-orange-200',
-                    'critical': 'bg-red-50 text-red-700 border-red-200'
-                };
-                
-                return (
-                    <Badge variant="outline" className={`${priorityColors[priority as keyof typeof priorityColors] || priorityColors.medium} font-medium`}>
-                        {priority.charAt(0).toUpperCase() + priority.slice(1)}
-                    </Badge>
-                );
-            },
-            sortable: true
-        },
-        {
-            key: 'category' as keyof Notification,
-            header: 'Category',
-            render: (value: any, notification: Notification) => {
-                const category = notification.category || 'other';
-                return (
-                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </Badge>
-                );
-            },
-            sortable: true
-        },
-        {
-            key: 'targetUsers' as keyof Notification,
-            header: 'Target Users',
-            render: (value: any, notification: Notification) => {
-                const targetUsers = notification.target_users || notification.targetUsers || [];
-                return (
-                    <div className="text-sm text-slate-700">
-                        {targetUsers.length > 0 ? `${targetUsers.length} user(s)` : 'All users'}
-                    </div>
-                );
-            },
-            sortable: true
-        },
-        {
-            key: 'createdAt' as keyof Notification,
-            header: 'Created',
-            render: (value: any, notification: Notification) => (
-                <span className="text-slate-700" title={formatDate(value)}>
-                    {timeAgo(value)}
-                </span>
-            ),
-            sortable: true
-        },
-        {
-            key: 'isRead' as keyof Notification,
-            header: 'Status',
-            render: (value: any, notification: Notification) => (
-                <div className="flex space-x-2">
-                    <Badge variant="outline" className={`${notification.isRead ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'} font-medium`}>
-                        {notification.isRead ? 'Read' : 'Unread'}
-                    </Badge>
-                    {notification.is_active !== undefined && (
-                        <Badge variant="outline" className={`${notification.is_active ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-700 border-gray-200'} font-medium`}>
-                            {notification.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
-                    )}
-                </div>
-            ),
-            sortable: true
-        }
-    ];
-
-    const actions: Action<Notification>[] = [
-        {
-            label: 'View Details',
-            onClick: (notification: Notification) => toast.info('View details feature coming soon'),
-            icon: <Eye className="h-4 w-4" />
-        },
-        {
-            label: 'Edit Notification',
-            onClick: (notification: Notification) => handleEdit(notification),
-            icon: <Edit className="h-4 w-4" />
-        },
-        {
-            label: 'Mark as Read',
-            onClick: (notification: Notification) => handleToggleRead(notification),
-            icon: <CheckCircle className="h-4 w-4" />,
-            hidden: (notification: Notification) => notification.isRead
-        },
-        {
-            label: 'Mark as Unread',
-            onClick: (notification: Notification) => handleToggleRead(notification),
-            icon: <XCircle className="h-4 w-4" />,
-            hidden: (notification: Notification) => !notification.isRead
-        },
-        {
-            label: 'Activate',
-            onClick: (notification: Notification) => handleToggleActive(notification),
-            icon: <CheckCircle className="h-4 w-4" />,
-            hidden: (notification: Notification) => notification.is_active !== false
-        },
-        {
-            label: 'Deactivate',
-            onClick: (notification: Notification) => handleToggleActive(notification),
-            icon: <XCircle className="h-4 w-4" />,
-            hidden: (notification: Notification) => notification.is_active === false
-        },
-        {
-            label: 'Delete Notification',
-            onClick: (notification: Notification) => handleDelete(notification.id),
-            icon: <Trash2 className="h-4 w-4" />,
-            variant: 'destructive' as const
-        }
-    ];
-
-    const stats = [
-        {
-            label: 'Total Notifications',
-            value: totalNotifications,
-            change: '+12%',
-            trend: 'up' as const
-        },
-        {
-            label: 'Unread',
-            value: unreadNotifications,
-            change: '-5%',
-            trend: 'down' as const
-        },
-        {
-            label: 'Active',
-            value: activeNotifications,
-            change: '+8%',
-            trend: 'up' as const
-        },
-        {
-            label: 'Urgent',
-            value: urgentNotifications,
-            change: '+3%',
-            trend: 'up' as const
-        }
-    ];
-
-    const filterOptions = [
-        {
-            key: 'type',
-            label: 'Type',
-            value: typeFilter,
-            options: [
-                { key: 'all', label: 'All Types', value: 'all' },
-                ...notificationTypes.map(type => ({ key: type.value, label: type.label, value: type.value }))
-            ],
-            onValueChange: setTypeFilter
-        },
-        {
-            key: 'priority',
-            label: 'Priority',
-            value: priorityFilter,
-            options: [
-                { key: 'all', label: 'All Priorities', value: 'all' },
-                ...priorities.map(priority => ({ key: priority.value, label: priority.label, value: priority.value }))
-            ],
-            onValueChange: setPriorityFilter
-        },
-        {
-            key: 'category',
-            label: 'Category',
-            value: categoryFilter,
-            options: [
-                { key: 'all', label: 'All Categories', value: 'all' },
-                ...categories.map(category => ({ key: category.value, label: category.label, value: category.value }))
-            ],
-            onValueChange: setCategoryFilter
-        },
-        {
-            key: 'status',
-            label: 'Status',
-            value: statusFilter,
-            options: [
-                { key: 'all', label: 'All Statuses', value: 'all' },
-                { key: 'read', label: 'Read', value: 'read' },
-                { key: 'unread', label: 'Unread', value: 'unread' },
-                { key: 'active', label: 'Active', value: 'active' },
-                { key: 'inactive', label: 'Inactive', value: 'inactive' }
-            ],
-            onValueChange: setStatusFilter
-        }
-    ];
-
-    const activeFilters = [];
-    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
-    if (typeFilter !== 'all') activeFilters.push(`Type: ${notificationTypes.find(t => t.value === typeFilter)?.label}`);
-    if (priorityFilter !== 'all') activeFilters.push(`Priority: ${priorities.find(p => p.value === priorityFilter)?.label}`);
-    if (categoryFilter !== 'all') activeFilters.push(`Category: ${categories.find(c => c.value === categoryFilter)?.label}`);
-    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
-
     return (
-        <div className="space-y-6">
-            {/* Breadcrumb */}
+        <div className="space-y-4">
+            {/* Header */}
             <Breadcrumb />
+            <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Notifications</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Browse and manage all system notifications</p>
+                </div>
+                <Button 
+                    onClick={markAllRead}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                    <Bell className="h-4 w-4 mr-2" /> Mark All as Read
+                </Button>
+            </div>
 
-            {/* Page Header */}
-            <PageHeader
-                title="Notifications Management"
-                description="Manage system notifications with comprehensive targeting and scheduling"
-                stats={stats}
-                breadcrumb={false}
-                actions={{
-                    primary: {
-                        label: 'New Notification',
-                        onClick: () => setIsCreateDialogOpen(true),
-                        icon: <Plus className="h-4 w-4" />
-                    },
-                    secondary: [
-                        {
-                            label: 'Refresh',
-                            onClick: refreshTable,
-                            icon: <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                        },
-                        {
-                            label: 'Export Report',
-                            onClick: exportToExcel,
-                            icon: <FileSpreadsheet className={`h-4 w-4 ${isExporting ? 'animate-pulse' : ''}`} />
-                        }
-                    ]
-                }}
-            />
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <EnhancedCard
+                    title="Total Notifications"
+                    description="All notifications in the system"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: totalItems,
+                        badge: 'Total',
+                        badgeColor: 'default'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Unread Notifications"
+                    description="Currently unread notifications"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: unreadCount,
+                        badge: 'Unread',
+                        badgeColor: 'warning'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Read Notifications"
+                    description="Read notifications"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: readCount,
+                        badge: 'Read',
+                        badgeColor: 'success'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Filtered Results"
+                    description="Current filter results"
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: filteredNotifications.length,
+                        badge: 'Filtered',
+                        badgeColor: 'info'
+                    }}
+                >
+                    <></>
+                </EnhancedCard>
+            </div>
 
             {/* Filter Bar */}
             <FilterBar
-                searchPlaceholder="Search by title, message, or category..."
-                searchValue={searchTerm}
-                onSearchChange={setSearchTerm}
-                filters={filterOptions}
+                searchPlaceholder="Search by title, message, or type..."
+                searchValue={search}
+                onSearchChange={(value) => {
+                    setSearch(value);
+                }}
+                filters={[
+                    {
+                        key: 'type',
+                        label: 'Type',
+                        value: type,
+                        options: [
+                            { key: 'All', value: 'All', label: 'All Types' },
+                            { key: 'info', value: 'info', label: 'Information' },
+                            { key: 'warning', value: 'warning', label: 'Warning' },
+                            { key: 'error', value: 'error', label: 'Error' },
+                            { key: 'success', value: 'success', label: 'Success' },
+                            { key: 'urgent', value: 'urgent', label: 'Urgent' },
+                        ],
+                        onValueChange: (v) => { setType(v as any); }
+                    },
+                    {
+                        key: 'status',
+                        label: 'Status',
+                        value: status,
+                        options: [
+                            { key: 'All', value: 'All', label: 'All Statuses' },
+                            { key: 'Read', value: 'Read', label: 'Read' },
+                            { key: 'Unread', value: 'Unread', label: 'Unread' },
+                        ],
+                        onValueChange: (v) => { setStatus(v as any); }
+                    }
+                ]}
                 activeFilters={activeFilters}
                 onClearFilters={() => {
-                    setSearchTerm('');
-                    setTypeFilter('all');
-                    setPriorityFilter('all');
-                    setCategoryFilter('all');
-                    setStatusFilter('all');
+                    setSearch('');
+                    setType('All');
+                    setStatus('All');
                 }}
+                actions={
+                    <>
+                        <Button
+                            variant="outline"
+                            onClick={refreshTable}
+                            disabled={isRefreshing || loading}
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        >
+                            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={exportToExcel}
+                            disabled={isExporting}
+                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        >
+                            <FileSpreadsheet className="h-4 w-4 mr-2" />
+                            {isExporting ? 'Exporting...' : 'Export Excel'}
+                        </Button>
+                    </>
+                }
             />
 
             {/* Notifications Table */}
             <EnhancedCard
-                title="Notifications Overview"
-                description={`${filteredNotifications.length} notifications out of ${total} total`}
-                variant="gradient"
-                size="lg"
-                stats={{
-                    total: total,
-                    badge: 'Total Notifications',
-                    badgeColor: 'success'
-                }}
+                title="Notifications List"
+                description={`${filteredNotifications.length} notifications matching your filters`}
+                variant="default"
+                size="sm"
             >
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-slate-600 dark:text-slate-400">Items per page:</span>
-                        <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
-                            <SelectTrigger className="w-[120px]">
-                                <SelectValue placeholder="Items per page" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {[10, 20, 50, 100].map(n => (
-                                    <SelectItem key={n} value={String(n)}>
-                                        {n} per page
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
                 <EnhancedDataTable
                     data={filteredNotifications}
                     columns={columns}
                     actions={actions}
                     loading={loading}
-                    noDataMessage="No notifications found matching your criteria"
+                    noDataMessage="No notifications found matching your search criteria"
                     searchPlaceholder="Search notifications..."
-                    pagination={{
-                        currentPage: page,
-                        totalPages: pages,
-                        pageSize: limit,
-                        totalItems: total,
-                        onPageChange: setPage
-                    }}
                 />
             </EnhancedCard>
-
-            {/* Create Dialog */}
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Create New Notification</DialogTitle>
-                        <DialogDescription>
-                            Create a new notification with targeting and scheduling
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="title">Title</Label>
-                            <Input
-                                id="title"
-                                value={formData.title}
-                                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                                placeholder="Notification title"
-                                className="mt-1"
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="message">Message</Label>
-                            <Textarea
-                                id="message"
-                                value={formData.message}
-                                onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
-                                placeholder="Notification message"
-                                rows={4}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="type">Type</Label>
-                                <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as Notification['type'] }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {notificationTypes.map(type => (
-                                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label htmlFor="priority">Priority</Label>
-                                <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value as Notification['priority'] }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {priorities.map(priority => (
-                                            <SelectItem key={priority.value} value={priority.value}>{priority.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="category">Category</Label>
-                            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as Notification['category'] }))}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {categories.map(category => (
-                                        <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor="targetUsers">Target Users</Label>
-                            <Select 
-                                value="" 
-                                onValueChange={(value) => {
-                                    if (value && !formData.targetUsers.includes(value)) {
-                                        setFormData(prev => ({ ...prev, targetUsers: [...prev.targetUsers, value] }));
-                                    }
-                                }}
-                                disabled={usersLoading}
-                            >
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue placeholder={usersLoading ? "Loading users..." : "Select users"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {usersList.map(user => (
-                                        <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                                {formData.targetUsers.map(userId => {
-                                    const user = usersList.find(u => u.id === userId);
-                                    return user ? (
-                                        <Badge key={userId} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                            {user.name}
-                                            <button
-                                                onClick={() => setFormData(prev => ({ ...prev, targetUsers: prev.targetUsers.filter(u => u !== userId) }))}
-                                                className="ml-1 text-blue-500 hover:text-blue-700"
-                                            >
-                                                ×
-                                            </button>
-                                        </Badge>
-                                    ) : null;
-                                })}
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="targetRoles">Target Roles</Label>
-                            <Select value="" onValueChange={(value) => {
-                                if (value && !formData.targetRoles.includes(value)) {
-                                    setFormData(prev => ({ ...prev, targetRoles: [...prev.targetRoles, value] }));
-                                }
-                            }}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue placeholder="Select roles" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {roles.map(role => (
-                                        <SelectItem key={role} value={role}>{role}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                                {formData.targetRoles.map(role => (
-                                    <Badge key={role} variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                        {role}
-                                        <button
-                                            onClick={() => setFormData(prev => ({ ...prev, targetRoles: prev.targetRoles.filter(r => r !== role) }))}
-                                            className="ml-1 text-green-500 hover:text-green-700"
-                                        >
-                                            ×
-                                        </button>
-                                    </Badge>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="scheduledDate">Scheduled Date</Label>
-                                <Input
-                                    id="scheduledDate"
-                                    type="datetime-local"
-                                    value={formData.scheduledDate}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, scheduledDate: e.target.value }))}
-                                    className="mt-1"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="expiryDate">Expiry Date</Label>
-                                <Input
-                                    id="expiryDate"
-                                    type="datetime-local"
-                                    value={formData.expiryDate}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
-                                    className="mt-1"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex justify-end space-x-2 pt-4">
-                            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button onClick={handleCreate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
-                                <Bell className="h-4 w-4 mr-2" />
-                                Create Notification
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            {/* Edit Dialog */}
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Edit Notification</DialogTitle>
-                        <DialogDescription>
-                            Update notification information and targeting
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="edit-title">Title</Label>
-                            <Input
-                                id="edit-title"
-                                value={formData.title}
-                                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-message">Message</Label>
-                            <Textarea
-                                id="edit-message"
-                                value={formData.message}
-                                onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
-                                rows={4}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="edit-type">Type</Label>
-                                <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as Notification['type'] }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {notificationTypes.map(type => (
-                                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label htmlFor="edit-priority">Priority</Label>
-                                <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value as Notification['priority'] }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {priorities.map(priority => (
-                                            <SelectItem key={priority.value} value={priority.value}>{priority.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-category">Category</Label>
-                            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as Notification['category'] }))}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {categories.map(category => (
-                                        <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-targetUsers">Target Users</Label>
-                            <Select 
-                                value="" 
-                                onValueChange={(value) => {
-                                    if (value && !formData.targetUsers.includes(value)) {
-                                        setFormData(prev => ({ ...prev, targetUsers: [...prev.targetUsers, value] }));
-                                    }
-                                }}
-                                disabled={usersLoading}
-                            >
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue placeholder={usersLoading ? "Loading users..." : "Select users"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {usersList.map(user => (
-                                        <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                                {formData.targetUsers.map(userId => {
-                                    const user = usersList.find(u => u.id === userId);
-                                    return user ? (
-                                        <Badge key={userId} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                            {user.name}
-                                            <button
-                                                onClick={() => setFormData(prev => ({ ...prev, targetUsers: prev.targetUsers.filter(u => u !== userId) }))}
-                                                className="ml-1 text-blue-500 hover:text-blue-700"
-                                            >
-                                                ×
-                                            </button>
-                                        </Badge>
-                                    ) : null;
-                                })}
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-targetRoles">Target Roles</Label>
-                            <Select value="" onValueChange={(value) => {
-                                if (value && !formData.targetRoles.includes(value)) {
-                                    setFormData(prev => ({ ...prev, targetRoles: [...prev.targetRoles, value] }));
-                                }
-                            }}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue placeholder="Select roles" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {roles.map(role => (
-                                        <SelectItem key={role} value={role}>{role}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                                {formData.targetRoles.map(role => (
-                                    <Badge key={role} variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                        {role}
-                                        <button
-                                            onClick={() => setFormData(prev => ({ ...prev, targetRoles: prev.targetRoles.filter(r => r !== role) }))}
-                                            className="ml-1 text-green-500 hover:text-green-700"
-                                        >
-                                            ×
-                                        </button>
-                                    </Badge>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="edit-scheduledDate">Scheduled Date</Label>
-                                <Input
-                                    id="edit-scheduledDate"
-                                    type="datetime-local"
-                                    value={formData.scheduledDate}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, scheduledDate: e.target.value }))}
-                                    className="mt-1"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="edit-expiryDate">Expiry Date</Label>
-                                <Input
-                                    id="edit-expiryDate"
-                                    type="datetime-local"
-                                    value={formData.expiryDate}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
-                                    className="mt-1"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex justify-end space-x-2 pt-4">
-                            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
-                                <Bell className="h-4 w-4 mr-2" />
-                                Save Changes
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
         </div>
     );
+}
+
+function escapeCsv(val: any) {
+    const str = String(val ?? '');
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
 }
