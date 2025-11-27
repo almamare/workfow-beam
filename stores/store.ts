@@ -10,6 +10,11 @@ import UsersSil from '@/stores/slices/users';                // Importing the Us
 import Employees from '@/stores/slices/employees';            // Importing the Employees type from the employees slice
 import TaskRequests from '@/stores/slices/tasks_requests';    // Importing the TaskRequests type from the tasks_requests slice
 import Notifications from '@/stores/slices/notifications';    // Importing the Notifications slice
+import Forms from '@/stores/slices/forms';                     // Importing the Forms slice
+import Documents from '@/stores/slices/documents';             // Importing the Documents slice
+import Banks from '@/stores/slices/banks';                     // Importing the Banks slice
+import Invoices from '@/stores/slices/invoices';               // Importing the Invoices slice
+import BankBalances from '@/stores/slices/bank-balances';      // Importing the Bank Balances slice
 
 
 // This is the Redux store configuration for the login functionality
@@ -26,8 +31,20 @@ const store = configureStore({
         users: UsersSil,                //
         employees: Employees,
         taskRequests: TaskRequests,
-        notifications: Notifications    // This is the slice for managing notifications
+        notifications: Notifications,   // This is the slice for managing notifications
+        forms: Forms,                   // This is the slice for managing forms
+        documents: Documents,           // This is the slice for managing documents
+        banks: Banks,                   // This is the slice for managing banks
+        invoices: Invoices,             // This is the slice for managing invoices
+        bankBalances: BankBalances      // This is the slice for managing bank balances
     },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+            serializableCheck: {
+                // Ignore these action types from serialization check
+                ignoredActions: ['forms/downloadFormPDF/fulfilled'],
+            },
+        }),
 });
 
 

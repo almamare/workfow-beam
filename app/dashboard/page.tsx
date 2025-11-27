@@ -17,7 +17,12 @@ import {
     FileSignature,
     BarChart2,
     FileArchive,
-    PieChart
+    PieChart,
+    Shield,
+    Receipt,
+    Landmark,
+    TrendingUp,
+    CreditCard
 } from 'lucide-react';
 import Link from 'next/link';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
@@ -114,6 +119,41 @@ const allMenuItems = [
         icon: PieChart,
         href: '/statistics',
         color: 'from-fuchsia-500 to-fuchsia-600 dark:from-fuchsia-600 dark:to-fuchsia-700'
+    },
+    {
+        number: 14,
+        title: 'Permissions',
+        icon: Shield,
+        href: '/permissions',
+        color: 'from-violet-500 to-violet-600 dark:from-violet-600 dark:to-violet-700'
+    },
+    {
+        number: 15,
+        title: 'Invoices',
+        icon: Receipt,
+        href: '/invoices',
+        color: 'from-rose-500 to-rose-600 dark:from-rose-600 dark:to-rose-700'
+    },
+    {
+        number: 16,
+        title: 'Banks',
+        icon: Landmark,
+        href: '/banks',
+        color: 'from-cyan-500 to-cyan-600 dark:from-cyan-600 dark:to-cyan-700'
+    },
+    {
+        number: 17,
+        title: 'Analysis',
+        icon: TrendingUp,
+        href: '/analysis',
+        color: 'from-lime-500 to-lime-600 dark:from-lime-600 dark:to-lime-700'
+    },
+    {
+        number: 18,
+        title: 'Bank Balances',
+        icon: CreditCard,
+        href: '/bank-balances',
+        color: 'from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700'
     },
 ];
 

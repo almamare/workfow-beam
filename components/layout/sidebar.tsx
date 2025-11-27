@@ -34,7 +34,10 @@ import {
     Eye,
     List,
     Edit,
-    Trash2
+    Trash2,
+    FileArchive,
+    Landmark,
+    Receipt
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -53,7 +56,7 @@ const iconLibrary: Record<string, any> = {
     Wallet, Contact, Settings, Megaphone, Building, TrendingUp,
     Activity, Calculator, ClipboardList, UserCheck, FileEdit,
     CreditCard, FileCheck, Banknote, BarChart3, History, UserCircle,
-    Plus, Eye, List, Edit, Trash2
+    Plus, Eye, List, Edit, Trash2, FileArchive, Landmark, Receipt
 };
 
 // Flexible route configuration - completely flexible system
@@ -120,7 +123,30 @@ const routeMapping: Record<string, string> = {
     '/history': '/settings',
     
     // Forms related pages
-    '/forms': '/requests'
+    '/forms/create': '/forms',
+    '/forms/update': '/forms',
+    '/forms/details': '/forms',
+    
+    // Documents related pages
+    '/documents/create': '/documents',
+    '/documents/update': '/documents',
+    '/documents/details': '/documents',
+    
+    // Banks related pages
+    '/banks/create': '/banks',
+    '/banks/update': '/banks',
+    '/banks/details': '/banks',
+    
+    // Invoices related pages
+    '/invoices/create': '/invoices',
+    '/invoices/update': '/invoices',
+    '/invoices/details': '/invoices',
+    
+    // Bank Balances related pages
+    '/bank-balances/create': '/bank-balances',
+    '/bank-balances/update': '/bank-balances',
+    '/bank-balances/details': '/bank-balances',
+    '/bank-balances/bank': '/bank-balances',
 };
 
 const routeConfig: Record<string, { 
@@ -207,6 +233,51 @@ const routeConfig: Record<string, {
             { href: '/inventory/items', title: 'Items', icon: 'Package', color: 'text-orange-400' },
             { href: '/inventory/transactions', title: 'Transactions', icon: 'FileText', color: 'text-amber-400' },
             { href: '/inventory/items', title: 'Add Item', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/forms': {
+        title: 'Forms',
+        icon: 'FileText',
+        color: 'text-cyan-400',
+        menuItems: [
+            { href: '/forms', title: 'Forms', icon: 'FileText', color: 'text-cyan-400' },
+            { href: '/forms/create', title: 'Create Form', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/documents': {
+        title: 'Documents',
+        icon: 'FileArchive',
+        color: 'text-emerald-400',
+        menuItems: [
+            { href: '/documents', title: 'Documents', icon: 'FileArchive', color: 'text-emerald-400' },
+            { href: '/documents/create', title: 'Add Document', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/banks': {
+        title: 'Banks',
+        icon: 'Landmark',
+        color: 'text-cyan-400',
+        menuItems: [
+            { href: '/banks', title: 'Banks', icon: 'Landmark', color: 'text-cyan-400' },
+            { href: '/banks/create', title: 'Add Bank', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/invoices': {
+        title: 'Invoices',
+        icon: 'Receipt',
+        color: 'text-rose-400',
+        menuItems: [
+            { href: '/invoices', title: 'Invoices', icon: 'Receipt', color: 'text-rose-400' },
+            { href: '/invoices/create', title: 'Add Invoice', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/bank-balances': {
+        title: 'Bank Balances',
+        icon: 'Wallet',
+        color: 'text-amber-400',
+        menuItems: [
+            { href: '/bank-balances', title: 'Bank Balances', icon: 'Wallet', color: 'text-amber-400' },
+            { href: '/bank-balances/create', title: 'Add Balance', icon: 'Plus', color: 'text-green-400' }
         ]
     },
     '/settings': {
