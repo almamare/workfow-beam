@@ -22,7 +22,8 @@ import {
     Receipt,
     Landmark,
     TrendingUp,
-    CreditCard
+    CreditCard,
+    CheckCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
@@ -154,6 +155,13 @@ const allMenuItems = [
         icon: CreditCard,
         href: '/bank-balances',
         color: 'from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700'
+    },
+    {
+        number: 19,
+        title: 'Approvals',
+        icon: CheckCircle,
+        href: '/approvals',
+        color: 'from-pink-500 to-pink-600 dark:from-pink-600 dark:to-pink-700'
     },
 ];
 

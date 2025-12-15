@@ -15,6 +15,7 @@ import Documents from '@/stores/slices/documents';             // Importing the 
 import Banks from '@/stores/slices/banks';                     // Importing the Banks slice
 import Invoices from '@/stores/slices/invoices';               // Importing the Invoices slice
 import BankBalances from '@/stores/slices/bank-balances';      // Importing the Bank Balances slice
+import Approvals from '@/stores/slices/approvals';            // Importing the Approvals slice
 
 
 // This is the Redux store configuration for the login functionality
@@ -36,7 +37,8 @@ const store = configureStore({
         documents: Documents,           // This is the slice for managing documents
         banks: Banks,                   // This is the slice for managing banks
         invoices: Invoices,             // This is the slice for managing invoices
-        bankBalances: BankBalances      // This is the slice for managing bank balances
+        bankBalances: BankBalances,      // This is the slice for managing bank balances
+        approvals: Approvals            // This is the slice for managing approvals
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

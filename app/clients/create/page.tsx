@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';      
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -102,7 +102,7 @@ const CreateClientPage: React.FC = () => {
                 toast.success('Client created successfully!');
                 setForm(initialValues);
                 // Optional: navigate back to list
-                // router.push('/clients');
+                router.push('/clients');
             } else {
                 const msg =
                     result?.data?.header?.messages?.[0]?.message ||

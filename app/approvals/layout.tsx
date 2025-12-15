@@ -5,14 +5,13 @@ import MainLayout from '@/components/layout/main-layout';
 
 
 export default function ApprovalsLayout({
-  children,
+    children,
 }: {
-  children: React.ReactNode;
+    children: React.ReactNode;
 }) {
-  return (
-    <MainLayout>
-      
-      {children}
-    </MainLayout>
-  );
+    return (
+        <MainLayout>
+            {children}
+        </MainLayout>
+    );
 }
