@@ -4,6 +4,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
 import { Loader2, Save, RotateCcw } from 'lucide-react';
@@ -16,13 +17,15 @@ type ClientPayload = {
     state: string;
     city: string;
     budget: number | string;
+    client_type?: 'Government' | 'Private';
 };
 
 const initialValues: ClientPayload = {
     name: '',
     state: '',
     city: '',
-    budget: ''
+    budget: '',
+    client_type: undefined
 };
 
 const numberFields: (keyof ClientPayload)[] = ['budget'];
@@ -45,6 +48,19 @@ const CreateClientPage: React.FC = () => {
             } else {
                 setForm(prev => ({ ...prev, [name]: value }));
             }
+            setFieldErrors(prev => {
+                const clone = { ...prev };
+                delete clone[name as string];
+                return clone;
+            });
+        },
+        []
+    );
+
+    // Update select field
+    const updateSelectField = useCallback(
+        (name: keyof ClientPayload, value: string) => {
+            setForm(prev => ({ ...prev, [name]: value as any }));
             setFieldErrors(prev => {
                 const clone = { ...prev };
                 delete clone[name as string];
@@ -79,6 +95,10 @@ const CreateClientPage: React.FC = () => {
     const formattedPayload = useMemo(() => {
         const payload: any = { ...form };
         payload.budget = form.budget === '' ? 0 : Number(form.budget);
+        // Remove client_type if not selected
+        if (!payload.client_type) {
+            delete payload.client_type;
+        }
         return payload as ClientPayload;
     }, [form]);
 
@@ -216,6 +236,25 @@ const CreateClientPage: React.FC = () => {
                                 />
                                 {fieldErrors.budget && (
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.budget}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="client_type" className="text-slate-700 dark:text-slate-200">Client Type</Label>
+                                <Select
+                                    value={form.client_type || ''}
+                                    onValueChange={(value) => updateSelectField('client_type', value)}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100">
+                                        <SelectValue placeholder="Select client type" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectItem value="Government">Government</SelectItem>
+                                        <SelectItem value="Private">Private</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {fieldErrors.client_type && (
+                                    <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.client_type}</p>
                                 )}
                             </div>
                         </div>

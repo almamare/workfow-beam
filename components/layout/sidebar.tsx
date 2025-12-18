@@ -147,6 +147,11 @@ const routeMapping: Record<string, string> = {
     '/bank-balances/update': '/bank-balances',
     '/bank-balances/details': '/bank-balances',
     '/bank-balances/bank': '/bank-balances',
+    
+    // Client Contracts related pages
+    '/client-contracts/create': '/client-contracts',
+    '/client-contracts/update': '/client-contracts',
+    '/client-contracts/details': '/client-contracts',
 };
 
 const routeConfig: Record<string, { 
@@ -278,6 +283,23 @@ const routeConfig: Record<string, {
         menuItems: [
             { href: '/bank-balances', title: 'Bank Balances', icon: 'Wallet', color: 'text-amber-400' },
             { href: '/bank-balances/create', title: 'Add Balance', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/client-contracts': {
+        title: 'Client Contracts',
+        icon: 'FileText',
+        color: 'text-teal-400',
+        menuItems: [
+            { href: '/client-contracts', title: 'Client Contracts', icon: 'FileText', color: 'text-teal-400' },
+            { href: '/client-contracts/create', title: 'Add Contract', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/timeline': {
+        title: 'Timeline',
+        icon: 'History',
+        color: 'text-slate-400',
+        menuItems: [
+            { href: '/timeline', title: 'Timeline', icon: 'History', color: 'text-slate-400' },
         ]
     },
     '/settings': {

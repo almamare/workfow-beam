@@ -63,20 +63,6 @@ export default function TaskRequestsPage() {
         dispatch(fetchTaskRequests({ page, limit, search }));
     }, [dispatch, page, limit, search]);
 
-    const requestTypes = [
-        { value: 'maintenance', label: 'Maintenance', icon: <ClipboardList className="h-4 w-4" /> },
-        { value: 'repair', label: 'Repair', icon: <AlertTriangle className="h-4 w-4" /> },
-        { value: 'installation', label: 'Installation', icon: <UserCheck className="h-4 w-4" /> },
-        { value: 'inspection', label: 'Inspection', icon: <Eye className="h-4 w-4" /> },
-        { value: 'other', label: 'Other', icon: <ClipboardList className="h-4 w-4" /> }
-    ];
-
-    const priorities = [
-        { value: 'low', label: 'Low' },
-        { value: 'medium', label: 'Medium' },
-        { value: 'high', label: 'High' },
-        { value: 'urgent', label: 'Urgent' }
-    ];
 
     const contractors = ['ABC Construction', 'XYZ Electrical', 'Green Landscaping', 'Modern Plumbing', 'Quality Painters'];
     const projects = ['Office Building Construction', 'Residential Complex', 'Shopping Mall', 'Hospital', 'School'];
@@ -238,11 +224,7 @@ export default function TaskRequestsPage() {
             render: (value: any) => {
                 const typeConfig = requestTypes.find(t => t.value === value);
                 const typeColors: Record<string, string> = {
-                    'maintenance': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-                    'repair': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
-                    'installation': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
-                    'inspection': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-                    'other': 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
+                    'Tasks': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800'
                 };
                 
                 return (

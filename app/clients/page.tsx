@@ -39,6 +39,8 @@ export default function ClientsPage() {
 
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState(search);
+    const [clientTypeFilter, setClientTypeFilter] = useState<'All' | 'Government' | 'Private'>('All');
+    const [statusFilter, setStatusFilter] = useState<'All' | 'Draft' | 'Active' | 'Suspended'>('All');
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -60,16 +62,28 @@ export default function ClientsPage() {
 
     const lastKeyRef = useRef<string>('');
     useEffect(() => {
-        const key = JSON.stringify({ page, limit, search: debouncedSearch });
+        const key = JSON.stringify({ page, limit, search: debouncedSearch, client_type: clientTypeFilter, status: statusFilter });
         if (lastKeyRef.current === key) return; 
         lastKeyRef.current = key;
-        dispatch(fetchClients({ page, limit, search: debouncedSearch }));
-    }, [dispatch, page, limit, debouncedSearch]);
+        dispatch(fetchClients({ 
+            page, 
+            limit, 
+            search: debouncedSearch,
+            client_type: clientTypeFilter !== 'All' ? clientTypeFilter : undefined,
+            status: statusFilter !== 'All' ? statusFilter : undefined,
+        }));
+    }, [dispatch, page, limit, debouncedSearch, clientTypeFilter, statusFilter]);
 
     const refreshTable = async () => {
         setIsRefreshing(true);
         try {
-            await dispatch(fetchClients({ page, limit, search: debouncedSearch }));
+            await dispatch(fetchClients({ 
+                page, 
+                limit, 
+                search: debouncedSearch,
+                client_type: clientTypeFilter !== 'All' ? clientTypeFilter : undefined,
+                status: statusFilter !== 'All' ? statusFilter : undefined,
+            }));
             toast.success('Table refreshed successfully');
         } catch (err) {
             toast.error('Failed to refresh table');
@@ -84,12 +98,14 @@ export default function ClientsPage() {
             const { data } = await axios.get('/clients/fetch', {
                 params: {
                     search: debouncedSearch,
+                    client_type: clientTypeFilter !== 'All' ? clientTypeFilter : undefined,
+                    status: statusFilter !== 'All' ? statusFilter : undefined,
                     limit: 10000,
                     page: 1
                 }
             });
 
-            const headers = ['ID', 'Client Name', 'Client Number', 'State', 'City', 'Budget', 'Created At'];
+            const headers = ['ID', 'Client Name', 'Client Number', 'Client Type', 'Status', 'State', 'City', 'Budget', 'Created At'];
             const csvHeaders = headers.join(',');
             
             const csvRows = data.body?.clients?.items?.map((client: Client) => {
@@ -97,6 +113,8 @@ export default function ClientsPage() {
                     client.sequence || '',
                     client.name || '',
                     client.client_no || '',
+                    client.client_type || '',
+                    client.status || '',
                     client.state || '',
                     client.city || '',
                     client.budget || 0,
@@ -165,6 +183,41 @@ export default function ClientsPage() {
             sortable: true 
         },
         { 
+            key: 'client_type' as keyof Client, 
+            header: 'Client Type', 
+            render: (value: any) => {
+                if (!value) return <span className="text-slate-400">N/A</span>;
+                const colors = {
+                    Government: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+                    Private: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+                };
+                return (
+                    <Badge variant="outline" className={`${colors[value as keyof typeof colors] || 'bg-slate-100 dark:bg-slate-800'} w-fit`}>
+                        {value}
+                    </Badge>
+                );
+            },
+            sortable: true 
+        },
+        { 
+            key: 'status' as keyof Client, 
+            header: 'Status', 
+            render: (value: any) => {
+                if (!value) return <span className="text-slate-400">N/A</span>;
+                const colors = {
+                    Active: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+                    Draft: 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800',
+                    Suspended: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
+                };
+                return (
+                    <Badge variant="outline" className={`${colors[value as keyof typeof colors] || 'bg-slate-100 dark:bg-slate-800'} w-fit`}>
+                        {value}
+                    </Badge>
+                );
+            },
+            sortable: true 
+        },
+        { 
             key: 'budget' as keyof Client, 
             header: 'Budget', 
             render: (value: any) => (
@@ -189,7 +242,13 @@ export default function ClientsPage() {
                 setDeleting(true);
                 await axios.delete(`/clients/delete/${id}`);
                 toast.success('Client deleted successfully');
-                dispatch(fetchClients({ page, limit, search: debouncedSearch }));
+                dispatch(fetchClients({ 
+                    page, 
+                    limit, 
+                    search: debouncedSearch,
+                    client_type: clientTypeFilter !== 'All' ? clientTypeFilter : undefined,
+                    status: statusFilter !== 'All' ? statusFilter : undefined,
+                }));
             } catch {
                 toast.error('Failed to delete client');
             } finally {
@@ -202,6 +261,12 @@ export default function ClientsPage() {
     );
 
     const actions: Action<Client>[] = [
+        {
+            label: 'View Details',
+            icon: <Eye className="h-4 w-4" />,
+            onClick: (client: Client) => router.push(`/clients/details?id=${client.id}`),
+            variant: 'info' as const
+        },
         {
             label: 'Edit Client',
             icon: <SquarePen className="h-4 w-4" />,
@@ -221,6 +286,8 @@ export default function ClientsPage() {
 
     const activeFilters = [];
     if (search) activeFilters.push(`Search: ${search}`);
+    if (clientTypeFilter !== 'All') activeFilters.push(`Type: ${clientTypeFilter}`);
+    if (statusFilter !== 'All') activeFilters.push(`Status: ${statusFilter}`);
 
     return (
         <>
@@ -245,9 +312,42 @@ export default function ClientsPage() {
                         setSearch(value);
                         setPage(1);
                     }}
+                    filters={[
+                        {
+                            key: 'client_type',
+                            label: 'Client Type',
+                            value: clientTypeFilter,
+                            options: [
+                                { key: 'all', label: 'All Types', value: 'All' },
+                                { key: 'government', label: 'Government', value: 'Government' },
+                                { key: 'private', label: 'Private', value: 'Private' },
+                            ],
+                            onValueChange: (value) => {
+                                setClientTypeFilter(value as 'All' | 'Government' | 'Private');
+                                setPage(1);
+                            }
+                        },
+                        {
+                            key: 'status',
+                            label: 'Status',
+                            value: statusFilter,
+                            options: [
+                                { key: 'all', label: 'All Status', value: 'All' },
+                                { key: 'draft', label: 'Draft', value: 'Draft' },
+                                { key: 'active', label: 'Active', value: 'Active' },
+                                { key: 'suspended', label: 'Suspended', value: 'Suspended' },
+                            ],
+                            onValueChange: (value) => {
+                                setStatusFilter(value as 'All' | 'Draft' | 'Active' | 'Suspended');
+                                setPage(1);
+                            }
+                        }
+                    ]}
                     activeFilters={activeFilters}
                     onClearFilters={() => {
                         setSearch('');
+                        setClientTypeFilter('All');
+                        setStatusFilter('All');
                         setPage(1);
                     }}
                     actions={
