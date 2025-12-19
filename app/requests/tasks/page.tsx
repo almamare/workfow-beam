@@ -27,6 +27,20 @@ import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
 import axios from '@/utils/axios';
 
+const requestTypes = [
+    { value: 'Tasks', label: 'Tasks', icon: <ClipboardList className="h-3 w-3" /> },
+    { value: 'Materials', label: 'Materials', icon: <ClipboardList className="h-3 w-3" /> },
+    { value: 'Equipment', label: 'Equipment', icon: <ClipboardList className="h-3 w-3" /> },
+    { value: 'Other', label: 'Other', icon: <ClipboardList className="h-3 w-3" /> }
+];
+
+const priorities = [
+    { value: 'low', label: 'Low' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'high', label: 'High' },
+    { value: 'urgent', label: 'Urgent' }
+];
+
 export default function TaskRequestsPage() {
     const taskRequests = useSelector(selectTaskRequests);
     const loading = useSelector(selectLoading);
@@ -206,7 +220,7 @@ export default function TaskRequestsPage() {
     const activeFilters = useMemo(() => {
         const arr: string[] = [];
         if (search) arr.push(`Search: ${search}`);
-        if (typeFilter !== 'all') arr.push(`Type: ${requestTypes.find(t => t.value === typeFilter)?.label}`);
+        if (typeFilter !== 'all') arr.push(`Type: ${typeFilter}`);
         if (statusFilter !== 'all') arr.push(`Status: ${statusFilter}`);
         return arr;
     }, [search, typeFilter, statusFilter]);

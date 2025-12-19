@@ -26,7 +26,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import {
-    Bell,
     Search,
     Sun,
     Moon,
@@ -34,15 +33,7 @@ import {
     Settings,
     LogOut,
     Menu,
-    Check,
-    X,
-    Loader2,
-    Activity,
-    Clock,
-    Globe,
     HelpCircle,
-    Shield,
-    TrendingUp,
 } from 'lucide-react';
 
 /* =========================================================

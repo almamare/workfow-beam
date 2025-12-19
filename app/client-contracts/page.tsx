@@ -204,7 +204,7 @@ export default function ClientContractsPage() {
         {
             label: 'View Details',
             onClick: (contract) => {
-                router.push(`/client-contracts/${contract.id}`);
+                router.push(`/client-contracts/details?id=${contract.id}`);
             },
             icon: <Eye className="h-4 w-4" />,
             variant: 'info' as const
@@ -212,7 +212,7 @@ export default function ClientContractsPage() {
         {
             label: 'Edit',
             onClick: (contract) => {
-                router.push(`/client-contracts/${contract.id}/edit`);
+                router.push(`/client-contracts/update?id=${contract.id}`);
             },
             icon: <Edit className="h-4 w-4" />,
             variant: 'default' as const

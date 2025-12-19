@@ -27,11 +27,14 @@ export default function ClientDetailsPage() {
     const clientId = params.get('id') || '';
 
     const dispatch = useReduxDispatch<AppDispatch>();
+    // البيانات تأتي مباشرة من السيرفر عبر Redux store
+    // Structure: { success: true, data: { client: { id, name, projects: [], contracts: [], task_orders: [], contractors: [] } } }
     const client = useSelector(selectSelectedClient);
     const loading = useSelector(selectClientsLoading);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
     const [isDeleting, setIsDeleting] = React.useState(false);
 
+    // جلب بيانات العميل من السيرفر - البيانات تأتي منظمة من السيرفر
     const fetchClientData = useCallback(async () => {
         if (!clientId) {
             toast.error('Client ID is required');
@@ -39,6 +42,8 @@ export default function ClientDetailsPage() {
             return;
         }
         try {
+            // البيانات تأتي من السيرفر بالشكل: { success: true, data: { client: {...} } }
+            // client object يحتوي على: id, name, client_no, projects[], contracts[], task_orders[], contractors[]
             await dispatch(fetchClient(clientId)).unwrap();
         } catch (err: any) {
             toast.error(err || 'Failed to load client data.');
@@ -93,7 +98,7 @@ export default function ClientDetailsPage() {
     };
 
     const formatDate = (dateString?: string) => {
-        if (!dateString) return '-';
+        if (!dateString) return '';
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -102,7 +107,7 @@ export default function ClientDetailsPage() {
     };
 
     const formatDateTime = (dateString?: string) => {
-        if (!dateString) return '-';
+        if (!dateString) return '';
         return new Date(dateString).toLocaleString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -113,9 +118,9 @@ export default function ClientDetailsPage() {
     };
 
     const formatCurrency = (value: string | number | undefined, currency: string = 'IQD') => {
-        if (!value) return '0';
+        if (!value) return '';
         const numValue = typeof value === 'string' ? parseFloat(value) : value;
-        if (isNaN(numValue)) return '0';
+        if (isNaN(numValue)) return '';
         return new Intl.NumberFormat('en-US').format(numValue) + ' ' + currency;
     };
 
@@ -140,36 +145,36 @@ export default function ClientDetailsPage() {
         {
             key: 'project_code' as keyof ClientProject,
             header: 'Project Code',
-            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{value || '-'}</span>
+            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{value || ''}</span>
         },
         {
             key: 'number' as keyof ClientProject,
             header: 'Number',
-            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value || '-'}</span>
+            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value || ''}</span>
         },
         {
             key: 'name' as keyof ClientProject,
             header: 'Project Name',
-            render: (value: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{value || '-'}</span>
+            render: (value: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{value || ''}</span>
         },
         {
             key: 'type' as keyof ClientProject,
             header: 'Type',
-            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value || '-'}</span>
+            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value || ''}</span>
         },
         {
             key: 'status' as keyof ClientProject,
             header: 'Status',
-            render: (value: any) => (
+            render: (value: any) => value ? (
                 <Badge variant="outline" className={`${getStatusColor(value)} w-fit`}>
-                    {value || '-'}
+                    {value}
                 </Badge>
-            )
+            ) : <span className="text-slate-500 dark:text-slate-400">—</span>
         },
         {
             key: 'created_at' as keyof ClientProject,
             header: 'Created At',
-            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 text-sm">{formatDate(value)}</span>
+            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 text-sm">{formatDate(value) || ''}</span>
         }
     ];
 
@@ -178,35 +183,35 @@ export default function ClientDetailsPage() {
         {
             key: 'contract_no' as keyof ClientContract,
             header: 'Contract No',
-            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{value || '-'}</span>
+            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{value || ''}</span>
         },
         {
             key: 'title' as keyof ClientContract,
             header: 'Title',
-            render: (value: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{value || '-'}</span>
+            render: (value: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{value || ''}</span>
         },
         {
             key: 'contract_value' as keyof ClientContract,
             header: 'Contract Value',
             render: (value: any, row: ClientContract) => (
                 <span className="font-semibold text-orange-600 dark:text-orange-400">
-                    {formatCurrency(value, row.currency)}
+                    {formatCurrency(value, row.currency) || ''}
                 </span>
             )
         },
         {
             key: 'status' as keyof ClientContract,
             header: 'Status',
-            render: (value: any) => (
+            render: (value: any) => value ? (
                 <Badge variant="outline" className={`${getStatusColor(value)} w-fit`}>
-                    {value || '-'}
+                    {value}
                 </Badge>
-            )
+            ) : <span className="text-slate-500 dark:text-slate-400">—</span>
         },
         {
             key: 'contract_date' as keyof ClientContract,
             header: 'Contract Date',
-            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 text-sm">{formatDate(value)}</span>
+            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 text-sm">{formatDate(value) || ''}</span>
         }
     ];
 
@@ -215,35 +220,35 @@ export default function ClientDetailsPage() {
         {
             key: 'task_order_no' as keyof ClientTaskOrder,
             header: 'Task Order No',
-            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{value || '-'}</span>
+            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{value || ''}</span>
         },
         {
             key: 'title' as keyof ClientTaskOrder,
             header: 'Title',
-            render: (value: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{value || '-'}</span>
+            render: (value: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{value || ''}</span>
         },
         {
             key: 'est_cost' as keyof ClientTaskOrder,
             header: 'Estimated Cost',
             render: (value: any) => (
                 <span className="font-semibold text-green-600 dark:text-green-400">
-                    {formatCurrency(value)}
+                    {formatCurrency(value) || ''}
                 </span>
             )
         },
         {
             key: 'status' as keyof ClientTaskOrder,
             header: 'Status',
-            render: (value: any) => (
+            render: (value: any) => value ? (
                 <Badge variant="outline" className={`${getStatusColor(value)} w-fit`}>
-                    {value || '-'}
+                    {value}
                 </Badge>
-            )
+            ) : <span className="text-slate-500 dark:text-slate-400">—</span>
         },
         {
             key: 'issue_date' as keyof ClientTaskOrder,
             header: 'Issue Date',
-            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 text-sm">{formatDate(value)}</span>
+            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 text-sm">{formatDate(value) || ''}</span>
         }
     ];
 
@@ -252,31 +257,31 @@ export default function ClientDetailsPage() {
         {
             key: 'number' as keyof ClientContractor,
             header: 'Number',
-            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{value || '-'}</span>
+            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{value || ''}</span>
         },
         {
             key: 'name' as keyof ClientContractor,
             header: 'Name',
-            render: (value: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{value || '-'}</span>
+            render: (value: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{value || ''}</span>
         },
         {
             key: 'phone' as keyof ClientContractor,
             header: 'Phone',
-            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value || '-'}</span>
+            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value || ''}</span>
         },
         {
             key: 'email' as keyof ClientContractor,
             header: 'Email',
-            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value || '-'}</span>
+            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value || ''}</span>
         },
         {
             key: 'status' as keyof ClientContractor,
             header: 'Status',
-            render: (value: any) => (
+            render: (value: any) => value ? (
                 <Badge variant="outline" className={`${getStatusColor(value)} w-fit`}>
-                    {value || '-'}
+                    {value}
                 </Badge>
-            )
+            ) : <span className="text-slate-500 dark:text-slate-400">—</span>
         }
     ];
 
@@ -363,19 +368,27 @@ export default function ClientDetailsPage() {
                     <div>
                         <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">Client Type</Label>
                         <div>
-                            <Badge variant="outline" className={`${getClientTypeColor(client.client_type)} flex items-center gap-1 w-fit`}>
-                                <Building className="h-4 w-4" />
-                                {client.client_type || 'N/A'}
-                            </Badge>
+                            {client.client_type ? (
+                                <Badge variant="outline" className={`${getClientTypeColor(client.client_type)} flex items-center gap-1 w-fit`}>
+                                    <Building className="h-4 w-4" />
+                                    {client.client_type}
+                                </Badge>
+                            ) : (
+                                <p className="text-slate-500 dark:text-slate-400">—</p>
+                            )}
                         </div>
                     </div>
                     <div>
                         <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">Status</Label>
                         <div>
-                            <Badge variant="outline" className={`${getStatusColor(client.status)} flex items-center gap-1 w-fit`}>
-                                {getStatusIcon(client.status)}
-                                {client.status || 'N/A'}
-                            </Badge>
+                            {client.status ? (
+                                <Badge variant="outline" className={`${getStatusColor(client.status)} flex items-center gap-1 w-fit`}>
+                                    {getStatusIcon(client.status)}
+                                    {client.status}
+                                </Badge>
+                            ) : (
+                                <p className="text-slate-500 dark:text-slate-400">—</p>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -393,14 +406,18 @@ export default function ClientDetailsPage() {
                         <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">State</Label>
                         <div className="flex items-center gap-2">
                             <MapPin className="h-4 w-4 text-slate-400" />
-                            <p className="text-slate-900 dark:text-slate-100">{client.state}</p>
+                            <p className="text-slate-900 dark:text-slate-100">
+                                {client.state || <span className="text-slate-500 dark:text-slate-400">—</span>}
+                            </p>
                         </div>
                     </div>
                     <div>
                         <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">City</Label>
                         <div className="flex items-center gap-2">
                             <MapPin className="h-4 w-4 text-slate-400" />
-                            <p className="text-slate-900 dark:text-slate-100">{client.city}</p>
+                            <p className="text-slate-900 dark:text-slate-100">
+                                {client.city || <span className="text-slate-500 dark:text-slate-400">—</span>}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -419,14 +436,14 @@ export default function ClientDetailsPage() {
                         <div className="flex items-center gap-2">
                             <DollarSign className="h-4 w-4 text-green-500" />
                             <p className="text-slate-900 dark:text-slate-100 font-semibold text-xl">
-                                {client.budget ? new Intl.NumberFormat('en-US').format(parseFloat(client.budget)) : 'N/A'}
+                                {client.budget ? new Intl.NumberFormat('en-US').format(parseFloat(client.budget)) : <span className="text-slate-500 dark:text-slate-400 font-normal">—</span>}
                             </p>
                         </div>
                     </div>
                 </div>
             </EnhancedCard>
 
-            {/* Projects */}
+            {/* Projects - البيانات تأتي مباشرة من السيرفر: client.projects[] */}
             {client.projects && client.projects.length > 0 && (
                 <EnhancedCard
                     title="Projects"
@@ -443,7 +460,7 @@ export default function ClientDetailsPage() {
                 </EnhancedCard>
             )}
 
-            {/* Contracts */}
+            {/* Contracts - البيانات تأتي مباشرة من السيرفر: client.contracts[] */}
             {client.contracts && client.contracts.length > 0 && (
                 <EnhancedCard
                     title="Contracts"
@@ -460,7 +477,7 @@ export default function ClientDetailsPage() {
                 </EnhancedCard>
             )}
 
-            {/* Task Orders */}
+            {/* Task Orders - البيانات تأتي مباشرة من السيرفر: client.task_orders[] */}
             {client.task_orders && client.task_orders.length > 0 && (
                 <EnhancedCard
                     title="Task Orders"
@@ -477,7 +494,7 @@ export default function ClientDetailsPage() {
                 </EnhancedCard>
             )}
 
-            {/* Contractors */}
+            {/* Contractors - البيانات تأتي مباشرة من السيرفر: client.contractors[] */}
             {client.contractors && client.contractors.length > 0 && (
                 <EnhancedCard
                     title="Contractors"
@@ -507,7 +524,7 @@ export default function ClientDetailsPage() {
                         <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-slate-400" />
                             <p className="text-slate-900 dark:text-slate-100">
-                                {formatDateTime(client.created_at)}
+                                {formatDateTime(client.created_at) || <span className="text-slate-500 dark:text-slate-400">—</span>}
                             </p>
                         </div>
                     </div>
@@ -517,7 +534,7 @@ export default function ClientDetailsPage() {
                             <div className="flex items-center gap-2">
                                 <Calendar className="h-4 w-4 text-slate-400" />
                                 <p className="text-slate-900 dark:text-slate-100">
-                                    {formatDateTime(client.updated_at)}
+                                    {formatDateTime(client.updated_at) || <span className="text-slate-500 dark:text-slate-400">—</span>}
                                 </p>
                             </div>
                         </div>

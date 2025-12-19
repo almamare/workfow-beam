@@ -2,7 +2,7 @@
 
 import MainLayout from '@/components/layout/main-layout';
 
-export default function ProjectsLayout({
+export default function ClientsLayout({
     children,
 }: {
     children: React.ReactNode;

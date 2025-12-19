@@ -2,7 +2,7 @@
 
 import MainLayout from '@/components/layout/main-layout';
 
-export default function ProjectsLayout({
+export default function TasksLayout({
     children,
 }: {
     children: React.ReactNode;

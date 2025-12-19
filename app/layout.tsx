@@ -3,22 +3,22 @@ import { Providers } from '@/components/providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Shuaa Al-Ranou Trade & General Contracting',
-  description: 'Project Management System',
+    title: 'Shuaa Al-Ranou Trade & General Contracting',
+    description: 'Project Management System',
 };
 
 export default function RootLayout({
-  children,
+    children,
 }: {
-  children: React.ReactNode;
+    children: React.ReactNode;
 }) {
-  return (
-    <html lang="en">
-      <body>
-        <Providers>
-          {children}
-        </Providers>
-      </body>
-    </html>
-  );
+    return (
+        <html lang="en">
+            <body>
+                <Providers>
+                    {children}
+                </Providers>
+            </body>
+        </html>
+    );
 }
