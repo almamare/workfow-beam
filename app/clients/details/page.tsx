@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AppDispatch } from '@/stores/store';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
@@ -21,7 +21,7 @@ import { EnhancedDataTable, Column } from '@/components/ui/enhanced-data-table';
 import axios from '@/utils/axios';
 import type { ClientProject, ClientContract, ClientTaskOrder, ClientContractor } from '@/stores/types/clients';
 
-export default function ClientDetailsPage() {
+function ClientDetailsContent() {
     const params = useSearchParams();
     const router = useRouter();
     const clientId = params.get('id') || '';
@@ -568,6 +568,25 @@ export default function ClientDetailsPage() {
                 </DialogContent>
             </Dialog>
         </div>
+    );
+}
+
+export default function ClientDetailsPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="space-y-4">
+                    <Breadcrumb />
+                    <div className="flex items-center justify-center py-20">
+                        <div className="text-center">
+                            <p className="text-slate-500 dark:text-slate-400">Loading client details...</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        >
+            <ClientDetailsContent />
+        </Suspense>
     );
 }
 
