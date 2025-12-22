@@ -5,6 +5,7 @@ export interface Approval {
     created_name: string;
     sequence: number;
     title: string;
+    step_no: string;
     step_name: string;
     remarks: string;
     status: string; // 'موافق', 'مرفوض', 'قيد المراجعة', etc.
