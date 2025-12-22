@@ -4,6 +4,8 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
 import { Loader2, Save, RotateCcw } from 'lucide-react';
@@ -17,6 +19,8 @@ type ClientPayload = {
     state: string;
     city: string;
     budget: number | string;
+    client_type?: 'Government' | 'Private';
+    notes?: string;
 };
 
 type ClientFromApi = {
@@ -27,6 +31,9 @@ type ClientFromApi = {
     budget: number | string;
     client_no?: string;
     sequence?: number;
+    client_type?: 'Government' | 'Private';
+    notes?: string;
+    status?: string;
     created_at?: string;
     updated_at?: string;
 };
@@ -35,7 +42,9 @@ const emptyValues: ClientPayload = {
     name: '',
     state: '',
     city: '',
-    budget: ''
+    budget: '',
+    client_type: undefined,
+    notes: ''
 };
 
 const numberFields: (keyof ClientPayload)[] = ['budget'];
@@ -50,7 +59,7 @@ const EditClientPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    const [clientMeta, setClientMeta] = useState<{ client_no?: string; sequence?: number }>({});
+    const [clientMeta, setClientMeta] = useState<{ client_no?: string; sequence?: number; status?: string }>({});
 
     // Update field
     const updateField = useCallback(
@@ -64,6 +73,19 @@ const EditClientPage: React.FC = () => {
             } else {
                 setForm(prev => ({ ...prev, [name]: value }));
             }
+            setFieldErrors(prev => {
+                const clone = { ...prev };
+                delete clone[name as string];
+                return clone;
+            });
+        },
+        []
+    );
+
+    // Update select field
+    const updateSelectField = useCallback(
+        (name: keyof ClientPayload, value: string) => {
+            setForm(prev => ({ ...prev, [name]: value as any }));
             setFieldErrors(prev => {
                 const clone = { ...prev };
                 delete clone[name as string];
@@ -96,6 +118,12 @@ const EditClientPage: React.FC = () => {
     const formattedPayload = useMemo(() => {
         const payload: any = { ...form };
         payload.budget = form.budget === '' ? 0 : Number(form.budget);
+        if (!payload.client_type) {
+            delete payload.client_type;
+        }
+        if (!payload.notes || payload.notes.trim() === '') {
+            delete payload.notes;
+        }
         return payload as ClientPayload;
     }, [form]);
 
@@ -123,12 +151,18 @@ const EditClientPage: React.FC = () => {
                 name: client.name ?? '',
                 state: client.state ?? '',
                 city: client.city ?? '',
-                budget: client.budget ?? ''
+                budget: client.budget ?? '',
+                client_type: client.client_type,
+                notes: client.notes ?? ''
             };
 
             setForm(nextForm);
             setLoadedForm(nextForm);
-            setClientMeta({ client_no: client.client_no, sequence: client.sequence });
+            setClientMeta({ 
+                client_no: client.client_no, 
+                sequence: client.sequence,
+                status: client.status 
+            });
         } catch (e: any) {
             const msg =
                 e?.response?.data?.header?.message ||
@@ -148,6 +182,13 @@ const EditClientPage: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Check if client status is Draft
+        if (clientMeta.status && clientMeta.status.toLowerCase() !== 'draft') {
+            toast.warning('Client information can only be updated when its status is Draft.');
+            return;
+        }
+        
         if (!validate()) {
             toast.error('Please fix the validation errors.');
             return;
@@ -222,10 +263,10 @@ const EditClientPage: React.FC = () => {
             </div>
 
             {/* Meta (read-only) */}
-            {(clientMeta.client_no || clientMeta.sequence !== undefined) && (
+            {(clientMeta.client_no || clientMeta.sequence !== undefined || clientMeta.status) && (
                 <EnhancedCard
                     title="Client Meta"
-                    description="Read-only identifiers."
+                    description="Read-only identifiers and status."
                     variant="default"
                     size="sm"
                 >
@@ -250,6 +291,26 @@ const EditClientPage: React.FC = () => {
                                     disabled 
                                     className="bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                                 />
+                            </div>
+                        )}
+                        {clientMeta.status && (
+                            <div className="space-y-2">
+                                <Label htmlFor="status" className="text-slate-700 dark:text-slate-200">Status</Label>
+                                <Input 
+                                    id="status" 
+                                    value={clientMeta.status} 
+                                    disabled 
+                                    className={`bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 ${
+                                        clientMeta.status.toLowerCase() !== 'draft' 
+                                            ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
+                                            : ''
+                                    }`}
+                                />
+                                {clientMeta.status.toLowerCase() !== 'draft' && (
+                                    <p className="text-xs text-red-500 dark:text-red-400">
+                                        Data can only be updated if the status is Draft
+                                    </p>
+                                )}
                             </div>
                         )}
                     </div>
@@ -326,6 +387,37 @@ const EditClientPage: React.FC = () => {
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.budget}</p>
                                 )}
                             </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="client_type" className="text-slate-700 dark:text-slate-200">Client Type</Label>
+                                <Select
+                                    value={form.client_type || ''}
+                                    onValueChange={(value) => updateSelectField('client_type', value === 'All' ? '' : value)}
+                                    disabled={initialLoading || loading}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400">
+                                        <SelectValue placeholder="Select client type" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectItem value="Government" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Government</SelectItem>
+                                        <SelectItem value="Private" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Private</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* Notes Field */}
+                        <div className="space-y-2 md:col-span-2 lg:col-span-3">
+                            <Label htmlFor="notes" className="text-slate-700 dark:text-slate-200">Notes (optional)</Label>
+                            <Textarea
+                                id="notes"
+                                value={form.notes}
+                                onChange={e => updateField('notes', e.target.value)}
+                                placeholder="Enter any additional notes (optional)"
+                                rows={4}
+                                disabled={initialLoading || loading}
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400"
+                            />
                         </div>
                     </div>
 

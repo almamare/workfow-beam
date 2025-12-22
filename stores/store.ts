@@ -9,6 +9,7 @@ import Contractors from '@/stores/slices/contractors';              // Importing
 import UsersSil from '@/stores/slices/users';                       // Importing the Users type from the users slice
 import Employees from '@/stores/slices/employees';                  // Importing the Employees type from the employees slice
 import TaskRequests from '@/stores/slices/tasks_requests';          // Importing the TaskRequests type from the tasks_requests slice
+import ClientRequests from '@/stores/slices/clients_requests';      // Importing the ClientRequests type from the clients_requests slice
 import Notifications from '@/stores/slices/notifications';          // Importing the Notifications slice
 import Forms from '@/stores/slices/forms';                          // Importing the Forms slice
 import Documents from '@/stores/slices/documents';                  // Importing the Documents slice
@@ -33,6 +34,7 @@ const store = configureStore({
         users: UsersSil,                    //
         employees: Employees,
         taskRequests: TaskRequests,
+        clientRequests: ClientRequests,      // This is the slice for managing client requests
         notifications: Notifications,       // This is the slice for managing notifications
         forms: Forms,                       // This is the slice for managing forms
         documents: Documents,               // This is the slice for managing documents

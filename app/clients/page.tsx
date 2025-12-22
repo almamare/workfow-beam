@@ -16,16 +16,18 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { DeleteDialog } from '@/components/delete-dialog';
-import { Trash2, SquarePen, Plus, RefreshCw, FileSpreadsheet, Eye } from 'lucide-react';
+import { Trash2, SquarePen, Plus, RefreshCw, FileSpreadsheet, Eye, X, Search } from 'lucide-react';
 import type { Client } from '@/stores/types/clients';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
-import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { DatePicker } from '@/components/DatePicker';
+import { Label } from '@/components/ui/label';
 
 export default function ClientsPage() {
     const dispatch = useDispatch<AppDispatch>();
@@ -41,6 +43,8 @@ export default function ClientsPage() {
     const [debouncedSearch, setDebouncedSearch] = useState(search);
     const [clientTypeFilter, setClientTypeFilter] = useState<'All' | 'Government' | 'Private'>('All');
     const [statusFilter, setStatusFilter] = useState<'All' | 'Draft' | 'Active' | 'Suspended'>('All');
+    const [dateFrom, setDateFrom] = useState<string>('');
+    const [dateTo, setDateTo] = useState<string>('');
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -62,7 +66,7 @@ export default function ClientsPage() {
 
     const lastKeyRef = useRef<string>('');
     useEffect(() => {
-        const key = JSON.stringify({ page, limit, search: debouncedSearch, client_type: clientTypeFilter, status: statusFilter });
+        const key = JSON.stringify({ page, limit, search: debouncedSearch, client_type: clientTypeFilter, status: statusFilter, date_from: dateFrom, date_to: dateTo });
         if (lastKeyRef.current === key) return; 
         lastKeyRef.current = key;
         dispatch(fetchClients({ 
@@ -71,8 +75,10 @@ export default function ClientsPage() {
             search: debouncedSearch,
             client_type: clientTypeFilter !== 'All' ? clientTypeFilter : undefined,
             status: statusFilter !== 'All' ? statusFilter : undefined,
+            from_date: dateFrom || undefined,
+            to_date: dateTo || undefined,
         }));
-    }, [dispatch, page, limit, debouncedSearch, clientTypeFilter, statusFilter]);
+    }, [dispatch, page, limit, debouncedSearch, clientTypeFilter, statusFilter, dateFrom, dateTo]);
 
     const refreshTable = async () => {
         setIsRefreshing(true);
@@ -83,6 +89,8 @@ export default function ClientsPage() {
                 search: debouncedSearch,
                 client_type: clientTypeFilter !== 'All' ? clientTypeFilter : undefined,
                 status: statusFilter !== 'All' ? statusFilter : undefined,
+                from_date: dateFrom || undefined,
+                to_date: dateTo || undefined,
             }));
             toast.success('Table refreshed successfully');
         } catch (err) {
@@ -95,14 +103,18 @@ export default function ClientsPage() {
     const exportToExcel = async () => {
         setIsExporting(true);
         try {
+            const exportParams: any = {
+                search: debouncedSearch,
+                client_type: clientTypeFilter !== 'All' ? clientTypeFilter : undefined,
+                status: statusFilter !== 'All' ? statusFilter : undefined,
+                limit: 10000,
+                page: 1
+            };
+            if (dateFrom) exportParams.from_date = dateFrom;
+            if (dateTo) exportParams.to_date = dateTo;
+            
             const { data } = await axios.get('/clients/fetch', {
-                params: {
-                    search: debouncedSearch,
-                    client_type: clientTypeFilter !== 'All' ? clientTypeFilter : undefined,
-                    status: statusFilter !== 'All' ? statusFilter : undefined,
-                    limit: 10000,
-                    page: 1
-                }
+                params: exportParams
             });
 
             const headers = ['ID', 'Client Name', 'Client Number', 'Client Type', 'Status', 'State', 'City', 'Budget', 'Created At'];
@@ -248,6 +260,8 @@ export default function ClientsPage() {
                     search: debouncedSearch,
                     client_type: clientTypeFilter !== 'All' ? clientTypeFilter : undefined,
                     status: statusFilter !== 'All' ? statusFilter : undefined,
+                    from_date: dateFrom || undefined,
+                    to_date: dateTo || undefined,
                 }));
             } catch {
                 toast.error('Failed to delete client');
@@ -288,6 +302,8 @@ export default function ClientsPage() {
     if (search) activeFilters.push(`Search: ${search}`);
     if (clientTypeFilter !== 'All') activeFilters.push(`Type: ${clientTypeFilter}`);
     if (statusFilter !== 'All') activeFilters.push(`Status: ${statusFilter}`);
+    if (dateFrom) activeFilters.push(`From: ${new Date(dateFrom).toLocaleDateString('en-US')}`);
+    if (dateTo) activeFilters.push(`To: ${new Date(dateTo).toLocaleDateString('en-US')}`);
 
     return (
         <>
@@ -298,83 +314,175 @@ export default function ClientsPage() {
                 {/* Page Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-200">Clients</h1>
+                        <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-200">All Clients</h1>
                         <p className="text-slate-600 dark:text-slate-400 mt-1">
-                            Manage your client relationships and track project assignments
+                            Browse and manage all clients with comprehensive filtering and management tools
                         </p>
                     </div>
                 </div>
-                {/* Filter Bar */}
-                <FilterBar
-                    searchPlaceholder="Search by client number..."
-                    searchValue={search}
-                    onSearchChange={(value) => {
-                        setSearch(value);
-                        setPage(1);
-                    }}
-                    filters={[
-                        {
-                            key: 'client_type',
-                            label: 'Client Type',
-                            value: clientTypeFilter,
-                            options: [
-                                { key: 'all', label: 'All Types', value: 'All' },
-                                { key: 'government', label: 'Government', value: 'Government' },
-                                { key: 'private', label: 'Private', value: 'Private' },
-                            ],
-                            onValueChange: (value) => {
-                                setClientTypeFilter(value as 'All' | 'Government' | 'Private');
-                                setPage(1);
-                            }
-                        },
-                        {
-                            key: 'status',
-                            label: 'Status',
-                            value: statusFilter,
-                            options: [
-                                { key: 'all', label: 'All Status', value: 'All' },
-                                { key: 'draft', label: 'Draft', value: 'Draft' },
-                                { key: 'active', label: 'Active', value: 'Active' },
-                                { key: 'suspended', label: 'Suspended', value: 'Suspended' },
-                            ],
-                            onValueChange: (value) => {
-                                setStatusFilter(value as 'All' | 'Draft' | 'Active' | 'Suspended');
-                                setPage(1);
-                            }
-                        }
-                    ]}
-                    activeFilters={activeFilters}
-                    onClearFilters={() => {
-                        setSearch('');
-                        setClientTypeFilter('All');
-                        setStatusFilter('All');
-                        setPage(1);
-                    }}
-                    actions={
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={exportToExcel}
-                                disabled={isExporting || loading}
-                                className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+
+                {/* Search & Filters Card */}
+                <EnhancedCard
+                    title="Search & Filters"
+                    description="Search and filter clients by various criteria"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="space-y-4">
+                        {/* Search Input with Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                                <Input
+                                    placeholder="Search by client number, name, state, city, budget, or sequence..."
+                                    value={search}
+                                    onChange={(e) => {
+                                        setSearch(e.target.value);
+                                        setPage(1);
+                                    }}
+                                    className="pl-10 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={exportToExcel}
+                                    disabled={isExporting || loading}
+                                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 whitespace-nowrap"
                                 >
-                                <FileSpreadsheet className={`h-4 w-4 ${isExporting ? 'animate-pulse' : ''}`} />
-                                {isExporting ? 'Exporting...' : 'Export Excel'}
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={refreshTable}
-                                disabled={isRefreshing}
-                                className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                    <FileSpreadsheet className={`h-4 w-4 mr-2 ${isExporting ? 'animate-pulse' : ''}`} />
+                                    {isExporting ? 'Exporting...' : 'Export Excel'}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={refreshTable}
+                                    disabled={isRefreshing}
+                                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 whitespace-nowrap"
                                 >
-                                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                                Refresh
-                            </Button>
+                                    <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                    Refresh
+                                </Button>
+                            </div>
                         </div>
-                    }
-                />
+
+                        {/* Filters Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Client Type Filter */}
+                            <div className="space-y-2">
+                                <Label htmlFor="client_type" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    Client Type
+                                </Label>
+                                <Select
+                                    value={clientTypeFilter}
+                                    onValueChange={(value) => {
+                                        setClientTypeFilter(value as 'All' | 'Government' | 'Private');
+                                        setPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100">
+                                        <SelectValue placeholder="All Types" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectItem value="All" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Types</SelectItem>
+                                        <SelectItem value="Government" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Government</SelectItem>
+                                        <SelectItem value="Private" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Private</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Status Filter */}
+                            <div className="space-y-2">
+                                <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    Status
+                                </Label>
+                                <Select
+                                    value={statusFilter}
+                                    onValueChange={(value) => {
+                                        setStatusFilter(value as 'All' | 'Draft' | 'Active' | 'Suspended');
+                                        setPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100">
+                                        <SelectValue placeholder="All Status" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectItem value="All" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Status</SelectItem>
+                                        <SelectItem value="Draft" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Draft</SelectItem>
+                                        <SelectItem value="Active" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Active</SelectItem>
+                                        <SelectItem value="Suspended" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Suspended</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* From Date */}
+                            <div className="space-y-2">
+                                <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    From Date
+                                </Label>
+                                <DatePicker
+                                    value={dateFrom}
+                                    onChange={(value) => {
+                                        setDateFrom(value);
+                                        setPage(1);
+                                    }}
+                                />
+                            </div>
+
+                            {/* To Date */}
+                            <div className="space-y-2">
+                                <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    To Date
+                                </Label>
+                                <DatePicker
+                                    value={dateTo}
+                                    onChange={(value) => {
+                                        setDateTo(value);
+                                        setPage(1);
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Active Filters & Clear Button */}
+                        {activeFilters.length > 0 && (
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                                {/* Active Filters */}
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Active filters:</span>
+                                    {activeFilters.map((filter, index) => (
+                                        <Badge
+                                            key={index}
+                                            variant="outline"
+                                            className="bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50 border-orange-200 dark:border-orange-800"
+                                        >
+                                            {filter}
+                                        </Badge>
+                                    ))}
+                                </div>
+
+                                {/* Clear All Button */}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setSearch('');
+                                        setClientTypeFilter('All');
+                                        setStatusFilter('All');
+                                        setDateFrom('');
+                                        setDateTo('');
+                                        setPage(1);
+                                    }}
+                                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800 whitespace-nowrap"
+                                >
+                                    <X className="h-4 w-4 mr-2" />
+                                    Clear All
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </EnhancedCard>
 
                 {/* Clients Table */}
                 <EnhancedCard

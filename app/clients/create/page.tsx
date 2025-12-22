@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
 import { Loader2, Save, RotateCcw } from 'lucide-react';
@@ -18,6 +19,7 @@ type ClientPayload = {
     city: string;
     budget: number | string;
     client_type?: 'Government' | 'Private';
+    notes?: string;
 };
 
 const initialValues: ClientPayload = {
@@ -25,7 +27,8 @@ const initialValues: ClientPayload = {
     state: '',
     city: '',
     budget: '',
-    client_type: undefined
+    client_type: undefined,
+    notes: ''
 };
 
 const numberFields: (keyof ClientPayload)[] = ['budget'];
@@ -98,6 +101,10 @@ const CreateClientPage: React.FC = () => {
         // Remove client_type if not selected
         if (!payload.client_type) {
             delete payload.client_type;
+        }
+        // Remove notes if empty (optional field)
+        if (!payload.notes || payload.notes.trim() === '') {
+            delete payload.notes;
         }
         return payload as ClientPayload;
     }, [form]);
@@ -257,6 +264,22 @@ const CreateClientPage: React.FC = () => {
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.client_type}</p>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Notes */}
+                        <div className="space-y-2 md:col-span-2 lg:col-span-3">
+                            <Label htmlFor="notes" className="text-slate-700 dark:text-slate-200">Request Notes</Label>
+                            <Textarea
+                                id="notes"
+                                value={form.notes || ''}
+                                onChange={e => updateField('notes', e.target.value)}
+                                placeholder="Enter notes or additional information (optional)..."
+                                rows={4}
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                            />
+                            {fieldErrors.notes && (
+                                <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.notes}</p>
+                            )}
                         </div>
                     </div>
 

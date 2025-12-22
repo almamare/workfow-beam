@@ -3,8 +3,8 @@ export interface Approval {
     request_id: string;
     created_id: string;
     created_name: string;
-    sequence: string;
-    step_no: number;
+    sequence: number;
+    title: string;
     step_name: string;
     remarks: string;
     status: string; // 'موافق', 'مرفوض', 'قيد المراجعة', etc.

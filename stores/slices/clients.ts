@@ -26,9 +26,11 @@ const initialState: ClientsState = {
 export interface FetchClientsParams {
     page?: number;
     limit?: number;
-    search?: string;
+    search?: string;  // Smart search in: client_no, name, state, city, budget, sequence
     client_type?: string;
     status?: string;
+    from_date?: string;  // Date range: from date (YYYY-MM-DD) - filters by created_at
+    to_date?: string;    // Date range: to date (YYYY-MM-DD) - filters by created_at
 }
 
 export const fetchClients = createAsyncThunk<
@@ -39,9 +41,14 @@ export const fetchClients = createAsyncThunk<
     'clients/fetchClients',
     async (params, { rejectWithValue, signal }) => {
         try {
-            const { page = 1, limit = 10, search = '', client_type, status } = params || {};
+            const { page = 1, limit = 10, search = '', client_type, status, from_date, to_date } = params || {};
+            const requestParams: any = { page, limit, search, client_type, status };
+            // Add date filters only if provided (search in created_at field)
+            if (from_date) requestParams.from_date = from_date;
+            if (to_date) requestParams.to_date = to_date;
+            
             const res = await api.get<ClientsResponse>('/clients/fetch', {
-                params: { page, limit, search, client_type, status },
+                params: requestParams,
                 signal, // يدعم إلغاء الطلب
             });
 
@@ -92,15 +99,45 @@ export const fetchClient = createAsyncThunk<
     'clients/fetchClient',
     async (clientId, { rejectWithValue }) => {
         try {
-            const res = await api.get<SingleClientResponse>(`/clients/fetch/client/${clientId}`);
-            const { success, message, data } = res.data;
-            if (!success || !data?.client) {
-                return rejectWithValue(message || 'Failed to fetch client');
+            const res = await api.get(`/clients/fetch/client/${clientId}`);
+            
+            let clientData = null;
+            let success = false;
+            let message = '';
+            
+            if (res.data?.body?.client) {
+                clientData = res.data.body.client;
+                success = res.data?.header?.success ?? true;
+                message = res.data?.header?.message || res.data?.body?.message || '';
+            } else if (res.data?.data?.client) {
+                clientData = res.data.data.client;
+                success = res.data.success ?? true;
+                message = res.data.message || '';
+            } else if (res.data?.client) {
+                clientData = res.data.client;
+                success = true;
+            } else if (res.data?.success && res.data?.client) {
+                clientData = res.data.client;
+                success = res.data.success;
+                message = res.data.message || '';
             }
-            return res.data;
+            
+            if (!clientData) {
+                return rejectWithValue(message || 'Client data not found in response');
+            }
+            
+            return {
+                success,
+                message,
+                data: {
+                    client: clientData
+                }
+            } as SingleClientResponse;
         } catch (err: any) {
+            console.error('Error in fetchClient:', err);
             const msg =
                 err?.response?.data?.message ||
+                err?.response?.data?.error ||
                 err?.message ||
                 'Network error while fetching client';
             return rejectWithValue(msg);
@@ -133,8 +170,10 @@ const clientsSlice = createSlice({
             })
             .addCase(fetchClients.rejected, (state, action) => {
                 state.loading = false;
-                // لا نعرض رسالة إلغاء كخطأ للمستخدم
-                const msg = (action.payload as string) || action.error.message || 'حدث خطأ أثناء جلب بيانات العملاء';
+                state.clients = [];
+                state.total = 0;
+                state.pages = 0;
+                const msg = (action.payload as string) || action.error.message || 'An error occurred while fetching client data';
                 state.error = msg === 'Request canceled' ? null : msg;
             })
             // Fetch Single Client

@@ -3,7 +3,7 @@
 import { AuthProvider } from '@/contexts/AuthContext';      // Importing the AuthProvider from the AuthContext file
 import { ThemeProvider } from '@/contexts/ThemeContext';    // Importing the ThemeProvider from the ThemeContext file
 import ReduxProvider from '@/components/ReduxProvider';     // Importing the ReduxProvider component which wraps the application with the Redux store
-import { Toaster } from '@/components/ui/sonner';          // Importing the Toaster component for toast notifications
+import { Toaster } from 'sonner';          // Importing the Toaster component for toast notifications
 
 
 interface ProvidersProps {
@@ -19,7 +19,7 @@ export function Providers({ children }: ProvidersProps) {
             <ReduxProvider>
                 <AuthProvider>
                     {children}
-                    <Toaster />
+                    <Toaster position="top-right" richColors closeButton className="toaster group" />
                 </AuthProvider>
             </ReduxProvider>
         </ThemeProvider>

@@ -8,6 +8,7 @@ export interface Client {
     budget: string;
     client_type?: 'Government' | 'Private';
     status?: 'Draft' | 'Active' | 'Suspended' ;
+    notes?: string;
     created_at: string;
     updated_at: string;
     projects?: ClientProject[];

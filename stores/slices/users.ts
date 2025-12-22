@@ -49,6 +49,29 @@ export const fetchUser = createAsyncThunk<
     { rejectValue: string }
 >('users/fetchUser', async ({ id }, { rejectWithValue }) => {
     try {
+        // Try endpoint 1: /users/fetch/${id} (used in update page)
+        try {
+            const response = await api.get<any>(`/users/fetch/${id}`);
+            const { header, body } = response.data;
+
+            if (header.success && body?.user) {
+                // Transform response to match UsersResponse format
+                return {
+                    header,
+                    body: {
+                        users: {
+                            items: [body.user],
+                            total: 1,
+                            pages: 1
+                        }
+                    }
+                } as UsersResponse;
+            }
+        } catch (error1: any) {
+            console.warn('Endpoint /users/fetch/ failed, trying /users/fetch/user/', error1.response?.data || error1.message);
+        }
+
+        // Try endpoint 2: /users/fetch/user/${id} (original)
         const response = await api.get<UsersResponse>(`/users/fetch/user/${id}`);
         const { header, body } = response.data;
 

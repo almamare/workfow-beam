@@ -7,11 +7,9 @@ import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import { fetchClient, selectSelectedClient, selectClientsLoading, clearSelectedClient } from '@/stores/slices/clients';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { 
-    ArrowLeft, Edit, Trash2, Building, MapPin, DollarSign, Calendar, UserCircle, 
-    CheckCircle, XCircle, Clock, FolderOpen, FileText, ClipboardList, 
-    Phone, Mail, Landmark, ExternalLink
+    ArrowLeft, Edit, Trash2, Building, MapPin, DollarSign, Calendar, 
+    CheckCircle, XCircle, Clock, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
@@ -21,20 +19,33 @@ import { EnhancedDataTable, Column } from '@/components/ui/enhanced-data-table';
 import axios from '@/utils/axios';
 import type { ClientProject, ClientContract, ClientTaskOrder, ClientContractor } from '@/stores/types/clients';
 
+// Centered Layout Component for states
+const Centered: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-3">
+        {children}
+    </div>
+);
+
+// Detail Row Component (branded colors)
+const Detail: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
+    <div className="flex items-start justify-between gap-4 py-2">
+        <span className="font-medium text-slate-700 dark:text-slate-200">{label}</span>
+        <span className="text-slate-600 dark:text-slate-400 text-right">{value || 'N/A'}</span>
+    </div>
+);
+
 function ClientDetailsContent() {
     const params = useSearchParams();
     const router = useRouter();
     const clientId = params.get('id') || '';
 
     const dispatch = useReduxDispatch<AppDispatch>();
-    // البيانات تأتي مباشرة من السيرفر عبر Redux store
     // Structure: { success: true, data: { client: { id, name, projects: [], contracts: [], task_orders: [], contractors: [] } } }
     const client = useSelector(selectSelectedClient);
     const loading = useSelector(selectClientsLoading);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
     const [isDeleting, setIsDeleting] = React.useState(false);
 
-    // جلب بيانات العميل من السيرفر - البيانات تأتي منظمة من السيرفر
     const fetchClientData = useCallback(async () => {
         if (!clientId) {
             toast.error('Client ID is required');
@@ -42,8 +53,6 @@ function ClientDetailsContent() {
             return;
         }
         try {
-            // البيانات تأتي من السيرفر بالشكل: { success: true, data: { client: {...} } }
-            // client object يحتوي على: id, name, client_no, projects[], contracts[], task_orders[], contractors[]
             await dispatch(fetchClient(clientId)).unwrap();
         } catch (err: any) {
             toast.error(err || 'Failed to load client data.');
@@ -60,13 +69,13 @@ function ClientDetailsContent() {
 
     const getStatusColor = (status?: string) => {
         const statusLower = status?.toLowerCase() || '';
-        if (statusLower.includes('active') || statusLower.includes('نشط')) {
+        if (statusLower.includes('active')) {
             return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
         }
-        if (statusLower.includes('draft') || statusLower.includes('مسودة')) {
+        if (statusLower.includes('draft')) {
             return 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800';
         }
-        if (statusLower.includes('suspended') || statusLower.includes('معلق')) {
+        if (statusLower.includes('suspended')) {
             return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800';
         }
         return 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
@@ -74,13 +83,13 @@ function ClientDetailsContent() {
 
     const getStatusIcon = (status?: string) => {
         const statusLower = status?.toLowerCase() || '';
-        if (statusLower.includes('active') || statusLower.includes('نشط')) {
+        if (statusLower.includes('active')) {
             return <CheckCircle className="h-4 w-4" />;
         }
-        if (statusLower.includes('draft') || statusLower.includes('مسودة')) {
+        if (statusLower.includes('draft')) {
             return <Clock className="h-4 w-4" />;
         }
-        if (statusLower.includes('suspended') || statusLower.includes('معلق')) {
+        if (statusLower.includes('suspended')) {
             return <XCircle className="h-4 w-4" />;
         }
         return <Clock className="h-4 w-4" />;
@@ -88,33 +97,41 @@ function ClientDetailsContent() {
 
     const getClientTypeColor = (type?: string) => {
         const typeLower = type?.toLowerCase() || '';
-        if (typeLower.includes('government') || typeLower.includes('حكومي')) {
+        if (typeLower.includes('government')) {
             return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
         }
-        if (typeLower.includes('private') || typeLower.includes('أهلي')) {
+        if (typeLower.includes('private')) {
             return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800';
         }
         return 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
     };
 
     const formatDate = (dateString?: string) => {
-        if (!dateString) return '';
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
+        if (!dateString) return 'N/A';
+        try {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+        } catch {
+            return 'Invalid date';
+        }
     };
 
     const formatDateTime = (dateString?: string) => {
-        if (!dateString) return '';
-        return new Date(dateString).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
+        if (!dateString) return 'N/A';
+        try {
+            return new Date(dateString).toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
+        } catch {
+            return 'Invalid date';
+        }
     };
 
     const formatCurrency = (value: string | number | undefined, currency: string = 'IQD') => {
@@ -287,163 +304,102 @@ function ClientDetailsContent() {
 
     if (loading) {
         return (
-            <div className="space-y-4">
-                <Breadcrumb />
-                <div className="text-center py-10 text-slate-500 dark:text-slate-400">
-                    Loading client details...
-                </div>
-            </div>
+            <Centered>
+                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                <p className="text-slate-500 dark:text-slate-400">Loading client details...</p>
+            </Centered>
         );
     }
 
     if (!client) {
         return (
-            <div className="space-y-4">
-                <Breadcrumb />
-                <div className="text-center py-10 text-slate-500 dark:text-slate-400">
-                    Client not found
-                </div>
-            </div>
+            <Centered>
+                <p className="text-rose-600 dark:text-rose-400">Client not found</p>
+                <Button
+                    variant="outline"
+                    onClick={() => router.push('/clients')}
+                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                >
+                    <ArrowLeft className="h-4 w-4 mr-2" /> Back to Clients
+                </Button>
+            </Centered>
         );
     }
 
     return (
         <div className="space-y-4">
+            {/* Header */}
             <Breadcrumb />
-            <div className="flex items-center gap-4">
-                <Button
-                    variant="outline"
-                    onClick={() => router.back()}
-                    className="border-slate-200 dark:border-slate-700"
-                >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back
-                </Button>
-                <div className="flex-1">
+            <div className="flex items-end justify-between gap-4">
+                <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
                         Client Details
                     </h1>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">
-                        View complete client information
-                    </p>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Review client data and related info.</p>
                 </div>
                 <div className="flex gap-2">
                     <Button
-                        onClick={() => router.push(`/clients/update?id=${client.id}`)}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                        variant="outline"
+                        onClick={() => router.push('/clients')}
+                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                     >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                    </Button>
-                    <Button
-                        variant="destructive"
-                        onClick={() => setIsDeleteDialogOpen(true)}
-                    >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
+                        Back to Clients
                     </Button>
                 </div>
             </div>
 
-            {/* Basic Information */}
-            <EnhancedCard
-                title="Basic Information"
-                description="Client basic details"
-                variant="default"
-                size="sm"
-            >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">Client ID</Label>
-                        <p className="text-slate-900 dark:text-slate-100 font-mono text-lg">{client.sequence || client.id}</p>
-                    </div>
-                    <div>
-                        <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">Client Number</Label>
-                        <p className="text-slate-900 dark:text-slate-100 font-mono text-lg">{client.client_no}</p>
-                    </div>
-                    <div className="md:col-span-2">
-                        <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">Client Name</Label>
-                        <p className="text-slate-900 dark:text-slate-100 text-lg font-semibold">{client.name}</p>
-                    </div>
-                    <div>
-                        <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">Client Type</Label>
-                        <div>
-                            {client.client_type ? (
-                                <Badge variant="outline" className={`${getClientTypeColor(client.client_type)} flex items-center gap-1 w-fit`}>
-                                    <Building className="h-4 w-4" />
-                                    {client.client_type}
-                                </Badge>
-                            ) : (
-                                <p className="text-slate-500 dark:text-slate-400">—</p>
-                            )}
-                        </div>
-                    </div>
-                    <div>
-                        <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">Status</Label>
-                        <div>
-                            {client.status ? (
-                                <Badge variant="outline" className={`${getStatusColor(client.status)} flex items-center gap-1 w-fit`}>
-                                    {getStatusIcon(client.status)}
-                                    {client.status}
-                                </Badge>
-                            ) : (
-                                <p className="text-slate-500 dark:text-slate-400">—</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </EnhancedCard>
+            {/* Stat cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <EnhancedCard title="Client Number" description={`Client ID: ${client.sequence}` || 'N/A'} variant="default" size="sm">
+                    <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">{client.client_no || 'N/A'}</div>
+                </EnhancedCard>
+                <EnhancedCard title="Client Name" description={client.name || 'N/A'} variant="default" size="sm">
+                    <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">{client.name || 'N/A'}</div>
+                </EnhancedCard>
+                <EnhancedCard title="Status" description={client.status || 'N/A'} variant="default" size="sm">
+                    {client.status ? (
+                        <Badge variant="outline" className={`${getStatusColor(client.status)} flex items-center gap-1 w-fit`}>
+                            {getStatusIcon(client.status)}
+                            {client.status}
+                        </Badge>
+                    ) : (
+                        <span className="text-slate-500 dark:text-slate-400">N/A</span>
+                    )}
+                </EnhancedCard>
+                <EnhancedCard title="Client Type" description={client.client_type || 'N/A'} variant="default" size="sm">
+                    {client.client_type ? (
+                        <Badge variant="outline" className={`${getClientTypeColor(client.client_type)} flex items-center gap-1 w-fit`}>
+                            <Building className="h-4 w-4" />
+                            {client.client_type}
+                        </Badge>
+                    ) : (
+                        <span className="text-slate-500 dark:text-slate-400">N/A</span>
+                    )}
+                </EnhancedCard>
+            </div>
 
-            {/* Location Information */}
-            <EnhancedCard
-                title="Location Information"
-                description="Client location details"
-                variant="default"
-                size="sm"
-            >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">State</Label>
-                        <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-slate-400" />
-                            <p className="text-slate-900 dark:text-slate-100">
-                                {client.state || <span className="text-slate-500 dark:text-slate-400">—</span>}
-                            </p>
-                        </div>
+            {/* Detailed Information */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+                <EnhancedCard title="Basic Information" description="Client basic details" variant="default" size="sm">
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                        <Detail label="Client ID" value={client.sequence || client.id || 'N/A'} />
+                        <Detail label="Client Number" value={client.client_no || 'N/A'} />
+                        <Detail label="Client Name" value={client.name || 'N/A'} />
+                        <Detail label="Client Type" value={client.client_type || 'N/A'} />
+                        <Detail label="Status" value={client.status || 'N/A'} />
+                        <Detail label="Created At" value={formatDateTime(client.created_at)} />
+                        <Detail label="Updated At" value={formatDateTime(client.updated_at)} />
                     </div>
-                    <div>
-                        <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">City</Label>
-                        <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-slate-400" />
-                            <p className="text-slate-900 dark:text-slate-100">
-                                {client.city || <span className="text-slate-500 dark:text-slate-400">—</span>}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </EnhancedCard>
+                </EnhancedCard>
 
-            {/* Financial Information */}
-            <EnhancedCard
-                title="Financial Information"
-                description="Client budget information"
-                variant="default"
-                size="sm"
-            >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">Budget</Label>
-                        <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4 text-green-500" />
-                            <p className="text-slate-900 dark:text-slate-100 font-semibold text-xl">
-                                {client.budget ? new Intl.NumberFormat('en-US').format(parseFloat(client.budget)) : <span className="text-slate-500 dark:text-slate-400 font-normal">—</span>}
-                            </p>
-                        </div>
+                <EnhancedCard title="Location Information" description="Client location details" variant="default" size="sm">
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                        <Detail label="State" value={client.state || 'N/A'} />
+                        <Detail label="City" value={client.city || 'N/A'} />
                     </div>
-                </div>
-            </EnhancedCard>
+                </EnhancedCard>
+            </div>
 
-            {/* Projects - البيانات تأتي مباشرة من السيرفر: client.projects[] */}
             {client.projects && client.projects.length > 0 && (
                 <EnhancedCard
                     title="Projects"
@@ -460,7 +416,6 @@ function ClientDetailsContent() {
                 </EnhancedCard>
             )}
 
-            {/* Contracts - البيانات تأتي مباشرة من السيرفر: client.contracts[] */}
             {client.contracts && client.contracts.length > 0 && (
                 <EnhancedCard
                     title="Contracts"
@@ -477,7 +432,6 @@ function ClientDetailsContent() {
                 </EnhancedCard>
             )}
 
-            {/* Task Orders - البيانات تأتي مباشرة من السيرفر: client.task_orders[] */}
             {client.task_orders && client.task_orders.length > 0 && (
                 <EnhancedCard
                     title="Task Orders"
@@ -494,7 +448,6 @@ function ClientDetailsContent() {
                 </EnhancedCard>
             )}
 
-            {/* Contractors - البيانات تأتي مباشرة من السيرفر: client.contractors[] */}
             {client.contractors && client.contractors.length > 0 && (
                 <EnhancedCard
                     title="Contractors"
@@ -511,36 +464,6 @@ function ClientDetailsContent() {
                 </EnhancedCard>
             )}
 
-            {/* Additional Information */}
-            <EnhancedCard
-                title="Additional Information"
-                description="Additional client details"
-                variant="default"
-                size="sm"
-            >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">Created At</Label>
-                        <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-slate-400" />
-                            <p className="text-slate-900 dark:text-slate-100">
-                                {formatDateTime(client.created_at) || <span className="text-slate-500 dark:text-slate-400">—</span>}
-                            </p>
-                        </div>
-                    </div>
-                    {client.updated_at && (
-                        <div>
-                            <Label className="text-sm font-medium text-slate-600 dark:text-slate-400">Updated At</Label>
-                            <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-slate-400" />
-                                <p className="text-slate-900 dark:text-slate-100">
-                                    {formatDateTime(client.updated_at) || <span className="text-slate-500 dark:text-slate-400">—</span>}
-                                </p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </EnhancedCard>
 
             {/* Delete Confirmation Dialog */}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -575,14 +498,10 @@ export default function ClientDetailsPage() {
     return (
         <Suspense
             fallback={
-                <div className="space-y-4">
-                    <Breadcrumb />
-                    <div className="flex items-center justify-center py-20">
-                        <div className="text-center">
-                            <p className="text-slate-500 dark:text-slate-400">Loading client details...</p>
-                        </div>
-                    </div>
-                </div>
+                <Centered>
+                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                    <p className="text-slate-500 dark:text-slate-400">Loading details…</p>
+                </Centered>
             }
         >
             <ClientDetailsContent />

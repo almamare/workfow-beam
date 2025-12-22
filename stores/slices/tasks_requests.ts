@@ -24,6 +24,10 @@ interface FetchTaskRequestsParams {
     page?: number;
     limit?: number;
     search?: string;
+    request_type?: string;
+    status?: string;
+    from_date?: string;
+    to_date?: string;
 }
 
 // Fetch a single Task Request by ID

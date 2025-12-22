@@ -78,6 +78,7 @@ const routeMapping: Record<string, string> = {
     '/clients/create': '/clients',
     '/clients/update': '/clients',
     '/clients/details': '/clients',
+    '/requests/clients': '/clients',
     
     // Contractors related pages
     '/contractors/create': '/contractors',
@@ -107,7 +108,7 @@ const routeMapping: Record<string, string> = {
     '/requests/employees': '/requests',
     '/approvals': '/requests',
     
-    // Financial related pages
+    // Financial related pages 
     '/financial/contractor-payments': '/financial',
     '/financial/cash-ledger': '/financial',
     '/financial/budgets': '/financial',
@@ -175,7 +176,8 @@ const routeConfig: Record<string, {
         icon: 'Users',
         color: 'text-purple-400',
         menuItems: [
-            { href: '/clients', title: 'Clients', icon: 'Users', color: 'text-purple-400' },
+            { href: '/clients', title: 'All Clients', icon: 'Users', color: 'text-purple-400' },
+            { href: '/requests/clients', title: 'Client Requests', icon: 'FileText', color: 'text-yellow-400' },
             { href: '/clients/create', title: 'Create Client', icon: 'Plus', color: 'text-green-400' }
         ]
     },
