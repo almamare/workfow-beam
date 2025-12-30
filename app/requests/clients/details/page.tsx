@@ -18,11 +18,18 @@ import {
     selectClientsLoading,
 } from '@/stores/slices/clients';
 import {
-    fetchUser,
     clearSelectedUser,
     selectSelectedUser,
     selectLoading as selectUsersLoading,
 } from '@/stores/slices/users';
+ import {
+    fetchAttachments,
+    clearAttachments,
+    selectAttachments,
+    selectAttachmentsLoading,
+    selectAttachmentsError,
+    removeAttachment,
+} from '@/stores/slices/attachments';
 import { toast } from "sonner";
 import axios from "@/utils/axios";
 
@@ -41,8 +48,11 @@ import {
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
-import AttachmentModel from '@/components/AttachmentModel';
+import { AttachmentsList } from '@/components/attachments/AttachmentsList';
+import { CreateAttachmentForm } from '@/components/attachments/CreateAttachmentForm';
+import { UpdateAttachmentForm } from '@/components/attachments/UpdateAttachmentForm';
 import ApprovalModel from '@/components/ApprovalModel';
+import type { Attachment as AttachmentType } from '@/stores/types/attachments';
 
 /* =========================================================
    Hooks
@@ -84,15 +94,6 @@ const getClientTypeColor = (type?: string) => {
 /* =========================================================
    Types
 =========================================================== */
-interface Attachment {
-    id: number;
-    request_type: string;
-    title: string;
-    uploader_name: string;
-    path: string;
-    file: string;
-    created_at: string;
-}
 
 interface Approval {
     id: string;
@@ -144,10 +145,15 @@ function ClientRequestDetails() {
     const userLoading = useAppSelector(selectUsersLoading);
     const userError = useAppSelector((state: RootState) => state.users.error);
 
+    // Attachments Redux State
+    const attachments = useAppSelector(selectAttachments);
+    const attachmentsLoading = useAppSelector(selectAttachmentsLoading);
+    const attachmentsError = useAppSelector(selectAttachmentsError);
 
     // Local State
-    const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [attachmentModelOpen, setAttachmentModelOpen] = useState(false);
+    const [updateAttachmentModelOpen, setUpdateAttachmentModelOpen] = useState(false);
+    const [selectedAttachment, setSelectedAttachment] = useState<AttachmentType | null>(null);
     const [approvals, setApprovals] = useState<Approval[]>([]);
     const [approvalModelOpen, setApprovalModelOpen] = useState(false);
 
@@ -217,13 +223,18 @@ function ClientRequestDetails() {
         };
     }, [request?.created_id, dispatch]);
 
-    // Fetch attachments and approvals
+    // Fetch attachments using Redux
     useEffect(() => {
         if (!id) return;
-        axios.get(`/attachments/fetch/${id}`)
-            .then((res) => setAttachments(res.data.body?.attachments || []))
-            .catch(() => toast.error("Failed to load attachments"));
+        dispatch(fetchAttachments(id));
+        return () => {
+            dispatch(clearAttachments());
+        };
+    }, [id, dispatch]);
 
+    // Fetch approvals
+    useEffect(() => {
+        if (!id) return;
         axios.get(`/approvals/fetch/${id}`)
             .then((res) => setApprovals(res.data.body?.approvals?.items || []))
             .catch(() => toast.error("Failed to load approvals"));
@@ -232,7 +243,8 @@ function ClientRequestDetails() {
     // Handle errors
     useEffect(() => {
         if (requestError) toast.error(requestError);
-    }, [requestError]);
+        if (attachmentsError) toast.error(attachmentsError);
+    }, [requestError, attachmentsError]);
 
     // Combined loading
     const loading = requestLoading || clientLoading || isLoading;
@@ -279,69 +291,30 @@ function ClientRequestDetails() {
     }
 
     // Handlers
-    const attachmentUploaded = (attachment: Attachment) => setAttachments(prev => [...prev, attachment]);
+    const handleAttachmentCreated = () => {
+        if (id) {
+            dispatch(fetchAttachments(id));
+        }
+    };
+
+    const handleAttachmentUpdated = () => {
+        if (id) {
+            dispatch(fetchAttachments(id));
+        }
+    };
+
+    const handleAttachmentDelete = (attachmentId: string) => {
+        dispatch(removeAttachment(attachmentId));
+    };
+
+    const handleEditAttachment = (attachment: AttachmentType) => {
+        setSelectedAttachment(attachment);
+        setUpdateAttachmentModelOpen(true);
+    };
+
     const approvalCreated = (approval: Approval) => setApprovals(prev => [...prev, approval]);
 
 
-    const attachmentColumns: Column<Attachment>[] = [
-        {
-            key: 'title',
-            header: 'File Name',
-            render: (value: any) => <span className="font-medium text-slate-800 dark:text-slate-200">{value}</span>
-        },
-        {
-            key: 'request_type',
-            header: 'Type',
-            render: (value: any) => (
-                <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">
-                    {value}
-                </Badge>
-            )
-        },
-        {
-            key: 'uploader_name',
-            header: 'Uploaded By',
-            render: (value: any) => <span className="text-slate-700 dark:text-slate-300">{value}</span>
-        },
-        {
-            key: 'created_at',
-            header: 'Date',
-            render: (value: any) => (
-                <span className="text-slate-600 dark:text-slate-400">{value ? value : 'N/A'}</span>
-            )
-        }
-    ];
-
-    const attachmentActions: Action<Attachment>[] = [
-        {
-            label: 'View File',
-            onClick: (attachment) => {
-                window.open(`${attachment.path}${attachment.file}`, '_blank');
-            },
-            icon: <Eye className="h-4 w-4" />,
-            variant: 'info' as const
-        },
-        {
-            label: 'Download',
-            onClick: (attachment) => {
-                const link = document.createElement('a');
-                link.href = `${attachment.path}${attachment.file}`;
-                link.download = attachment.file;
-                link.click();
-            },
-            icon: <Download className="h-4 w-4" />,
-            variant: 'default' as const
-        },
-        {
-            label: 'Delete',
-            onClick: (attachment) => {
-                setAttachments(prev => prev.filter(att => att.id !== attachment.id));
-                toast.success('Attachment deleted successfully');
-            },
-            icon: <Trash2 className="h-4 w-4" />,
-            variant: 'destructive' as const
-        }
-    ];
 
     const approvalColumns: Column<Approval>[] = [
         {
@@ -684,13 +657,12 @@ function ClientRequestDetails() {
                     </Button>
                 }
             >
-                <EnhancedDataTable
-                    data={attachments}
-                    columns={attachmentColumns}
-                    actions={attachmentActions}
-                    loading={false}
-                    noDataMessage="No attachments for this request"
-                    hideEmptyMessage={true}
+                <AttachmentsList
+                    attachments={attachments}
+                    loading={attachmentsLoading}
+                    onDelete={handleAttachmentDelete}
+                    onEdit={handleEditAttachment}
+                    requestId={id || undefined}
                 />
             </EnhancedCard>
 
@@ -726,11 +698,21 @@ function ClientRequestDetails() {
                 onCreated={approvalCreated}
                 requestId={request?.id}
             />
-            <AttachmentModel 
+            <CreateAttachmentForm
                 open={attachmentModelOpen}
                 onClose={() => setAttachmentModelOpen(false)}
-                onUploaded={attachmentUploaded}
-                requestId={request?.id}
+                onSuccess={handleAttachmentCreated}
+                requestId={id || ''}
+                requestType={request?.request_type || 'Clients'}
+            />
+            <UpdateAttachmentForm
+                open={updateAttachmentModelOpen}
+                onClose={() => {
+                    setUpdateAttachmentModelOpen(false);
+                    setSelectedAttachment(null);
+                }}
+                onSuccess={handleAttachmentUpdated}
+                attachment={selectedAttachment}
             />
         </div>
     );

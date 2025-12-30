@@ -12,14 +12,6 @@ import {
     selectError as selectRequestError,
 } from '@/stores/slices/tasks_requests';
 import {
-    fetchTaskOrder,
-    clearSelectedTaskOrder,
-    selectSelectedTaskOrder,
-    selectSelectedContractor,
-    selectSelectedProject,
-    selectTaskOrdersLoading,
-} from '@/stores/slices/task-orders';
-import {
     clearSelectedUser,
     selectSelectedUser,
     selectLoading as selectUsersLoading,
@@ -46,6 +38,7 @@ import {
     Trash2,
     Phone,
     Mail,
+    DollarSign,
 } from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
@@ -73,6 +66,8 @@ const getStatusColor = (status: string) => {
         'Closed': 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800',
         'Complete': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
         'Completed': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        'Paid': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+        'Cancelled': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
         'Active': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
         'Draft': 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800',
         'Suspended': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
@@ -116,7 +111,7 @@ const Detail: React.FC<{ label: string; value: React.ReactNode }> = ({ label, va
 /* =========================================================
    Main Component
 =========================================================== */
-function TaskRequestDetails() {
+function FinancialRequestDetails() {
     const router = useRouter();
     const params = useSearchParams();
     const id = params.get('id');
@@ -127,11 +122,6 @@ function TaskRequestDetails() {
     const request = useAppSelector(selectSelectedTaskRequest);
     const requestLoading = useAppSelector(selectRequestLoading);
     const requestError = useAppSelector(selectRequestError);
-
-    const taskOrder = useAppSelector(selectSelectedTaskOrder);
-    const contractor = useAppSelector(selectSelectedContractor);
-    const project = useAppSelector(selectSelectedProject);
-    const taskOrderLoading = useAppSelector(selectTaskOrdersLoading);
 
     const user = useAppSelector(selectSelectedUser);
     const userLoading = useAppSelector(selectUsersLoading);
@@ -156,7 +146,7 @@ function TaskRequestDetails() {
     useEffect(() => {
         if (!id) {
             toast.error('Request ID is missing');
-            router.push('/requests/tasks');
+            router.push('/requests/financial');
             return;
         }
         dispatch(fetchTaskRequest({ id }));
@@ -165,28 +155,14 @@ function TaskRequestDetails() {
         };
     }, [id, router, dispatch]);
 
-    // Fetch task order data
-    useEffect(() => {
-        if (request?.task_order_id) {
-            dispatch(fetchTaskOrder({ id: request.task_order_id }));
-        }
-        return () => {
-            dispatch(clearSelectedTaskOrder());
-        };
-    }, [request, dispatch]);
-
     // Fetch user data (creator) - Try multiple endpoints
     useEffect(() => {
         if (request?.created_id) {
-
-            // Try alternative endpoint first: /users/fetch/${id}
             const fetchUserData = async () => {
                 try {
-                    // Try endpoint 1: /users/fetch/${id} (used in update page)
                     const response1 = await axios.get(`/users/fetch/${request.created_id}`);
                     
                     if (response1.data?.body?.user) {
-                        // Manually set user in Redux state
                         dispatch({
                             type: 'users/fetchUser/fulfilled',
                             payload: {
@@ -204,11 +180,9 @@ function TaskRequestDetails() {
                     }
                 } catch (error1: any) {
                 }
-                
             };
             
             fetchUserData();
-        } else {
         }
         return () => {
             dispatch(clearSelectedUser());
@@ -239,7 +213,7 @@ function TaskRequestDetails() {
     }, [requestError, attachmentsError]);
 
     // Combined loading
-    const loading = requestLoading || taskOrderLoading || isLoading;
+    const loading = requestLoading || isLoading;
 
     if (loading && !request) {
         return (
@@ -256,7 +230,7 @@ function TaskRequestDetails() {
                 <p className="text-rose-600 dark:text-rose-400">{requestError}</p>
                 <Button
                     variant="outline"
-                    onClick={() => router.push('/requests/tasks')}
+                    onClick={() => router.push('/requests/financial')}
                     className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
@@ -269,10 +243,10 @@ function TaskRequestDetails() {
     if (!request) {
         return (
             <Centered>
-                <p className="text-rose-600 dark:text-rose-400">Task request not found</p>
+                <p className="text-rose-600 dark:text-rose-400">Financial request not found</p>
                 <Button
                     variant="outline"
-                    onClick={() => router.push('/requests/tasks')}
+                    onClick={() => router.push('/requests/financial')}
                     className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
@@ -436,16 +410,16 @@ function TaskRequestDetails() {
             <div className="flex items-end justify-between gap-4">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
-                        Task Request Details
+                        Financial Request Details
                     </h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-2">
-                        A brief overview of the task request with available actions.
+                        A brief overview of the financial request with available actions.
                     </p>
                 </div>
                 <div className="flex gap-2">
                     <Button
                         variant="outline"
-                        onClick={() => router.push('/requests/tasks')}
+                        onClick={() => router.push('/requests/financial')}
                         className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                     >
                         Back to Requests
@@ -471,8 +445,9 @@ function TaskRequestDetails() {
                     variant="default"
                     size="sm"
                 >
-                    <div className="text-xl md:text-lg font-bold text-slate-900 dark:text-slate-100">
-                        {request.request_type || 'Tasks'}
+                    <div className="text-xl md:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                        <DollarSign className="h-5 w-5 text-orange-500" />
+                        {request.request_type || 'Financial'}
                     </div>
                 </EnhancedCard>
                 <EnhancedCard
@@ -544,91 +519,32 @@ function TaskRequestDetails() {
                 />
             </EnhancedCard>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                {/* Task Order Information */}
-                {taskOrder && (
-                    <EnhancedCard
-                        title="Task Order Information"
-                        description="Task order details and information"
-                        variant="default"
-                        size="sm"
-                        headerActions={
-                            taskOrder.id ? (
-                                <Button
-                                    variant="outline"
-                                    onClick={() => router.push(`/tasks/details?id=${taskOrder.id}`)}
-                                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                                >
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    View Full Task Order Details
-                                </Button>
-                            ) : undefined
-                        }
-                    >
-                        <div className="divide-y divide-slate-200 dark:divide-slate-800 space-y-1">
-                            <Detail label="Task Order ID" value={taskOrder.sequence} />
-                            <Detail label="Task Order Number" value={taskOrder.task_order_no} />
-                            <Detail label="Title" value={taskOrder.title} />
-                            <Detail
-                                label="Status"
-                                value={
-                                    taskOrder.status ? (
-                                        <Badge variant="outline" className={getStatusColor(taskOrder.status)}>
-                                            {taskOrder.status}
-                                        </Badge>
-                                    ) : 'N/A'
-                                }
-                            />
-                            {contractor && (
-                                <>
-                                    <Detail label="Contractor Name" value={contractor.name} />
-                                    <Detail label="Contractor Number" value={contractor.number} />
-                                </>
-                            )}
-                            {project && (
-                                <>
-                                    <Detail label="Project Name" value={project.name} />
-                                    <Detail label="Project Code" value={project.project_code} />
-                                </>
-                            )}
-                            <Detail label="Created At" value={taskOrder.created_at} />
-                            {taskOrder.updated_at && (
-                                <Detail label="Updated At" value={taskOrder.updated_at} />
-                            )}
+            {/* Request Details */}
+            <EnhancedCard
+                title="Request Details"
+                description="Request information and notes"
+                variant="default"
+                size="sm"
+            >
+                <div className="divide-y divide-slate-200 dark:divide-slate-800 space-y-1">
+                    <Detail label="Request Code" value={request.request_code} />
+                    <Detail label="Request Type" value={request.request_type || 'Financial'} />
+                    <Detail label="Status" value={
+                        <Badge variant="outline" className={getStatusColor(request.status || 'Pending')}>
+                            {request.status || 'N/A'}
+                        </Badge>
+                    } />
+                    <Detail label="Created By" value={request.created_by_name} />
+                    <Detail label="Created At" value={request.created_at} />
+                    <Detail label="Updated At" value={request.updated_at} />
+                    {request.notes && (
+                        <div className="py-2">
+                            <span className="font-medium text-slate-700 dark:text-slate-200 block mb-2">Notes</span>
+                            <p className="text-slate-600 dark:text-slate-400">{request.notes}</p>
                         </div>
-                    </EnhancedCard>
-                )}
-
-
-                {/* Request Details */}
-                <EnhancedCard
-                    title="Request Details"
-                    description="Request information and notes"
-                    variant="default"
-                    size="sm"
-                >
-                    <div className="divide-y divide-slate-200 dark:divide-slate-800 space-y-1">
-                        <Detail label="Request Code" value={request.request_code} />
-                        <Detail label="Request Type" value={request.request_type || 'Tasks'} />
-                        <Detail label="Status" value={
-                            <Badge variant="outline" className={getStatusColor(request.status || 'Pending')}>
-                                {request.status || 'N/A'}
-                            </Badge>
-                        } />
-                        <Detail label="Contractor" value={request.contractor_name} />
-                        <Detail label="Project" value={request.project_name} />
-                        <Detail label="Created By" value={request.created_by_name} />
-                        <Detail label="Created At" value={request.created_at} />
-                        <Detail label="Updated At" value={request.updated_at} />
-                        {request.notes && (
-                            <div className="py-2">
-                                <span className="font-medium text-slate-700 dark:text-slate-200 block mb-2">Notes</span>
-                                <p className="text-slate-600 dark:text-slate-400">{request.notes}</p>
-                            </div>
-                        )}
-                    </div>
-                </EnhancedCard>
-            </div>
+                    )}
+                </div>
+            </EnhancedCard>
 
             {/* Attachments Section */}
             <EnhancedCard
@@ -692,7 +608,7 @@ function TaskRequestDetails() {
                 onClose={() => setAttachmentModelOpen(false)}
                 onSuccess={handleAttachmentCreated}
                 requestId={id || ''}
-                requestType={request?.request_type || 'Tasks'}
+                requestType={request?.request_type || 'Financial'}
             />
             <UpdateAttachmentForm
                 open={updateAttachmentModelOpen}
@@ -720,7 +636,8 @@ export default function Page() {
                 </Centered>
             }
         >
-            <TaskRequestDetails />
+            <FinancialRequestDetails />
         </Suspense>
     );
 }
+

@@ -8,8 +8,8 @@ export default function RolesLayout({
   children: React.ReactNode;
 }) {
   return (
-    <MainLayout>
-      {children}
-    </MainLayout>
+        <MainLayout>
+          {children}
+        </MainLayout>
   );
 }

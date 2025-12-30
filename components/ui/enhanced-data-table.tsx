@@ -199,32 +199,39 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                                 )
                             ) : (
                                 // Data rows
-                                data.map((row, index) => (
-                                    <tr
-                                        key={index}
-                                        className={cn(
-                                            'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-200',
-                                            onRowClick && 'cursor-pointer'
-                                        )}
-                                        onClick={() => onRowClick && onRowClick(row)}
-                                    >
-                                        {columns.map((column) => (
-                                            <td
-                                                key={column.key as string}
+                                data
+                                    .filter((row) => row != null) // Filter out null/undefined rows
+                                    .map((row, index) => {
+                                        // Use row.id or a unique identifier if available, otherwise use index
+                                        const rowKey = (row as any)?.id || (row as any)?.key || index;
+                                        return (
+                                            <tr
+                                                key={rowKey}
                                                 className={cn(
-                                                    'px-4 py-2 text-sm text-slate-900 dark:text-slate-200 whitespace-nowrap',
-                                                    column.align === 'center' && 'text-center',
-                                                    column.align === 'right' && 'text-right'
+                                                    'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-200',
+                                                    onRowClick && 'cursor-pointer'
                                                 )}
+                                                onClick={() => onRowClick && onRowClick(row)}
                                             >
-                                                {column.render ? column.render(row[column.key], row) : row[column.key]}
-                                            </td>
-                                        ))}
-                                        {showActions && actions.length > 0 && (
-                                            <td className="px-4 py-2 text-right">
+                                                {columns.map((column) => (
+                                                    <td
+                                                        key={column.key as string}
+                                                        className={cn(
+                                                            'px-4 py-2 text-sm text-slate-900 dark:text-slate-200 whitespace-nowrap',
+                                                            column.align === 'center' && 'text-center',
+                                                            column.align === 'right' && 'text-right'
+                                                        )}
+                                                    >
+                                                        {column.render 
+                                                            ? column.render(row?.[column.key], row) 
+                                                            : (row?.[column.key] ?? '')}
+                                                    </td>
+                                                ))}
+                                                {showActions && actions.length > 0 && (
+                                                    <td className="px-4 py-2 text-right">
                                                 <div className="flex gap-1 justify-start">
                                                     {actions
-                                                        .filter(action => !action.hidden || !action.hidden(row))
+                                                        .filter(action => !action.hidden || (row && !action.hidden(row)))
                                                         .map((action, actionIndex) => {
                                                             // Choose color classes based on action.variant or custom property (optional)
                                                             let colorClasses = "transition-all border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300";
@@ -256,10 +263,11 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                                                             );
                                                         })}
                                                 </div>
-                                            </td>
-                                        )}
-                                    </tr>
-                                ))
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        );
+                                    })
                             )}
                         </tbody>
                     </table>

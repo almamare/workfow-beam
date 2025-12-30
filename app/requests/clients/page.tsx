@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef, Suspense } from 'react';
 import { AppDispatch } from '@/stores/store';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
+import { useSearchParams } from 'next/navigation';
 import {
     fetchTaskRequests,
     selectTaskRequests,
@@ -46,20 +47,23 @@ interface ClientRequestWithData extends TaskRequest {
     client?: Client;
 }
 
-export default function ClientRequestsPage() {
+function ClientRequestsPageContent() {
     const taskRequests = useSelector(selectTaskRequests);
     const loading = useSelector(selectLoading);
     const totalPages = useSelector(selectTotalPages);
     const totalItems = useSelector(selectTotalItems);
 
     const router = useRouter();
+    const searchParams = useSearchParams();
     const dispatch = useReduxDispatch<AppDispatch>();
 
+    // Get status from URL query parameter
+    const statusFromUrl = searchParams.get('status') || 'all';
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState(search);
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
-    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<string>(statusFromUrl);
     const [dateFrom, setDateFrom] = useState<string>('');
     const [dateTo, setDateTo] = useState<string>('');
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -82,6 +86,13 @@ export default function ClientRequestsPage() {
     const clientRequests = useMemo(() => {
         return taskRequests.filter(req => req.request_type === 'Clients');
     }, [taskRequests]);
+
+    // Update status filter when URL changes
+    useEffect(() => {
+        const statusFromUrl = searchParams.get('status') || 'all';
+        setStatusFilter(statusFromUrl);
+        setPage(1);
+    }, [searchParams]);
 
     // Debounce search
     useEffect(() => {
@@ -369,7 +380,13 @@ export default function ClientRequestsPage() {
         return arr;
     }, [search, statusFilter, dateFrom, dateTo]);
 
-    const columns: Column<ClientRequestWithData>[] = [
+    // Memoize loadingClients to prevent unnecessary re-renders
+    const loadingClientsRef = useRef(loadingClients);
+    useEffect(() => {
+        loadingClientsRef.current = loadingClients;
+    }, [loadingClients]);
+
+    const columns: Column<ClientRequestWithData>[] = useMemo(() => [
         {
             key: 'request_code' as keyof ClientRequestWithData,
             header: 'Request Code',
@@ -381,7 +398,8 @@ export default function ClientRequestsPage() {
             header: 'Client Name',
             render: (value: any, row: ClientRequestWithData) => {
                 const client = row.client;
-                if (loadingClients.has(row.task_order_id)) {
+                const isLoading = loadingClientsRef.current.has(row.task_order_id);
+                if (isLoading) {
                     return <span className="text-slate-400">Loading...</span>;
                 }
                 return <span className="font-semibold text-slate-800 dark:text-slate-200">{client?.name || 'N/A'}</span>;
@@ -448,16 +466,6 @@ export default function ClientRequestsPage() {
             sortable: true
         },
         {
-            key: 'notes' as keyof ClientRequestWithData,
-            header: 'Notes',
-            render: (value: any) => (
-                <div className="max-w-xs">
-                    <div className="text-sm text-slate-800 dark:text-slate-200 truncate">{value || '-'}</div>
-                </div>
-            ),
-            sortable: true
-        },
-        {
             key: 'status' as keyof ClientRequestWithData,
             header: 'Status',
             render: (value: any) => {
@@ -493,7 +501,7 @@ export default function ClientRequestsPage() {
             ),
             sortable: true
         }
-    ];
+    ], []); // Empty dependency array to keep columns stable
 
     const actions: Action<ClientRequestWithData>[] = [
         {
@@ -937,6 +945,18 @@ export default function ClientRequestsPage() {
                 </DialogContent>
             </Dialog>
         </div>
+    );
+}
+
+export default function ClientRequestsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[40vh]">
+                <div className="text-slate-500 dark:text-slate-400">Loading...</div>
+            </div>
+        }>
+            <ClientRequestsPageContent />
+        </Suspense>
     );
 }
 

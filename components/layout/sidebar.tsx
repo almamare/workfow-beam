@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
     Home,
     Users,
@@ -37,9 +37,12 @@ import {
     Trash2,
     FileArchive,
     Landmark,
-    Receipt
+    Receipt,
+    ChevronDown,
+    ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
@@ -48,6 +51,7 @@ interface MenuItem {
     icon: React.ReactNode;
     href: string;
     color?: string;
+    subItems?: { href: string; title: string; icon?: React.ReactNode; color?: string }[];
 }
 
 // General icon library - reusable icons that can be used anywhere
@@ -56,7 +60,8 @@ const iconLibrary: Record<string, any> = {
     Wallet, Contact, Settings, Megaphone, Building, TrendingUp,
     Activity, Calculator, ClipboardList, UserCheck, FileEdit,
     CreditCard, FileCheck, Banknote, BarChart3, History, UserCircle,
-    Plus, Eye, List, Edit, Trash2, FileArchive, Landmark, Receipt
+    Plus, Eye, List, Edit, Trash2, FileArchive, Landmark, Receipt,
+    ChevronDown, ChevronRight
 };
 
 // Flexible route configuration - completely flexible system
@@ -73,12 +78,19 @@ const routeMapping: Record<string, string> = {
     '/projects/tender/create': '/projects',
     '/projects/tender/update': '/projects',
     '/budgets': '/projects',
+    '/requests/projects': '/projects',
+    '/requests/projects/details': '/projects',
+    '/requests/projects/timeline': '/projects',
     
     // Clients related pages
     '/clients/create': '/clients',
     '/clients/update': '/clients',
     '/clients/details': '/clients',
     '/requests/clients': '/clients',
+    '/client-contracts': '/clients',
+    '/client-contracts/create': '/clients',
+    '/client-contracts/update': '/clients',
+    '/client-contracts/details': '/clients',
     
     // Contractors related pages
     '/contractors/create': '/contractors',
@@ -89,6 +101,9 @@ const routeMapping: Record<string, string> = {
     '/tasks/create': '/tasks',
     '/tasks/update': '/tasks',
     '/tasks/details': '/tasks',
+    '/requests/tasks': '/tasks',
+    '/requests/tasks/details': '/tasks',
+    '/requests/tasks/timeline': '/tasks',
     
     // Users related pages
     '/users/create': '/users',
@@ -103,7 +118,6 @@ const routeMapping: Record<string, string> = {
     '/departments': '/users',
     
     // Requests related pages
-    '/requests/tasks': '/requests',
     '/requests/financial': '/requests',
     '/requests/employees': '/requests',
     '/approvals': '/requests',
@@ -149,17 +163,19 @@ const routeMapping: Record<string, string> = {
     '/bank-balances/details': '/bank-balances',
     '/bank-balances/bank': '/bank-balances',
     
-    // Client Contracts related pages
-    '/client-contracts/create': '/client-contracts',
-    '/client-contracts/update': '/client-contracts',
-    '/client-contracts/details': '/client-contracts',
 };
 
 const routeConfig: Record<string, { 
     title: string; 
     icon: string; 
     color: string; 
-    menuItems: { href: string; title: string; icon: string; color: string }[] 
+    menuItems: { 
+        href: string; 
+        title: string; 
+        icon: string; 
+        color: string;
+        subItems?: { href: string; title: string; icon?: string; color?: string }[];
+    }[] 
 }> = {
     '/projects': {
         title: 'Projects',
@@ -167,6 +183,17 @@ const routeConfig: Record<string, {
         color: 'text-indigo-400',
         menuItems: [
             { href: '/projects', title: 'Projects', icon: 'FolderOpen', color: 'text-indigo-400' },
+            { 
+                href: '/requests/projects', 
+                title: 'Project Requests', 
+                icon: 'FileText', 
+                color: 'text-yellow-400',
+                subItems: [
+                    { href: '/requests/projects?status=Pending', title: 'Pending', color: 'text-yellow-400' },
+                    { href: '/requests/projects?status=Approved', title: 'Approved', color: 'text-green-400' },
+                    { href: '/requests/projects?status=Rejected', title: 'Rejected', color: 'text-red-400' }
+                ]
+            },
             { href: '/projects/create', title: 'Create Project', icon: 'Plus', color: 'text-green-400' },
             { href: '/budgets', title: 'Budgets', icon: 'TrendingUp', color: 'text-teal-400' },
         ]
@@ -177,7 +204,19 @@ const routeConfig: Record<string, {
         color: 'text-purple-400',
         menuItems: [
             { href: '/clients', title: 'All Clients', icon: 'Users', color: 'text-purple-400' },
-            { href: '/requests/clients', title: 'Client Requests', icon: 'FileText', color: 'text-yellow-400' },
+            { 
+                href: '/requests/clients', 
+                title: 'Client Requests', 
+                icon: 'FileText', 
+                color: 'text-yellow-400',
+                subItems: [
+                    { href: '/requests/clients?status=Pending', title: 'Pending', color: 'text-yellow-400' },
+                    { href: '/requests/clients?status=Approved', title: 'Approved', color: 'text-green-400' },
+                    { href: '/requests/clients?status=Rejected', title: 'Rejected', color: 'text-red-400' }
+                ]
+            },
+            { href: '/client-contracts', title: 'Client Contracts', icon: 'FileCheck', color: 'text-teal-400' },
+            { href: '/client-contracts/create', title: 'Create Client Contract', icon: 'Plus', color: 'text-green-400' },
             { href: '/clients/create', title: 'Create Client', icon: 'Plus', color: 'text-green-400' }
         ]
     },
@@ -196,6 +235,17 @@ const routeConfig: Record<string, {
         color: 'text-yellow-400',
         menuItems: [
             { href: '/tasks', title: 'Task Orders', icon: 'ClipboardList', color: 'text-yellow-400' },
+            { 
+                href: '/requests/tasks', 
+                title: 'Task Requests', 
+                icon: 'FileText', 
+                color: 'text-yellow-400',
+                subItems: [
+                    { href: '/requests/tasks?status=Pending', title: 'Pending', color: 'text-yellow-400' },
+                    { href: '/requests/tasks?status=Approved', title: 'Approved', color: 'text-green-400' },
+                    { href: '/requests/tasks?status=Rejected', title: 'Rejected', color: 'text-red-400' }
+                ]
+            },
             { href: '/tasks/create', title: 'Create Task', icon: 'Plus', color: 'text-green-400' }
         ]
     },
@@ -326,6 +376,22 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: SidebarProps) {
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({});
+
+    // Auto-open collapsible if current path matches a subItem
+    useEffect(() => {
+        const currentStatus = searchParams.get('status');
+        if (currentStatus && pathname === '/requests/clients') {
+            setOpenCollapsibles(prev => ({ ...prev, '/requests/clients': true }));
+        }
+        if (currentStatus && pathname === '/requests/projects') {
+            setOpenCollapsibles(prev => ({ ...prev, '/requests/projects': true }));
+        }
+        if (currentStatus && pathname === '/requests/tasks') {
+            setOpenCollapsibles(prev => ({ ...prev, '/requests/tasks': true }));
+        }
+    }, [pathname, searchParams]);
 
     // Hide sidebar entirely on dashboard
     if (pathname === '/dashboard') {
@@ -370,12 +436,24 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
             if (currentRoute.config.menuItems) {
                 currentRoute.config.menuItems.forEach(menuItem => {
                     const MenuIconComponent = iconLibrary[menuItem.icon] || Activity;
-                    items.push({
+                    const item: MenuItem = {
                         title: menuItem.title,
                         icon: <MenuIconComponent className="h-4 w-4" />,
                         href: menuItem.href,
                         color: menuItem.color
-                    });
+                    };
+                    
+                    // Add subItems if they exist
+                    if (menuItem.subItems && menuItem.subItems.length > 0) {
+                        item.subItems = menuItem.subItems.map(subItem => ({
+                            href: subItem.href,
+                            title: subItem.title,
+                            icon: subItem.icon ? (iconLibrary[subItem.icon] ? React.createElement(iconLibrary[subItem.icon], { className: "h-3 w-3" }) : null) : null,
+                            color: subItem.color
+                        }));
+                    }
+                    
+                    items.push(item);
                 });
             }
         }
@@ -508,35 +586,107 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                 <nav className="p-4 flex-1 overflow-y-auto pb-6 scrollbar-thin">  
                     <div className="space-y-2">
                         {menuItems.length > 0 ? (
-                            menuItems.map((item, index) => (
-                                <Link
-                                    key={`${item.href}-${index}`}
-                                    href={item.href}
-                                    className={cn(
-                                        "group flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative",
-                                        isActive(item.href)
-                                            ? "bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-500 dark:to-orange-600 text-white shadow-lg shadow-orange-500/25 dark:shadow-orange-500/25"
-                                            : "text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50 hover:shadow-lg"
-                                    )}
-                                    title={collapsed && !mobileOpen ? item.title : undefined}
-                                    onClick={handleItemClick}
-                                >
-                                    <div className={cn(
-                                        "transition-colors duration-300",
-                                        isActive(item.href) ? "text-white dark:text-white" : item.color || "text-slate-400 dark:text-slate-400"
-                                    )}>
-                                        {item.icon}
-                                    </div>
-                                    {(!collapsed || mobileOpen) && (
-                                        <>
-                                            <span className="flex-1">{item.title}</span>
-                                        </>
-                                    )}
-                                    {isActive(item.href) && (
-                                        <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white dark:bg-white rounded-l-full"></div>
-                                    )}
-                                </Link>
-                            ))
+                            menuItems.map((item, index) => {
+                                const hasSubItems = item.subItems && item.subItems.length > 0;
+                                const isOpen = openCollapsibles[item.href] || false;
+                                const isItemActive = isActive(item.href) || (hasSubItems && item.subItems?.some(sub => isActive(sub.href)));
+
+                                if (hasSubItems) {
+                                    return (
+                                        <Collapsible
+                                            key={`${item.href}-${index}`}
+                                            open={isOpen}
+                                            onOpenChange={(open) => setOpenCollapsibles(prev => ({ ...prev, [item.href]: open }))}
+                                        >
+                                            <CollapsibleTrigger asChild>
+                                                <button
+                                                    className={cn(
+                                                        "group w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative",
+                                                        isItemActive
+                                                            ? "bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-500 dark:to-orange-600 text-white shadow-lg shadow-orange-500/25 dark:shadow-orange-500/25"
+                                                            : "text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50 hover:shadow-lg"
+                                                    )}
+                                                    title={collapsed && !mobileOpen ? item.title : undefined}
+                                                >
+                                                    <div className={cn(
+                                                        "transition-colors duration-300",
+                                                        isItemActive ? "text-white dark:text-white" : item.color || "text-slate-400 dark:text-slate-400"
+                                                    )}>
+                                                        {item.icon}
+                                                    </div>
+                                                    {(!collapsed || mobileOpen) && (
+                                                        <>
+                                                            <span className="flex-1 text-left">{item.title}</span>
+                                                            {isOpen ? (
+                                                                <ChevronDown className="h-4 w-4 transition-transform" />
+                                                            ) : (
+                                                                <ChevronRight className="h-4 w-4 transition-transform" />
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </CollapsibleTrigger>
+                                            <CollapsibleContent className="mt-1 space-y-1">
+                                                {item.subItems?.map((subItem, subIndex) => (
+                                                    <Link
+                                                        key={`${subItem.href}-${subIndex}`}
+                                                        href={subItem.href}
+                                                        className={cn(
+                                                            "group flex items-center gap-4 px-4 py-2.5 ml-6 rounded-lg text-sm font-medium transition-all duration-300",
+                                                            isActive(subItem.href)
+                                                                ? "bg-slate-700/70 dark:bg-slate-700/70 text-white"
+                                                                : "text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50"
+                                                        )}
+                                                        onClick={handleItemClick}
+                                                    >
+                                                        {subItem.icon && (
+                                                            <div className={cn(
+                                                                "transition-colors duration-300",
+                                                                isActive(subItem.href) ? "text-white dark:text-white" : subItem.color || "text-slate-400 dark:text-slate-400"
+                                                            )}>
+                                                                {subItem.icon}
+                                                            </div>
+                                                        )}
+                                                        {(!collapsed || mobileOpen) && (
+                                                            <span className="flex-1">{subItem.title}</span>
+                                                        )}
+                                                    </Link>
+                                                ))}
+                                            </CollapsibleContent>
+                                        </Collapsible>
+                                    );
+                                }
+
+                                return (
+                                    <Link
+                                        key={`${item.href}-${index}`}
+                                        href={item.href}
+                                        className={cn(
+                                            "group flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative",
+                                            isActive(item.href)
+                                                ? "bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-500 dark:to-orange-600 text-white shadow-lg shadow-orange-500/25 dark:shadow-orange-500/25"
+                                                : "text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50 hover:shadow-lg"
+                                        )}
+                                        title={collapsed && !mobileOpen ? item.title : undefined}
+                                        onClick={handleItemClick}
+                                    >
+                                        <div className={cn(
+                                            "transition-colors duration-300",
+                                            isActive(item.href) ? "text-white dark:text-white" : item.color || "text-slate-400 dark:text-slate-400"
+                                        )}>
+                                            {item.icon}
+                                        </div>
+                                        {(!collapsed || mobileOpen) && (
+                                            <>
+                                                <span className="flex-1">{item.title}</span>
+                                            </>
+                                        )}
+                                        {isActive(item.href) && (
+                                            <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white dark:bg-white rounded-l-full"></div>
+                                        )}
+                                    </Link>
+                                );
+                            })
                         ) : (
                             <div className="text-center py-8 text-slate-400 dark:text-slate-400 text-sm">
                                 {(!collapsed || mobileOpen) ? 'No menu items available' : ''}

@@ -1,67 +1,180 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { AppDispatch } from '@/stores/store';
-import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import type { AppDispatch } from '@/stores/store';
+
 import {
     fetchContracts,
     selectContracts,
     selectContractsLoading,
     selectContractsTotal,
     selectContractsPages,
+    selectContractsError,
 } from '@/stores/slices/client-contracts';
 import { fetchClients, selectClients } from '@/stores/slices/clients';
-import { Badge } from '@/components/ui/badge';
+
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { FileText, Eye, Edit, Trash2, Plus, RefreshCw, FileSpreadsheet, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { DeleteDialog } from '@/components/delete-dialog';
+import { SquarePen, Plus, RefreshCw, FileSpreadsheet, Eye, X, Search, Trash2 } from 'lucide-react';
+import type { ClientContract } from '@/stores/types/client-contracts';
 import { toast } from 'sonner';
+import axios from '@/utils/axios';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
-import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
-import type { ClientContract } from '@/stores/types/client-contracts';
-import { deleteContract } from '@/stores/slices/client-contracts';
-import axios from '@/utils/axios';
-import { useRouter } from 'next/navigation';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { DatePicker } from '@/components/DatePicker';
+import { Label } from '@/components/ui/label';
 
 export default function ClientContractsPage() {
+    const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
-    // Redux state
+
     const contracts = useSelector(selectContracts);
     const loading = useSelector(selectContractsLoading);
-    const totalItems = useSelector(selectContractsTotal);
-    const totalPages = useSelector(selectContractsPages);
+    const total = useSelector(selectContractsTotal);
+    const pages = useSelector(selectContractsPages);
+    const error = useSelector(selectContractsError);
     const clients = useSelector(selectClients);
 
-    const dispatch = useReduxDispatch<AppDispatch>();
-
     const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState(search);
     const [statusFilter, setStatusFilter] = useState<'All' | string>('All');
     const [clientFilter, setClientFilter] = useState<'All' | string>('All');
+    const [dateFrom, setDateFrom] = useState<string>('');
+    const [dateTo, setDateTo] = useState<string>('');
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
-    const [selectedContract, setSelectedContract] = useState<ClientContract | null>(null);
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
 
-    // Fetch contracts and clients
+    // Delete dialog state
+    const [open, setOpen] = useState(false);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState(false);
+
     useEffect(() => {
-        dispatch(fetchContracts({
-            page,
-            limit,
-            search: search || undefined,
+        if (error) toast.error(error);
+    }, [error]);
+
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch(search), 400);
+        return () => clearTimeout(t);
+    }, [search]);
+
+    const lastKeyRef = useRef<string>('');
+    useEffect(() => {
+        const key = JSON.stringify({ page, limit, search: debouncedSearch, status: statusFilter, client_id: clientFilter, date_from: dateFrom, date_to: dateTo });
+        if (lastKeyRef.current === key) return; 
+        lastKeyRef.current = key;
+        dispatch(fetchContracts({ 
+            page, 
+            limit, 
+            search: debouncedSearch,
             status: statusFilter !== 'All' ? statusFilter : undefined,
             client_id: clientFilter !== 'All' ? clientFilter : undefined,
         }));
         dispatch(fetchClients({ limit: 1000 }));
-    }, [dispatch, page, limit, search, statusFilter, clientFilter]);
+    }, [dispatch, page, limit, debouncedSearch, statusFilter, clientFilter, dateFrom, dateTo]);
+
+    const refreshTable = async () => {
+        setIsRefreshing(true);
+        try {
+            await dispatch(fetchContracts({ 
+                page, 
+                limit, 
+                search: debouncedSearch,
+                status: statusFilter !== 'All' ? statusFilter : undefined,
+                client_id: clientFilter !== 'All' ? clientFilter : undefined,
+            }));
+            toast.success('Table refreshed successfully');
+        } catch (err) {
+            toast.error('Failed to refresh table');
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const exportToExcel = async () => {
+        setIsExporting(true);
+        try {
+            const exportParams: any = {
+                search: debouncedSearch,
+                status: statusFilter !== 'All' ? statusFilter : undefined,
+                client_id: clientFilter !== 'All' ? clientFilter : undefined,
+                limit: 10000,
+                page: 1
+            };
+            if (dateFrom) exportParams.from_date = dateFrom;
+            if (dateTo) exportParams.to_date = dateTo;
+            
+            const { data } = await axios.get('/client-contracts/fetch', {
+                params: exportParams
+            });
+
+            const items = data?.data?.contracts?.items || data?.body?.contracts?.items || contracts;
+
+            const headers = ['Contract No', 'Title', 'Client Name', 'Client No', 'Contract Date', 'Start Date', 'End Date', 'Contract Value', 'Currency', 'Guarantee %', 'Retention %', 'Status', 'Created At'];
+            const csvHeaders = headers.join(',');
+            
+            const escapeCsv = (val: any) => {
+                if (val === null || val === undefined) return '';
+                const str = String(val);
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            };
+            
+            const csvRows = items.map((contract: ClientContract) => {
+                return [
+                    escapeCsv(contract.contract_no),
+                    escapeCsv(contract.title),
+                    escapeCsv(contract.client_name || contract.client?.name),
+                    escapeCsv(contract.client_no || contract.client?.client_no),
+                    escapeCsv(contract.contract_date),
+                    escapeCsv(contract.start_date),
+                    escapeCsv(contract.end_date),
+                    escapeCsv(contract.contract_value),
+                    escapeCsv(contract.currency),
+                    escapeCsv(contract.guarantee_percent),
+                    escapeCsv(contract.retention_percent),
+                    escapeCsv(contract.status),
+                    escapeCsv(contract.created_at)
+                ].join(',');
+            }) || [];
+
+            const csvContent = [csvHeaders, ...csvRows].join('\n');
+            
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `client_contracts_${new Date().toISOString().split('T')[0]}.csv`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            window.URL.revokeObjectURL(url);
+            link.remove();
+            
+            toast.success('Client contracts exported successfully');
+        } catch (err) {
+            console.error('Export error:', err);
+            toast.error('Failed to export client contracts');
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     const getStatusColor = (status: string) => {
-        const statusLower = status?.toLowerCase() || '';
+        if (!status) return 'bg-slate-100 dark:bg-slate-800';
+        const statusLower = status.toLowerCase();
         if (statusLower.includes('نشط') || statusLower.includes('active')) {
             return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
         }
@@ -74,23 +187,9 @@ export default function ClientContractsPage() {
         return 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
     };
 
-    const getStatusIcon = (status: string) => {
-        const statusLower = status?.toLowerCase() || '';
-        if (statusLower.includes('نشط') || statusLower.includes('active')) {
-            return <CheckCircle className="h-4 w-4" />;
-        }
-        if (statusLower.includes('منتهي') || statusLower.includes('expired') || statusLower.includes('ended')) {
-            return <Clock className="h-4 w-4" />;
-        }
-        if (statusLower.includes('ملغي') || statusLower.includes('cancelled') || statusLower.includes('canceled')) {
-            return <XCircle className="h-4 w-4" />;
-        }
-        return <Clock className="h-4 w-4" />;
-    };
-
     const formatCurrency = (value: number | string, currency: string = 'IQD') => {
         const numValue = typeof value === 'string' ? parseFloat(value) : value;
-        if (isNaN(numValue)) return '0';
+        if (isNaN(numValue)) return '0 ' + currency;
         return new Intl.NumberFormat('en-US').format(numValue) + ' ' + currency;
     };
 
@@ -104,481 +203,381 @@ export default function ClientContractsPage() {
     };
 
     const columns: Column<ClientContract>[] = [
-        {
-            key: 'contract_no' as keyof ClientContract,
-            header: 'Contract No',
+        { 
+            key: 'contract_no' as keyof ClientContract, 
+            header: 'Contract No', 
+            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 font-mono text-sm font-semibold">{value || '-'}</span>,
             sortable: true,
-            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400 font-semibold">{value || '-'}</span>
+            width: '120px'
         },
-        {
-            key: 'title' as keyof ClientContract,
-            header: 'Title',
-            sortable: true,
-            render: (value: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{value || '-'}</span>
+        { 
+            key: 'title' as keyof ClientContract, 
+            header: 'Title', 
+            render: (value: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{value || '-'}</span>,
+            sortable: true 
         },
-        {
-            key: 'client_name' as keyof ClientContract,
-            header: 'Client Name',
-            sortable: true,
-            render: (value: any, row: ClientContract) => (
-                <div className="flex flex-col">
-                    <span className="text-slate-700 dark:text-slate-300 font-medium">{value || row.client?.name || '-'}</span>
-                    {row.client_no && (
-                        <span className="text-xs text-slate-500 dark:text-slate-400">#{row.client_no}</span>
-                    )}
-                </div>
-            )
-        },
-        {
-            key: 'contract_date' as keyof ClientContract,
-            header: 'Contract Date',
-            sortable: true,
-            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{formatDate(value)}</span>
-        },
-        {
-            key: 'start_date' as keyof ClientContract,
-            header: 'Start Date',
-            sortable: true,
-            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{formatDate(value)}</span>
-        },
-        {
-            key: 'end_date' as keyof ClientContract,
-            header: 'End Date',
-            sortable: true,
-            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{formatDate(value)}</span>
-        },
-        {
-            key: 'contract_value' as keyof ClientContract,
-            header: 'Contract Value',
-            sortable: true,
-            render: (value: any, row: ClientContract) => (
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {formatCurrency(value, row.currency)}
-                </span>
-            )
-        },
-        {
-            key: 'guarantee_percent' as keyof ClientContract,
-            header: 'Guarantee %',
-            sortable: true,
-            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value ? `${value}%` : '0%'}</span>
-        },
-        {
-            key: 'retention_percent' as keyof ClientContract,
-            header: 'Retention %',
-            sortable: true,
-            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value ? `${value}%` : '0%'}</span>
-        },
-        {
-            key: 'status' as keyof ClientContract,
-            header: 'Status',
-            render: (value: any) => {
+        { 
+            key: 'client_name' as keyof ClientContract, 
+            header: 'Client Name', 
+            render: (value: any, row: ClientContract) => {
+                const clientName = value || row.client?.name || '-';
+                const clientNo = row.client_no || row.client?.client_no;
                 return (
-                    <Badge variant="outline" className={`${getStatusColor(value)} flex items-center gap-1 w-fit font-medium`}>
-                        {getStatusIcon(value)}
-                        {value || '-'}
+                    <div className="flex flex-col">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">{clientName}</span>
+                        {clientNo && (
+                            <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">#{clientNo}</span>
+                        )}
+                    </div>
+                );
+            },
+            sortable: true 
+        },
+        { 
+            key: 'contract_date' as keyof ClientContract, 
+            header: 'Contract Date', 
+            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{formatDate(value)}</span>,
+            sortable: true 
+        },
+        { 
+            key: 'contract_value' as keyof ClientContract, 
+            header: 'Contract Value', 
+            render: (value: any, row: ClientContract) => (
+                <span className="font-semibold text-green-600 dark:text-green-400">
+                    {value ? formatCurrency(value, row.currency) : 'N/A'}
+                </span>
+            ),
+            sortable: true 
+        },
+        { 
+            key: 'status' as keyof ClientContract, 
+            header: 'Status', 
+            render: (value: any) => {
+                if (!value) return <span className="text-slate-400">N/A</span>;
+                return (
+                    <Badge variant="outline" className={`${getStatusColor(value)} w-fit`}>
+                        {value}
                     </Badge>
                 );
             },
-            sortable: true
+            sortable: true 
         },
-        {
-            key: 'created_at' as keyof ClientContract,
-            header: 'Created At',
-            sortable: true,
-            render: (value: any) => (
-                <span className="text-slate-600 dark:text-slate-400">
-                    {value ? new Date(value).toLocaleString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }) : '-'}
-                </span>
-            )
+        { 
+            key: 'created_at' as keyof ClientContract, 
+            header: 'Created', 
+            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 text-sm">{formatDate(value)}</span>,
+            sortable: true 
         }
     ];
+
+    const handleDeleteContract = useCallback(
+        async (id: string) => {
+            if (!id) return;
+            try {
+                setDeleting(true);
+                await axios.delete(`/client-contracts/delete/${id}`);
+                toast.success('Contract deleted successfully');
+                dispatch(fetchContracts({ 
+                    page, 
+                    limit, 
+                    search: debouncedSearch,
+                    status: statusFilter !== 'All' ? statusFilter : undefined,
+                    client_id: clientFilter !== 'All' ? clientFilter : undefined,
+                }));
+            } catch {
+                toast.error('Failed to delete contract');
+            } finally {
+                setDeleting(false);
+                setOpen(false);
+                setSelectedId(null);
+            }
+        },
+        [dispatch, page, limit, debouncedSearch, statusFilter, clientFilter]
+    );
 
     const actions: Action<ClientContract>[] = [
         {
             label: 'View Details',
-            onClick: (contract) => {
-                router.push(`/client-contracts/details?id=${contract.id}`);
-            },
             icon: <Eye className="h-4 w-4" />,
+            onClick: (contract: ClientContract) => router.push(`/client-contracts/details?id=${contract.id}`),
             variant: 'info' as const
         },
         {
-            label: 'Edit',
-            onClick: (contract) => {
-                router.push(`/client-contracts/update?id=${contract.id}`);
-            },
-            icon: <Edit className="h-4 w-4" />,
-            variant: 'default' as const
+            label: 'Edit Contract',
+            icon: <SquarePen className="h-4 w-4" />,
+            onClick: (contract: ClientContract) => router.push(`/client-contracts/update?id=${contract.id}`),
+            variant: 'warning' as const
         },
         {
-            label: 'Delete',
-            onClick: (contract) => {
-                setSelectedContract(contract);
-                setIsDeleteDialogOpen(true);
-            },
+            label: 'Delete Contract',
             icon: <Trash2 className="h-4 w-4" />,
+            onClick: (contract: ClientContract) => {
+                setSelectedId(contract.id);
+                setOpen(true);
+            },
             variant: 'destructive' as const
-        }
+        },
     ];
 
-    const refreshTable = async () => {
-        setIsRefreshing(true);
-        try {
-            setPage(1);
-            await dispatch(fetchContracts({
-                page: 1,
-                limit,
-                search: search || undefined,
-                status: statusFilter !== 'All' ? statusFilter : undefined,
-                client_id: clientFilter !== 'All' ? clientFilter : undefined,
-            }));
-            toast.success('Table refreshed successfully');
-        } catch {
-            toast.error('Failed to refresh table');
-        } finally {
-            setIsRefreshing(false);
-        }
-    };
+    const activeFilters = [];
+    if (search) activeFilters.push(`Search: ${search}`);
+    if (statusFilter !== 'All') activeFilters.push(`Status: ${statusFilter}`);
+    if (clientFilter !== 'All') {
+        const client = clients.find(c => c.id === clientFilter);
+        activeFilters.push(`Client: ${client?.name || clientFilter}`);
+    }
+    if (dateFrom) activeFilters.push(`From: ${new Date(dateFrom).toLocaleDateString('en-US')}`);
+    if (dateTo) activeFilters.push(`To: ${new Date(dateTo).toLocaleDateString('en-US')}`);
 
-    const exportToExcel = async () => {
-        setIsExporting(true);
-        try {
-            const res = await axios.get('/client-contracts/fetch', {
-                params: {
-                    page: 1,
-                    limit: 10000,
-                    search: search || undefined,
-                    status: statusFilter !== 'All' ? statusFilter : undefined,
-                    client_id: clientFilter !== 'All' ? clientFilter : undefined,
-                }
-            });
-
-            const items = res?.data?.data?.contracts?.items || res?.data?.body?.contracts?.items || contracts;
-
-            const headers = ['Contract No', 'Title', 'Client Name', 'Client No', 'Contract Date', 'Start Date', 'End Date', 'Contract Value', 'Currency', 'Guarantee %', 'Retention %', 'Status', 'Created At'];
-            const csvHeaders = headers.join(',');
-            const csvRows = items.map((c: ClientContract) => {
-                const escapeCsv = (val: any) => {
-                    if (val === null || val === undefined) return '';
-                    const str = String(val);
-                    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-                        return `"${str.replace(/"/g, '""')}"`;
-                    }
-                    return str;
-                };
-                return [
-                    escapeCsv(c.contract_no),
-                    escapeCsv(c.title),
-                    escapeCsv(c.client_name || c.client?.name),
-                    escapeCsv(c.client_no || c.client?.client_no),
-                    escapeCsv(c.contract_date),
-                    escapeCsv(c.start_date),
-                    escapeCsv(c.end_date),
-                    escapeCsv(c.contract_value),
-                    escapeCsv(c.currency),
-                    escapeCsv(c.guarantee_percent),
-                    escapeCsv(c.retention_percent),
-                    escapeCsv(c.status),
-                    escapeCsv(c.created_at)
-                ].join(',');
-            });
-            const csvContent = [csvHeaders, ...csvRows].join('\n');
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `client_contracts_${new Date().toISOString().slice(0, 10)}.csv`;
-            a.click();
-            URL.revokeObjectURL(url);
-            toast.success('Data exported successfully');
-        } catch (err: any) {
-            toast.error(err?.response?.data?.message || err?.message || 'Failed to export data');
-        } finally {
-            setIsExporting(false);
-        }
-    };
-
-    const handleDelete = async () => {
-        if (!selectedContract) return;
-
-        setIsDeleting(true);
-        try {
-            await dispatch(deleteContract(selectedContract.id));
-            toast.success('Contract deleted successfully');
-            setIsDeleteDialogOpen(false);
-            setSelectedContract(null);
-            await dispatch(fetchContracts({ page, limit, search: search || undefined, status: statusFilter !== 'All' ? statusFilter : undefined, client_id: clientFilter !== 'All' ? clientFilter : undefined }));
-        } catch (error: any) {
-            toast.error(error || 'Failed to delete contract');
-        } finally {
-            setIsDeleting(false);
-        }
-    };
-
-    const activeFilters = useMemo(() => {
-        const arr: string[] = [];
-        if (search) arr.push(`Search: ${search}`);
-        if (statusFilter !== 'All') arr.push(`Status: ${statusFilter}`);
-        if (clientFilter !== 'All') {
-            const client = clients.find(c => c.id === clientFilter);
-            arr.push(`Client: ${client?.name || clientFilter}`);
-        }
-        return arr;
-    }, [search, statusFilter, clientFilter, clients]);
-
-    const uniqueStatuses = useMemo(() => {
-        const statusSet = new Set<string>();
-        contracts.forEach(c => {
-            if (c.status) statusSet.add(c.status);
-        });
-        return Array.from(statusSet).sort();
-    }, [contracts]);
-
-    // Calculate stats
-    const totalContracts = totalItems;
-    const activeContracts = useMemo(() => {
-        return contracts.filter(c => {
-            const s = c.status?.toLowerCase() || '';
-            return s.includes('نشط') || s.includes('active');
-        }).length;
-    }, [contracts]);
-
-    const expiredContracts = useMemo(() => {
-        return contracts.filter(c => {
-            const s = c.status?.toLowerCase() || '';
-            return s.includes('منتهي') || s.includes('expired') || s.includes('ended');
-        }).length;
-    }, [contracts]);
-
-    const cancelledContracts = useMemo(() => {
-        return contracts.filter(c => {
-            const s = c.status?.toLowerCase() || '';
-            return s.includes('ملغي') || s.includes('cancelled') || s.includes('canceled');
-        }).length;
-    }, [contracts]);
-
+    // Get unique statuses for filter
+    const uniqueStatuses = Array.from(new Set(contracts.map(c => c.status).filter(Boolean))).sort();
 
     return (
-        <div className="space-y-4">
-            {/* Header */}
-            <Breadcrumb />
-            <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
-                <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Client Contracts</h1>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">Manage and track client contracts</p>
+        <>
+            <div className="space-y-4">
+                {/* Breadcrumb */}
+                <Breadcrumb />
+                
+                {/* Page Header */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
+                    <div>
+                        <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-200">All Client Contracts</h1>
+                        <p className="text-slate-600 dark:text-slate-400 mt-1">
+                            Browse and manage all client contracts with comprehensive filtering and management tools
+                        </p>
+                    </div>
                 </div>
-                <Button
-                    onClick={() => router.push('/client-contracts/create')}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-                >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add New Contract
-                </Button>
-            </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Search & Filters Card */}
                 <EnhancedCard
-                    title="Total Contracts"
-                    description="All contract records"
+                    title="Search & Filters"
+                    description="Search and filter contracts by various criteria"
                     variant="default"
                     size="sm"
-                    stats={{
-                        total: totalContracts,
-                        badge: 'Total',
-                        badgeColor: 'default'
-                    }}
                 >
-                    <></>
+                    <div className="space-y-4">
+                        {/* Search Input with Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                                <Input
+                                    placeholder="Search by contract number, title, client name..."
+                                    value={search}
+                                    onChange={(e) => {
+                                        setSearch(e.target.value);
+                                        setPage(1);
+                                    }}
+                                    className="pl-10 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={exportToExcel}
+                                    disabled={isExporting || loading}
+                                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 whitespace-nowrap"
+                                >
+                                    <FileSpreadsheet className={`h-4 w-4 mr-2 ${isExporting ? 'animate-pulse' : ''}`} />
+                                    {isExporting ? 'Exporting...' : 'Export Excel'}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={refreshTable}
+                                    disabled={isRefreshing}
+                                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 whitespace-nowrap"
+                                >
+                                    <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                    Refresh
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Filters Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Status Filter */}
+                            <div className="space-y-2">
+                                <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    Status
+                                </Label>
+                                <Select
+                                    value={statusFilter}
+                                    onValueChange={(value) => {
+                                        setStatusFilter(value);
+                                        setPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100">
+                                        <SelectValue placeholder="All Status" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectItem value="All" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Status</SelectItem>
+                                        {uniqueStatuses.map(status => (
+                                            <SelectItem key={status} value={status} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">
+                                                {status}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Client Filter */}
+                            <div className="space-y-2">
+                                <Label htmlFor="client" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    Client
+                                </Label>
+                                <Select
+                                    value={clientFilter}
+                                    onValueChange={(value) => {
+                                        setClientFilter(value);
+                                        setPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100">
+                                        <SelectValue placeholder="All Clients" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectItem value="All" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Clients</SelectItem>
+                                        {clients.map(client => (
+                                            <SelectItem key={client.id} value={client.id} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">
+                                                {client.name} ({client.client_no})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* From Date */}
+                            <div className="space-y-2">
+                                <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    From Date
+                                </Label>
+                                <DatePicker
+                                    value={dateFrom}
+                                    onChange={(value) => {
+                                        setDateFrom(value);
+                                        setPage(1);
+                                    }}
+                                />
+                            </div>
+
+                            {/* To Date */}
+                            <div className="space-y-2">
+                                <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    To Date
+                                </Label>
+                                <DatePicker
+                                    value={dateTo}
+                                    onChange={(value) => {
+                                        setDateTo(value);
+                                        setPage(1);
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Active Filters & Clear Button */}
+                        {activeFilters.length > 0 && (
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                                {/* Active Filters */}
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Active filters:</span>
+                                    {activeFilters.map((filter, index) => (
+                                        <Badge
+                                            key={index}
+                                            variant="outline"
+                                            className="bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50 border-orange-200 dark:border-orange-800"
+                                        >
+                                            {filter}
+                                        </Badge>
+                                    ))}
+                                </div>
+
+                                {/* Clear All Button */}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setSearch('');
+                                        setStatusFilter('All');
+                                        setClientFilter('All');
+                                        setDateFrom('');
+                                        setDateTo('');
+                                        setPage(1);
+                                    }}
+                                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800 whitespace-nowrap"
+                                >
+                                    <X className="h-4 w-4 mr-2" />
+                                    Clear All
+                                </Button>
+                            </div>
+                        )}
+                    </div>
                 </EnhancedCard>
+
+                {/* Contracts Table */}
                 <EnhancedCard
-                    title="Active Contracts"
-                    description="Currently active contracts"
+                    title="Contracts List"
+                    description={`${total} contract${total !== 1 ? 's' : ''} found`}
                     variant="default"
                     size="sm"
                     stats={{
-                        total: activeContracts,
-                        badge: 'Active',
+                        total: total,
+                        badge: 'Total Contracts',
                         badgeColor: 'success'
                     }}
+                    headerActions={
+                        <Select
+                            value={String(limit)}
+                            onValueChange={(v) => {
+                                setLimit(Number(v));
+                                setPage(1);
+                            }}
+                        >
+                            <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                                <SelectValue placeholder="Items per page" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                <SelectItem value="5" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">5 per page</SelectItem>
+                                <SelectItem value="10" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">10 per page</SelectItem>
+                                <SelectItem value="20" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">20 per page</SelectItem>
+                                <SelectItem value="50" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">50 per page</SelectItem>
+                                <SelectItem value="100" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">100 per page</SelectItem>
+                                <SelectItem value="200" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">200 per page</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    }
                 >
-                    <></>
-                </EnhancedCard>
-                <EnhancedCard
-                    title="Expired Contracts"
-                    description="Expired contracts"
-                    variant="default"
-                    size="sm"
-                    stats={{
-                        total: expiredContracts,
-                        badge: 'Expired',
-                        badgeColor: 'warning'
-                    }}
-                >
-                    <></>
-                </EnhancedCard>
-                <EnhancedCard
-                    title="Cancelled Contracts"
-                    description="Cancelled contracts"
-                    variant="default"
-                    size="sm"
-                    stats={{
-                        total: cancelledContracts,
-                        badge: 'Cancelled',
-                        badgeColor: 'error'
-                    }}
-                >
-                    <></>
+                    <EnhancedDataTable
+                        data={contracts}
+                        columns={columns}
+                        actions={actions}
+                        loading={loading}
+                        pagination={{
+                            currentPage: page,
+                            totalPages: pages,
+                            pageSize: limit,
+                            totalItems: total,
+                            onPageChange: setPage,
+                        }}
+                        noDataMessage="No contracts found matching your search criteria"
+                        searchPlaceholder="Search contracts..."
+                    />
                 </EnhancedCard>
             </div>
 
-            {/* Filter Bar */}
-            <FilterBar
-                searchPlaceholder="Search by contract number, title..."
-                searchValue={search}
-                onSearchChange={(value) => {
-                    setSearch(value);
-                    setPage(1);
-                }}
-                filters={[
-                    {
-                        key: 'status',
-                        label: 'Status',
-                        value: statusFilter,
-                        options: [
-                            { key: 'all', label: 'All Statuses', value: 'All' },
-                            ...uniqueStatuses.map(s => ({
-                                key: s,
-                                label: s,
-                                value: s
-                            }))
-                        ],
-                        onValueChange: (value) => {
-                            setStatusFilter(value);
-                            setPage(1);
-                        }
-                    },
-                    {
-                        key: 'client',
-                        label: 'Client',
-                        value: clientFilter,
-                        options: [
-                            { key: 'all', label: 'All Clients', value: 'All' },
-                            ...clients.map(c => ({
-                                key: c.id,
-                                label: `${c.name} (${c.client_no})`,
-                                value: c.id
-                            }))
-                        ],
-                        onValueChange: (value) => {
-                            setClientFilter(value);
-                            setPage(1);
-                        }
+            {/* Delete dialog */}
+            <DeleteDialog
+                open={open}
+                onClose={() => {
+                    if (!deleting) {
+                        setOpen(false);
+                        setSelectedId(null);
                     }
-                ]}
-                activeFilters={activeFilters}
-                onClearFilters={() => {
-                    setSearch('');
-                    setStatusFilter('All');
-                    setClientFilter('All');
-                    setPage(1);
                 }}
-                actions={
-                    <>
-                        <Button
-                            variant="outline"
-                            onClick={refreshTable}
-                            disabled={isRefreshing || loading}
-                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                        >
-                            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={exportToExcel}
-                            disabled={isExporting}
-                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                        >
-                            <FileSpreadsheet className="h-4 w-4 mr-2" />
-                            {isExporting ? 'Exporting...' : 'Export Excel'}
-                        </Button>
-                    </>
-                }
+                onConfirm={() => selectedId && handleDeleteContract(selectedId)}
             />
-
-            {/* Contracts Table */}
-            <EnhancedCard
-                title="Contracts List"
-                description={`${totalItems} contracts found`}
-                variant="default"
-                size="sm"
-                headerActions={
-                    <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
-                        <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
-                            <SelectValue placeholder="Items per page" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
-                            {[5, 10, 20, 50, 100, 200].map(n => (
-                                <SelectItem key={n} value={String(n)} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
-                                    {n} per page
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                }
-            >
-                <EnhancedDataTable
-                    data={contracts}
-                    columns={columns}
-                    actions={actions}
-                    loading={loading}
-                    pagination={{
-                        currentPage: page,
-                        totalPages: totalPages,
-                        pageSize: limit,
-                        totalItems: totalItems,
-                        onPageChange: setPage
-                    }}
-                    noDataMessage="No contracts found matching your search criteria"
-                />
-            </EnhancedCard>
-
-            {/* Delete Confirmation Dialog */}
-            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delete Contract</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to delete this contract? This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    {selectedContract && (
-                        <div className="py-4">
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                <strong>Contract No:</strong> {selectedContract.contract_no}
-                            </p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                <strong>Title:</strong> {selectedContract.title}
-                            </p>
-                        </div>
-                    )}
-                    <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-                            {isDeleting ? 'Deleting...' : 'Delete'}
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
-        </div>
+        </>
     );
 }
-

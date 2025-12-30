@@ -12,13 +12,11 @@ import {
     selectError as selectRequestError,
 } from '@/stores/slices/tasks_requests';
 import {
-    fetchTaskOrder,
-    clearSelectedTaskOrder,
-    selectSelectedTaskOrder,
-    selectSelectedContractor,
+    fetchProject,
+    clearSelectedProject,
     selectSelectedProject,
-    selectTaskOrdersLoading,
-} from '@/stores/slices/task-orders';
+    selectLoading as selectProjectsLoading,
+} from '@/stores/slices/projects';
 import {
     clearSelectedUser,
     selectSelectedUser,
@@ -74,11 +72,25 @@ const getStatusColor = (status: string) => {
         'Complete': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
         'Completed': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
         'Active': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+        'Inactive': 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800',
+        'Stopped': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
+        'Onhold': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800',
         'Draft': 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800',
         'Suspended': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
         'Submitted': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
     };
     return colors[status] || 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
+};
+
+const getProjectTypeColor = (type?: string) => {
+    if (!type) return 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
+    const colors: Record<string, string> = {
+        'Public': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        'Communications': 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+        'Restoration': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+        'Referral': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+    };
+    return colors[type] || 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
 };
 
 /* =========================================================
@@ -116,7 +128,7 @@ const Detail: React.FC<{ label: string; value: React.ReactNode }> = ({ label, va
 /* =========================================================
    Main Component
 =========================================================== */
-function TaskRequestDetails() {
+function ProjectRequestDetails() {
     const router = useRouter();
     const params = useSearchParams();
     const id = params.get('id');
@@ -128,10 +140,8 @@ function TaskRequestDetails() {
     const requestLoading = useAppSelector(selectRequestLoading);
     const requestError = useAppSelector(selectRequestError);
 
-    const taskOrder = useAppSelector(selectSelectedTaskOrder);
-    const contractor = useAppSelector(selectSelectedContractor);
     const project = useAppSelector(selectSelectedProject);
-    const taskOrderLoading = useAppSelector(selectTaskOrdersLoading);
+    const projectLoading = useAppSelector(selectProjectsLoading);
 
     const user = useAppSelector(selectSelectedUser);
     const userLoading = useAppSelector(selectUsersLoading);
@@ -156,7 +166,7 @@ function TaskRequestDetails() {
     useEffect(() => {
         if (!id) {
             toast.error('Request ID is missing');
-            router.push('/requests/tasks');
+            router.push('/requests/projects');
             return;
         }
         dispatch(fetchTaskRequest({ id }));
@@ -165,28 +175,24 @@ function TaskRequestDetails() {
         };
     }, [id, router, dispatch]);
 
-    // Fetch task order data
+    // Fetch project data
     useEffect(() => {
         if (request?.task_order_id) {
-            dispatch(fetchTaskOrder({ id: request.task_order_id }));
+            dispatch(fetchProject({ id: request.task_order_id }));
         }
         return () => {
-            dispatch(clearSelectedTaskOrder());
+            dispatch(clearSelectedProject());
         };
     }, [request, dispatch]);
 
     // Fetch user data (creator) - Try multiple endpoints
     useEffect(() => {
         if (request?.created_id) {
-
-            // Try alternative endpoint first: /users/fetch/${id}
             const fetchUserData = async () => {
                 try {
-                    // Try endpoint 1: /users/fetch/${id} (used in update page)
                     const response1 = await axios.get(`/users/fetch/${request.created_id}`);
                     
                     if (response1.data?.body?.user) {
-                        // Manually set user in Redux state
                         dispatch({
                             type: 'users/fetchUser/fulfilled',
                             payload: {
@@ -204,11 +210,9 @@ function TaskRequestDetails() {
                     }
                 } catch (error1: any) {
                 }
-                
             };
             
             fetchUserData();
-        } else {
         }
         return () => {
             dispatch(clearSelectedUser());
@@ -239,7 +243,7 @@ function TaskRequestDetails() {
     }, [requestError, attachmentsError]);
 
     // Combined loading
-    const loading = requestLoading || taskOrderLoading || isLoading;
+    const loading = requestLoading || projectLoading || isLoading;
 
     if (loading && !request) {
         return (
@@ -256,7 +260,7 @@ function TaskRequestDetails() {
                 <p className="text-rose-600 dark:text-rose-400">{requestError}</p>
                 <Button
                     variant="outline"
-                    onClick={() => router.push('/requests/tasks')}
+                    onClick={() => router.push('/requests/projects')}
                     className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
@@ -269,10 +273,10 @@ function TaskRequestDetails() {
     if (!request) {
         return (
             <Centered>
-                <p className="text-rose-600 dark:text-rose-400">Task request not found</p>
+                <p className="text-rose-600 dark:text-rose-400">Project request not found</p>
                 <Button
                     variant="outline"
-                    onClick={() => router.push('/requests/tasks')}
+                    onClick={() => router.push('/requests/projects')}
                     className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
@@ -436,16 +440,16 @@ function TaskRequestDetails() {
             <div className="flex items-end justify-between gap-4">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
-                        Task Request Details
+                        Project Request Details
                     </h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-2">
-                        A brief overview of the task request with available actions.
+                        A brief overview of the project request with available actions.
                     </p>
                 </div>
                 <div className="flex gap-2">
                     <Button
                         variant="outline"
-                        onClick={() => router.push('/requests/tasks')}
+                        onClick={() => router.push('/requests/projects')}
                         className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                     >
                         Back to Requests
@@ -472,7 +476,7 @@ function TaskRequestDetails() {
                     size="sm"
                 >
                     <div className="text-xl md:text-lg font-bold text-slate-900 dark:text-slate-100">
-                        {request.request_type || 'Tasks'}
+                        {request.request_type || 'Projects'}
                     </div>
                 </EnhancedCard>
                 <EnhancedCard
@@ -545,55 +549,63 @@ function TaskRequestDetails() {
             </EnhancedCard>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                {/* Task Order Information */}
-                {taskOrder && (
+                {/* Project Information */}
+                {project && (
                     <EnhancedCard
-                        title="Task Order Information"
-                        description="Task order details and information"
+                        title="Project Information"
+                        description="Project details and information"
                         variant="default"
                         size="sm"
                         headerActions={
-                            taskOrder.id ? (
-                                <Button
-                                    variant="outline"
-                                    onClick={() => router.push(`/tasks/details?id=${taskOrder.id}`)}
-                                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                                >
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    View Full Task Order Details
-                                </Button>
-                            ) : undefined
+                            <Button
+                                variant="outline"
+                                onClick={() => router.push(`/projects/details?id=${project.id}`)}
+                                className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                            >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Full Project Details
+                            </Button>
                         }
                     >
                         <div className="divide-y divide-slate-200 dark:divide-slate-800 space-y-1">
-                            <Detail label="Task Order ID" value={taskOrder.sequence} />
-                            <Detail label="Task Order Number" value={taskOrder.task_order_no} />
-                            <Detail label="Title" value={taskOrder.title} />
+                            <Detail label="Project ID" value={project.sequence} />
+                            <Detail label="Project Number" value={project.project_no} />
+                            <Detail label="Project Name" value={project.name} />
                             <Detail
-                                label="Status"
+                                label="Project Type"
                                 value={
-                                    taskOrder.status ? (
-                                        <Badge variant="outline" className={getStatusColor(taskOrder.status)}>
-                                            {taskOrder.status}
+                                    project.type ? (
+                                        <Badge variant="outline" className={getProjectTypeColor(project.type)}>
+                                            {project.type}
                                         </Badge>
                                     ) : 'N/A'
                                 }
                             />
-                            {contractor && (
-                                <>
-                                    <Detail label="Contractor Name" value={contractor.name} />
-                                    <Detail label="Contractor Number" value={contractor.number} />
-                                </>
+                            <Detail
+                                label="Status"
+                                value={
+                                    project.status ? (
+                                        <Badge variant="outline" className={getStatusColor(project.status)}>
+                                            {project.status}
+                                        </Badge>
+                                    ) : 'N/A'
+                                }
+                            />
+                            {project.location && (
+                                <Detail label="Location" value={project.location} />
                             )}
-                            {project && (
-                                <>
-                                    <Detail label="Project Name" value={project.name} />
-                                    <Detail label="Project Code" value={project.project_code} />
-                                </>
+                            {project.budget && (
+                                <Detail
+                                    label="Budget"
+                                    value={project.budget ? `${project.budget} IQD` : 'N/A'}
+                                />
                             )}
-                            <Detail label="Created At" value={taskOrder.created_at} />
-                            {taskOrder.updated_at && (
-                                <Detail label="Updated At" value={taskOrder.updated_at} />
+                            {project.notes && (
+                                <Detail label="Notes" value={project.notes} />
+                            )}
+                            <Detail label="Created At" value={project.created_at} />
+                            {project.updated_at && (
+                                <Detail label="Updated At" value={project.updated_at} />
                             )}
                         </div>
                     </EnhancedCard>
@@ -609,14 +621,12 @@ function TaskRequestDetails() {
                 >
                     <div className="divide-y divide-slate-200 dark:divide-slate-800 space-y-1">
                         <Detail label="Request Code" value={request.request_code} />
-                        <Detail label="Request Type" value={request.request_type || 'Tasks'} />
+                        <Detail label="Request Type" value={request.request_type || 'Projects'} />
                         <Detail label="Status" value={
                             <Badge variant="outline" className={getStatusColor(request.status || 'Pending')}>
                                 {request.status || 'N/A'}
                             </Badge>
                         } />
-                        <Detail label="Contractor" value={request.contractor_name} />
-                        <Detail label="Project" value={request.project_name} />
                         <Detail label="Created By" value={request.created_by_name} />
                         <Detail label="Created At" value={request.created_at} />
                         <Detail label="Updated At" value={request.updated_at} />
@@ -692,7 +702,7 @@ function TaskRequestDetails() {
                 onClose={() => setAttachmentModelOpen(false)}
                 onSuccess={handleAttachmentCreated}
                 requestId={id || ''}
-                requestType={request?.request_type || 'Tasks'}
+                requestType={request?.request_type || 'Projects'}
             />
             <UpdateAttachmentForm
                 open={updateAttachmentModelOpen}
@@ -720,7 +730,8 @@ export default function Page() {
                 </Centered>
             }
         >
-            <TaskRequestDetails />
+            <ProjectRequestDetails />
         </Suspense>
     );
 }
+

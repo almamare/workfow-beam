@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import { AppDispatch } from '@/stores/store';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
+import { useSearchParams } from 'next/navigation';
 import {
     fetchTaskRequests,
     selectTaskRequests,
@@ -17,14 +18,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ClipboardList, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, RefreshCw, FileSpreadsheet, Calendar, Clock, UserCheck, AlertTriangle } from 'lucide-react';
+import { ClipboardList, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, RefreshCw, FileSpreadsheet, Calendar, Clock, UserCheck, AlertTriangle, Search, X, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import type { TaskRequest } from '@/stores/types/tasks_requests';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
-import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
+import { DatePicker } from '@/components/DatePicker';
 import axios from '@/utils/axios';
 
 const requestTypes = [
@@ -41,21 +42,25 @@ const priorities = [
     { value: 'urgent', label: 'Urgent' }
 ];
 
-export default function TaskRequestsPage() {
+function TaskRequestsPageContent() {
     const taskRequests = useSelector(selectTaskRequests);
     const loading = useSelector(selectLoading);
     const totalPages = useSelector(selectTotalPages);
     const totalItems = useSelector(selectTotalItems);
 
     const router = useRouter();
+    const searchParams = useSearchParams();
     const dispatch = useReduxDispatch<AppDispatch>();
 
+    // Get status from URL query parameter
+    const statusFromUrl = searchParams.get('status') || 'all';
     const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState(search);
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
-    const [typeFilter, setTypeFilter] = useState<string>('all');
-    const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [priorityFilter, setPriorityFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<string>(statusFromUrl);
+    const [dateFrom, setDateFrom] = useState<string>('');
+    const [dateTo, setDateTo] = useState<string>('');
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [editingRequest, setEditingRequest] = useState<TaskRequest | null>(null);
@@ -73,32 +78,66 @@ export default function TaskRequestsPage() {
         assigned_to: ''
     });
 
+    // Update status filter when URL changes
     useEffect(() => {
-        dispatch(fetchTaskRequests({ page, limit, search }));
-    }, [dispatch, page, limit, search]);
+        const statusFromUrl = searchParams.get('status') || 'all';
+        setStatusFilter(statusFromUrl);
+        setPage(1);
+    }, [searchParams]);
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(search), 400);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    // Fetch task requests
+    useEffect(() => {
+        dispatch(fetchTaskRequests({ 
+            page, 
+            limit, 
+            search: debouncedSearch,
+            request_type: 'Tasks',
+            status: statusFilter !== 'all' ? statusFilter : undefined,
+            from_date: dateFrom || undefined,
+            to_date: dateTo || undefined,
+        }));
+    }, [dispatch, page, limit, debouncedSearch, statusFilter, dateFrom, dateTo]);
 
 
-    const contractors = ['ABC Construction', 'XYZ Electrical', 'Green Landscaping', 'Modern Plumbing', 'Quality Painters'];
-    const projects = ['Office Building Construction', 'Residential Complex', 'Shopping Mall', 'Hospital', 'School'];
-    const assignees = ['Ahmed Ali', 'Sara Ahmed', 'Mohammed Saleh', 'Fatima Mohamed', 'Omar Hassan'];
+    // Filter task requests to only show "Tasks" type
+    const taskRequestsFiltered = useMemo(() => {
+        return taskRequests.filter(req => req.request_type === 'Tasks');
+    }, [taskRequests]);
+
+    const contractors: string[] = ['ABC Construction', 'XYZ Electrical', 'Green Landscaping', 'Modern Plumbing', 'Quality Painters'];
+    const projects: string[] = ['Office Building Construction', 'Residential Complex', 'Shopping Mall', 'Hospital', 'School'];
+    const assignees: string[] = ['Ahmed Ali', 'Sara Ahmed', 'Mohammed Saleh', 'Fatima Mohamed', 'Omar Hassan'];
 
     const filteredRequests = useMemo(() => {
-        return taskRequests.filter(request => {
-            const matchesSearch = request.request_code?.toLowerCase().includes(search.toLowerCase()) ||
-                                request.contractor_name?.toLowerCase().includes(search.toLowerCase()) ||
-                                request.project_name?.toLowerCase().includes(search.toLowerCase()) ||
-                                request.notes?.toLowerCase().includes(search.toLowerCase());
-            const matchesType = typeFilter === 'all' || request.request_type === typeFilter;
+        return taskRequestsFiltered.filter(request => {
+            const matchesSearch = request.request_code?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                                request.contractor_name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                                request.project_name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                                request.notes?.toLowerCase().includes(debouncedSearch.toLowerCase());
             const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
             
-            return matchesSearch && matchesType && matchesStatus;
+            return matchesSearch && matchesStatus;
         });
-    }, [taskRequests, search, typeFilter, statusFilter]);
+    }, [taskRequestsFiltered, debouncedSearch, statusFilter]);
 
     const refreshTable = async () => {
         setIsRefreshing(true);
         try {
-            await dispatch(fetchTaskRequests({ page, limit, search }));
+            await dispatch(fetchTaskRequests({ 
+                page, 
+                limit, 
+                search: debouncedSearch,
+                request_type: 'Tasks',
+                status: statusFilter !== 'all' ? statusFilter : undefined,
+                from_date: dateFrom || undefined,
+                to_date: dateTo || undefined,
+            }));
             toast.success('Table refreshed successfully');
         } catch {
             toast.error('Failed to refresh table');
@@ -110,9 +149,11 @@ export default function TaskRequestsPage() {
     const exportToExcel = async () => {
         setIsExporting(true);
         try {
-            const { data } = await axios.get('/tasks_requests/fetch', {
+            const { data } = await axios.get('/requests/tasks/fetch', {
                 params: {
-                    search,
+                    request_type: 'Tasks',
+                    search: debouncedSearch,
+                    status: statusFilter !== 'all' ? statusFilter : undefined,
                     limit: 10000,
                     page: 1
                 }
@@ -120,7 +161,9 @@ export default function TaskRequestsPage() {
 
             const headers = ['Request Code', 'Request Type', 'Contractor', 'Project', 'Description', 'Status', 'Created By', 'Created At'];
             const csvHeaders = headers.join(',');
-            const csvRows = (data?.body?.task_requests?.items || data?.body?.items || []).map((req: any) => {
+            const items = data?.body?.tasks_requests?.items || [];
+            
+            const csvRows = items.map((req: TaskRequest) => {
                 return [
                     req.request_code,
                     req.request_type,
@@ -132,8 +175,10 @@ export default function TaskRequestsPage() {
                     req.created_at ? new Date(req.created_at).toLocaleDateString('en-US') : ''
                 ].join(',');
             });
+            
             const csvContent = [csvHeaders, ...csvRows].join('\n');
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -212,18 +257,15 @@ export default function TaskRequestsPage() {
         toast.success(`Request ${status} successfully`);
     };
 
-    const totalRequests = taskRequests.length;
-    const pendingRequests = taskRequests.filter(r => r.status === 'Pending').length;
-    const approvedRequests = taskRequests.filter(r => r.status === 'Approved').length;
-    const completedRequests = taskRequests.filter(r => r.status === 'Complete').length;
-
     const activeFilters = useMemo(() => {
         const arr: string[] = [];
         if (search) arr.push(`Search: ${search}`);
-        if (typeFilter !== 'all') arr.push(`Type: ${typeFilter}`);
         if (statusFilter !== 'all') arr.push(`Status: ${statusFilter}`);
+        if (dateFrom && dateTo) arr.push(`Date: ${dateFrom} to ${dateTo}`);
+        else if (dateFrom) arr.push(`From Date: ${dateFrom}`);
+        else if (dateTo) arr.push(`To Date: ${dateTo}`);
         return arr;
-    }, [search, typeFilter, statusFilter]);
+    }, [search, statusFilter, dateFrom, dateTo]);
 
     const columns: Column<TaskRequest>[] = [
         {
@@ -312,190 +354,219 @@ export default function TaskRequestsPage() {
 
     const actions: Action<TaskRequest>[] = [
         {
-            label: 'View Details',
-            onClick: (request) => router.push(`/requests/tasks/details?id=${request.id}`),
-            icon: <Eye className="h-4 w-4" />,
-            variant: 'info' as const
-        },
-        {
-            label: 'Edit Request',
-            onClick: (request) => handleEdit(request),
-            icon: <Edit className="h-4 w-4" />,
+            label: 'View Request Details',
+            onClick: (request) => {
+                router.push(`/requests/tasks/details?id=${request.id}`);
+            },
+            icon: <FileText className="h-4 w-4" />,
             variant: 'warning' as const
         },
         {
-            label: 'Approve Request',
-            onClick: (request) => handleStatusChange(request.id, 'approved'),
-            icon: <CheckCircle className="h-4 w-4" />,
+            label: 'Show Approvals Timeline',
+            onClick: (request) => router.push(`/requests/tasks/timeline?id=${request.id}`),
+            icon: <Clock className="h-4 w-4" />,
+            variant: 'info' as const,
+            hidden: () => false
+        },
+        {
+            label: 'Download Data',
+            onClick: (request) => {
+                const headers = ['Request Code', 'Request Type', 'Contractor', 'Project', 'Description', 'Status', 'Created By', 'Created At'];
+                const csvHeaders = headers.join(',');
+                const csvRow = [
+                    request.request_code || '',
+                    request.request_type || 'Tasks',
+                    escapeCsv(request.contractor_name || ''),
+                    escapeCsv(request.project_name || ''),
+                    escapeCsv(request.notes || ''),
+                    request.status || '',
+                    escapeCsv(request.created_by_name || ''),
+                    request.created_at || ''
+                ].join(',');
+                const csvContent = [csvHeaders, csvRow].join('\n');
+                const BOM = '\uFEFF';
+                const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `task_request_${request.request_code || request.id}_${new Date().toISOString().slice(0,10)}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+                toast.success('Request data exported successfully');
+            },
+            icon: <FileSpreadsheet className="h-4 w-4" />,
             variant: 'success' as const,
-            hidden: (request) => request.status !== 'Pending'
+            hidden: (request) => request.status !== 'Completed'
         },
-        {
-            label: 'Reject Request',
-            onClick: (request) => handleStatusChange(request.id, 'rejected'),
-            icon: <XCircle className="h-4 w-4" />,
-            variant: 'destructive' as const,
-            hidden: (request) => request.status === 'Approved' || request.status === 'Rejected' || request.status === 'Complete'
-        },
-        {
-            label: 'Mark as Complete',
-            onClick: (request) => handleStatusChange(request.id, 'completed'),
-            icon: <UserCheck className="h-4 w-4" />,
-            variant: 'success' as const,
-            hidden: (request) => request.status !== 'Approved'
-        },
-        {
-            label: 'Delete Request',
-            onClick: (request) => handleDelete(request.id),
-            icon: <Trash2 className="h-4 w-4" />,
-            variant: 'destructive' as const
-        }
     ];
 
     return (
         <div className="space-y-4">
-            {/* Header */}
+            {/* Breadcrumb */}
             <Breadcrumb />
-            <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
+            
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Task Requests</h1>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">Manage task requests with comprehensive tracking and approval workflow</p>
+                    <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-200">Task Requests</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-1">
+                        Browse and manage all task requests with comprehensive filtering and management tools
+                    </p>
                 </div>
-                <Button 
-                    onClick={() => setIsCreateDialogOpen(true)}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                    <Plus className="h-4 w-4 mr-2" /> New Request
-                </Button>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <EnhancedCard
-                    title="Total Requests"
-                    description="All task requests in the system"
-                    variant="default"
-                    size="sm"
-                    stats={{
-                        total: totalRequests,
-                        badge: 'Total',
-                        badgeColor: 'default'
-                    }}
-                >
-                    <></>
-                </EnhancedCard>
-                <EnhancedCard
-                    title="Pending Requests"
-                    description="Awaiting approval"
-                    variant="default"
-                    size="sm"
-                    stats={{
-                        total: pendingRequests,
-                        badge: 'Pending',
-                        badgeColor: 'warning'
-                    }}
-                >
-                    <></>
-                </EnhancedCard>
-                <EnhancedCard
-                    title="Approved Requests"
-                    description="Approved task requests"
-                    variant="default"
-                    size="sm"
-                    stats={{
-                        total: approvedRequests,
-                        badge: 'Approved',
-                        badgeColor: 'success'
-                    }}
-                >
-                    <></>
-                </EnhancedCard>
-                <EnhancedCard
-                    title="Completed Requests"
-                    description="Completed task requests"
-                    variant="default"
-                    size="sm"
-                    stats={{
-                        total: completedRequests,
-                        badge: 'Completed',
-                        badgeColor: 'info'
-                    }}
-                >
-                    <></>
-                </EnhancedCard>
-            </div>
+            {/* Search & Filters Card */}
+            <EnhancedCard
+                title="Search & Filters"
+                description="Search and filter task requests by various criteria"
+                variant="default"
+                size="sm"
+            >
+                <div className="space-y-4">
+                    {/* Search Input with Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                            <Input
+                                placeholder="Search by request code, contractor, project, or notes..."
+                                value={search}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    setPage(1);
+                                }}
+                                className="pl-10 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={exportToExcel}
+                                disabled={isExporting || loading}
+                                className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 whitespace-nowrap"
+                            >
+                                <FileSpreadsheet className={`h-4 w-4 mr-2 ${isExporting ? 'animate-pulse' : ''}`} />
+                                {isExporting ? 'Exporting...' : 'Export Excel'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={refreshTable}
+                                disabled={isRefreshing}
+                                className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 whitespace-nowrap"
+                            >
+                                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                Refresh
+                            </Button>
+                        </div>
+                    </div>
 
-            {/* Filter Bar */}
-            <FilterBar
-                searchPlaceholder="Search by request code, contractor, project, or notes..."
-                searchValue={search}
-                onSearchChange={(value) => {
-                    setSearch(value);
-                    setPage(1);
-                }}
-                filters={[
-                    {
-                        key: 'type',
-                        label: 'Request Type',
-                        value: typeFilter,
-                        options: [
-                            { key: 'all', value: 'all', label: 'All Types' },
-                            ...requestTypes.map(type => ({ key: type.value, value: type.value, label: type.label }))
-                        ],
-                        onValueChange: (v) => { setTypeFilter(v as string); setPage(1); }
-                    },
-                    {
-                        key: 'status',
-                        label: 'Status',
-                        value: statusFilter,
-                        options: [
-                            { key: 'all', value: 'all', label: 'All Statuses' },
-                            { key: 'Pending', value: 'Pending', label: 'Pending' },
-                            { key: 'Approved', value: 'Approved', label: 'Approved' },
-                            { key: 'Rejected', value: 'Rejected', label: 'Rejected' },
-                            { key: 'Complete', value: 'Complete', label: 'Complete' },
-                            { key: 'Closed', value: 'Closed', label: 'Closed' }
-                        ],
-                        onValueChange: (v) => { setStatusFilter(v as string); setPage(1); }
-                    }
-                ]}
-                activeFilters={activeFilters}
-                onClearFilters={() => {
-                    setSearch('');
-                    setTypeFilter('all');
-                    setStatusFilter('all');
-                    setPage(1);
-                }}
-                actions={
-                    <>
-                        <Button
-                            variant="outline"
-                            onClick={refreshTable}
-                            disabled={isRefreshing || loading}
-                            className="h-10 px-3 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-                        >
-                            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={exportToExcel}
-                            disabled={isExporting}
-                            className="h-10 px-3 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-                        >
-                            <FileSpreadsheet className="h-4 w-4 mr-2" />
-                            {isExporting ? 'Exporting...' : 'Export Excel'}
-                        </Button>
-                    </>
-                }
-            />
+                    {/* Filters Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Status Filter */}
+                        <div className="space-y-2">
+                            <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                                Status
+                            </Label>
+                            <Select
+                                value={statusFilter}
+                                onValueChange={(value) => {
+                                    setStatusFilter(value);
+                                    setPage(1);
+                                }}
+                            >
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100">
+                                    <SelectValue placeholder="All Status" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectItem value="all" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Status</SelectItem>
+                                    <SelectItem value="Pending" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Pending</SelectItem>
+                                    <SelectItem value="Approved" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Approved</SelectItem>
+                                    <SelectItem value="Rejected" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Rejected</SelectItem>
+                                    <SelectItem value="Complete" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Complete</SelectItem>
+                                    <SelectItem value="Closed" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Closed</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* From Date */}
+                        <div className="space-y-2">
+                            <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                                From Date
+                            </Label>
+                            <DatePicker
+                                value={dateFrom}
+                                onChange={(value) => {
+                                    setDateFrom(value);
+                                    setPage(1);
+                                }}
+                            />
+                        </div>
+
+                        {/* To Date */}
+                        <div className="space-y-2">
+                            <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                                To Date
+                            </Label>
+                            <DatePicker
+                                value={dateTo}
+                                onChange={(value) => {
+                                    setDateTo(value);
+                                    setPage(1);
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Active Filters & Clear Button */}
+                    {activeFilters.length > 0 && (
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            {/* Active Filters */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Active filters:</span>
+                                {activeFilters.map((filter, index) => (
+                                    <Badge
+                                        key={index}
+                                        variant="outline"
+                                        className="bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50 border-orange-200 dark:border-orange-800"
+                                    >
+                                        {filter}
+                                    </Badge>
+                                ))}
+                            </div>
+
+                            {/* Clear All Button */}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setSearch('');
+                                    setStatusFilter('all');
+                                    setDateFrom('');
+                                    setDateTo('');
+                                    setPage(1);
+                                }}
+                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800 whitespace-nowrap"
+                            >
+                                <X className="h-4 w-4 mr-2" />
+                                Clear All
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </EnhancedCard>
 
             {/* Requests Table */}
             <EnhancedCard
-                title="Task Requests Overview"
-                description={`${filteredRequests.length} requests out of ${taskRequests.length} total`}
+                title="Task Requests List"
+                description={`${totalItems} request${totalItems !== 1 ? 's' : ''} found`}
                 variant="default"
                 size="sm"
+                stats={{
+                    total: totalItems,
+                    badge: 'Total Requests',
+                    badgeColor: 'default'
+                }}
                 headerActions={
                     <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
                         <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
@@ -520,7 +591,7 @@ export default function TaskRequestsPage() {
                         currentPage: page,
                         totalPages,
                         pageSize: limit,
-                        totalItems: filteredRequests.length,
+                        totalItems: totalItems,
                         onPageChange: setPage
                     }}
                     noDataMessage="No task requests found matching your criteria"
@@ -826,6 +897,18 @@ export default function TaskRequestsPage() {
                 </DialogContent>
             </Dialog>
         </div>
+    );
+}
+
+export default function TaskRequestsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[40vh]">
+                <div className="text-slate-500 dark:text-slate-400">Loading...</div>
+            </div>
+        }>
+            <TaskRequestsPageContent />
+        </Suspense>
     );
 }
 

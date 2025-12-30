@@ -348,57 +348,86 @@ function ClientDetailsContent() {
                 </div>
             </div>
 
-            {/* Stat cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <EnhancedCard title="Client Number" description={`Client ID: ${client.sequence}` || 'N/A'} variant="default" size="sm">
-                    <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">{client.client_no || 'N/A'}</div>
-                </EnhancedCard>
-                <EnhancedCard title="Client Name" description={client.name || 'N/A'} variant="default" size="sm">
-                    <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">{client.name || 'N/A'}</div>
-                </EnhancedCard>
-                <EnhancedCard title="Status" description={client.status || 'N/A'} variant="default" size="sm">
-                    {client.status ? (
-                        <Badge variant="outline" className={`${getStatusColor(client.status)} flex items-center gap-1 w-fit`}>
-                            {getStatusIcon(client.status)}
-                            {client.status}
-                        </Badge>
-                    ) : (
-                        <span className="text-slate-500 dark:text-slate-400">N/A</span>
-                    )}
-                </EnhancedCard>
-                <EnhancedCard title="Client Type" description={client.client_type || 'N/A'} variant="default" size="sm">
-                    {client.client_type ? (
-                        <Badge variant="outline" className={`${getClientTypeColor(client.client_type)} flex items-center gap-1 w-fit`}>
-                            <Building className="h-4 w-4" />
-                            {client.client_type}
-                        </Badge>
-                    ) : (
-                        <span className="text-slate-500 dark:text-slate-400">N/A</span>
-                    )}
-                </EnhancedCard>
-            </div>
-
-            {/* Detailed Information */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                <EnhancedCard title="Basic Information" description="Client basic details" variant="default" size="sm">
-                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                        <Detail label="Client ID" value={client.sequence || client.id || 'N/A'} />
-                        <Detail label="Client Number" value={client.client_no || 'N/A'} />
-                        <Detail label="Client Name" value={client.name || 'N/A'} />
-                        <Detail label="Client Type" value={client.client_type || 'N/A'} />
-                        <Detail label="Status" value={client.status || 'N/A'} />
-                        <Detail label="Created At" value={formatDateTime(client.created_at)} />
-                        <Detail label="Updated At" value={formatDateTime(client.updated_at)} />
-                    </div>
-                </EnhancedCard>
-
-                <EnhancedCard title="Location Information" description="Client location details" variant="default" size="sm">
-                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                        <Detail label="State" value={client.state || 'N/A'} />
-                        <Detail label="City" value={client.city || 'N/A'} />
-                    </div>
-                </EnhancedCard>
-            </div>
+            {/* Client Information Table */}
+            <EnhancedCard
+                title="Client Information"
+                description="Complete client details"
+                variant="default"
+                size="sm"
+            >
+                <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                        <thead>
+                            <tr className="border-b border-slate-200 dark:border-slate-700">
+                                <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50">Field</th>
+                                <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Client ID</td>
+                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{client.sequence || client.id || 'N/A'}</td>
+                            </tr>
+                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Client Number</td>
+                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400 font-mono font-semibold">{client.client_no || 'N/A'}</td>
+                            </tr>
+                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Client Name</td>
+                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400 font-semibold">{client.name || 'N/A'}</td>
+                            </tr>
+                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Client Type</td>
+                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
+                                    {client.client_type ? (
+                                        <Badge variant="outline" className={`${getClientTypeColor(client.client_type)} flex items-center gap-1 w-fit`}>
+                                            <Building className="h-4 w-4" />
+                                            {client.client_type}
+                                        </Badge>
+                                    ) : 'N/A'}
+                                </td>
+                            </tr>
+                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Status</td>
+                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
+                                    {client.status ? (
+                                        <Badge variant="outline" className={`${getStatusColor(client.status)} flex items-center gap-1 w-fit`}>
+                                            {getStatusIcon(client.status)}
+                                            {client.status}
+                                        </Badge>
+                                    ) : 'N/A'}
+                                </td>
+                            </tr>
+                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">State</td>
+                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{client.state || 'N/A'}</td>
+                            </tr>
+                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">City</td>
+                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{client.city || 'N/A'}</td>
+                            </tr>
+                            {client.budget && (
+                                <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                    <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Budget</td>
+                                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400 font-semibold text-green-600 dark:text-green-400">
+                                        {formatCurrency(client.budget)}
+                                    </td>
+                                </tr>
+                            )}
+                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Created At</td>
+                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{formatDateTime(client.created_at)}</td>
+                            </tr>
+                            {client.updated_at && (
+                                <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                    <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Updated At</td>
+                                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{formatDateTime(client.updated_at)}</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </EnhancedCard>
 
             {client.projects && client.projects.length > 0 && (
                 <EnhancedCard

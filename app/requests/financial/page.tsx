@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, CreditCard, TrendingUp } from 'lucide-react';
+import { DollarSign, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, CreditCard, TrendingUp, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/ui/page-header';
 import { FilterBar } from '@/components/ui/filter-bar';
@@ -538,8 +538,22 @@ export default function FinancialRequestsPage() {
     const actions = [
         {
             label: 'View Details',
-            onClick: (request: FinancialRequest) => toast.info('View details feature coming soon'),
-            icon: <Eye className="h-4 w-4" />
+            onClick: (request: FinancialRequest) => {
+                // Use request.id to navigate to details page
+                // Note: This assumes FinancialRequest.id matches TaskRequest.id
+                window.location.href = `/requests/financial/details?id=${request.id}`;
+            },
+            icon: <Eye className="h-4 w-4" />,
+            variant: 'info' as const
+        },
+        {
+            label: 'Show Approvals Timeline',
+            onClick: (request: FinancialRequest) => {
+                window.location.href = `/requests/financial/timeline?id=${request.id}`;
+            },
+            icon: <Clock className="h-4 w-4" />,
+            variant: 'info' as const,
+            hidden: () => false
         },
         {
             label: 'Edit Request',
