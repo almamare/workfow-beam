@@ -62,7 +62,7 @@ const formatCurrency = (amount: number, currency: string) => {
     }).format(amount);
 };
 
-const BankBalancesViewPage: React.FC = () => {
+const BankBalancesViewPageContent: React.FC = () => {
     const router = useRouter();
     const params = useSearchParams();
     const bankId = params.get('id') || '';
@@ -376,7 +376,7 @@ const BankBalancesViewPage: React.FC = () => {
 export default function Page() {
     return (
         <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading bank balances...</div>}>
-            <BankBalancesViewPage />
+            <BankBalancesViewPageContent />
         </Suspense>
     );
 }

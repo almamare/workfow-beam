@@ -36,7 +36,7 @@ const initialValues: Omit<UpdateDocumentPayload, 'id'> = {
     file: '',
 };
 
-const UpdateDocumentPage: React.FC = () => {
+const UpdateDocumentPageContent: React.FC = () => {
     const [form, setForm] = useState<Omit<UpdateDocumentPayload, 'id'> & { fileObject?: File }>(initialValues);
     const [loading, setLoading] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -503,7 +503,7 @@ const UpdateDocumentPage: React.FC = () => {
 export default function Page() {
     return (
         <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading update document...</div>}>
-            <UpdateDocumentPage />
+            <UpdateDocumentPageContent />
         </Suspense>
     );
 }

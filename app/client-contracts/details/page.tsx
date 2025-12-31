@@ -66,7 +66,7 @@ const Centered: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     </div>
 );
 
-function ContractDetails() {
+function ContractDetailsContent() {
     const params = useSearchParams();
     const router = useRouter();
     const contractId = params.get('id') || '';
@@ -338,7 +338,7 @@ export default function ContractDetailsPage() {
                 </Centered>
             }
         >
-            <ContractDetails />
+            <ContractDetailsContent />
         </Suspense>
     );
 }

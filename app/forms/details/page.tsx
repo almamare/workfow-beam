@@ -19,7 +19,7 @@ import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { toast } from 'sonner';
 
-const FormDetailsPage: React.FC = () => {
+const FormDetailsPageContent: React.FC = () => {
     const router = useRouter();
     const params = useSearchParams();
     const formId = params.get('id') || '';
@@ -267,7 +267,7 @@ const FormDetailsPage: React.FC = () => {
 export default function Page() {
     return (
         <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading form details...</div>}>
-            <FormDetailsPage />
+            <FormDetailsPageContent />
         </Suspense>
     );
 }

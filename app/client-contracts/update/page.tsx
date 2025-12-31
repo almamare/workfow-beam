@@ -18,7 +18,7 @@ import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { DatePicker } from '@/components/DatePicker';
 import type { UpdateContractRequest } from '@/stores/types/client-contracts';
 
-function UpdateContractForm() {
+function UpdateContractFormContent() {
     const params = useSearchParams();
     const router = useRouter();
     const contractId = params.get('id') || '';
@@ -519,7 +519,7 @@ export default function UpdateContractPage() {
                 </div>
             }
         >
-            <UpdateContractForm />
+            <UpdateContractFormContent />
         </Suspense>
     );
 }

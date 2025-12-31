@@ -25,7 +25,7 @@ const initialValues: Omit<UpdateFormPayload, 'id'> = {
     date_issue: '',
 };
 
-const UpdateFormPage: React.FC = () => {
+const UpdateFormPageContent: React.FC = () => {
     const [form, setForm] = useState<Omit<UpdateFormPayload, 'id'>>(initialValues);
     const [loading, setLoading] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -293,7 +293,7 @@ const UpdateFormPage: React.FC = () => {
 export default function Page() {
     return (
         <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading update form...</div>}>
-            <UpdateFormPage />
+            <UpdateFormPageContent />
         </Suspense>
     );
 }

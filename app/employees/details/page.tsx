@@ -89,7 +89,7 @@ const roleBadgeClasses = (role: string) => {
 /* =========================================================
    Component
 =========================================================== */
-function EmployeeDetails() {
+function EmployeeDetailsContent() {
     const router = useRouter();
     const params = useSearchParams();
     const id = params.get('id');
@@ -492,7 +492,7 @@ function fmt(date?: string) {
 export default function Page() {
     return (
         <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading employee...</div>}>
-            <EmployeeDetails />
+            <EmployeeDetailsContent />
         </Suspense>
     );
 }

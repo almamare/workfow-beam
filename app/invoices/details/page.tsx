@@ -18,7 +18,7 @@ import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { toast } from 'sonner';
 
-const InvoiceDetailsPage: React.FC = () => {
+const InvoiceDetailsPageContent: React.FC = () => {
     const router = useRouter();
     const params = useSearchParams();
     const invoiceId = params.get('id') || '';
@@ -410,7 +410,7 @@ const InvoiceDetailsPage: React.FC = () => {
 export default function Page() {
     return (
         <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading invoice details...</div>}>
-            <InvoiceDetailsPage />
+            <InvoiceDetailsPageContent />
         </Suspense>
     );
 }

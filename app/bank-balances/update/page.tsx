@@ -26,7 +26,7 @@ const formatCurrency = (amount: number, currency: string) => {
     }).format(amount);
 };
 
-const UpdateBankBalancePage: React.FC = () => {
+const UpdateBankBalancePageContent: React.FC = () => {
     const [form, setForm] = useState<Omit<UpdateBankBalancePayload, 'id'>>({
         balance: 0,
         notes: '',
@@ -312,7 +312,7 @@ const UpdateBankBalancePage: React.FC = () => {
 export default function Page() {
     return (
         <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading update balance...</div>}>
-            <UpdateBankBalancePage />
+            <UpdateBankBalancePageContent />
         </Suspense>
     );
 }

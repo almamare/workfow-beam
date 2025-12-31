@@ -18,7 +18,7 @@ import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { toast } from 'sonner';
 
-const BankDetailsPage: React.FC = () => {
+const BankDetailsPageContent: React.FC = () => {
     const router = useRouter();
     const params = useSearchParams();
     const bankId = params.get('id') || '';
@@ -254,7 +254,7 @@ const BankDetailsPage: React.FC = () => {
 export default function Page() {
     return (
         <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading bank details...</div>}>
-            <BankDetailsPage />
+            <BankDetailsPageContent />
         </Suspense>
     );
 }

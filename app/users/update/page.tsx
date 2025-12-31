@@ -51,7 +51,7 @@ const initialValues: UserPayload = {
     status: 'Active',
 };
 
-const UpdateUserPage: React.FC = () => {
+const UpdateUserPageContent: React.FC = () => {
     const [form, setForm] = useState<UserPayload>(initialValues);
     const [loading, setLoading] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -381,7 +381,7 @@ const UpdateUserPage: React.FC = () => {
 export default function Page() {
     return (
         <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading update user...</div>}>
-            <UpdateUserPage />
+            <UpdateUserPageContent />
         </Suspense>
     );
 }

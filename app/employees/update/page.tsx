@@ -56,7 +56,7 @@ const EMPTY: EmployeePayload = {
 /* =========================================================
    Component
 ========================================================= */
-const UpdateEmployeePage: React.FC = () => {
+const UpdateEmployeePageContent: React.FC = () => {
     const router = useRouter();
     const params = useSearchParams();
     const employeeId = params.get('id');
@@ -395,7 +395,7 @@ const ErrorText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 export default function Page() {
     return (
         <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading update employee...</div>}>
-            <UpdateEmployeePage />
+            <UpdateEmployeePageContent />
         </Suspense>
     );
 }

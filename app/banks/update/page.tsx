@@ -60,7 +60,7 @@ const initialValues: Omit<UpdateBankPayload, 'id'> = {
     status: 'Active',
 };
 
-const UpdateBankPage: React.FC = () => {
+const UpdateBankPageContent: React.FC = () => {
     const [form, setForm] = useState<Omit<UpdateBankPayload, 'id'>>(initialValues);
     const [loading, setLoading] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -453,7 +453,7 @@ const UpdateBankPage: React.FC = () => {
 export default function Page() {
     return (
         <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading update bank...</div>}>
-            <UpdateBankPage />
+            <UpdateBankPageContent />
         </Suspense>
     );
 }

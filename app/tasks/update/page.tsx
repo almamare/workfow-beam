@@ -98,7 +98,7 @@
    const EMPTY_PROJECT_VALUE = 'no-projects-available';
    
    /* ============================== Page =============================== */
-   const UpdateTaskOrderPage: React.FC = () => {
+   const UpdateTaskOrderPageContent: React.FC = () => {
        // Form state
        const [form, setForm] = useState<TaskOrderPayload>(initialValues);
    
@@ -700,7 +700,7 @@
                    </Centered>
                }
            >
-               <UpdateTaskOrderPage />
+               <UpdateTaskOrderPageContent />
            </Suspense>
        );
    }

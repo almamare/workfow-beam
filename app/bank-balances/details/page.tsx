@@ -59,7 +59,7 @@ const formatCurrency = (amount: number, currency: string) => {
     }).format(amount);
 };
 
-const BalanceDetailsPage: React.FC = () => {
+const BalanceDetailsPageContent: React.FC = () => {
     const router = useRouter();
     const params = useSearchParams();
     const balanceId = params.get('id') || '';
@@ -300,7 +300,7 @@ const BalanceDetailsPage: React.FC = () => {
 export default function Page() {
     return (
         <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading balance details...</div>}>
-            <BalanceDetailsPage />
+            <BalanceDetailsPageContent />
         </Suspense>
     );
 }

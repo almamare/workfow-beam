@@ -31,7 +31,7 @@ interface BankOption {
     account_number?: string;
 }
 
-const UpdateInvoicePage: React.FC = () => {
+const UpdateInvoicePageContent: React.FC = () => {
     const [form, setForm] = useState<Omit<UpdateInvoicePayload, 'id'>>({
         invoice_date: '',
         due_date: '',
@@ -639,7 +639,7 @@ const UpdateInvoicePage: React.FC = () => {
 export default function Page() {
     return (
         <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading update invoice...</div>}>
-            <UpdateInvoicePage />
+            <UpdateInvoicePageContent />
         </Suspense>
     );
 }

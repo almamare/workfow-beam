@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import { AppDispatch } from '@/stores/store';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import {
@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Shield, Eye, Check, X, Clock, RefreshCw, FileSpreadsheet, Search } from 'lucide-react';
+import { Shield, Eye, Check, X, Clock, RefreshCw, FileSpreadsheet, Search, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { FilterBar } from '@/components/ui/filter-bar';
@@ -25,7 +25,7 @@ import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data
 import type { Approval } from '@/stores/types/approvals';
 import axios from '@/utils/axios';
 
-export default function ApprovalsPage() {
+function ApprovalsPageContent() {
     // Redux state
     const approvals = useSelector(selectApprovals);
     const loading = useSelector(selectApprovalsLoading);
@@ -535,4 +535,16 @@ function escapeCsv(val: any) {
         return '"' + str.replace(/"/g, '""') + '"';
     }
     return str;
+}
+
+export default function ApprovalsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+            </div>
+        }>
+            <ApprovalsPageContent />
+        </Suspense>
+    );
 }
