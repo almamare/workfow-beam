@@ -161,7 +161,7 @@ function ProjectRequestsPageContent() {
             const project = request.project;
             const matchesSearch = request.request_code?.toLowerCase().includes(search.toLowerCase()) ||
                                 project?.name?.toLowerCase().includes(search.toLowerCase()) ||
-                                project?.project_no?.toLowerCase().includes(search.toLowerCase()) ||
+                                project?.number?.toLowerCase().includes(search.toLowerCase()) ||
                                 request.notes?.toLowerCase().includes(search.toLowerCase());
             const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
             
@@ -229,7 +229,7 @@ function ProjectRequestsPageContent() {
                     req.request_code,
                     req.request_type,
                     escapeCsv(project?.name || ''),
-                    escapeCsv(project?.project_no || ''),
+                    escapeCsv(project?.number || ''),
                     escapeCsv(project?.type || ''),
                     req.status,
                     escapeCsv(req.notes || ''),
@@ -279,7 +279,7 @@ function ProjectRequestsPageContent() {
                 request.request_code || '',
                 request.request_type || 'Projects',
                 escapeCsv(project?.name || ''),
-                escapeCsv(project?.project_no || ''),
+                escapeCsv(project?.number || ''),
                 escapeCsv(project?.type || ''),
                 request.status || '',
                 escapeCsv(request.notes || ''),
@@ -396,7 +396,7 @@ function ProjectRequestsPageContent() {
             header: 'Project Number',
             render: (value: any, row: ProjectRequestWithData) => {
                 const project = row.project;
-                return <span className="text-slate-500 dark:text-slate-400 font-mono text-sm">{project?.project_no || 'N/A'}</span>;
+                return <span className="text-slate-500 dark:text-slate-400 font-mono text-sm">{project?.number || 'N/A'}</span>;
             },
             sortable: true
         },

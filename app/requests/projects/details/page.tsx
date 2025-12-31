@@ -569,7 +569,7 @@ function ProjectRequestDetails() {
                     >
                         <div className="divide-y divide-slate-200 dark:divide-slate-800 space-y-1">
                             <Detail label="Project ID" value={project.sequence} />
-                            <Detail label="Project Number" value={project.project_no} />
+                            <Detail label="Project Number" value={project.number} />
                             <Detail label="Project Name" value={project.name} />
                             <Detail
                                 label="Project Type"
