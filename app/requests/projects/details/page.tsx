@@ -591,18 +591,6 @@ function ProjectRequestDetails() {
                                     ) : 'N/A'
                                 }
                             />
-                            {project.location && (
-                                <Detail label="Location" value={project.location} />
-                            )}
-                            {project.budget && (
-                                <Detail
-                                    label="Budget"
-                                    value={project.budget ? `${project.budget} IQD` : 'N/A'}
-                                />
-                            )}
-                            {project.notes && (
-                                <Detail label="Notes" value={project.notes} />
-                            )}
                             <Detail label="Created At" value={project.created_at} />
                             {project.updated_at && (
                                 <Detail label="Updated At" value={project.updated_at} />
