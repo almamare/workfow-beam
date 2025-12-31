@@ -4,7 +4,7 @@
 
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch } from '@/stores/store';
@@ -30,7 +30,7 @@ import type { Contractor } from '@/stores/types/contractors';
 /* =========================================================
    Component
 =========================================================== */
-export default function ContractorDetails() {
+function ContractorDetailsContent() {
     const router = useRouter();
     const params = useSearchParams();
     const id = params.get('id') || '';
@@ -248,4 +248,12 @@ function fmt(date: string) {
     } catch {
         return 'Invalid date';
     }
+}
+
+export default function ContractorDetails() {
+    return (
+        <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading contractor...</div>}>
+            <ContractorDetailsContent />
+        </Suspense>
+    );
 }

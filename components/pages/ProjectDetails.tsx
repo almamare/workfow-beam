@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
@@ -55,7 +55,7 @@ type ProjectStatus = "Active" | "Inactive" | "Complete" | "Stopped" | "Onhold";
 //————————————————————————————————————————
 // Component
 //————————————————————————————————————————
-export default function ProjectDetailsPage() {
+function ProjectDetailsPageContent() {
     const dispatch = useDispatch<AppDispatch>();
     const params = useSearchParams();
     const router = useRouter();
@@ -512,4 +512,12 @@ function formatDate(dateString: string | null | undefined) {
     } catch {
         return "Invalid date";
     }
+}
+
+export default function ProjectDetailsPage() {
+    return (
+        <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading project...</div>}>
+            <ProjectDetailsPageContent />
+        </Suspense>
+    );
 }

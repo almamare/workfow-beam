@@ -6,112 +6,112 @@
    - Submits an update via PUT /task-orders/update/:id
    - Includes robust field validation and file handling (base64)
    ========================================================================= */
-   'use client';
+'use client';
 
-   import React, { useState, useCallback, useMemo, useEffect, Suspense } from 'react';
-   import { Label } from '@/components/ui/label';
-   import { Input } from '@/components/ui/input';
-   import {
-       Select,
-       SelectTrigger,
-       SelectContent,
-       SelectItem,
-       SelectValue
-   } from '@/components/ui/select';
-   import { DatePicker } from '@/components/DatePicker';
-   import { Button } from '@/components/ui/button';
-   import { toast } from 'sonner';
-   import axios from '@/utils/axios';
-   import { Loader2, Save, RotateCcw, Plus, Trash2, FileUp } from 'lucide-react';
-   import { useDispatch, useSelector } from 'react-redux';
-   import { useRouter, useSearchParams } from 'next/navigation';
-   import type { AppDispatch } from '@/stores/store';
-   import {
-       fetchContractors,
-       selectContractors,
-       selectLoading as selectContractorsLoading,
-       selectError as selectContractorsError
-   } from '@/stores/slices/contractors';
-   import type { Contractor } from '@/stores/types/contractors';
-   import {
-       fetchProjects,
-       selectProjects,
-       selectLoading as selectProjectsLoading,
-       selectError as selectProjectsError
-   } from '@/stores/slices/projects';
-   import type { Project } from '@/stores/types/projects';
-   import { Breadcrumb } from '@/components/layout/breadcrumb';
-   import { EnhancedCard } from '@/components/ui/enhanced-card';
+import React, { useState, useCallback, useMemo, useEffect, Suspense } from 'react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectTrigger,
+    SelectContent,
+    SelectItem,
+    SelectValue
+} from '@/components/ui/select';
+import { DatePicker } from '@/components/DatePicker';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import axios from '@/utils/axios';
+import { Loader2, Save, RotateCcw, Plus, Trash2, FileUp } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useRouter, useSearchParams } from 'next/navigation';
+import type { AppDispatch } from '@/stores/store';
+import {
+    fetchContractors,
+    selectContractors,
+    selectLoading as selectContractorsLoading,
+    selectError as selectContractorsError
+} from '@/stores/slices/contractors';
+import type { Contractor } from '@/stores/types/contractors';
+import {
+    fetchProjects,
+    selectProjects,
+    selectLoading as selectProjectsLoading,
+    selectError as selectProjectsError
+} from '@/stores/slices/projects';
+import type { Project } from '@/stores/types/projects';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+
+/* ============================== Types ============================== */
+type ContractTerm = {
+    title: string;
+    description: string;
+};
+
+type TaskOrderDocument = {
+    title: string;
+    file: string; // base64 or URL
+    name?: string; // original filename (for UI)
+    type?: string; // MIME type
+    size?: number; // bytes
+};
+
+type TaskOrderPayload = {
+    contractor_id: string;
+    project_id: string;
+    title: string;
+    description?: string;
+    issue_date: string; // YYYY-MM-DD
+    est_cost: string; // numeric string
+    notes: string;
+    status: 'Active' | 'Closed' | 'Cancelled' | 'Pending' | 'Onhold';
+    contract_terms: ContractTerm[];
+    documents: TaskOrderDocument[];
+};
+
+/* ======================== Initial Form State ======================= */
+const initialValues: TaskOrderPayload = {
+    contractor_id: '',
+    project_id: '',
+    title: '',
+    description: '',
+    issue_date: '',
+    est_cost: '',
+    notes: '',
+    status: 'Active',
+    contract_terms: [{ title: '', description: '' }],
+    documents: [{ title: '', file: '' }]
+};
+
+const statuses: TaskOrderPayload['status'][] = [
+    'Active',
+    'Pending',
+    'Onhold',
+    'Closed',
+    'Cancelled'
+];
+
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const EMPTY_CONTRACTOR_VALUE = 'no-contractors-available';
+const EMPTY_PROJECT_VALUE = 'no-projects-available';
    
-   /* ============================== Types ============================== */
-   type ContractTerm = {
-       title: string;
-       description: string;
-   };
-   
-   type TaskOrderDocument = {
-       title: string;
-       file: string; // base64 or URL
-       name?: string; // original filename (for UI)
-       type?: string; // MIME type
-       size?: number; // bytes
-   };
-   
-   type TaskOrderPayload = {
-       contractor_id: string;
-       project_id: string;
-       title: string;
-       description?: string;
-       issue_date: string; // YYYY-MM-DD
-       est_cost: string; // numeric string
-       notes: string;
-       status: 'Active' | 'Closed' | 'Cancelled' | 'Pending' | 'Onhold';
-       contract_terms: ContractTerm[];
-       documents: TaskOrderDocument[];
-   };
-   
-   /* ======================== Initial Form State ======================= */
-   const initialValues: TaskOrderPayload = {
-       contractor_id: '',
-       project_id: '',
-       title: '',
-       description: '',
-       issue_date: '',
-       est_cost: '',
-       notes: '',
-       status: 'Active',
-       contract_terms: [{ title: '', description: '' }],
-       documents: [{ title: '', file: '' }]
-   };
-   
-   const statuses: TaskOrderPayload['status'][] = [
-       'Active',
-       'Pending',
-       'Onhold',
-       'Closed',
-       'Cancelled'
-   ];
-   
-   const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
-   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-   const EMPTY_CONTRACTOR_VALUE = 'no-contractors-available';
-   const EMPTY_PROJECT_VALUE = 'no-projects-available';
-   
-   /* ============================== Page =============================== */
-   const UpdateTaskOrderPageContent: React.FC = () => {
-       // Form state
-       const [form, setForm] = useState<TaskOrderPayload>(initialValues);
-   
-       // UI and errors
-       const [loading, setLoading] = useState(false); // submit loading
-       const [initialLoading, setInitialLoading] = useState(true); // initial fetch loading
-       const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-   
-       const router = useRouter();
-   
-       // Read taskId from query string using useSearchParams
-       const searchParams = useSearchParams();
-       const taskId = searchParams.get('id');
+/* ============================== Page =============================== */
+const UpdateTaskOrderPageContent: React.FC = () => {
+    // Form state
+    const [form, setForm] = useState<TaskOrderPayload>(initialValues);
+
+    // UI and errors
+    const [loading, setLoading] = useState(false); // submit loading
+    const [initialLoading, setInitialLoading] = useState(true); // initial fetch loading
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+    const router = useRouter();
+
+    // Read taskId from query string using useSearchParams
+    const searchParams = useSearchParams();
+    const taskId = searchParams.get('id');
    
        // Redux
        const dispatch = useDispatch<AppDispatch>();
@@ -677,30 +677,30 @@
                    </form>
            </div>
        );
-   };
-   
-   // Centered Layout Component for states
-   const Centered: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-       <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-3">
-           {children}
-       </div>
-   );
-   
-   
-   /* =========================================================
-      Page Wrapper
-   =========================================================== */
-   export default function Page() {
-       return (
-           <Suspense
-               fallback={
-                   <Centered>
-                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                       <p className="text-muted-foreground">Loading update...</p>
-                   </Centered>
-               }
-           >
-               <UpdateTaskOrderPageContent />
-           </Suspense>
-       );
-   }
+};
+
+// Centered Layout Component for states
+const Centered: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-3">
+        {children}
+    </div>
+);
+
+
+/* =========================================================
+   Page Wrapper
+=========================================================== */
+export default function Page() {
+    return (
+        <Suspense
+            fallback={
+                <Centered>
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">Loading update...</p>
+                </Centered>
+            }
+        >
+            <UpdateTaskOrderPageContent />
+        </Suspense>
+    );
+}

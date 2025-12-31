@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ const initialItem: TenderItem = {
     amount: ''
 };
 
-const UpdateTenderPage: React.FC = () => {
+const UpdateTenderPageContent: React.FC = () => {
     const [item, setItem] = useState<TenderItem>(initialItem);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
@@ -189,7 +189,13 @@ const UpdateTenderPage: React.FC = () => {
     );
 };
 
-export default UpdateTenderPage;
+export default function UpdateTenderPage() {
+    return (
+        <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading tender...</div>}>
+            <UpdateTenderPageContent />
+        </Suspense>
+    );
+}
 
 const InputGroup = ({
     label,

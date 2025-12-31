@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, Suspense } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -49,7 +49,7 @@ const emptyValues: ClientPayload = {
 
 const numberFields: (keyof ClientPayload)[] = ['budget'];
 
-const EditClientPage: React.FC = () => {
+const EditClientPageContent: React.FC = () => {
     const searchParams = useSearchParams();
     const id = searchParams.get('id'); // expects /clients/edit?id=xxxx
     const router = useRouter();
@@ -448,4 +448,10 @@ const EditClientPage: React.FC = () => {
     );
 };
 
-export default EditClientPage;
+export default function EditClientPage() {
+    return (
+        <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading clients...</div>}>
+            <EditClientPageContent />
+        </Suspense>
+    );
+}

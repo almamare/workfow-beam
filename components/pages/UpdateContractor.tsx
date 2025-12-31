@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from '@/utils/axios';
 import { toast } from 'sonner';
@@ -55,7 +55,7 @@ const STATUS_OPTIONS = ['Active', 'Inactive', 'Close'];
 /* =========================================================
    Component
 ========================================================= */
-export default function UpdateContractorPage() {
+function UpdateContractorPageContent() {
     const router = useRouter();
     const params = useSearchParams();
     const id = params.get('id');
@@ -438,3 +438,11 @@ function Field({
 const ErrorText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <p className="text-xs text-red-500 dark:text-red-400">{children}</p>
 );
+
+export default function UpdateContractorPage() {
+    return (
+        <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading contractor...</div>}>
+            <UpdateContractorPageContent />
+        </Suspense>
+    );
+}

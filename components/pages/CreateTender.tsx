@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, Suspense } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,7 @@ const initialForm: TenderFormState = {
     items: [emptyItem('')]
 };
 
-const CreateTenderPage: React.FC = () => {
+const CreateTenderPageContent: React.FC = () => {
     const [form, setForm] = useState<TenderFormState>(initialForm);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
@@ -464,4 +464,10 @@ const CreateTenderPage: React.FC = () => {
     );
 };
 
-export default CreateTenderPage;
+export default function CreateTenderPage() {
+    return (
+        <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading tender...</div>}>
+            <CreateTenderPageContent />
+        </Suspense>
+    );
+}

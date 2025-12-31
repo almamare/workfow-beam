@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from '@/utils/axios';
 import { toast } from 'sonner';
@@ -54,7 +54,7 @@ const numberFields: (keyof ProjectPayload)[] = [
     'actual_cost'
 ];
 
-const UpdateProjectPage: React.FC = () => {
+const UpdateProjectPageContent: React.FC = () => {
     const router = useRouter();
     const params = useSearchParams();
     const projectId = params.get('id') || '';
@@ -264,7 +264,13 @@ const UpdateProjectPage: React.FC = () => {
     );
 };
 
-export default UpdateProjectPage;
+export default function UpdateProjectPage() {
+    return (
+        <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading project...</div>}>
+            <UpdateProjectPageContent />
+        </Suspense>
+    );
+}
 
 const InputGroup = ({ label, value, name, error, onChange, type = 'text', inputMode }: any) => (
     <div className="space-y-2">
