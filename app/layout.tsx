@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Providers } from '@/components/providers';
 import './globals.css';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
     title: 'Shuaa Al-Ranou Trade & General Contracting',
     description: 'Project Management System',
