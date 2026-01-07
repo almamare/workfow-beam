@@ -85,7 +85,7 @@ export default function LoginPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50 dark:from-slate-900 dark:via-slate-800 dark:to-orange-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50 dark:from-slate-900 dark:via-slate-800 dark:to-sky-900">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-40">
                 <div className="absolute inset-0" style={{
@@ -193,7 +193,7 @@ export default function LoginPage() {
                         </div>
 
                         {/* Login Card */}
-                        <Card className="shadow-xl border border-orange-100 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+                        <Card className="shadow-xl border border-sky-100 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
                             <CardHeader className="space-y-2 text-center pb-8">
                                 <CardTitle className="text-2xl xl:text-3xl font-bold bg-gradient-to-r from-brand-orange to-brand-gold bg-clip-text text-transparent">
                                     Welcome Back

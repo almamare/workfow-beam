@@ -13,8 +13,8 @@
   --popover: 0 0% 100%;
   --popover-foreground: 200 17% 33%;
 
-  /* Primary Brand Colors - Orange Theme */
-  --primary: 32 100% 47%;              /* Brand Orange */
+  /* Primary Brand Colors - Sky Theme */
+  --primary: 199 89% 48%;              /* Brand Sky */
   --primary-foreground: 0 0% 100%;
 
   --secondary: 30 20% 94%;             /* Light Gray */
@@ -23,7 +23,7 @@
   --muted: 30 20% 94%;                 /* Muted Gray */
   --muted-foreground: 200 10% 50%;
 
-  --accent: 32 100% 47%;               /* Same as Brand */
+  --accent: 199 89% 48%;               /* Same as Brand */
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 60%;            /* Red */
@@ -31,24 +31,39 @@
 
   --border: 200 15% 85%;               /* Light Border */
   --input: 200 15% 85%;
-  --ring: 32 100% 47%;                 /* Focus Ring */
+  --ring: 199 89% 48%;                 /* Focus Ring */
 
   --radius: 0.75rem;                   /* Rounded Corners */
   
   /* Extended Brand Palette */
-  --brand-orange: 32 100% 47%;         /* Primary Orange */
-  --brand-orange-light: 32 100% 60%;   /* Light Orange */
-  --brand-orange-dark: 32 100% 35%;    /* Dark Orange */
-  --brand-orange-50: 32 100% 95%;      /* Very Light Orange */
-  --brand-orange-100: 32 100% 90%;     /* Light Orange */
-  --brand-orange-200: 32 100% 85%;     /* Lighter Orange */
-  --brand-orange-300: 32 100% 75%;     /* Light Orange */
-  --brand-orange-400: 32 100% 65%;     /* Medium Orange */
-  --brand-orange-500: 32 100% 47%;     /* Primary Orange */
-  --brand-orange-600: 32 100% 40%;     /* Dark Orange */
-  --brand-orange-700: 32 100% 35%;     /* Darker Orange */
-  --brand-orange-800: 32 100% 25%;     /* Very Dark Orange */
-  --brand-orange-900: 32 100% 15%;     /* Darkest Orange */
+  --brand-sky: 199 89% 48%;            /* Primary Sky */
+  --brand-sky-light: 198 93% 60%;      /* Light Sky */
+  --brand-sky-dark: 201 96% 32%;       /* Dark Sky */
+  --brand-sky-50: 204 100% 97%;        /* Very Light Sky */
+  --brand-sky-100: 204 96% 94%;        /* Light Sky */
+  --brand-sky-200: 200 94% 87%;        /* Lighter Sky */
+  --brand-sky-300: 199 89% 73%;        /* Light Sky */
+  --brand-sky-400: 198 93% 60%;        /* Medium Sky */
+  --brand-sky-500: 199 89% 48%;        /* Primary Sky */
+  --brand-sky-600: 200 98% 39%;        /* Dark Sky */
+  --brand-sky-700: 201 96% 32%;        /* Darker Sky */
+  --brand-sky-800: 201 94% 27%;        /* Very Dark Sky */
+  --brand-sky-900: 202 80% 24%;        /* Darkest Sky */
+  
+  /* Keep old orange variables for backward compatibility (will be replaced) */
+  --brand-orange: 199 89% 48%;         /* Primary Sky (mapped) */
+  --brand-orange-light: 198 93% 60%;   /* Light Sky (mapped) */
+  --brand-orange-dark: 201 96% 32%;    /* Dark Sky (mapped) */
+  --brand-orange-50: 204 100% 97%;     /* Very Light Sky (mapped) */
+  --brand-orange-100: 204 96% 94%;     /* Light Sky (mapped) */
+  --brand-orange-200: 200 94% 87%;     /* Lighter Sky (mapped) */
+  --brand-orange-300: 199 89% 73%;     /* Light Sky (mapped) */
+  --brand-orange-400: 198 93% 60%;     /* Medium Sky (mapped) */
+  --brand-orange-500: 199 89% 48%;     /* Primary Sky (mapped) */
+  --brand-orange-600: 200 98% 39%;     /* Dark Sky (mapped) */
+  --brand-orange-700: 201 96% 32%;     /* Darker Sky (mapped) */
+  --brand-orange-800: 201 94% 27%;     /* Very Dark Sky (mapped) */
+  --brand-orange-900: 202 80% 24%;     /* Darkest Sky (mapped) */
   
   /* Supporting Colors */
   --brand-gold: 45 100% 50%;           /* Gold Accent */
@@ -82,7 +97,7 @@
   --popover: 0 0% 6%;
   --popover-foreground: 0 0% 100%;
 
-  --primary: 32 100% 47%;              /* Keep Brand Orange */
+  --primary: 199 89% 48%;              /* Keep Brand Sky */
   --primary-foreground: 0 0% 100%;
 
   --secondary: 200 15% 15%;            /* Dark Secondary */
@@ -99,7 +114,7 @@
 
   --border: 200 10% 25%;               /* Dark Border */
   --input: 200 10% 25%;
-  --ring: 32 100% 47%;                 /* Keep Brand Ring */
+  --ring: 199 89% 48%;                 /* Keep Brand Ring */
 }
 
 @layer base {
@@ -138,15 +153,15 @@
 @layer components {
   /* Brand Gradients */
   .brand-gradient {
-    background: linear-gradient(135deg, hsl(var(--brand-orange)), hsl(var(--brand-gold)));
+    background: linear-gradient(135deg, hsl(var(--brand-sky)), hsl(var(--brand-blue)));
   }
   
   .brand-gradient-soft {
-    background: linear-gradient(135deg, hsl(var(--brand-orange-100)), hsl(var(--brand-orange-200)));
+    background: linear-gradient(135deg, hsl(var(--brand-sky-100)), hsl(var(--brand-sky-200)));
   }
   
   .brand-gradient-dark {
-    background: linear-gradient(135deg, hsl(var(--brand-orange-600)), hsl(var(--brand-orange-800)));
+    background: linear-gradient(135deg, hsl(var(--brand-sky-600)), hsl(var(--brand-sky-800)));
   }
   
   /* Enhanced Shadows */
@@ -168,51 +183,51 @@
   
   /* Brand Borders */
   .brand-border {
-    border: 2px solid hsl(var(--brand-orange));
+    border: 2px solid hsl(var(--brand-sky));
   }
   
   .brand-border-light {
-    border: 1px solid hsl(var(--brand-orange-200));
+    border: 1px solid hsl(var(--brand-sky-200));
   }
   
   .brand-border-gradient {
     border: 2px solid transparent;
     background: linear-gradient(white, white) padding-box,
-                linear-gradient(135deg, hsl(var(--brand-orange)), hsl(var(--brand-gold))) border-box;
+                linear-gradient(135deg, hsl(var(--brand-sky)), hsl(var(--brand-blue))) border-box;
   }
   
   /* Brand Text Colors */
   .brand-text {
-    color: hsl(var(--brand-orange));
+    color: hsl(var(--brand-sky));
   }
   
   .brand-text-light {
-    color: hsl(var(--brand-orange-light));
+    color: hsl(var(--brand-sky-light));
   }
   
   .brand-text-dark {
-    color: hsl(var(--brand-orange-dark));
+    color: hsl(var(--brand-sky-dark));
   }
   
   /* Brand Backgrounds */
   .brand-bg {
-    background-color: hsl(var(--brand-orange));
+    background-color: hsl(var(--brand-sky));
   }
   
   .brand-bg-light {
-    background-color: hsl(var(--brand-orange-light));
+    background-color: hsl(var(--brand-sky-light));
   }
   
   .brand-bg-dark {
-    background-color: hsl(var(--brand-orange-dark));
+    background-color: hsl(var(--brand-sky-dark));
   }
   
   .brand-bg-50 {
-    background-color: hsl(var(--brand-orange-50));
+    background-color: hsl(var(--brand-sky-50));
   }
   
   .brand-bg-100 {
-    background-color: hsl(var(--brand-orange-100));
+    background-color: hsl(var(--brand-sky-100));
   }
   
   /* Enhanced Cards */
@@ -225,7 +240,7 @@
   }
   
   .card-brand-header {
-    @apply bg-gradient-to-r from-brand-orange to-brand-gold text-white p-6 rounded-t-xl;
+    @apply bg-gradient-to-r from-brand-sky to-brand-blue text-white p-6 rounded-t-xl;
   }
   
   .card-brand-gradient {
@@ -234,15 +249,15 @@
   
   /* Enhanced Buttons */
   .btn-brand {
-    @apply bg-gradient-to-r from-brand-orange to-brand-orange-600 hover:from-brand-orange-600 hover:to-brand-orange-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105;
+    @apply bg-gradient-to-r from-brand-sky to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105;
   }
   
   .btn-brand-outline {
-    @apply border-2 border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 hover:shadow-lg;
+    @apply border-2 border-brand-sky text-brand-sky hover:bg-brand-sky hover:text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 hover:shadow-lg;
   }
   
   .btn-brand-ghost {
-    @apply text-brand-orange hover:bg-brand-orange-50 font-semibold py-3 px-6 rounded-lg transition-all duration-300;
+    @apply text-brand-sky hover:bg-brand-sky-50 font-semibold py-3 px-6 rounded-lg transition-all duration-300;
   }
   
   .btn-brand-sm {
@@ -278,7 +293,7 @@
   .form-brand input,
   .form-brand select,
   .form-brand textarea {
-    @apply border border-slate-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all duration-300 bg-white;
+    @apply border border-slate-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-sky focus:border-transparent transition-all duration-300 bg-white;
   }
   
   .form-brand input:focus,
@@ -293,7 +308,7 @@
   
   /* Enhanced Alerts */
   .alert-brand {
-    @apply bg-gradient-to-r from-brand-orange to-brand-orange-600 text-white p-6 rounded-xl shadow-lg;
+    @apply bg-gradient-to-r from-brand-sky to-brand-sky-600 text-white p-6 rounded-xl shadow-lg;
   }
   
   .alert-brand-success {
@@ -314,7 +329,7 @@
   
   /* Enhanced Badges */
   .badge-brand {
-    @apply bg-gradient-to-r from-brand-orange to-brand-orange-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-sm;
+    @apply bg-gradient-to-r from-brand-sky to-brand-sky-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-sm;
   }
   
   .badge-brand-success {
@@ -339,11 +354,11 @@
   }
   
   .nav-brand-item {
-    @apply text-slate-600 hover:text-brand-orange hover:bg-brand-orange-50 px-4 py-2 rounded-lg transition-all duration-300 font-medium;
+    @apply text-slate-600 hover:text-brand-sky hover:bg-brand-sky-50 px-4 py-2 rounded-lg transition-all duration-300 font-medium;
   }
   
   .nav-brand-item-active {
-    @apply text-brand-orange bg-brand-orange-50 border-r-2 border-brand-orange;
+    @apply text-brand-sky bg-brand-sky-50 border-r-2 border-brand-sky;
   }
   
   /* Sidebar Styles */
@@ -356,7 +371,7 @@
   }
   
   .sidebar-brand-item-active {
-    @apply text-white bg-brand-orange border-r-4 border-brand-orange;
+    @apply text-white bg-brand-sky border-r-4 border-brand-sky;
   }
   
   /* Dashboard Specific */
@@ -387,13 +402,13 @@
   
   /* Utility Classes */
   .text-gradient {
-    @apply bg-gradient-to-r from-brand-orange to-brand-gold bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-brand-sky to-brand-blue bg-clip-text text-transparent;
   }
   
   .border-gradient {
     border: 2px solid transparent;
     background: linear-gradient(white, white) padding-box,
-                linear-gradient(135deg, hsl(var(--brand-orange)), hsl(var(--brand-gold))) border-box;
+                linear-gradient(135deg, hsl(var(--brand-sky)), hsl(var(--brand-blue))) border-box;
   }
   
   .glass-effect {
@@ -415,11 +430,11 @@
   }
 
   .card-brand-enhanced-header {
-    @apply bg-gradient-to-r from-brand-orange to-brand-gold text-white p-6;
+    @apply bg-gradient-to-r from-brand-sky to-brand-blue text-white p-6;
   }
 
   .btn-brand-enhanced {
-    @apply bg-gradient-to-r from-brand-orange to-brand-gold hover:from-brand-orange-dark hover:to-brand-gold text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95;
+    @apply bg-gradient-to-r from-brand-sky to-brand-blue hover:from-brand-sky-dark hover:to-brand-blue text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95;
   }
 
   .table-brand-enhanced {

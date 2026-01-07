@@ -39,13 +39,6 @@ const allMenuItems = [
         color: 'from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700'
     },
     {
-        number: 2,
-        title: 'Client Contracts',
-        icon: FileText,
-        href: '/client-contracts',
-        color: 'from-teal-500 to-teal-600 dark:from-teal-600 dark:to-teal-700'
-    },
-    {
         number: 3,
         title: 'Projects',
         icon: FolderOpen,
@@ -57,7 +50,7 @@ const allMenuItems = [
         title: 'Contractors',
         icon: Building,
         href: '/contractors',
-        color: 'from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700'
+        color: 'from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700'
     },
     {
         number: 5,
@@ -195,11 +188,11 @@ export default function DashboardPage() {
         <div className="bg-slate-100 dark:bg-slate-900 transition-colors duration-300 p-3 sm:p-4 md:p-6">
             {/* Header Section */}
             <div className="mb-4 md:mb-6">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-600 via-orange-500 to-orange-400 dark:from-orange-400 dark:via-orange-300 dark:to-orange-500 bg-clip-text text-transparent mb-2 leading-tight">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-sky-600 via-sky-500 to-sky-400 dark:from-sky-400 dark:via-sky-300 dark:to-sky-500 bg-clip-text text-transparent mb-2 leading-tight">
                     Welcome to Shuaa Al-Ranou Trade & General Contracting
                 </h1>
                 <p className="text-base sm:text-lg md:text-xl text-slate-700 dark:text-slate-300 font-medium">
-                    Welcome, <span className="text-orange-600 dark:text-orange-400 font-semibold">{userName}</span>
+                    Welcome, <span className="text-sky-600 dark:text-sky-400 font-semibold">{userName}</span>
                 </p>
             </div>
 
@@ -217,7 +210,7 @@ export default function DashboardPage() {
                             href={item.href}
                             className="block group"
                         >
-                            <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:border-orange-400 dark:hover:border-orange-500 hover:shadow-lg dark:hover:shadow-orange-500/10 transition-all duration-300 cursor-pointer h-full active:scale-95">
+                            <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:border-sky-400 dark:hover:border-sky-500 hover:shadow-lg dark:hover:shadow-sky-500/10 transition-all duration-300 cursor-pointer h-full active:scale-95">
                                 {/* Background gradient on hover */}
                                 <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-white/50 dark:from-slate-700/30 dark:to-slate-800/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 
@@ -236,7 +229,7 @@ export default function DashboardPage() {
                                     
                                     {/* Number and Title */}
                                     <div className="w-full">
-                                        <h3 className="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors leading-tight line-clamp-2 px-1">
+                                        <h3 className="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors leading-tight line-clamp-2 px-1">
                                             <span className="text-[11px] sm:text-[12px] md:text-[13px] font-bold text-slate-500 dark:text-slate-400 mr-1">
                                                 {String(item.number).padStart(2, '0')}.
                                             </span>
@@ -246,7 +239,7 @@ export default function DashboardPage() {
                                 </div>
                                 
                                 {/* Hover effect overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl sm:rounded-2xl" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl sm:rounded-2xl" />
                             </div>
                         </Link>
                     ))}

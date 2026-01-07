@@ -117,7 +117,7 @@ const InvoiceDetailsPageContent: React.FC = () => {
             <div className="space-y-4">
                 <Breadcrumb />
                 <div className="flex items-center justify-center py-20">
-                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                 </div>
             </div>
         );
@@ -132,7 +132,7 @@ const InvoiceDetailsPageContent: React.FC = () => {
                     <Button
                         variant="outline"
                         onClick={() => router.push('/invoices')}
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Invoices
@@ -160,7 +160,7 @@ const InvoiceDetailsPageContent: React.FC = () => {
                         type="button"
                         variant="outline"
                         onClick={() => router.push('/invoices')}
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Invoices
@@ -168,7 +168,7 @@ const InvoiceDetailsPageContent: React.FC = () => {
                     <Button
                         type="button"
                         onClick={() => router.push(`/invoices/update?id=${invoiceId}`)}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Invoice
@@ -341,7 +341,7 @@ const InvoiceDetailsPageContent: React.FC = () => {
                         </div>
                         <div>
                             <Label className="text-slate-500 dark:text-slate-400 text-sm">Total</Label>
-                            <p className="text-slate-900 dark:text-slate-100 font-mono text-2xl font-bold text-orange-600 dark:text-orange-400 mt-1">
+                            <p className="text-slate-900 dark:text-slate-100 font-mono text-2xl font-bold text-sky-600 dark:text-sky-400 mt-1">
                                 {formatCurrency(selectedInvoice.total || 0)}
                             </p>
                         </div>

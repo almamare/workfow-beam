@@ -255,7 +255,7 @@ const EditClientPageContent: React.FC = () => {
                         type="button" 
                         variant="outline" 
                         onClick={() => router.push('/clients')}
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         Back to Clients
                     </Button>
@@ -335,7 +335,7 @@ const EditClientPageContent: React.FC = () => {
                                     onChange={e => updateField('name', e.target.value)}
                                     placeholder="Client Name"
                                     disabled={initialLoading || loading}
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400"
                                 />
                                 {fieldErrors.name && (
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.name}</p>
@@ -350,7 +350,7 @@ const EditClientPageContent: React.FC = () => {
                                     onChange={e => updateField('state', e.target.value)}
                                     placeholder="e.g., Nineveh"
                                     disabled={initialLoading || loading}
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400"
                                 />
                                 {fieldErrors.state && (
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.state}</p>
@@ -365,7 +365,7 @@ const EditClientPageContent: React.FC = () => {
                                     onChange={e => updateField('city', e.target.value)}
                                     placeholder="e.g., Mosul"
                                     disabled={initialLoading || loading}
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400"
                                 />
                                 {fieldErrors.city && (
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.city}</p>
@@ -381,7 +381,7 @@ const EditClientPageContent: React.FC = () => {
                                     onChange={e => updateField('budget', e.target.value)}
                                     placeholder="0"
                                     disabled={initialLoading || loading}
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400"
                                 />
                                 {fieldErrors.budget && (
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.budget}</p>
@@ -395,7 +395,7 @@ const EditClientPageContent: React.FC = () => {
                                     onValueChange={(value) => updateSelectField('client_type', value === 'All' ? '' : value)}
                                     disabled={initialLoading || loading}
                                 >
-                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400">
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400">
                                         <SelectValue placeholder="Select client type" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -416,7 +416,7 @@ const EditClientPageContent: React.FC = () => {
                                 placeholder="Enter any additional notes (optional)"
                                 rows={4}
                                 disabled={initialLoading || loading}
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400"
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 disabled:cursor-not-allowed disabled:text-slate-500 dark:disabled:text-slate-400"
                             />
                         </div>
                     </div>
@@ -427,7 +427,7 @@ const EditClientPageContent: React.FC = () => {
                             variant="outline" 
                             onClick={handleReset} 
                             disabled={loading || initialLoading}
-                            className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                            className="border-sky-200 dark:border-sky-800 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-700 dark:hover:text-sky-300 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                         >
                             <RotateCcw className="h-4 w-4 mr-2" />
                             Reset
@@ -435,7 +435,7 @@ const EditClientPageContent: React.FC = () => {
                         <Button 
                             type="submit" 
                             disabled={loading || initialLoading}
-                            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-600 dark:to-orange-700 dark:hover:from-orange-700 dark:hover:to-orange-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                            className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-700 dark:hover:to-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                         >
                             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                             <Save className="h-4 w-4 mr-2" />

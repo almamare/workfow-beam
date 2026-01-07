@@ -245,7 +245,7 @@ export const CreateAttachmentForm: React.FC<CreateAttachmentFormProps> = ({
                                 </div>
                                 <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
                                     <div
-                                        className="bg-orange-500 h-2 rounded-full transition-all duration-300"
+                                        className="bg-sky-500 h-2 rounded-full transition-all duration-300"
                                         style={{ width: `${uploadProgress}%` }}
                                     />
                                 </div>
@@ -312,7 +312,7 @@ export const CreateAttachmentForm: React.FC<CreateAttachmentFormProps> = ({
                     <Button
                         onClick={handleSubmit}
                         disabled={uploadProgress > 0 && uploadProgress < 100}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white"
                     >
                         {uploadProgress > 0 && uploadProgress < 100 ? (
                             <>

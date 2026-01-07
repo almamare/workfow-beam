@@ -32,7 +32,7 @@ const CURRENCIES = [
     { code: 'BHD', name: 'Bahraini Dinar', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' },
     { code: 'OMR', name: 'Omani Rial', color: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' },
     { code: 'JOD', name: 'Jordanian Dinar', color: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800' },
-    { code: 'EGP', name: 'Egyptian Pound', color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800' },
+    { code: 'EGP', name: 'Egyptian Pound', color: 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800' },
 ];
 
 // Helper function to get currency badge
@@ -124,7 +124,7 @@ const BankBalancesViewPageContent: React.FC = () => {
             <div className="space-y-4">
                 <Breadcrumb />
                 <div className="flex items-center justify-center py-20">
-                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                 </div>
             </div>
         );
@@ -139,7 +139,7 @@ const BankBalancesViewPageContent: React.FC = () => {
                     <Button
                         variant="outline"
                         onClick={() => router.push('/bank-balances')}
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Balances
@@ -167,7 +167,7 @@ const BankBalancesViewPageContent: React.FC = () => {
                         type="button"
                         variant="outline"
                         onClick={() => router.push('/bank-balances')}
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to All Balances
@@ -175,7 +175,7 @@ const BankBalancesViewPageContent: React.FC = () => {
                     <Button
                         type="button"
                         onClick={() => router.push(`/bank-balances/create?bank_id=${bankId}`)}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                         <Plus className="h-4 w-4 mr-2" />
                         Add New Balance
@@ -248,7 +248,7 @@ const BankBalancesViewPageContent: React.FC = () => {
                         <p className="text-slate-600 dark:text-slate-400 mb-4">No balances found for this bank</p>
                         <Button
                             onClick={() => router.push(`/bank-balances/create?bank_id=${bankId}`)}
-                            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                            className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Add First Balance
@@ -311,7 +311,7 @@ const BankBalancesViewPageContent: React.FC = () => {
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => router.push(`/bank-balances/update?id=${balance.id}`)}
-                                                    className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                                    className="text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                                                 >
                                                     <Edit className="h-4 w-4" />
                                                 </Button>

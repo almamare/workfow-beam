@@ -19,6 +19,7 @@ import BankBalances from '@/stores/slices/bank-balances';           // Importing
 import Approvals from '@/stores/slices/approvals';                  // Importing the Approvals slice
 import ClientContracts from '@/stores/slices/client-contracts';     // Importing the Client Contracts slice
 import Attachments from '@/stores/slices/attachments';              // Importing the Attachments slice
+import ContractorPayments from '@/stores/slices/contractor-payments'; // Importing the Contractor Payments slice
 
 
 // This is the Redux store configuration for the login functionality
@@ -44,7 +45,8 @@ const store = configureStore({
         bankBalances: BankBalances,         // This is the slice for managing bank balances
         approvals: Approvals,               // This is the slice for managing approvals
         clientContracts: ClientContracts,  // This is the slice for managing client contracts
-        attachments: Attachments            // This is the slice for managing attachments
+        attachments: Attachments,           // This is the slice for managing attachments
+        contractorPayments: ContractorPayments // This is the slice for managing contractor payments
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

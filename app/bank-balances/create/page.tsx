@@ -189,7 +189,7 @@ const CreateBankBalancePageContent: React.FC = () => {
                     type="button"
                     variant="outline"
                     onClick={() => router.push('/bank-balances')}
-                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                 >
                     Back to Balances
                 </Button>
@@ -215,12 +215,12 @@ const CreateBankBalancePageContent: React.FC = () => {
                                     onValueChange={(val) => updateField('bank_id', val)}
                                     disabled={banksLoading}
                                 >
-                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                         <SelectValue placeholder={banksLoading ? "Loading..." : "Select Bank"} />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
                                         {banks.map(bank => (
-                                            <SelectItem key={bank.id} value={bank.id} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
+                                            <SelectItem key={bank.id} value={bank.id} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">
                                                 {bank.name} {bank.bank_no ? `(${bank.bank_no})` : ''}
                                             </SelectItem>
                                         ))}
@@ -240,12 +240,12 @@ const CreateBankBalancePageContent: React.FC = () => {
                                     value={form.currency}
                                     onValueChange={(val) => updateField('currency', val)}
                                 >
-                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                         <SelectValue placeholder="Select Currency" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
                                         {CURRENCIES.map(currency => (
-                                            <SelectItem key={currency.code} value={currency.code} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200">
+                                            <SelectItem key={currency.code} value={currency.code} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">
                                                 {currency.code} - {currency.name}
                                             </SelectItem>
                                         ))}
@@ -269,7 +269,7 @@ const CreateBankBalancePageContent: React.FC = () => {
                                     value={form.balance || ''}
                                     onChange={e => updateField('balance', parseFloat(e.target.value) || 0)}
                                     placeholder="0.00"
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 font-mono"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 font-mono"
                                 />
                                 {fieldErrors.balance && (
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.balance}</p>
@@ -288,7 +288,7 @@ const CreateBankBalancePageContent: React.FC = () => {
                                     onChange={e => updateField('notes', e.target.value)}
                                     rows={3}
                                     maxLength={500}
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 <p className="text-xs text-slate-500 dark:text-slate-400">
                                     {(form.notes || '').length} / 500 characters
@@ -307,7 +307,7 @@ const CreateBankBalancePageContent: React.FC = () => {
                             variant="outline"
                             onClick={handleReset}
                             disabled={loading}
-                            className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                            className="border-sky-200 dark:border-sky-800 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-700 dark:hover:text-sky-300 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                         >
                             <RotateCcw className="h-4 w-4 mr-2" />
                             Reset Form
@@ -315,7 +315,7 @@ const CreateBankBalancePageContent: React.FC = () => {
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                            className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                         >
                             {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                             {loading ? 'Creating...' : 'Create Balance'}

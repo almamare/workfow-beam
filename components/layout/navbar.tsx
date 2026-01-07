@@ -77,7 +77,7 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                         {isDashboard && (
                             <div className="flex items-center gap-3">
                                 <div className="relative flex items-center justify-center">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-orange-400/20 to-orange-600/20 dark:from-orange-500/30 dark:to-orange-700/30 rounded-xl blur-sm"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-br from-sky-400/20 to-sky-600/20 dark:from-sky-500/30 dark:to-sky-700/30 rounded-xl blur-sm"></div>
                                     <div className="relative">
                                         <Image
                                             src="https://cdn.shuarano.com/img/logo.png"
@@ -91,7 +91,7 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                                     </div>
                                 </div>
                                 <div className="leading-tight">
-                                    <span className="block text-base md:text-lg font-bold tracking-wide bg-gradient-to-r from-orange-600 to-orange-500 dark:from-orange-400 dark:to-orange-300 bg-clip-text text-transparent">
+                                    <span className="block text-base md:text-lg font-bold tracking-wide bg-gradient-to-r from-sky-600 to-sky-500 dark:from-sky-400 dark:to-sky-300 bg-clip-text text-transparent">
                                         Shuaa Al-Ranou
                                     </span>
                                     <span className="block text-xs md:text-sm text-slate-600 dark:text-slate-400 font-medium">
@@ -133,10 +133,10 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 dark:text-slate-500 transition-colors" />
                             <Input 
                                 placeholder="Search projects, tasks, users..." 
-                                className="pl-12 pr-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:bg-white dark:focus:bg-slate-800 focus:border-orange-400 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-200/50 dark:focus:ring-orange-500/30 transition-all duration-300" 
+                                className="pl-12 pr-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:bg-white dark:focus:bg-slate-800 focus:border-sky-400 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-200/50 dark:focus:ring-sky-500/30 transition-all duration-300" 
                             />
                         </div>
-                        <Button className="bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 hover:from-orange-600 hover:to-orange-700 dark:hover:from-orange-700 dark:hover:to-orange-800 text-white px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 font-medium">
+                        <Button className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white px-5 py-2.5 rounded-xl transition-all duration-300 font-medium">
                             <Search className="h-4 w-4 mr-2" />
                             Search
                         </Button>
@@ -169,9 +169,9 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                             title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
                         >
                             {theme === 'light' ? (
-                                <Moon className="h-5 w-5 text-slate-700 dark:text-slate-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors" />
+                                <Moon className="h-5 w-5 text-slate-700 dark:text-slate-300 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors" />
                             ) : (
-                                <Sun className="h-5 w-5 text-yellow-500 group-hover:text-orange-400 transition-colors" />
+                                <Sun className="h-5 w-5 text-yellow-500 group-hover:text-sky-400 transition-colors" />
                             )}
                         </Button>
 
@@ -186,9 +186,9 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                                     className="h-auto p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all duration-200 group"
                                 >
                                     <div className="flex items-center gap-2.5">
-                                        <Avatar className="h-8 w-8 ring-2 ring-orange-200 dark:ring-orange-800/50 group-hover:ring-orange-400 dark:group-hover:ring-orange-600 transition-all duration-200">
+                                        <Avatar className="h-8 w-8 ring-2 ring-sky-200 dark:ring-sky-800/50 group-hover:ring-sky-400 dark:group-hover:ring-sky-600 transition-all duration-200">
                                             <AvatarImage src={user?.avatar} />
-                                            <AvatarFallback className="bg-gradient-to-br from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 text-white font-semibold">
+                                            <AvatarFallback className="bg-gradient-to-br from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700 text-white font-semibold">
                                                 <ClientOnly fallback="U">
                                                     {`${user?.name?.[0] ?? ''}${user?.surname?.[0] ?? ''}`}
                                                 </ClientOnly>
@@ -214,10 +214,10 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                                 className="w-72 p-4 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-xl"
                             >
                                 {/* User Info Header */}
-                                <div className="flex items-center gap-3 p-3 bg-gradient-to-br from-orange-50 to-orange-100/50 dark:from-orange-900/30 dark:to-orange-800/20 border border-orange-200/50 dark:border-orange-800/50 rounded-lg mb-3">
-                                    <Avatar className="h-12 w-12 ring-2 ring-orange-300 dark:ring-orange-700/50">
+                                <div className="flex items-center gap-3 p-3 bg-gradient-to-br from-sky-50 to-sky-100/50 dark:from-sky-900/30 dark:to-sky-800/20 border border-sky-200/50 dark:border-sky-800/50 rounded-lg mb-3">
+                                    <Avatar className="h-12 w-12 ring-2 ring-sky-300 dark:ring-sky-700/50">
                                         <AvatarImage src={user?.avatar} />
-                                        <AvatarFallback className="bg-gradient-to-br from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 text-white font-semibold">
+                                        <AvatarFallback className="bg-gradient-to-br from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700 text-white font-semibold">
                                             <ClientOnly fallback="U">
                                                 {`${user?.name?.[0] ?? ''}${user?.surname?.[0] ?? ''}`}
                                             </ClientOnly>
@@ -245,18 +245,18 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                                 <div className="grid grid-cols-2 gap-2 mb-3">
                                     <Button 
                                         variant="ghost" 
-                                        className="h-auto p-3 flex flex-col items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20 border border-transparent hover:border-orange-200 dark:hover:border-orange-800/50 transition-all duration-200"
+                                        className="h-auto p-3 flex flex-col items-center gap-2 hover:bg-sky-50 dark:hover:bg-sky-900/20 border border-transparent hover:border-sky-200 dark:hover:border-sky-800/50 transition-all duration-200"
                                         onClick={() => router.push('/profile')}
                                     >
-                                        <User className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                                        <User className="h-5 w-5 text-sky-600 dark:text-sky-400" />
                                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Profile</span>
                                     </Button>
                                     <Button 
                                         variant="ghost" 
-                                        className="h-auto p-3 flex flex-col items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20 border border-transparent hover:border-orange-200 dark:hover:border-orange-800/50 transition-all duration-200"
+                                        className="h-auto p-3 flex flex-col items-center gap-2 hover:bg-sky-50 dark:hover:bg-sky-900/20 border border-transparent hover:border-sky-200 dark:hover:border-sky-800/50 transition-all duration-200"
                                         onClick={() => router.push('/settings')}
                                     >
-                                        <Settings className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                                        <Settings className="h-5 w-5 text-sky-600 dark:text-sky-400" />
                                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Settings</span>
                                     </Button>
                                 </div>
@@ -324,7 +324,7 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                             <Input 
                                 placeholder="Search projects, tasks, users..." 
-                                className="pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:border-orange-400 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-200/50 dark:focus:ring-orange-500/30 transition-all duration-300 w-full" 
+                                className="pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:border-sky-400 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-200/50 dark:focus:ring-sky-500/30 transition-all duration-300 w-full" 
                             />
                         </div>
                     </div>

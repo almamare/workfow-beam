@@ -1,6 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef, Suspense } from 'react';
+import { AppDispatch } from '@/stores/store';
+import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
+import { useSearchParams } from 'next/navigation';
+import {
+    fetchTaskRequests,
+    selectTaskRequests,
+    selectLoading,
+    selectTotalPages,
+    selectTotalItems
+} from '@/stores/slices/tasks_requests';
+import { fetchProject } from '@/stores/slices/projects';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -8,192 +19,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, CreditCard, TrendingUp, Clock } from 'lucide-react';
+import { DollarSign, Plus, Eye, RefreshCw, FileSpreadsheet, Calendar, Clock, Search, X, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { PageHeader } from '@/components/ui/page-header';
-import { FilterBar } from '@/components/ui/filter-bar';
+import { useRouter } from 'next/navigation';
+import type { TaskRequest } from '@/stores/types/tasks_requests';
+import type { Project } from '@/stores/types/projects';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
-import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
+import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
+import { DatePicker } from '@/components/DatePicker';
+import axios from '@/utils/axios';
+import { Loader2 } from 'lucide-react';
 
-interface FinancialRequest {
-    id: string;
-    requestNumber: string;
-    requesterId: string;
-    requesterName: string;
-    requestType: 'budget' | 'expense' | 'payment' | 'advance' | 'refund' | 'other';
-    title: string;
-    description: string;
-    amount: number;
-    currency: string;
-    category: string;
-    projectId: string;
-    projectName: string;
-    department: string;
-    priority: 'low' | 'medium' | 'high' | 'urgent';
-    status: 'pending' | 'approved' | 'rejected' | 'cancelled' | 'paid';
-    submittedDate: string;
-    reviewedDate: string;
-    reviewedBy: string;
-    approvedDate: string;
-    approvedBy: string;
-    paymentDate: string;
-    paymentMethod: 'bank_transfer' | 'cash' | 'check' | 'card';
-    reference: string;
-    attachments: string[];
-    comments: string;
-    metadata: Record<string, any>;
-}
-
-const mockRequests: FinancialRequest[] = [
-    {
-        id: '1',
-        requestNumber: 'REQ-FIN-001',
-        requesterId: 'EMP-001',
-        requesterName: 'Ahmed Ali',
-        requestType: 'expense',
-        title: 'Office Supplies Purchase',
-        description: 'Request for office supplies including paper, pens, and stationery for the project team.',
-        amount: 2500,
-        currency: 'USD',
-        category: 'Office Supplies',
-        projectId: 'PRJ-001',
-        projectName: 'Office Building Construction',
-        department: 'Project Management',
-        priority: 'medium',
-        status: 'approved',
-        submittedDate: '2024-01-15',
-        reviewedDate: '2024-01-16',
-        reviewedBy: 'Fatima Mohamed',
-        approvedDate: '2024-01-17',
-        approvedBy: 'Omar Hassan',
-        paymentDate: '',
-        paymentMethod: 'bank_transfer',
-        reference: 'PO-2024-001',
-        attachments: ['quotation.pdf', 'budget_justification.pdf'],
-        comments: 'Approved for project needs',
-        metadata: { vendor: 'Office Supplies Co.', items: ['Paper', 'Pens', 'Stationery'] }
-    },
-    {
-        id: '2',
-        requestNumber: 'REQ-FIN-002',
-        requesterId: 'EMP-002',
-        requesterName: 'Sara Ahmed',
-        requestType: 'budget',
-        title: 'Marketing Budget Request',
-        description: 'Request for additional marketing budget to promote the new project launch.',
-        amount: 15000,
-        currency: 'USD',
-        category: 'Marketing',
-        projectId: 'PRJ-002',
-        projectName: 'Residential Complex',
-        department: 'Marketing',
-        priority: 'high',
-        status: 'pending',
-        submittedDate: '2024-01-18',
-        reviewedDate: '',
-        reviewedBy: '',
-        approvedDate: '',
-        approvedBy: '',
-        paymentDate: '',
-        paymentMethod: 'bank_transfer',
-        reference: 'BUD-2024-002',
-        attachments: ['marketing_plan.pdf'],
-        comments: '',
-        metadata: { campaign: 'Project Launch', duration: '3 months' }
-    },
-    {
-        id: '3',
-        requestNumber: 'REQ-FIN-003',
-        requesterId: 'EMP-003',
-        requesterName: 'Mohammed Saleh',
-        requestType: 'payment',
-        title: 'Contractor Payment Request',
-        description: 'Request for payment to ABC Construction for completed foundation work.',
-        amount: 50000,
-        currency: 'USD',
-        category: 'Contractor Payment',
-        projectId: 'PRJ-001',
-        projectName: 'Office Building Construction',
-        department: 'Project Management',
-        priority: 'urgent',
-        status: 'paid',
-        submittedDate: '2024-01-10',
-        reviewedDate: '2024-01-11',
-        reviewedBy: 'Ahmed Ali',
-        approvedDate: '2024-01-12',
-        approvedBy: 'Fatima Mohamed',
-        paymentDate: '2024-01-15',
-        paymentMethod: 'check',
-        reference: 'PAY-2024-001',
-        attachments: ['invoice.pdf', 'work_completion_certificate.pdf'],
-        comments: 'Payment processed successfully',
-        metadata: { contractor: 'ABC Construction', workType: 'Foundation' }
-    },
-    {
-        id: '4',
-        requestNumber: 'REQ-FIN-004',
-        requesterId: 'EMP-004',
-        requesterName: 'Fatima Mohamed',
-        requestType: 'advance',
-        title: 'Travel Advance Request',
-        description: 'Request for travel advance for business trip to Dubai for project meeting.',
-        amount: 8000,
-        currency: 'USD',
-        category: 'Travel',
-        projectId: 'PRJ-003',
-        projectName: 'Shopping Mall',
-        department: 'Project Management',
-        priority: 'medium',
-        status: 'rejected',
-        submittedDate: '2024-01-20',
-        reviewedDate: '2024-01-21',
-        reviewedBy: 'Omar Hassan',
-        approvedDate: '',
-        approvedBy: '',
-        paymentDate: '',
-        paymentMethod: 'bank_transfer',
-        reference: 'ADV-2024-001',
-        attachments: ['travel_itinerary.pdf'],
-        comments: 'Travel not approved due to budget constraints',
-        metadata: { destination: 'Dubai', duration: '3 days', purpose: 'Project Meeting' }
-    },
-    {
-        id: '5',
-        requestNumber: 'REQ-FIN-005',
-        requesterId: 'EMP-005',
-        requesterName: 'Omar Hassan',
-        requestType: 'refund',
-        title: 'Equipment Refund Request',
-        description: 'Request for refund of overpaid equipment purchase from Tech Solutions Inc.',
-        amount: 2500,
-        currency: 'USD',
-        category: 'Equipment',
-        projectId: 'PRJ-002',
-        projectName: 'Residential Complex',
-        department: 'IT Department',
-        priority: 'low',
-        status: 'pending',
-        submittedDate: '2024-01-22',
-        reviewedDate: '',
-        reviewedBy: '',
-        approvedDate: '',
-        approvedBy: '',
-        paymentDate: '',
-        paymentMethod: 'bank_transfer',
-        reference: 'REF-2024-001',
-        attachments: ['invoice.pdf', 'overpayment_proof.pdf'],
-        comments: '',
-        metadata: { vendor: 'Tech Solutions Inc.', equipment: 'Laptop', reason: 'Overpayment' }
-    }
-];
-
+// Financial Request type is always "Financial" for this page
 const requestTypes = [
-    { value: 'budget', label: 'Budget Request', icon: <DollarSign className="h-4 w-4" /> },
-    { value: 'expense', label: 'Expense Request', icon: <CreditCard className="h-4 w-4" /> },
-    { value: 'payment', label: 'Payment Request', icon: <TrendingUp className="h-4 w-4" /> },
-    { value: 'advance', label: 'Advance Request', icon: <Calendar className="h-4 w-4" /> },
-    { value: 'refund', label: 'Refund Request', icon: <DollarSign className="h-4 w-4" /> },
-    { value: 'other', label: 'Other Request', icon: <DollarSign className="h-4 w-4" /> }
+    { value: 'Financial', label: 'Financial', icon: <DollarSign className="h-3 w-3" /> }
 ];
 
 const priorities = [
@@ -203,913 +43,596 @@ const priorities = [
     { value: 'urgent', label: 'Urgent' }
 ];
 
-const categories = ['Office Supplies', 'Marketing', 'Contractor Payment', 'Travel', 'Equipment', 'Utilities', 'Rent', 'Insurance', 'Training', 'Other'];
-const departments = ['Project Management', 'IT Department', 'Finance', 'HR', 'Operations', 'Sales', 'Marketing'];
-const projects = ['Office Building Construction', 'Residential Complex', 'Shopping Mall', 'Hospital', 'School'];
-const requesters = ['Ahmed Ali', 'Sara Ahmed', 'Mohammed Saleh', 'Fatima Mohamed', 'Omar Hassan'];
-const paymentMethods = [
-    { value: 'bank_transfer', label: 'Bank Transfer' },
-    { value: 'cash', label: 'Cash' },
-    { value: 'check', label: 'Check' },
-    { value: 'card', label: 'Credit Card' }
-];
+// Extended TaskRequest with project data
+interface FinancialRequestWithData extends TaskRequest {
+    project?: Project;
+}
 
-export default function FinancialRequestsPage() {
-    const [requests, setRequests] = useState<FinancialRequest[]>(mockRequests);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [typeFilter, setTypeFilter] = useState<string>('all');
-    const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [priorityFilter, setPriorityFilter] = useState<string>('all');
-    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-    const [editingRequest, setEditingRequest] = useState<FinancialRequest | null>(null);
-    const [formData, setFormData] = useState({
-        requesterId: '',
-        requesterName: '',
-        requestType: 'expense',
-        title: '',
-        description: '',
-        amount: '',
-        currency: 'USD',
-        category: '',
-        projectId: '',
-        department: '',
-        priority: 'medium',
-        paymentMethod: 'bank_transfer',
-        reference: '',
-        comments: ''
-    });
+function FinancialRequestsPageContent() {
+    const taskRequests = useSelector(selectTaskRequests);
+    const loading = useSelector(selectLoading);
+    const totalPages = useSelector(selectTotalPages);
+    const totalItems = useSelector(selectTotalItems);
 
-    const filteredRequests = requests.filter(request => {
-        const matchesSearch = request.requestNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            request.requesterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            request.description.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesType = typeFilter === 'all' || request.requestType === typeFilter;
-        const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
-        const matchesPriority = priorityFilter === 'all' || request.priority === priorityFilter;
-        
-        return matchesSearch && matchesType && matchesStatus && matchesPriority;
-    });
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const dispatch = useReduxDispatch<AppDispatch>();
 
-    const handleCreate = () => {
-        if (!formData.requesterName || !formData.title || !formData.description || !formData.amount) {
-            toast.error('Please fill in all required fields');
+    // Get status from URL query parameter
+    const statusFromUrl = searchParams.get('status') || 'all';
+    const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState(search);
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [statusFilter, setStatusFilter] = useState<string>(statusFromUrl);
+    const [dateFrom, setDateFrom] = useState<string>('');
+    const [dateTo, setDateTo] = useState<string>('');
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [projectsData, setProjectsData] = useState<Map<string, Project>>(new Map());
+    const [loadingProjects, setLoadingProjects] = useState<Set<string>>(new Set());
+
+    // Filter task requests to only show "Financial" type
+    const financialRequests = useMemo(() => {
+        return taskRequests.filter(req => req.request_type === 'Financial');
+    }, [taskRequests]);
+
+    // Update status filter when URL changes
+    useEffect(() => {
+        const statusFromUrl = searchParams.get('status') || 'all';
+        setStatusFilter(statusFromUrl);
+        setPage(1);
+    }, [searchParams]);
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(search), 400);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    // Fetch task requests with request_type = "Financial"
+    useEffect(() => {
+        dispatch(fetchTaskRequests({ 
+            page, 
+            limit, 
+            search: debouncedSearch,
+            request_type: 'Financial',
+            status: statusFilter !== 'all' ? statusFilter : undefined,
+            from_date: dateFrom || undefined,
+            to_date: dateTo || undefined,
+        }));
+    }, [dispatch, page, limit, debouncedSearch, statusFilter, dateFrom, dateTo]);
+
+    // Fetch project data for each task request
+    const fetchProjectData = useCallback(async (projectId: string) => {
+        if (projectsData.has(projectId) || loadingProjects.has(projectId)) {
             return;
         }
 
-        const newRequest: FinancialRequest = {
-            id: Date.now().toString(),
-            requestNumber: `REQ-FIN-${String(requests.length + 1).padStart(3, '0')}`,
-            requesterId: formData.requesterId,
-            requesterName: formData.requesterName,
-            requestType: formData.requestType as FinancialRequest['requestType'],
-            title: formData.title,
-            description: formData.description,
-            amount: parseFloat(formData.amount),
-            currency: formData.currency,
-            category: formData.category,
-            projectId: formData.projectId,
-            projectName: projects.find(p => p === formData.projectId) || '',
-            department: formData.department,
-            priority: formData.priority as FinancialRequest['priority'],
-            status: 'pending',
-            submittedDate: new Date().toISOString().split('T')[0],
-            reviewedDate: '',
-            reviewedBy: '',
-            approvedDate: '',
-            approvedBy: '',
-            paymentDate: '',
-            paymentMethod: formData.paymentMethod as FinancialRequest['paymentMethod'],
-            reference: formData.reference,
-            attachments: [],
-            comments: formData.comments,
-            metadata: {}
-        };
+        setLoadingProjects(prev => new Set(prev).add(projectId));
+        try {
+            const result = await dispatch(fetchProject({ id: projectId })).unwrap();
+            if (result?.body?.project) {
+                setProjectsData(prev => new Map(prev).set(projectId, result.body!.project));
+            }
+        } catch (error) {
+            console.error(`Failed to fetch project ${projectId}:`, error);
+        } finally {
+            setLoadingProjects(prev => {
+                const next = new Set(prev);
+                next.delete(projectId);
+                return next;
+            });
+        }
+    }, [dispatch, projectsData, loadingProjects]);
 
-        setRequests([...requests, newRequest]);
-        setIsCreateDialogOpen(false);
-        setFormData({
-            requesterId: '',
-            requesterName: '',
-            requestType: 'expense',
-            title: '',
-            description: '',
-            amount: '',
-            currency: 'USD',
-            category: '',
-            projectId: '',
-            department: '',
-            priority: 'medium',
-            paymentMethod: 'bank_transfer',
-            reference: '',
-            comments: ''
+    // Fetch project data for all requests
+    useEffect(() => {
+        financialRequests.forEach(request => {
+            if (request.task_order_id && !projectsData.has(request.task_order_id)) {
+                fetchProjectData(request.task_order_id);
+            }
         });
-        toast.success('Financial request created successfully');
-    };
+    }, [financialRequests, fetchProjectData, projectsData]);
 
-    const handleEdit = (request: FinancialRequest) => {
-        setEditingRequest(request);
-        setFormData({
-            requesterId: request.requesterId,
-            requesterName: request.requesterName,
-            requestType: request.requestType,
-            title: request.title,
-            description: request.description,
-            amount: request.amount.toString(),
-            currency: request.currency,
-            category: request.category,
-            projectId: request.projectId,
-            department: request.department,
-            priority: request.priority,
-            paymentMethod: request.paymentMethod,
-            reference: request.reference,
-            comments: request.comments
+    // Create enriched requests with project data
+    const enrichedRequests = useMemo(() => {
+        return financialRequests.map(request => {
+            const project = projectsData.get(request.task_order_id);
+            return {
+                ...request,
+                project
+            } as FinancialRequestWithData;
         });
-        setIsEditDialogOpen(true);
-    };
+    }, [financialRequests, projectsData]);
 
-    const handleUpdate = () => {
-        if (!editingRequest) return;
-
-        const updatedRequests = requests.map(r =>
-            r.id === editingRequest.id ? { 
-                ...r, 
-                requesterId: formData.requesterId,
-                requesterName: formData.requesterName,
-                requestType: formData.requestType as FinancialRequest['requestType'],
-                title: formData.title,
-                description: formData.description,
-                amount: parseFloat(formData.amount),
-                currency: formData.currency,
-                category: formData.category,
-                projectId: formData.projectId,
-                projectName: projects.find(p => p === formData.projectId) || '',
-                department: formData.department,
-                priority: formData.priority as FinancialRequest['priority'],
-                paymentMethod: formData.paymentMethod as FinancialRequest['paymentMethod'],
-                reference: formData.reference,
-                comments: formData.comments
-            } : r
-        );
-
-        setRequests(updatedRequests);
-        setIsEditDialogOpen(false);
-        setEditingRequest(null);
-        setFormData({
-            requesterId: '',
-            requesterName: '',
-            requestType: 'expense',
-            title: '',
-            description: '',
-            amount: '',
-            currency: 'USD',
-            category: '',
-            projectId: '',
-            department: '',
-            priority: 'medium',
-            paymentMethod: 'bank_transfer',
-            reference: '',
-            comments: ''
+    const filteredRequests = useMemo(() => {
+        return enrichedRequests.filter(request => {
+            const project = request.project;
+            const matchesSearch = request.request_code?.toLowerCase().includes(search.toLowerCase()) ||
+                                project?.name?.toLowerCase().includes(search.toLowerCase()) ||
+                                project?.project_code?.toLowerCase().includes(search.toLowerCase()) ||
+                                request.notes?.toLowerCase().includes(search.toLowerCase());
+            const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
+            
+            return matchesSearch && matchesStatus;
         });
-        toast.success('Financial request updated successfully');
+    }, [enrichedRequests, search, statusFilter]);
+
+    const refreshTable = async () => {
+        setIsRefreshing(true);
+        try {
+            await dispatch(fetchTaskRequests({ 
+                page, 
+                limit, 
+                search: debouncedSearch,
+                request_type: 'Financial',
+                status: statusFilter !== 'all' ? statusFilter : undefined,
+                from_date: dateFrom || undefined,
+                to_date: dateTo || undefined,
+            }));
+            setProjectsData(new Map()); // Clear cached projects to refetch
+            toast.success('Table refreshed successfully');
+        } catch {
+            toast.error('Failed to refresh table');
+        } finally {
+            setIsRefreshing(false);
+        }
     };
 
-    const handleDelete = (id: string) => {
-        setRequests(requests.filter(r => r.id !== id));
-        toast.success('Financial request deleted successfully');
-    };
-
-    const handleStatusChange = (id: string, status: FinancialRequest['status']) => {
-        setRequests(prev => prev.map(request => 
-            request.id === id 
-                ? { 
-                    ...request, 
-                    status: status,
-                    reviewedDate: status === 'approved' || status === 'rejected' ? new Date().toISOString().split('T')[0] : request.reviewedDate,
-                    reviewedBy: status === 'approved' || status === 'rejected' ? 'Current User' : request.reviewedBy,
-                    approvedDate: status === 'approved' ? new Date().toISOString().split('T')[0] : request.approvedDate,
-                    approvedBy: status === 'approved' ? 'Current User' : request.approvedBy,
-                    paymentDate: status === 'paid' ? new Date().toISOString().split('T')[0] : request.paymentDate
+    const exportToExcel = async () => {
+        setIsExporting(true);
+        try {
+            const { data } = await axios.get('/requests/tasks/fetch', {
+                params: {
+                    request_type: 'Financial',
+                    search,
+                    limit: 10000,
+                    page: 1
                 }
-                : request
-        ));
-        toast.success(`Request ${status} successfully`);
+            });
+
+            const headers = ['Request Code', 'Request Type', 'Project', 'Project Code', 'Status', 'Notes', 'Created By', 'Created At'];
+            const csvHeaders = headers.join(',');
+            const items = data?.body?.tasks_requests?.items || [];
+            
+            // Fetch project data for export
+            const exportData = await Promise.all(
+                items.map(async (req: TaskRequest) => {
+                    let project: Project | null = null;
+                    if (req.task_order_id) {
+                        try {
+                            const result = await dispatch(fetchProject({ id: req.task_order_id })).unwrap();
+                            if (result?.body?.project) {
+                                project = result.body.project;
+                            }
+                        } catch (error) {
+                            console.error(`Failed to fetch project ${req.task_order_id}:`, error);
+                        }
+                    }
+                    return { req, project };
+                })
+            );
+
+            const csvRows = exportData.map(({ req, project }) => {
+                return [
+                    req.request_code,
+                    req.request_type,
+                    escapeCsv(project?.name || ''),
+                    escapeCsv(project?.project_code || ''),
+                    req.status,
+                    escapeCsv(req.notes || ''),
+                    escapeCsv(req.created_by_name || ''),
+                    req.created_at ? new Date(req.created_at).toLocaleDateString('en-US') : ''
+                ].join(',');
+            });
+            
+            const csvContent = [csvHeaders, ...csvRows].join('\n');
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `financial_requests_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success('Data exported successfully');
+        } catch {
+            toast.error('Failed to export data');
+        } finally {
+            setIsExporting(false);
+        }
     };
 
-    const formatCurrency = (amount: number, currency: string) => {
-        return new Intl.NumberFormat('en-SA', {
-            style: 'currency',
-            currency: currency,
-            minimumFractionDigits: 0
-        }).format(amount);
+    const exportRequestData = async (request: FinancialRequestWithData) => {
+        try {
+            // Fetch project data if not already loaded
+            let project = request.project;
+            if (!project && request.task_order_id) {
+                try {
+                    const result = await dispatch(fetchProject({ id: request.task_order_id })).unwrap();
+                    if (result?.body?.project) {
+                        project = result.body.project;
+                    }
+                } catch (error) {
+                    console.error(`Failed to fetch project ${request.task_order_id}:`, error);
+                    toast.error('Failed to fetch project data');
+                    return;
+                }
+            }
+
+            const headers = ['Request Code', 'Request Type', 'Project Name', 'Project Code', 'Status', 'Notes', 'Created By', 'Created At'];
+            const csvHeaders = headers.join(',');
+            
+            const csvRow = [
+                request.request_code || '',
+                request.request_type || 'Financial',
+                escapeCsv(project?.name || ''),
+                escapeCsv(project?.project_code || ''),
+                request.status || '',
+                escapeCsv(request.notes || ''),
+                escapeCsv(request.created_by_name || ''),
+                request.created_at || ''
+            ].join(',');
+            
+            const csvContent = [csvHeaders, csvRow].join('\n');
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `financial_request_${request.request_code || request.id}_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success('Request data exported successfully');
+        } catch (error) {
+            console.error('Export error:', error);
+            toast.error('Failed to export request data');
+        }
     };
 
-    const totalRequests = filteredRequests.length;
-    const totalAmount = filteredRequests.reduce((sum, request) => sum + request.amount, 0);
-    const pendingAmount = filteredRequests.filter(r => r.status === 'pending').reduce((sum, request) => sum + request.amount, 0);
-    const approvedAmount = filteredRequests.filter(r => r.status === 'approved').reduce((sum, request) => sum + request.amount, 0);
+    const escapeCsv = (str: string) => {
+        if (!str) return '';
+        return `"${String(str).replace(/"/g, '""')}"`;
+    };
 
-    const columns = [
+    const activeFilters = useMemo(() => {
+        const arr: string[] = [];
+        if (search) arr.push(`Search: ${search}`);
+        if (statusFilter !== 'all') arr.push(`Status: ${statusFilter}`);
+        if (dateFrom && dateTo) arr.push(`Date: ${dateFrom} to ${dateTo}`);
+        else if (dateFrom) arr.push(`From Date: ${dateFrom}`);
+        else if (dateTo) arr.push(`To Date: ${dateTo}`);
+        return arr;
+    }, [search, statusFilter, dateFrom, dateTo]);
+
+    // Memoize loadingProjects to prevent unnecessary re-renders
+    const loadingProjectsRef = useRef(loadingProjects);
+    useEffect(() => {
+        loadingProjectsRef.current = loadingProjects;
+    }, [loadingProjects]);
+
+    const columns: Column<FinancialRequestWithData>[] = useMemo(() => [
         {
-            key: 'requestNumber' as keyof FinancialRequest,
-            header: 'Request Number',
-            render: (value: any) => <span className="font-mono text-sm text-slate-600">{value}</span>,
-            sortable: true,
-            width: '140px'
-        },
-        {
-            key: 'requesterName' as keyof FinancialRequest,
-            header: 'Requester',
-            render: (value: any, request: FinancialRequest) => (
-                <div>
-                    <div className="font-semibold text-slate-800">{request.requesterName}</div>
-                    <div className="text-sm text-slate-600">{request.requesterId}</div>
-                </div>
-            ),
+            key: 'request_code' as keyof FinancialRequestWithData,
+            header: 'Request Code',
+            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 font-mono text-sm">{value}</span>,
             sortable: true
         },
         {
-            key: 'requestType' as keyof FinancialRequest,
-            header: 'Request Type',
+            key: 'project_name' as any,
+            header: 'Project Name',
+            render: (value: any, row: FinancialRequestWithData) => {
+                const project = row.project;
+                const isLoading = loadingProjectsRef.current.has(row.task_order_id);
+                if (isLoading) {
+                    return <span className="text-slate-400">Loading...</span>;
+                }
+                return <span className="font-semibold text-slate-800 dark:text-slate-200">{project?.name || 'N/A'}</span>;
+            },
+            sortable: true
+        },
+        {
+            key: 'project_code' as any,
+            header: 'Project Code',
+            render: (value: any, row: FinancialRequestWithData) => {
+                const project = row.project;
+                return <span className="text-slate-500 dark:text-slate-400 font-mono text-sm">{project?.project_code || 'N/A'}</span>;
+            },
+            sortable: true
+        },
+        {
+            key: 'status' as keyof FinancialRequestWithData,
+            header: 'Status',
             render: (value: any) => {
-                const typeConfig = requestTypes.find(t => t.value === value);
-                const typeColors = {
-                    'budget': 'bg-blue-50 text-blue-700 border-blue-200',
-                    'expense': 'bg-green-50 text-green-700 border-green-200',
-                    'payment': 'bg-purple-50 text-purple-700 border-purple-200',
-                    'advance': 'bg-yellow-50 text-yellow-700 border-yellow-200',
-                    'refund': 'bg-orange-50 text-orange-700 border-orange-200',
-                    'other': 'bg-gray-50 text-gray-700 border-gray-200'
+                const statusColors: Record<string, string> = {
+                    'Pending': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+                    'Approved': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+                    'Rejected': 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+                    'Closed': 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800',
+                    'Complete': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
                 };
                 
                 return (
-                    <Badge variant="outline" className={`${typeColors[value as keyof typeof typeColors]} font-medium`}>
-                        {typeConfig?.icon}
-                        <span className="ml-1">{typeConfig?.label}</span>
+                    <Badge variant="outline" className={`${statusColors[value as keyof typeof statusColors] || statusColors.Pending} font-medium`}>
+                        {value}
                     </Badge>
                 );
             },
             sortable: true
         },
         {
-            key: 'title' as keyof FinancialRequest,
-            header: 'Title',
-            render: (value: any, request: FinancialRequest) => (
-                <div>
-                    <div className="font-semibold text-slate-800">{request.title}</div>
-                    <div className="text-sm text-slate-600 truncate max-w-xs">{request.description}</div>
-                </div>
-            ),
+            key: 'notes' as keyof FinancialRequestWithData,
+            header: 'Notes',
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300">{value || '-'}</span>,
             sortable: true
         },
         {
-            key: 'amount' as keyof FinancialRequest,
-            header: 'Amount',
-            render: (value: any, request: FinancialRequest) => (
-                <span className="font-semibold text-slate-800">
-                    {formatCurrency(value, request.currency)}
+            key: 'created_by_name' as keyof FinancialRequestWithData,
+            header: 'Created By',
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300">{value || '-'}</span>,
+            sortable: true
+        },
+        {
+            key: 'created_at' as keyof FinancialRequestWithData,
+            header: 'Created At',
+            render: (value: any) => (
+                <span className="text-slate-600 dark:text-slate-400">
+                    {value}
                 </span>
             ),
             sortable: true
-        },
-        {
-            key: 'category' as keyof FinancialRequest,
-            header: 'Category',
-            render: (value: any) => (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                    {value}
-                </Badge>
-            ),
-            sortable: true
-        },
-        {
-            key: 'projectName' as keyof FinancialRequest,
-            header: 'Project',
-            render: (value: any, request: FinancialRequest) => (
-                <div>
-                    <div className="font-semibold text-slate-800">{request.projectName}</div>
-                    <div className="text-sm text-slate-600">{request.projectId}</div>
-                </div>
-            ),
-            sortable: true
-        },
-        {
-            key: 'priority' as keyof FinancialRequest,
-            header: 'Priority',
-            render: (value: any) => {
-                const priorityColors = {
-                    'low': 'bg-gray-50 text-gray-700 border-gray-200',
-                    'medium': 'bg-blue-50 text-blue-700 border-blue-200',
-                    'high': 'bg-orange-50 text-orange-700 border-orange-200',
-                    'urgent': 'bg-red-50 text-red-700 border-red-200'
-                };
-                
-                return (
-                    <Badge variant="outline" className={`${priorityColors[value as keyof typeof priorityColors]} font-medium`}>
-                        {value.charAt(0).toUpperCase() + value.slice(1)}
-                    </Badge>
-                );
-            },
-            sortable: true
-        },
-        {
-            key: 'status' as keyof FinancialRequest,
-            header: 'Status',
-            render: (value: any) => {
-                const statusColors = {
-                    'pending': 'bg-yellow-100 text-yellow-700 border-yellow-200',
-                    'approved': 'bg-green-100 text-green-700 border-green-200',
-                    'rejected': 'bg-red-100 text-red-700 border-red-200',
-                    'cancelled': 'bg-gray-100 text-gray-700 border-gray-200',
-                    'paid': 'bg-blue-100 text-blue-700 border-blue-200'
-                };
-                
-                return (
-                    <Badge variant="outline" className={`${statusColors[value as keyof typeof statusColors]} font-medium`}>
-                        {value.charAt(0).toUpperCase() + value.slice(1)}
-                    </Badge>
-                );
-            },
-            sortable: true
         }
-    ];
+    ], []); // Empty dependency array to keep columns stable
 
-    const actions = [
+    const actions: Action<FinancialRequestWithData>[] = [
         {
-            label: 'View Details',
-            onClick: (request: FinancialRequest) => {
-                // Use request.id to navigate to details page
-                // Note: This assumes FinancialRequest.id matches TaskRequest.id
-                window.location.href = `/requests/financial/details?id=${request.id}`;
+            label: 'View Request Details',
+            onClick: (request) => {
+                router.push(`/requests/financial/details?id=${request.id}`);
+            },
+            icon: <FileText className="h-4 w-4" />,
+            variant: 'warning' as const
+        },
+        {
+            label: 'View Project Details',
+            onClick: (request) => {
+                if (request.project) {
+                    router.push(`/projects/details?id=${request.project.id}`);
+                } else if (request.task_order_id) {
+                    router.push(`/projects/details?id=${request.task_order_id}`);
+                }
             },
             icon: <Eye className="h-4 w-4" />,
             variant: 'info' as const
         },
         {
             label: 'Show Approvals Timeline',
-            onClick: (request: FinancialRequest) => {
-                window.location.href = `/requests/financial/timeline?id=${request.id}`;
-            },
+            onClick: (request) => router.push(`/requests/financial/timeline?id=${request.id}`),
             icon: <Clock className="h-4 w-4" />,
             variant: 'info' as const,
             hidden: () => false
         },
         {
-            label: 'Edit Request',
-            onClick: (request: FinancialRequest) => handleEdit(request),
-            icon: <Edit className="h-4 w-4" />
+            label: 'Download Data',
+            onClick: (request) => exportRequestData(request),
+            icon: <FileSpreadsheet className="h-4 w-4" />,
+            variant: 'success' as const,
+            hidden: (request) => request.status !== 'Complete'
         },
-        {
-            label: 'Approve Request',
-            onClick: (request: FinancialRequest) => handleStatusChange(request.id, 'approved'),
-            icon: <CheckCircle className="h-4 w-4" />,
-            hidden: (request: FinancialRequest) => request.status !== 'pending'
-        },
-        {
-            label: 'Reject Request',
-            onClick: (request: FinancialRequest) => handleStatusChange(request.id, 'rejected'),
-            icon: <XCircle className="h-4 w-4" />,
-            hidden: (request: FinancialRequest) => request.status === 'approved' || request.status === 'rejected' || request.status === 'paid'
-        },
-        {
-            label: 'Mark as Paid',
-            onClick: (request: FinancialRequest) => handleStatusChange(request.id, 'paid'),
-            icon: <DollarSign className="h-4 w-4" />,
-            hidden: (request: FinancialRequest) => request.status !== 'approved'
-        },
-        {
-            label: 'Cancel Request',
-            onClick: (request: FinancialRequest) => handleStatusChange(request.id, 'cancelled'),
-            icon: <XCircle className="h-4 w-4" />,
-            hidden: (request: FinancialRequest) => request.status === 'approved' || request.status === 'rejected' || request.status === 'paid'
-        },
-        {
-            label: 'Delete Request',
-            onClick: (request: FinancialRequest) => handleDelete(request.id),
-            icon: <Trash2 className="h-4 w-4" />,
-            variant: 'destructive' as const
-        }
     ];
-
-    const stats = [
-        {
-            label: 'Total Requests',
-            value: totalRequests,
-            change: '+12%',
-            trend: 'up' as const
-        },
-        {
-            label: 'Total Amount',
-            value: formatCurrency(totalAmount, 'USD'),
-            change: '+8%',
-            trend: 'up' as const
-        },
-        {
-            label: 'Pending Amount',
-            value: formatCurrency(pendingAmount, 'USD'),
-            change: '+15%',
-            trend: 'up' as const
-        },
-        {
-            label: 'Approved Amount',
-            value: formatCurrency(approvedAmount, 'USD'),
-            change: '+6%',
-            trend: 'up' as const
-        }
-    ];
-
-    const filterOptions = [
-        {
-            key: 'type',
-            label: 'Request Type',
-            value: typeFilter,
-            options: [
-                { key: 'all', label: 'All Types', value: 'all' },
-                ...requestTypes.map(type => ({ key: type.value, label: type.label, value: type.value }))
-            ],
-            onValueChange: setTypeFilter
-        },
-        {
-            key: 'status',
-            label: 'Status',
-            value: statusFilter,
-            options: [
-                { key: 'all', label: 'All Statuses', value: 'all' },
-                { key: 'pending', label: 'Pending', value: 'pending' },
-                { key: 'approved', label: 'Approved', value: 'approved' },
-                { key: 'rejected', label: 'Rejected', value: 'rejected' },
-                { key: 'cancelled', label: 'Cancelled', value: 'cancelled' },
-                { key: 'paid', label: 'Paid', value: 'paid' }
-            ],
-            onValueChange: setStatusFilter
-        },
-        {
-            key: 'priority',
-            label: 'Priority',
-            value: priorityFilter,
-            options: [
-                { key: 'all', label: 'All Priorities', value: 'all' },
-                ...priorities.map(priority => ({ key: priority.value, label: priority.label, value: priority.value }))
-            ],
-            onValueChange: setPriorityFilter
-        }
-    ];
-
-    const activeFilters = [];
-    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
-    if (typeFilter !== 'all') activeFilters.push(`Type: ${requestTypes.find(t => t.value === typeFilter)?.label}`);
-    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
-    if (priorityFilter !== 'all') activeFilters.push(`Priority: ${priorities.find(p => p.value === priorityFilter)?.label}`);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
+            {/* Breadcrumb */}
+            <Breadcrumb />
+            
             {/* Page Header */}
-            <PageHeader
-                title="Financial Requests"
-                description="Manage financial requests with comprehensive approval workflow and payment tracking"
-                stats={stats}
-                actions={{
-                    primary: {
-                        label: 'New Request',
-                        onClick: () => setIsCreateDialogOpen(true),
-                        icon: <Plus className="h-4 w-4" />
-                    },
-                    secondary: [
-                        {
-                            label: 'Export Report',
-                            onClick: () => toast.info('Export feature coming soon'),
-                            icon: <Download className="h-4 w-4" />
-                        },
-                        {
-                            label: 'Financial Analytics',
-                            onClick: () => toast.info('Analytics feature coming soon'),
-                            icon: <TrendingUp className="h-4 w-4" />
-                        }
-                    ]
-                }}
-            />
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-200">Financial Requests</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-1">
+                        Browse and manage all financial requests with comprehensive filtering and management tools
+                    </p>
+                </div>
+            </div>
 
-            {/* Filter Bar */}
-            <FilterBar
-                searchPlaceholder="Search by request number, requester name, or title..."
-                searchValue={searchTerm}
-                onSearchChange={setSearchTerm}
-                filters={filterOptions}
-                activeFilters={activeFilters}
-                onClearFilters={() => {
-                    setSearchTerm('');
-                    setTypeFilter('all');
-                    setStatusFilter('all');
-                    setPriorityFilter('all');
-                }}
-            />
+            {/* Search & Filters Card */}
+            <EnhancedCard
+                title="Search & Filters"
+                description="Search and filter financial requests by various criteria"
+                variant="default"
+                size="sm"
+            >
+                    <div className="space-y-4">
+                    {/* Search Input with Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                            <Input
+                                placeholder="Search by request code, project name, project code, or notes..."
+                                value={search}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    setPage(1);
+                                }}
+                                className="pl-10 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={exportToExcel}
+                                disabled={isExporting || loading}
+                                className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 whitespace-nowrap"
+                            >
+                                <FileSpreadsheet className={`h-4 w-4 mr-2 ${isExporting ? 'animate-pulse' : ''}`} />
+                                {isExporting ? 'Exporting...' : 'Export Excel'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={refreshTable}
+                                disabled={isRefreshing}
+                                className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 whitespace-nowrap"
+                            >
+                                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                Refresh
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Filters Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Status Filter */}
+                        <div className="space-y-2">
+                            <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                                Status
+                            </Label>
+                            <Select
+                                value={statusFilter}
+                                onValueChange={(value) => {
+                                    setStatusFilter(value);
+                                    setPage(1);
+                                }}
+                            >
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                    <SelectValue placeholder="All Status" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectItem value="all" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Status</SelectItem>
+                                    <SelectItem value="Pending" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Pending</SelectItem>
+                                    <SelectItem value="Approved" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Approved</SelectItem>
+                                    <SelectItem value="Rejected" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Rejected</SelectItem>
+                                    <SelectItem value="Complete" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Complete</SelectItem>
+                                    <SelectItem value="Closed" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Closed</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* From Date */}
+                        <div className="space-y-2">
+                            <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                                From Date
+                            </Label>
+                            <DatePicker
+                                value={dateFrom}
+                                onChange={(value) => {
+                                    setDateFrom(value);
+                                    setPage(1);
+                                }}
+                            />
+                        </div>
+
+                        {/* To Date */}
+                        <div className="space-y-2">
+                            <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                                To Date
+                            </Label>
+                            <DatePicker
+                                value={dateTo}
+                                onChange={(value) => {
+                                    setDateTo(value);
+                                    setPage(1);
+                                }}
+                            />
+                        </div>
+                        </div>
+
+                    {/* Active Filters & Clear Button */}
+                    {activeFilters.length > 0 && (
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            {/* Active Filters */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Active filters:</span>
+                                {activeFilters.map((filter, index) => (
+                                    <Badge
+                                        key={index}
+                                        variant="outline"
+                                        className="bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 hover:bg-sky-200 dark:hover:bg-sky-900/50 border-sky-200 dark:border-sky-800"
+                                    >
+                                        {filter}
+                                    </Badge>
+                                ))}
+                        </div>
+
+                            {/* Clear All Button */}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setSearch('');
+                                    setStatusFilter('all');
+                                    setDateFrom('');
+                                    setDateTo('');
+                                    setPage(1);
+                                }}
+                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800 whitespace-nowrap"
+                            >
+                                <X className="h-4 w-4 mr-2" />
+                                Clear All
+                            </Button>
+                        </div>
+                    )}
+                        </div>
+            </EnhancedCard>
 
             {/* Requests Table */}
             <EnhancedCard
-                title="Financial Requests Overview"
-                description={`${filteredRequests.length} requests out of ${requests.length} total`}
-                variant="gradient"
-                size="lg"
+                title="Financial Requests List"
+                description={`${totalItems} request${totalItems !== 1 ? 's' : ''} found`}
+                variant="default"
+                size="sm"
                 stats={{
-                    total: requests.length,
-                    badge: 'Active Requests',
-                    badgeColor: 'success'
+                    total: totalItems,
+                    badge: 'Total Requests',
+                    badgeColor: 'default'
                 }}
+                headerActions={
+                    <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
+                        <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                            <SelectValue placeholder="Items per page" />
+                                    </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                            {[5, 10, 20, 50, 100, 200].map(n => (
+                                <SelectItem key={n} value={String(n)} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">
+                                    {n} per page
+                                </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                }
             >
                 <EnhancedDataTable
                     data={filteredRequests}
                     columns={columns}
                     actions={actions}
-                    loading={false}
-                    noDataMessage="No requests found matching your criteria"
+                    loading={loading}
+                    pagination={{
+                        currentPage: page,
+                        totalPages,
+                        pageSize: limit,
+                        totalItems: totalItems,
+                        onPageChange: setPage
+                    }}
+                    noDataMessage="No financial requests found matching your criteria"
                     searchPlaceholder="Search requests..."
+                    hideEmptyMessage={true}
                 />
             </EnhancedCard>
+                        </div>
+    );
+}
 
-            {/* Create Dialog */}
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Create New Financial Request</DialogTitle>
-                        <DialogDescription>
-                            Add a new financial request with comprehensive details
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="requesterName">Requester Name</Label>
-                            <Select value={formData.requesterName} onValueChange={(value) => setFormData(prev => ({ ...prev, requesterName: value }))}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue placeholder="Select Requester" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {requesters.map(requester => (
-                                        <SelectItem key={requester} value={requester}>{requester}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+export default function FinancialRequestsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[40vh]">
+                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                         </div>
-                        <div>
-                            <Label htmlFor="requesterId">Requester ID</Label>
-                            <Input
-                                id="requesterId"
-                                value={formData.requesterId}
-                                onChange={(e) => setFormData(prev => ({ ...prev, requesterId: e.target.value }))}
-                                placeholder="Requester ID"
-                                className="mt-1"
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="requestType">Request Type</Label>
-                            <Select value={formData.requestType} onValueChange={(value) => setFormData(prev => ({ ...prev, requestType: value }))}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {requestTypes.map(type => (
-                                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor="title">Title</Label>
-                            <Input
-                                id="title"
-                                value={formData.title}
-                                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                                placeholder="Request title"
-                                className="mt-1"
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="description">Description</Label>
-                            <Textarea
-                                id="description"
-                                value={formData.description}
-                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                placeholder="Request description"
-                                rows={4}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="amount">Amount</Label>
-                                <Input
-                                    id="amount"
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.amount}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                                    placeholder="0.00"
-                                    className="mt-1"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="currency">Currency</Label>
-                                <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="USD">US Dollar</SelectItem>
-                                        <SelectItem value="USD">US Dollar</SelectItem>
-                                        <SelectItem value="EUR">Euro</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="category">Category</Label>
-                            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue placeholder="Select Category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {categories.map(category => (
-                                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor="projectId">Project</Label>
-                            <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue placeholder="Select Project" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {projects.map(project => (
-                                        <SelectItem key={project} value={project}>{project}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor="department">Department</Label>
-                            <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue placeholder="Select Department" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {departments.map(department => (
-                                        <SelectItem key={department} value={department}>{department}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="priority">Priority</Label>
-                                <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {priorities.map(priority => (
-                                            <SelectItem key={priority.value} value={priority.value}>{priority.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label htmlFor="paymentMethod">Payment Method</Label>
-                                <Select value={formData.paymentMethod} onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {paymentMethods.map(method => (
-                                            <SelectItem key={method.value} value={method.value}>{method.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="reference">Reference</Label>
-                            <Input
-                                id="reference"
-                                value={formData.reference}
-                                onChange={(e) => setFormData(prev => ({ ...prev, reference: e.target.value }))}
-                                placeholder="Reference number or code"
-                                className="mt-1"
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="comments">Comments</Label>
-                            <Textarea
-                                id="comments"
-                                value={formData.comments}
-                                onChange={(e) => setFormData(prev => ({ ...prev, comments: e.target.value }))}
-                                placeholder="Additional comments"
-                                rows={3}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div className="flex justify-end space-x-2 pt-4">
-                            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button onClick={handleCreate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
-                                <DollarSign className="h-4 w-4 mr-2" />
-                                Create Request
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            {/* Edit Dialog */}
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Edit Financial Request</DialogTitle>
-                        <DialogDescription>
-                            Update financial request information and details
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="edit-requesterName">Requester Name</Label>
-                            <Select value={formData.requesterName} onValueChange={(value) => setFormData(prev => ({ ...prev, requesterName: value }))}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {requesters.map(requester => (
-                                        <SelectItem key={requester} value={requester}>{requester}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-requesterId">Requester ID</Label>
-                            <Input
-                                id="edit-requesterId"
-                                value={formData.requesterId}
-                                onChange={(e) => setFormData(prev => ({ ...prev, requesterId: e.target.value }))}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-requestType">Request Type</Label>
-                            <Select value={formData.requestType} onValueChange={(value) => setFormData(prev => ({ ...prev, requestType: value }))}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {requestTypes.map(type => (
-                                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-title">Title</Label>
-                            <Input
-                                id="edit-title"
-                                value={formData.title}
-                                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-description">Description</Label>
-                            <Textarea
-                                id="edit-description"
-                                value={formData.description}
-                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                rows={4}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="edit-amount">Amount</Label>
-                                <Input
-                                    id="edit-amount"
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.amount}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                                    className="mt-1"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="edit-currency">Currency</Label>
-                                <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="USD">US Dollar</SelectItem>
-                                        <SelectItem value="USD">US Dollar</SelectItem>
-                                        <SelectItem value="EUR">Euro</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-category">Category</Label>
-                            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {categories.map(category => (
-                                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-projectId">Project</Label>
-                            <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {projects.map(project => (
-                                        <SelectItem key={project} value={project}>{project}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-department">Department</Label>
-                            <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
-                                <SelectTrigger className="mt-1">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {departments.map(department => (
-                                        <SelectItem key={department} value={department}>{department}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="edit-priority">Priority</Label>
-                                <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {priorities.map(priority => (
-                                            <SelectItem key={priority.value} value={priority.value}>{priority.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label htmlFor="edit-paymentMethod">Payment Method</Label>
-                                <Select value={formData.paymentMethod} onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {paymentMethods.map(method => (
-                                            <SelectItem key={method.value} value={method.value}>{method.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-reference">Reference</Label>
-                            <Input
-                                id="edit-reference"
-                                value={formData.reference}
-                                onChange={(e) => setFormData(prev => ({ ...prev, reference: e.target.value }))}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-comments">Comments</Label>
-                            <Textarea
-                                id="edit-comments"
-                                value={formData.comments}
-                                onChange={(e) => setFormData(prev => ({ ...prev, comments: e.target.value }))}
-                                rows={3}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div className="flex justify-end space-x-2 pt-4">
-                            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
-                                <DollarSign className="h-4 w-4 mr-2" />
-                                Save Changes
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-        </div>
+        }>
+            <FinancialRequestsPageContent />
+        </Suspense>
     );
 }

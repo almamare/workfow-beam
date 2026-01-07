@@ -280,7 +280,7 @@ const CreateTenderPageContent: React.FC = () => {
                         type="button"
                         variant="outline"
                         onClick={() => router.push('/projects/details?id=' + paramProjectId)}
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         Back to Tenders
                     </Button>
@@ -303,7 +303,7 @@ const CreateTenderPageContent: React.FC = () => {
                                     size="sm"
                                     variant="outline"
                                     onClick={recalcAll}
-                                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                                 >
                                     <Calculator className="h-4 w-4 mr-2" />
                                     Recalculate
@@ -313,7 +313,7 @@ const CreateTenderPageContent: React.FC = () => {
                                     size="sm"
                                     onClick={addItem}
                                     disabled={!form.project_id}
-                                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-600 dark:to-orange-700 dark:hover:from-orange-700 dark:hover:to-orange-800 text-white shadow-md"
+                                    className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-700 dark:hover:to-sky-800 text-white shadow-md"
                                 >
                                     <Plus className="h-4 w-4 mr-2" />
                                     Add Item
@@ -362,7 +362,7 @@ const CreateTenderPageContent: React.FC = () => {
                                                         updateItemField(index, 'name', e.target.value)
                                                     }
                                                     placeholder="Steel Beams"
-                                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                                 />
                                                 {errors[`items.${index}.name`] && (
                                                     <p className="text-xs text-red-500 dark:text-red-400">
@@ -382,7 +382,7 @@ const CreateTenderPageContent: React.FC = () => {
                                                         updateItemField(index, 'price', e.target.value)
                                                     }
                                                     placeholder="0.00"
-                                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                                 />
                                                 {errors[`items.${index}.price`] && (
                                                     <p className="text-xs text-red-500 dark:text-red-400">
@@ -402,7 +402,7 @@ const CreateTenderPageContent: React.FC = () => {
                                                         updateItemField(index, 'quantity', e.target.value)
                                                     }
                                                     placeholder="0"
-                                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                                 />
                                                 {errors[`items.${index}.quantity`] && (
                                                     <p className="text-xs text-red-500 dark:text-red-400">
@@ -444,7 +444,7 @@ const CreateTenderPageContent: React.FC = () => {
                         variant="outline"
                         onClick={handleReset}
                         disabled={loading}
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         <RotateCcw className="h-4 w-4 mr-2" />
                         Reset
@@ -452,7 +452,7 @@ const CreateTenderPageContent: React.FC = () => {
                     <Button 
                         type="submit" 
                         disabled={loading || !form.project_id} 
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-600 dark:to-orange-700 dark:hover:from-orange-700 dark:hover:to-orange-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-700 dark:hover:to-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                         {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                         <Save className="h-4 w-4 mr-2" />

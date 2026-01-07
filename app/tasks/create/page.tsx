@@ -417,7 +417,7 @@ const CreateTaskOrderPage: React.FC = () => {
                         type="button"
                         variant="outline"
                         onClick={() => router.push('/tasks')}
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         Back Task Orders
                     </Button>
@@ -448,7 +448,7 @@ const CreateTaskOrderPage: React.FC = () => {
                                         value={form.contractor_id}
                                         onValueChange={value => updateField('contractor_id', value)}
                                     >
-                                        <SelectTrigger id="contractor_id" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100">
+                                        <SelectTrigger id="contractor_id" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
                                             {contractorsLoading ? (
                                                 <div className="flex items-center">
                                                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -472,7 +472,7 @@ const CreateTaskOrderPage: React.FC = () => {
                                                     <SelectItem
                                                         key={contractor.id}
                                                         value={contractor.id}
-                                                        className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400"
+                                                        className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400"
                                                     >
                                                         {contractor.label}
                                                     </SelectItem>
@@ -499,12 +499,12 @@ const CreateTaskOrderPage: React.FC = () => {
                                         value={projectType}
                                         onValueChange={setProjectType}
                                     >
-                                        <SelectTrigger id="project_type" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100">
+                                        <SelectTrigger id="project_type" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
                                             <SelectValue placeholder="Project Type" />
                                         </SelectTrigger>
                                         <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
                                             {projectTypes.map(type => (
-                                                <SelectItem key={type} value={type} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400">
+                                                <SelectItem key={type} value={type} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400">
                                                     {type}
                                                 </SelectItem>
                                             ))}
@@ -518,7 +518,7 @@ const CreateTaskOrderPage: React.FC = () => {
                                         value={form.project_id}
                                         onValueChange={value => updateField('project_id', value)}
                                     >
-                                        <SelectTrigger id="project_id" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100">
+                                        <SelectTrigger id="project_id" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
                                             {projectsLoading ? (
                                                 <div className="flex items-center">
                                                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -542,7 +542,7 @@ const CreateTaskOrderPage: React.FC = () => {
                                                     <SelectItem
                                                         key={project.id}
                                                         value={project.id}
-                                                        className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400"
+                                                        className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400"
                                                     >
                                                         {project.label}
                                                     </SelectItem>
@@ -570,7 +570,7 @@ const CreateTaskOrderPage: React.FC = () => {
                                         value={form.title}
                                         onChange={e => updateField('title', e.target.value)}
                                         placeholder="Task order title"
-                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     />
                                     {fieldErrors.title && (
                                         <p className="text-xs text-red-500 dark:text-red-400">
@@ -604,12 +604,12 @@ const CreateTaskOrderPage: React.FC = () => {
                                         value={form.status}
                                         onValueChange={value => updateField('status', value)}
                                     >
-                                        <SelectTrigger id="status" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100">
+                                        <SelectTrigger id="status" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
                                             <SelectValue placeholder="Select status" />
                                         </SelectTrigger>
                                         <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
                                             {statuses.map(status => (
-                                                <SelectItem key={status} value={status} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400">
+                                                <SelectItem key={status} value={status} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400">
                                                     {status}
                                                 </SelectItem>
                                             ))}
@@ -633,7 +633,7 @@ const CreateTaskOrderPage: React.FC = () => {
                                         value={form.est_cost}
                                         onChange={e => updateField('est_cost', e.target.value)}
                                         placeholder="0"
-                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     />
                                     {fieldErrors.est_cost && (
                                         <p className="text-xs text-red-500 dark:text-red-400">
@@ -648,7 +648,7 @@ const CreateTaskOrderPage: React.FC = () => {
                                 <Label htmlFor="description" className="text-slate-700 dark:text-slate-200">Description</Label>
                                 <textarea
                                     id="description"
-                                    className="min-h-[100px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-100 dark:focus-visible:ring-orange-900/50 focus:border-orange-300 dark:focus:border-orange-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="min-h-[100px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-100 dark:focus-visible:ring-sky-900/50 focus:border-sky-300 dark:focus:border-sky-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     value={form.description}
                                     onChange={e => updateField('description', e.target.value)}
                                     placeholder="Detailed description of the task order..."
@@ -682,10 +682,10 @@ const CreateTaskOrderPage: React.FC = () => {
                                         placeholder="Term title"
                                         value={term.title}
                                         onChange={e => updateTermField(index, 'title', e.target.value)}
-                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     />
                                     <textarea
-                                        className="min-h-[80px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-100 dark:focus-visible:ring-orange-900/50 focus:border-orange-300 dark:focus:border-orange-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                        className="min-h-[80px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-100 dark:focus-visible:ring-sky-900/50 focus:border-sky-300 dark:focus:border-sky-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                         placeholder="Term description"
                                         value={term.description}
                                         onChange={e => updateTermField(index, 'description', e.target.value)}
@@ -702,7 +702,7 @@ const CreateTaskOrderPage: React.FC = () => {
                                 variant="outline"
                                 size="sm"
                                 onClick={addTerm}
-                                className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                className="border-sky-200 dark:border-sky-800 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-700 dark:hover:text-sky-300 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                             >
                                 <Plus className="h-4 w-4 mr-2" />
                                 Add Term
@@ -717,7 +717,7 @@ const CreateTaskOrderPage: React.FC = () => {
                         <Label htmlFor="notes" className="text-slate-700 dark:text-slate-200">Notes</Label>
                         <textarea
                             id="notes"
-                            className="min-h-[100px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-100 dark:focus-visible:ring-orange-900/50 focus:border-orange-300 dark:focus:border-orange-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                            className="min-h-[100px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-100 dark:focus-visible:ring-sky-900/50 focus:border-sky-300 dark:focus:border-sky-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                             value={form.notes}
                             onChange={e => updateField('notes', e.target.value)}
                             placeholder="Additional notes for the task order..."
@@ -751,7 +751,7 @@ const CreateTaskOrderPage: React.FC = () => {
                                         placeholder="Document title"
                                         value={doc.title}
                                         onChange={e => updateDocTitle(index, e.target.value)}
-                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     />
                                     <div className="flex items-center gap-3">
                                         <label
@@ -810,7 +810,7 @@ const CreateTaskOrderPage: React.FC = () => {
                             variant="outline"
                             size="sm"
                             onClick={addDocument}
-                            className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                            className="border-sky-200 dark:border-sky-800 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-700 dark:hover:text-sky-300 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Add Document
@@ -824,7 +824,7 @@ const CreateTaskOrderPage: React.FC = () => {
                             variant="outline"
                             onClick={handleReset}
                             disabled={loading}
-                            className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                            className="border-sky-200 dark:border-sky-800 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-700 dark:hover:text-sky-300 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                         >
                             <RotateCcw className="h-4 w-4 mr-2" />
                             Reset Form
@@ -832,7 +832,7 @@ const CreateTaskOrderPage: React.FC = () => {
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                            className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                         >
                             {loading ? (
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -68,17 +68,20 @@ function ClientDetailsContent() {
     }, [fetchClientData, dispatch]);
 
     const getStatusColor = (status?: string) => {
-        const statusLower = status?.toLowerCase() || '';
-        if (statusLower.includes('active')) {
-            return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
-        }
-        if (statusLower.includes('draft')) {
-            return 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800';
-        }
-        if (statusLower.includes('suspended')) {
-            return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800';
-        }
-        return 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+        if (!status) return 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
+        const colors: Record<string, string> = {
+            'Pending': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+            'Approved': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+            'Rejected': 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+            'Closed': 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800',
+            'Complete': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+            'Completed': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+            'Active': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+            'Draft': 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800',
+            'Suspended': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
+            'Submitted': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+        };
+        return colors[status] || 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
     };
 
     const getStatusIcon = (status?: string) => {
@@ -211,7 +214,7 @@ function ClientDetailsContent() {
             key: 'contract_value' as keyof ClientContract,
             header: 'Contract Value',
             render: (value: any, row: ClientContract) => (
-                <span className="font-semibold text-orange-600 dark:text-orange-400">
+                <span className="font-semibold text-sky-600 dark:text-sky-400">
                     {formatCurrency(value, row.currency) || ''}
                 </span>
             )
@@ -305,7 +308,7 @@ function ClientDetailsContent() {
     if (loading) {
         return (
             <Centered>
-                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                 <p className="text-slate-500 dark:text-slate-400">Loading client details...</p>
             </Centered>
         );
@@ -318,7 +321,7 @@ function ClientDetailsContent() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/clients')}
-                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" /> Back to Clients
                 </Button>
@@ -328,104 +331,135 @@ function ClientDetailsContent() {
 
     return (
         <div className="space-y-4">
-            {/* Header */}
+            {/* Breadcrumb */}
             <Breadcrumb />
+            
+            {/* Header */}
             <div className="flex items-end justify-between gap-4">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
                         Client Details
                     </h1>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">Review client data and related info.</p>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
+                        A brief overview of the client with available actions.
+                    </p>
                 </div>
                 <div className="flex gap-2">
                     <Button
                         variant="outline"
                         onClick={() => router.push('/clients')}
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         Back to Clients
                     </Button>
                 </div>
             </div>
 
-            {/* Client Information Table */}
+            {/* Stat Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <EnhancedCard
+                    title="Client ID"
+                    description="Client identifier"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="text-lg md:text-lg font-bold text-slate-900 dark:text-slate-100">
+                        {client.sequence || client.id || 'N/A'}
+                    </div>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Client Number"
+                    description="Client number"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="text-lg md:text-lg font-bold text-slate-900 dark:text-slate-100 font-mono">
+                        {client.client_no || 'N/A'}
+                    </div>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Client Status"
+                    description="Status and workflow stage"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="flex items-center gap-2 text-xl md:text-lg font-bold text-slate-900 dark:text-slate-100">
+                        {client.status ? (
+                            <Badge variant="outline" className={getStatusColor(client.status)}>
+                                {client.status}
+                            </Badge>
+                        ) : 'N/A'}
+                    </div>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Created At"
+                    description="Client creation date"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="text-lg md:text-lg font-bold text-slate-900 dark:text-slate-100">
+                        {formatDateTime(client.created_at)}
+                    </div>
+                </EnhancedCard>
+            </div>
+
+            {/* Client Information */}
             <EnhancedCard
                 title="Client Information"
-                description="Complete client details"
+                description="Client details and information"
                 variant="default"
                 size="sm"
+                headerActions={
+                    <Button
+                        variant="outline"
+                        onClick={() => router.push(`/clients/update?id=${client.id}`)}
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Client
+                    </Button>
+                }
             >
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                        <thead>
-                            <tr className="border-b border-slate-200 dark:border-slate-700">
-                                <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50">Field</th>
-                                <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50">Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Client ID</td>
-                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{client.sequence || client.id || 'N/A'}</td>
-                            </tr>
-                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Client Number</td>
-                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400 font-mono font-semibold">{client.client_no || 'N/A'}</td>
-                            </tr>
-                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Client Name</td>
-                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400 font-semibold">{client.name || 'N/A'}</td>
-                            </tr>
-                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Client Type</td>
-                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
-                                    {client.client_type ? (
-                                        <Badge variant="outline" className={`${getClientTypeColor(client.client_type)} flex items-center gap-1 w-fit`}>
-                                            <Building className="h-4 w-4" />
-                                            {client.client_type}
-                                        </Badge>
-                                    ) : 'N/A'}
-                                </td>
-                            </tr>
-                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Status</td>
-                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
-                                    {client.status ? (
-                                        <Badge variant="outline" className={`${getStatusColor(client.status)} flex items-center gap-1 w-fit`}>
-                                            {getStatusIcon(client.status)}
-                                            {client.status}
-                                        </Badge>
-                                    ) : 'N/A'}
-                                </td>
-                            </tr>
-                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">State</td>
-                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{client.state || 'N/A'}</td>
-                            </tr>
-                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">City</td>
-                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{client.city || 'N/A'}</td>
-                            </tr>
-                            {client.budget && (
-                                <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                    <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Budget</td>
-                                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400 font-semibold text-green-600 dark:text-green-400">
-                                        {formatCurrency(client.budget)}
-                                    </td>
-                                </tr>
-                            )}
-                            <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Created At</td>
-                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{formatDateTime(client.created_at)}</td>
-                            </tr>
-                            {client.updated_at && (
-                                <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                    <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Updated At</td>
-                                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{formatDateTime(client.updated_at)}</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                <div className="divide-y divide-slate-200 dark:divide-slate-800 space-y-1">
+                    <Detail label="Client ID" value={client.sequence || client.id} />
+                    <Detail label="Client Number" value={<span className="font-mono">{client.client_no}</span>} />
+                    <Detail label="Client Name" value={client.name} />
+                    <Detail
+                        label="Client Type"
+                        value={
+                            client.client_type ? (
+                                <Badge variant="outline" className={getClientTypeColor(client.client_type)}>
+                                    {client.client_type}
+                                </Badge>
+                            ) : 'N/A'
+                        }
+                    />
+                    <Detail
+                        label="Status"
+                        value={
+                            client.status ? (
+                                <Badge variant="outline" className={getStatusColor(client.status)}>
+                                    {client.status}
+                                </Badge>
+                            ) : 'N/A'
+                        }
+                    />
+                    <Detail label="State" value={client.state} />
+                    <Detail label="City" value={client.city} />
+                    <Detail
+                        label="Budget"
+                        value={client.budget ? formatCurrency(client.budget) : 'N/A'}
+                    />
+                    {client.notes && (
+                        <div className="py-2">
+                            <span className="font-medium text-slate-700 dark:text-slate-200 block mb-2">Notes</span>
+                            <p className="text-slate-600 dark:text-slate-400">{client.notes}</p>
+                        </div>
+                    )}
+                    <Detail label="Created At" value={formatDateTime(client.created_at)} />
+                    {client.updated_at && (
+                        <Detail label="Updated At" value={formatDateTime(client.updated_at)} />
+                    )}
                 </div>
             </EnhancedCard>
 
@@ -528,7 +562,7 @@ export default function ClientDetailsPage() {
         <Suspense
             fallback={
                 <Centered>
-                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                     <p className="text-slate-500 dark:text-slate-400">Loading details…</p>
                 </Centered>
             }

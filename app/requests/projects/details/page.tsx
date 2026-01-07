@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense, useState } from 'react';
+import { useEffect, Suspense, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
 import { AppDispatch, RootState } from '@/stores/store';
@@ -88,7 +88,7 @@ const getProjectTypeColor = (type?: string) => {
         'Public': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
         'Communications': 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
         'Restoration': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
-        'Referral': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+        'Referral': 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800',
     };
     return colors[type] || 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
 };
@@ -228,13 +228,21 @@ function ProjectRequestDetails() {
         };
     }, [id, dispatch]);
 
+    // Fetch approvals function
+    const fetchApprovals = useCallback(async () => {
+        if (!id) return;
+        try {
+            const res = await axios.get(`/approvals/fetch/${id}`);
+            setApprovals(res.data.body?.approvals?.items || []);
+        } catch (error) {
+            toast.error("Failed to load approvals");
+        }
+    }, [id]);
+
     // Fetch approvals
     useEffect(() => {
-        if (!id) return;
-        axios.get(`/approvals/fetch/${id}`)
-            .then((res) => setApprovals(res.data.body?.approvals?.items || []))
-            .catch(() => toast.error("Failed to load approvals"));
-    }, [id]);
+        fetchApprovals();
+    }, [fetchApprovals]);
 
     // Handle errors
     useEffect(() => {
@@ -248,7 +256,7 @@ function ProjectRequestDetails() {
     if (loading && !request) {
         return (
             <Centered>
-                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                 <p className="text-slate-500 dark:text-slate-400">Loading details...</p>
             </Centered>
         );
@@ -261,7 +269,7 @@ function ProjectRequestDetails() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/requests/projects')}
-                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Requests
@@ -277,7 +285,7 @@ function ProjectRequestDetails() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/requests/projects')}
-                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Requests
@@ -308,7 +316,10 @@ function ProjectRequestDetails() {
         setUpdateAttachmentModelOpen(true);
     };
 
-    const approvalCreated = (approval: Approval) => setApprovals(prev => [...prev, approval]);
+    const approvalCreated = async () => {
+        // Refresh approvals from API
+        await fetchApprovals();
+    };
 
 
 
@@ -450,7 +461,7 @@ function ProjectRequestDetails() {
                     <Button
                         variant="outline"
                         onClick={() => router.push('/requests/projects')}
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         Back to Requests
                     </Button>
@@ -560,7 +571,7 @@ function ProjectRequestDetails() {
                             <Button
                                 variant="outline"
                                 onClick={() => router.push(`/projects/details?id=${project.id}`)}
-                                className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                             >
                                 <Eye className="h-4 w-4 mr-2" />
                                 View Full Project Details
@@ -630,17 +641,17 @@ function ProjectRequestDetails() {
 
             {/* Attachments Section */}
             <EnhancedCard
-                title="Attachments"
+                title="Documents History"
                 description={`${attachments.length} file(s) attached to this request`}
                 variant="default"
                 size="sm"
                 headerActions={
                     <Button
                         onClick={() => setAttachmentModelOpen(true)}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white transition-all duration-300"
                     >
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Attachment
+                        Add Document
                     </Button>
                 }
             >
@@ -655,17 +666,17 @@ function ProjectRequestDetails() {
 
             {/* Approvals Section */}
             <EnhancedCard
-                title="Approvals"
+                title="Case History"
                 description={`${approvals.length} approval step(s) for this request`}
                 variant="default"
                 size="sm"
                 headerActions={
                     <Button
                         onClick={() => setApprovalModelOpen(true)}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white transition-all duration-300"
                     >
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Approval
+                        Add Review
                     </Button>
                 }
             >
@@ -684,6 +695,7 @@ function ProjectRequestDetails() {
                 onClose={() => setApprovalModelOpen(false)}
                 onCreated={approvalCreated}
                 requestId={request?.id}
+                requestType={request?.request_type || 'Projects'}
             />
             <CreateAttachmentForm
                 open={attachmentModelOpen}
@@ -713,7 +725,7 @@ export default function Page() {
         <Suspense
             fallback={
                 <Centered>
-                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                     <p className="text-slate-500 dark:text-slate-400">Loading details...</p>
                 </Centered>
             }

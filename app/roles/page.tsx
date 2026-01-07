@@ -407,7 +407,7 @@ export default function RolesPage() {
               }}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+              <Button type="submit" className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700">
                 Create Role
               </Button>
             </div>
@@ -488,7 +488,7 @@ export default function RolesPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                <Button type="submit" className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700">
                   Update Role
                 </Button>
               </div>

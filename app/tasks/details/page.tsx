@@ -42,7 +42,7 @@ const statusBadgeClasses = (status: string) =>
         : status === 'Pending'
         ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
         : status === 'Onhold'
-        ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800'
+        ? 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800'
         : status === 'Closed'
         ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
         : status === 'Cancelled'
@@ -82,7 +82,7 @@ function TaskOrderDetails() {
     if (loading) {
         return (
             <Centered>
-                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                 <p className="text-slate-500 dark:text-slate-400">Loading task order...</p>
             </Centered>
         );
@@ -95,7 +95,7 @@ function TaskOrderDetails() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/tasks')}
-                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" /> Back to Tasks
                 </Button>
@@ -110,7 +110,7 @@ function TaskOrderDetails() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/tasks')}
-                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" /> Back to Tasks
                 </Button>
@@ -135,7 +135,7 @@ function TaskOrderDetails() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/tasks')}
-                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                 >
                     Back to Tasks
                 </Button>
@@ -272,7 +272,7 @@ export default function Page() {
         <Suspense
             fallback={
                 <Centered>
-                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                     <p className="text-slate-500 dark:text-slate-400">Loading details…</p>
                 </Centered>
             }

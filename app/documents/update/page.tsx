@@ -296,7 +296,7 @@ const UpdateDocumentPageContent: React.FC = () => {
             <div className="space-y-4">
                 <Breadcrumb />
                 <div className="flex items-center justify-center py-20">
-                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                 </div>
             </div>
         );
@@ -330,7 +330,7 @@ const UpdateDocumentPageContent: React.FC = () => {
                     type="button"
                     variant="outline"
                     onClick={() => router.push('/documents')}
-                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                 >
                     Back to Documents
                 </Button>
@@ -355,7 +355,7 @@ const UpdateDocumentPageContent: React.FC = () => {
                                     id="title"
                                     value={form.title}
                                     onChange={e => updateField('title', e.target.value)}
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     minLength={3}
                                 />
                                 {fieldErrors.title && (
@@ -373,14 +373,14 @@ const UpdateDocumentPageContent: React.FC = () => {
                                     value={form.description || ''}
                                     onChange={e => updateField('description', e.target.value)}
                                     rows={4}
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                             </div>
 
                             {/* File Upload */}
                             <div className="space-y-2 md:col-span-2">
                                 <Label className="text-slate-700 dark:text-slate-300 font-medium">
-                                    File {hasNewFile && <span className="text-orange-600">(New file selected)</span>}
+                                    File {hasNewFile && <span className="text-sky-600">(New file selected)</span>}
                                 </Label>
                                 {form.file ? (
                                     <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-800/50">
@@ -409,7 +409,7 @@ const UpdateDocumentPageContent: React.FC = () => {
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => fileInputRef.current?.click()}
-                                                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                                                 >
                                                     <Upload className="h-4 w-4 mr-2" />
                                                     Replace
@@ -440,8 +440,8 @@ const UpdateDocumentPageContent: React.FC = () => {
                                         onDrop={handleDrop}
                                         className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                                             isDragging
-                                                ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
-                                                : 'border-slate-300 dark:border-slate-600 hover:border-orange-400 dark:hover:border-orange-500'
+                                                ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
+                                                : 'border-slate-300 dark:border-slate-600 hover:border-sky-400 dark:hover:border-sky-500'
                                         }`}
                                     >
                                         <Upload className="h-12 w-12 mx-auto mb-4 text-slate-400 dark:text-slate-500" />
@@ -455,7 +455,7 @@ const UpdateDocumentPageContent: React.FC = () => {
                                             type="button"
                                             variant="outline"
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                                         >
                                             <Upload className="h-4 w-4 mr-2" />
                                             Select File
@@ -480,7 +480,7 @@ const UpdateDocumentPageContent: React.FC = () => {
                             variant="outline"
                             onClick={handleReset}
                             disabled={loading}
-                            className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                            className="border-sky-200 dark:border-sky-800 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-700 dark:hover:text-sky-300 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                         >
                             <RotateCcw className="h-4 w-4 mr-2" />
                             Reset Form
@@ -488,7 +488,7 @@ const UpdateDocumentPageContent: React.FC = () => {
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                            className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                         >
                             {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                             {loading ? 'Updating...' : 'Update Document'}

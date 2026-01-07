@@ -16,18 +16,23 @@ import { deleteContract } from '@/stores/slices/client-contracts';
 import type { ClientContract } from '@/stores/types/client-contracts';
 
 // Status badge classes
-const statusBadgeClasses = (status: string) => {
-    const statusLower = status?.toLowerCase() || '';
-    if (statusLower.includes('active') || statusLower.includes('نشط')) {
-        return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
-    }
-    if (statusLower.includes('expired') || statusLower.includes('منتهي')) {
-        return 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800';
-    }
-    if (statusLower.includes('cancelled') || statusLower.includes('ملغي')) {
-        return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800';
-    }
-    return 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+const getStatusColor = (status?: string) => {
+    if (!status) return 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
+    const colors: Record<string, string> = {
+        'Pending': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+        'Approved': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+        'Rejected': 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+        'Closed': 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800',
+        'Complete': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        'Completed': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        'Active': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+        'Draft': 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800',
+        'Suspended': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
+        'Submitted': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        'Expired': 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800',
+        'Cancelled': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
+    };
+    return colors[status] || 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
 };
 
 // Date formatting helper
@@ -38,6 +43,22 @@ function formatDate(dateString?: string) {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
+        });
+    } catch {
+        return 'Invalid date';
+    }
+}
+
+// DateTime formatting helper
+function formatDateTime(dateString?: string) {
+    if (!dateString) return 'N/A';
+    try {
+        return new Date(dateString).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
         });
     } catch {
         return 'Invalid date';
@@ -140,7 +161,7 @@ function ContractDetailsContent() {
     if (loading) {
         return (
             <Centered>
-                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                 <p className="text-slate-500 dark:text-slate-400">Loading contract details...</p>
             </Centered>
         );
@@ -153,7 +174,7 @@ function ContractDetailsContent() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/client-contracts')}
-                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" /> Back to Contracts
                 </Button>
@@ -163,92 +184,110 @@ function ContractDetailsContent() {
 
     return (
         <div className="space-y-4">
-            {/* Header */}
+            {/* Breadcrumb */}
             <Breadcrumb />
+            
+            {/* Header */}
             <div className="flex items-end justify-between gap-4">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
                         Contract Details
                     </h1>
-                    {contract.contract_no && (
-                        <p className="text-slate-600 dark:text-slate-400 mt-1">Contract No: {contract.contract_no}</p>
-                    )}
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">Review contract data and related info.</p>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
+                        A brief overview of the contract with available actions.
+                    </p>
                 </div>
                 <div className="flex gap-2">
                     <Button
                         variant="outline"
                         onClick={() => router.push('/client-contracts')}
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         Back to Contracts
-                    </Button>
-                    <Button
-                        onClick={() => router.push(`/client-contracts/update?id=${contract.id}`)}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-                    >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                    </Button>
-                    <Button
-                        variant="destructive"
-                        onClick={() => setIsDeleteDialogOpen(true)}
-                    >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
                     </Button>
                 </div>
             </div>
 
-            {/* Stat cards */}
+            {/* Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <EnhancedCard title="Contract Title" description={contract.contract_no} variant="default" size="sm">
-                    <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">{contract.title}</div>
+                <EnhancedCard
+                    title="Contract No"
+                    description="Contract number"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="text-lg md:text-lg font-bold text-slate-900 dark:text-slate-100 font-mono">
+                        {contract.contract_no || 'N/A'}
+                    </div>
                 </EnhancedCard>
-                <EnhancedCard title="Status" description={formatDate(contract.contract_date)} variant="default" size="sm">
-                    <Badge className={statusBadgeClasses(contract.status)}>{contract.status}</Badge>
+                <EnhancedCard
+                    title="Contract Status"
+                    description="Status and workflow stage"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="flex items-center gap-2 text-xl md:text-lg font-bold text-slate-900 dark:text-slate-100">
+                        {contract.status ? (
+                            <Badge variant="outline" className={getStatusColor(contract.status)}>
+                                {contract.status}
+                            </Badge>
+                        ) : 'N/A'}
+                    </div>
                 </EnhancedCard>
-                <EnhancedCard title="Contract Value" description={contract.currency} variant="default" size="sm">
-                    <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <EnhancedCard
+                    title="Contract Value"
+                    description={`Contract value in ${contract.currency || 'IQD'}`}
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="text-lg md:text-lg font-bold text-slate-900 dark:text-slate-100">
                         {formatCurrency(contract.contract_value, contract.currency)}
                     </div>
                 </EnhancedCard>
-                <EnhancedCard title="Client" description={contract.client_no || 'N/A'} variant="default" size="sm">
-                    <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                        {contract.client_name || contract.client?.name || 'N/A'}
+                <EnhancedCard
+                    title="Created At"
+                    description="Contract creation date"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="text-lg md:text-lg font-bold text-slate-900 dark:text-slate-100">
+                        {formatDateTime(contract.created_at)}
                     </div>
                 </EnhancedCard>
             </div>
 
-            {/* Detailed Information */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                {/* Basic Information */}
-                <EnhancedCard title="Basic Information" description="Contract basic details" variant="default" size="sm">
-                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                {/* Contract Information */}
+                <EnhancedCard
+                    title="Contract Information"
+                    description="Contract details and information"
+                    variant="default"
+                    size="sm"
+                    headerActions={
+                        <Button
+                            variant="outline"
+                            onClick={() => router.push(`/client-contracts/update?id=${contract.id}`)}
+                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Contract
+                        </Button>
+                    }
+                >
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800 space-y-1">
                         <Detail label="Contract No" value={<span className="font-mono">{contract.contract_no}</span>} />
                         <Detail label="Title" value={contract.title} />
-                        <Detail label="Status" value={<Badge className={statusBadgeClasses(contract.status)}>{contract.status}</Badge>} />
+                        <Detail
+                            label="Status"
+                            value={
+                                contract.status ? (
+                                    <Badge variant="outline" className={getStatusColor(contract.status)}>
+                                        {contract.status}
+                                    </Badge>
+                                ) : 'N/A'
+                            }
+                        />
                         <Detail label="Currency" value={contract.currency} />
-                        <Detail label="Created At" value={formatDate(contract.created_at)} />
-                        {contract.updated_at && <Detail label="Updated At" value={formatDate(contract.updated_at)} />}
-                    </div>
-                </EnhancedCard>
-
-                {/* Client Information */}
-                {contract.client && (
-                    <EnhancedCard title="Client Information" description="Details about the associated client" variant="default" size="sm">
-                        <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                            <Detail label="Client Name" value={contract.client.name} />
-                            <Detail label="Client Number" value={contract.client.client_no} />
-                            {contract.client.client_type && <Detail label="Client Type" value={contract.client.client_type} />}
-                            {contract.client.status && <Detail label="Client Status" value={contract.client.status} />}
-                        </div>
-                    </EnhancedCard>
-                )}
-
-                {/* Date Information */}
-                <EnhancedCard title="Date Information" description="Contract dates and duration" variant="default" size="sm">
-                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
                         <Detail label="Contract Date" value={formatDate(contract.contract_date)} />
                         <Detail label="Start Date" value={formatDate(contract.start_date)} />
                         <Detail label="End Date" value={formatDate(contract.end_date)} />
@@ -258,42 +297,76 @@ function ContractDetailsContent() {
                                 value={`${calculateDuration(contract.start_date, contract.end_date)} days`} 
                             />
                         )}
+                        {contract.description && (
+                            <div className="py-2">
+                                <span className="font-medium text-slate-700 dark:text-slate-200 block mb-2">Description</span>
+                                <p className="text-slate-600 dark:text-slate-400">{contract.description}</p>
+                            </div>
+                        )}
+                        {contract.notes && (
+                            <div className="py-2">
+                                <span className="font-medium text-slate-700 dark:text-slate-200 block mb-2">Notes</span>
+                                <p className="text-slate-600 dark:text-slate-400">{contract.notes}</p>
+                            </div>
+                        )}
+                        <Detail label="Created At" value={formatDateTime(contract.created_at)} />
+                        {contract.updated_at && (
+                            <Detail label="Updated At" value={formatDateTime(contract.updated_at)} />
+                        )}
                     </div>
                 </EnhancedCard>
 
-                {/* Financial Information */}
-                <EnhancedCard title="Financial Information" description="Contract financial details" variant="default" size="sm">
-                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                {/* Client & Financial Information */}
+                <EnhancedCard
+                    title="Client & Financial Information"
+                    description="Client details and financial information"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800 space-y-1">
+                        {contract.client ? (
+                            <>
+                                <Detail label="Client Name" value={contract.client.name || contract.client_name} />
+                                <Detail label="Client Number" value={contract.client.client_no || contract.client_no} />
+                                {contract.client.client_type && (
+                                    <Detail label="Client Type" value={contract.client.client_type} />
+                                )}
+                                {contract.client.status && (
+                                    <Detail
+                                        label="Client Status"
+                                        value={
+                                            <Badge variant="outline" className={getStatusColor(contract.client.status)}>
+                                                {contract.client.status}
+                                            </Badge>
+                                        }
+                                    />
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <Detail label="Client Name" value={contract.client_name || 'N/A'} />
+                                <Detail label="Client Number" value={contract.client_no || 'N/A'} />
+                            </>
+                        )}
+                        <div className="py-2 border-t-2 border-slate-300 dark:border-slate-600 my-2">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">Financial Details</span>
+                        </div>
                         <Detail 
                             label="Contract Value" 
-                            value={<span className="font-semibold">{formatCurrency(contract.contract_value, contract.currency)}</span>} 
+                            value={<span className="font-semibold text-sky-600 dark:text-sky-400">{formatCurrency(contract.contract_value, contract.currency)}</span>} 
                         />
                         <Detail label="Guarantee Percent" value={`${contract.guarantee_percent || 0}%`} />
                         <Detail 
                             label="Guarantee Amount" 
-                            value={<span className="font-semibold">{formatCurrency(calculateGuaranteeAmount(contract), contract.currency)}</span>} 
+                            value={<span className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(calculateGuaranteeAmount(contract), contract.currency)}</span>} 
                         />
                         <Detail label="Retention Percent" value={`${contract.retention_percent || 0}%`} />
                         <Detail 
                             label="Retention Amount" 
-                            value={<span className="font-semibold">{formatCurrency(calculateRetentionAmount(contract), contract.currency)}</span>} 
+                            value={<span className="font-semibold text-amber-600 dark:text-amber-400">{formatCurrency(calculateRetentionAmount(contract), contract.currency)}</span>} 
                         />
                     </div>
                 </EnhancedCard>
-            </div>
-
-            {/* Descriptions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                {contract.description && (
-                    <EnhancedCard title="Contract Description" description="Details about this contract" variant="default" size="sm">
-                        <p className="text-slate-700 dark:text-slate-300">{contract.description}</p>
-                    </EnhancedCard>
-                )}
-                {contract.notes && (
-                    <EnhancedCard title="Notes" description="Additional notes about this contract" variant="default" size="sm">
-                        <p className="text-slate-700 dark:text-slate-300">{contract.notes}</p>
-                    </EnhancedCard>
-                )}
             </div>
 
             {/* Delete Confirmation Dialog */}
@@ -333,7 +406,7 @@ export default function ContractDetailsPage() {
         <Suspense
             fallback={
                 <Centered>
-                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                     <p className="text-slate-500 dark:text-slate-400">Loading details…</p>
                 </Centered>
             }

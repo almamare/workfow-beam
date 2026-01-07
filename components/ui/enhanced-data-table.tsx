@@ -94,9 +94,9 @@ export function EnhancedDataTable<T extends Record<string, any>>({
 
         if (sortKey === column.key) {
             return sortDirection === 'asc' ? (
-                <ArrowUp className="h-4 w-4 text-orange-600" />
+                <ArrowUp className="h-4 w-4 text-sky-600" />
             ) : (
-                <ArrowDown className="h-4 w-4 text-orange-600" />
+                <ArrowDown className="h-4 w-4 text-sky-600" />
             );
         }
 
@@ -114,7 +114,7 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                             placeholder={searchPlaceholder}
                             value={searchTerm}
                             onChange={(e) => handleSearch(e.target.value)}
-                            className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
+                            className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
                         />
                     </div>
                     {pagination && (
@@ -309,7 +309,7 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                                             className={cn(
                                                 'h-8 w-8 p-0',
                                                 isActive 
-                                                    ? 'bg-orange-600 hover:bg-orange-700 text-white' 
+                                                    ? 'bg-sky-600 hover:bg-sky-700 text-white' 
                                                     : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                                             )}
                                         >

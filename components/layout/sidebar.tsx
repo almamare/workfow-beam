@@ -118,11 +118,13 @@ const routeMapping: Record<string, string> = {
     '/departments': '/users',
     
     // Requests related pages
-    '/requests/financial': '/requests',
     '/requests/employees': '/requests',
     '/approvals': '/requests',
     
     // Financial related pages 
+    '/requests/financial': '/financial',
+    '/requests/financial/details': '/financial',
+    '/requests/financial/timeline': '/financial',
     '/financial/contractor-payments': '/financial',
     '/financial/cash-ledger': '/financial',
     '/financial/budgets': '/financial',
@@ -212,7 +214,9 @@ const routeConfig: Record<string, {
                 subItems: [
                     { href: '/requests/clients?status=Pending', title: 'Pending', color: 'text-yellow-400' },
                     { href: '/requests/clients?status=Approved', title: 'Approved', color: 'text-green-400' },
-                    { href: '/requests/clients?status=Rejected', title: 'Rejected', color: 'text-red-400' }
+                    { href: '/requests/clients?status=Rejected', title: 'Rejected', color: 'text-red-400' },
+                    { href: '/requests/clients?status=Closed', title: 'Closed', color: 'text-slate-400' },
+                    { href: '/requests/clients?status=Complete', title: 'Complete', color: 'text-green-400' },
                 ]
             },
             { href: '/client-contracts', title: 'Client Contracts', icon: 'FileCheck', color: 'text-teal-400' },
@@ -223,9 +227,9 @@ const routeConfig: Record<string, {
     '/contractors': {
         title: 'Contractors',
         icon: 'Building',
-        color: 'text-orange-400',
+        color: 'text-sky-400',
         menuItems: [
-            { href: '/contractors', title: 'Contractors', icon: 'Building', color: 'text-orange-400' },
+            { href: '/contractors', title: 'Contractors', icon: 'Building', color: 'text-sky-400' },
             { href: '/contractors/create', title: 'Create Contractor', icon: 'Plus', color: 'text-green-400' }
         ]
     },
@@ -266,7 +270,6 @@ const routeConfig: Record<string, {
         color: 'text-yellow-400',
         menuItems: [
             { href: '/requests/tasks', title: 'Task Requests', icon: 'FileEdit', color: 'text-yellow-400' },
-            { href: '/requests/financial', title: 'Financial Requests', icon: 'CreditCard', color: 'text-emerald-400' },
             { href: '/requests/employees', title: 'Employee Requests', icon: 'Contact', color: 'text-purple-400' },
             { href: '/approvals', title: 'Approvals', icon: 'FileCheck', color: 'text-rose-400' }
         ]
@@ -276,6 +279,17 @@ const routeConfig: Record<string, {
         icon: 'Wallet',
         color: 'text-green-400',
         menuItems: [
+            { 
+                href: '/requests/financial', 
+                title: 'Financial Requests', 
+                icon: 'CreditCard', 
+                color: 'text-emerald-400',
+                subItems: [
+                    { href: '/requests/financial?status=Pending', title: 'Pending', color: 'text-yellow-400' },
+                    { href: '/requests/financial?status=Approved', title: 'Approved', color: 'text-green-400' },
+                    { href: '/requests/financial?status=Rejected', title: 'Rejected', color: 'text-red-400' }
+                ]
+            },
             { href: '/financial/contractor-payments', title: 'Contractor Payments', icon: 'Banknote', color: 'text-green-400' },
             { href: '/financial/cash-ledger', title: 'Cash Ledger', icon: 'BarChart3', color: 'text-emerald-400' },
             { href: '/financial/budgets', title: 'Project Budgets', icon: 'TrendingUp', color: 'text-teal-400' },
@@ -285,9 +299,9 @@ const routeConfig: Record<string, {
     '/inventory': {
         title: 'Inventory',
         icon: 'Package',
-        color: 'text-orange-400',
+        color: 'text-sky-400',
         menuItems: [
-            { href: '/inventory/items', title: 'Items', icon: 'Package', color: 'text-orange-400' },
+            { href: '/inventory/items', title: 'Items', icon: 'Package', color: 'text-sky-400' },
             { href: '/inventory/transactions', title: 'Transactions', icon: 'FileText', color: 'text-amber-400' },
             { href: '/inventory/items', title: 'Add Item', icon: 'Plus', color: 'text-green-400' }
         ]
@@ -391,6 +405,9 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
         if (currentStatus && pathname === '/requests/tasks') {
             setOpenCollapsibles(prev => ({ ...prev, '/requests/tasks': true }));
         }
+        if (currentStatus && pathname === '/requests/financial') {
+            setOpenCollapsibles(prev => ({ ...prev, '/requests/financial': true }));
+        }
     }, [pathname, searchParams]);
 
     // Hide sidebar entirely on dashboard
@@ -463,9 +480,34 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
 
     const hideText = collapsed && !mobileOpen;
 
-    // Check if route is active - exact match only
+    // Check if route is active - exact match including search params
     const isActive = (href: string) => {
-        return href === pathname;
+        try {
+            // Parse href to get pathname and search params
+            const url = new URL(href, 'http://localhost');
+            const hrefPath = url.pathname;
+            const hrefStatus = url.searchParams.get('status');
+            
+            // Check if pathname matches
+            if (hrefPath !== pathname) {
+                return false;
+            }
+            
+            // Get current status from search params
+            const currentStatus = searchParams.get('status');
+            
+            // If href has status param, check if it matches current status
+            if (hrefStatus !== null) {
+                return currentStatus === hrefStatus;
+            }
+            
+            // If href doesn't have status param, check if current page also doesn't have status
+            // This means the base route (without status filter) is active
+            return currentStatus === null;
+        } catch (e) {
+            // Fallback to simple pathname check if URL parsing fails
+            return href.split('?')[0] === pathname;
+        }
     };
 
     // Close mobile sidebar when clicking a link
@@ -603,7 +645,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                                     className={cn(
                                                         "group w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative",
                                                         isItemActive
-                                                            ? "bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-500 dark:to-orange-600 text-white shadow-lg shadow-orange-500/25 dark:shadow-orange-500/25"
+                                                            ? "bg-gradient-to-r from-sky-500 to-sky-600 dark:from-sky-500 dark:to-sky-600 text-white shadow-lg shadow-sky-500/25 dark:shadow-sky-500/25"
                                                             : "text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50 hover:shadow-lg"
                                                     )}
                                                     title={collapsed && !mobileOpen ? item.title : undefined}
@@ -632,9 +674,9 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                                         key={`${subItem.href}-${subIndex}`}
                                                         href={subItem.href}
                                                         className={cn(
-                                                            "group flex items-center gap-4 px-4 py-2.5 ml-6 rounded-lg text-sm font-medium transition-all duration-300",
+                                                            "group flex items-center gap-4 px-4 py-2.5 ml-6 rounded-lg text-sm font-medium transition-all duration-300 relative",
                                                             isActive(subItem.href)
-                                                                ? "bg-slate-700/70 dark:bg-slate-700/70 text-white"
+                                                                ? "bg-gradient-to-r from-sky-500/80 to-sky-600/80 dark:from-sky-500/80 dark:to-sky-600/80 text-white shadow-md shadow-sky-500/20 dark:shadow-sky-500/20 font-semibold"
                                                                 : "text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50"
                                                         )}
                                                         onClick={handleItemClick}
@@ -648,7 +690,12 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                                             </div>
                                                         )}
                                                         {(!collapsed || mobileOpen) && (
-                                                            <span className="flex-1">{subItem.title}</span>
+                                                            <>
+                                                                <span className="flex-1">{subItem.title}</span>
+                                                                {isActive(subItem.href) && (
+                                                                    <div className="w-1.5 h-1.5 bg-white dark:bg-white rounded-full"></div>
+                                                                )}
+                                                            </>
                                                         )}
                                                     </Link>
                                                 ))}
@@ -664,7 +711,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                         className={cn(
                                             "group flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative",
                                             isActive(item.href)
-                                                ? "bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-500 dark:to-orange-600 text-white shadow-lg shadow-orange-500/25 dark:shadow-orange-500/25"
+                                                ? "bg-gradient-to-r from-sky-500 to-sky-600 dark:from-sky-500 dark:to-sky-600 text-white shadow-lg shadow-sky-500/25 dark:shadow-sky-500/25"
                                                 : "text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50 hover:shadow-lg"
                                         )}
                                         title={collapsed && !mobileOpen ? item.title : undefined}
@@ -700,7 +747,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                     {(!collapsed || mobileOpen) && (
                         <div className="bg-gradient-to-r from-slate-800 to-slate-700 dark:from-slate-800 dark:to-slate-700 rounded-lg p-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-500 dark:to-orange-600 rounded-full flex items-center justify-center">
+                                <div className="w-8 h-8 bg-gradient-to-r from-sky-500 to-sky-600 dark:from-sky-500 dark:to-sky-600 rounded-full flex items-center justify-center">
                                     <span className="text-white text-sm font-bold">SA</span>
                                 </div>
                                 <div>

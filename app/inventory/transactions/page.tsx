@@ -831,7 +831,7 @@ export default function InventoryTransactionsPage() {
                             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleCreate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                            <Button onClick={handleCreate} className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700">
                                 <Package className="h-4 w-4 mr-2" />
                                 Create Transaction
                             </Button>
@@ -1006,7 +1006,7 @@ export default function InventoryTransactionsPage() {
                             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700">
                                 <Package className="h-4 w-4 mr-2" />
                                 Save Changes
                             </Button>

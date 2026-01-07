@@ -232,7 +232,7 @@ const CreateInvoicePage: React.FC = () => {
                     type="button"
                     variant="outline"
                     onClick={() => router.push('/invoices')}
-                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                 >
                     Back to Invoices
                 </Button>
@@ -461,7 +461,7 @@ const CreateInvoicePage: React.FC = () => {
                             type="button"
                             variant="outline"
                             onClick={addItem}
-                            className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Add Item
@@ -521,8 +521,8 @@ const CreateInvoicePage: React.FC = () => {
                             {/* Total */}
                             <div className="space-y-2">
                                 <Label className="text-slate-700 dark:text-slate-300 font-medium">Total</Label>
-                                <div className="p-3 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg border-2 border-orange-300 dark:border-orange-700">
-                                    <span className="font-mono text-2xl font-bold text-orange-700 dark:text-orange-300">
+                                <div className="p-3 bg-gradient-to-r from-sky-50 to-sky-100 dark:from-sky-900/20 dark:to-sky-800/20 rounded-lg border-2 border-sky-300 dark:border-sky-700">
+                                    <span className="font-mono text-2xl font-bold text-sky-700 dark:text-sky-300">
                                         {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(total)}
                                     </span>
                                 </div>
@@ -538,7 +538,7 @@ const CreateInvoicePage: React.FC = () => {
                         variant="outline"
                         onClick={handleReset}
                         disabled={loading}
-                        className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-700 dark:hover:text-sky-300 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         <RotateCcw className="h-4 w-4 mr-2" />
                         Reset Form
@@ -546,7 +546,7 @@ const CreateInvoicePage: React.FC = () => {
                     <Button
                         type="submit"
                         disabled={loading}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                         {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                         {loading ? 'Creating...' : 'Create Invoice'}

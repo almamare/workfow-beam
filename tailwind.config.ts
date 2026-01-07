@@ -46,17 +46,32 @@ const config: Config = {
         
         // Enhanced Brand Colors
         brand: {
+          sky: {
+            50: 'hsl(var(--brand-sky-50))',
+            100: 'hsl(var(--brand-sky-100))',
+            200: 'hsl(var(--brand-sky-200))',
+            300: 'hsl(var(--brand-sky-300))',
+            400: 'hsl(var(--brand-sky-400))',
+            500: 'hsl(var(--brand-sky-500))',
+            600: 'hsl(var(--brand-sky-600))',
+            700: 'hsl(var(--brand-sky-700))',
+            800: 'hsl(var(--brand-sky-800))',
+            900: 'hsl(var(--brand-sky-900))',
+            DEFAULT: 'hsl(var(--brand-sky))',
+            light: 'hsl(var(--brand-sky-light))',
+            dark: 'hsl(var(--brand-sky-dark))',
+          },
           orange: {
-            50: 'hsl(var(--brand-orange-50))',
-            100: 'hsl(var(--brand-orange-100))',
-            200: 'hsl(var(--brand-orange-200))',
-            300: 'hsl(var(--brand-orange-300))',
-            400: 'hsl(var(--brand-orange-400))',
-            500: 'hsl(var(--brand-orange-500))',
-            600: 'hsl(var(--brand-orange-600))',
-            700: 'hsl(var(--brand-orange-700))',
-            800: 'hsl(var(--brand-orange-800))',
-            900: 'hsl(var(--brand-orange-900))',
+            50: 'hsl(var(--brand-sky-50))',
+            100: 'hsl(var(--brand-sky-100))',
+            200: 'hsl(var(--brand-sky-200))',
+            300: 'hsl(var(--brand-sky-300))',
+            400: 'hsl(var(--brand-sky-400))',
+            500: 'hsl(var(--brand-sky-500))',
+            600: 'hsl(var(--brand-sky-600))',
+            700: 'hsl(var(--brand-sky-700))',
+            800: 'hsl(var(--brand-sky-800))',
+            900: 'hsl(var(--brand-sky-900))',
             DEFAULT: 'hsl(var(--brand-orange))',
             light: 'hsl(var(--brand-orange-light))',
             dark: 'hsl(var(--brand-orange-dark))',
@@ -149,9 +164,9 @@ const config: Config = {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'gradient-brand': 'linear-gradient(135deg, hsl(var(--brand-orange)), hsl(var(--brand-gold)))',
-        'gradient-brand-soft': 'linear-gradient(135deg, hsl(var(--brand-orange-100)), hsl(var(--brand-orange-200)))',
-        'gradient-brand-dark': 'linear-gradient(135deg, hsl(var(--brand-orange-600)), hsl(var(--brand-orange-800)))',
+        'gradient-brand': 'linear-gradient(135deg, hsl(var(--brand-sky)), hsl(var(--brand-blue)))',
+        'gradient-brand-soft': 'linear-gradient(135deg, hsl(var(--brand-sky-100)), hsl(var(--brand-sky-200)))',
+        'gradient-brand-dark': 'linear-gradient(135deg, hsl(var(--brand-sky-600)), hsl(var(--brand-sky-800)))',
       },
       screens: {
         'xs': '475px',
@@ -164,14 +179,14 @@ const config: Config = {
     function({ addUtilities }: any) {
       const newUtilities = {
         '.text-gradient': {
-          'background': 'linear-gradient(135deg, hsl(var(--brand-orange)), hsl(var(--brand-gold)))',
+          'background': 'linear-gradient(135deg, hsl(var(--brand-sky)), hsl(var(--brand-blue)))',
           '-webkit-background-clip': 'text',
           '-webkit-text-fill-color': 'transparent',
           'background-clip': 'text',
         },
         '.border-gradient': {
           'border': '2px solid transparent',
-          'background': 'linear-gradient(white, white) padding-box, linear-gradient(135deg, hsl(var(--brand-orange)), hsl(var(--brand-gold))) border-box',
+          'background': 'linear-gradient(white, white) padding-box, linear-gradient(135deg, hsl(var(--brand-sky)), hsl(var(--brand-blue))) border-box',
         },
         '.glass-effect': {
           'background': 'rgba(255, 255, 255, 0.8)',
@@ -187,7 +202,7 @@ const config: Config = {
         },
         '.scrollbar-thin': {
           'scrollbar-width': 'thin',
-          'scrollbar-color': 'hsl(var(--brand-orange-300)) hsl(var(--slate-100))',
+          'scrollbar-color': 'hsl(var(--brand-sky-300)) hsl(var(--slate-100))',
           '&::-webkit-scrollbar': {
             width: '6px'
           },
@@ -195,11 +210,11 @@ const config: Config = {
             background: 'hsl(var(--slate-100))'
           },
           '&::-webkit-scrollbar-thumb': {
-            background: 'hsl(var(--brand-orange-300))',
+            background: 'hsl(var(--brand-sky-300))',
             'border-radius': '3px'
           },
           '&::-webkit-scrollbar-thumb:hover': {
-            background: 'hsl(var(--brand-orange-400))'
+            background: 'hsl(var(--brand-sky-400))'
           }
         }
       }

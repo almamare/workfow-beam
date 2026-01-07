@@ -390,7 +390,7 @@ export default function EmployeeRequestsPage() {
                     'overtime': 'bg-green-50 text-green-700 border-green-200',
                     'advance': 'bg-yellow-50 text-yellow-700 border-yellow-200',
                     'training': 'bg-purple-50 text-purple-700 border-purple-200',
-                    'equipment': 'bg-orange-50 text-orange-700 border-orange-200',
+                    'equipment': 'bg-sky-50 text-sky-700 border-sky-200',
                     'other': 'bg-gray-50 text-gray-700 border-gray-200'
                 };
                 
@@ -442,7 +442,7 @@ export default function EmployeeRequestsPage() {
                 const priorityColors = {
                     'low': 'bg-gray-50 text-gray-700 border-gray-200',
                     'medium': 'bg-blue-50 text-blue-700 border-blue-200',
-                    'high': 'bg-orange-50 text-orange-700 border-orange-200',
+                    'high': 'bg-sky-50 text-sky-700 border-sky-200',
                     'urgent': 'bg-red-50 text-red-700 border-red-200'
                 };
                 
@@ -837,7 +837,7 @@ export default function EmployeeRequestsPage() {
                             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleCreate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                            <Button onClick={handleCreate} className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700">
                                 <Users className="h-4 w-4 mr-2" />
                                 Create Request
                             </Button>
@@ -1025,7 +1025,7 @@ export default function EmployeeRequestsPage() {
                             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700">
                                 <Users className="h-4 w-4 mr-2" />
                                 Save Changes
                             </Button>

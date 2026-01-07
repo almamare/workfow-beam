@@ -64,9 +64,9 @@ export function Breadcrumb() {
                             />
                         )}
                         {isLast ? (
-                            <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 truncate px-2 py-1 rounded-md bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/10 border border-orange-200/50 dark:border-orange-800/30">
+                            <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 truncate px-2 py-1 rounded-md bg-gradient-to-r from-sky-50 to-sky-100/50 dark:from-sky-900/20 dark:to-sky-800/10 border border-sky-200/50 dark:border-sky-800/30">
                                 {item.icon ?? null}
-                                <span className="text-orange-700 dark:text-orange-300">{item.label}</span>
+                                <span className="text-sky-700 dark:text-sky-300">{item.label}</span>
                             </span>
                         ) : (
                             <Link
@@ -74,7 +74,7 @@ export function Breadcrumb() {
                                 className={cn(
                                     "flex items-center gap-1.5 truncate px-2 py-1 rounded-md transition-all duration-200",
                                     "text-slate-600 dark:text-slate-400",
-                                    "hover:text-orange-600 dark:hover:text-orange-400",
+                                    "hover:text-sky-600 dark:hover:text-sky-400",
                                     "hover:bg-slate-100 dark:hover:bg-slate-800/50",
                                     "hover:shadow-sm"
                                 )}

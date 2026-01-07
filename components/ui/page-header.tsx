@@ -85,7 +85,7 @@ export function PageHeader({
                         {actions.primary && (
                             <Button
                                 onClick={actions.primary.onClick}
-                                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                                 size="sm"
                             >
                                 {actions.primary.icon || <Plus className="h-4 w-4 mr-2" />}

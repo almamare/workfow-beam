@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense, useState } from 'react';
+import { useEffect, Suspense, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
 import { AppDispatch, RootState } from '@/stores/store';
@@ -198,13 +198,21 @@ function FinancialRequestDetails() {
         };
     }, [id, dispatch]);
 
+    // Fetch approvals function
+    const fetchApprovals = useCallback(async () => {
+        if (!id) return;
+        try {
+            const res = await axios.get(`/approvals/fetch/${id}`);
+            setApprovals(res.data.body?.approvals?.items || []);
+        } catch (error) {
+            toast.error("Failed to load approvals");
+        }
+    }, [id]);
+
     // Fetch approvals
     useEffect(() => {
-        if (!id) return;
-        axios.get(`/approvals/fetch/${id}`)
-            .then((res) => setApprovals(res.data.body?.approvals?.items || []))
-            .catch(() => toast.error("Failed to load approvals"));
-    }, [id]);
+        fetchApprovals();
+    }, [fetchApprovals]);
 
     // Handle errors
     useEffect(() => {
@@ -218,7 +226,7 @@ function FinancialRequestDetails() {
     if (loading && !request) {
         return (
             <Centered>
-                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                 <p className="text-slate-500 dark:text-slate-400">Loading details...</p>
             </Centered>
         );
@@ -231,7 +239,7 @@ function FinancialRequestDetails() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/requests/financial')}
-                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Requests
@@ -247,7 +255,7 @@ function FinancialRequestDetails() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/requests/financial')}
-                    className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Requests
@@ -278,7 +286,10 @@ function FinancialRequestDetails() {
         setUpdateAttachmentModelOpen(true);
     };
 
-    const approvalCreated = (approval: Approval) => setApprovals(prev => [...prev, approval]);
+    const approvalCreated = async () => {
+        // Refresh approvals from API
+        await fetchApprovals();
+    };
 
 
 
@@ -420,7 +431,7 @@ function FinancialRequestDetails() {
                     <Button
                         variant="outline"
                         onClick={() => router.push('/requests/financial')}
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         Back to Requests
                     </Button>
@@ -446,7 +457,7 @@ function FinancialRequestDetails() {
                     size="sm"
                 >
                     <div className="text-xl md:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-orange-500" />
+                        <DollarSign className="h-5 w-5 text-sky-500" />
                         {request.request_type || 'Financial'}
                     </div>
                 </EnhancedCard>
@@ -555,7 +566,7 @@ function FinancialRequestDetails() {
                 headerActions={
                     <Button
                         onClick={() => setAttachmentModelOpen(true)}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                         <Plus className="h-4 w-4 mr-2" />
                         Add Attachment
@@ -580,7 +591,7 @@ function FinancialRequestDetails() {
                 headerActions={
                     <Button
                         onClick={() => setApprovalModelOpen(true)}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                         <Plus className="h-4 w-4 mr-2" />
                         Add Approval
@@ -631,7 +642,7 @@ export default function Page() {
         <Suspense
             fallback={
                 <Centered>
-                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
                     <p className="text-slate-500 dark:text-slate-400">Loading details...</p>
                 </Centered>
             }

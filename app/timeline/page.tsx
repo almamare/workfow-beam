@@ -211,7 +211,7 @@ export default function TimelinePage() {
                         variant="outline"
                         onClick={refreshTimeline}
                         disabled={isRefreshing || loading}
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                         {isRefreshing ? 'Refreshing...' : 'Refresh'}
@@ -278,8 +278,8 @@ export default function TimelinePage() {
                     <div className="space-y-6">
                         {filteredTimeline.map((item) => (
                             <div key={item.id} className="relative pl-10">
-                                <div className="absolute left-0 top-2 w-6 h-6 rounded-full border-2 border-orange-400 bg-slate-50 dark:bg-slate-900 flex items-center justify-center shadow-sm">
-                                    <Clock className="h-3 w-3 text-orange-500" />
+                                <div className="absolute left-0 top-2 w-6 h-6 rounded-full border-2 border-sky-400 bg-slate-50 dark:bg-slate-900 flex items-center justify-center shadow-sm">
+                                    <Clock className="h-3 w-3 text-sky-500" />
                                 </div>
                                 <div className="bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
                                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2">

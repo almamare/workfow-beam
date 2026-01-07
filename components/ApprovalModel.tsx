@@ -13,15 +13,15 @@ interface ApprovalModelProps {
     onClose: () => void; // Callback to close the modal
     onCreated: (approval: any) => void; // Callback when approval is created
     requestId?: string; // Request ID associated with the approval
+    requestType?: string; // Request type
 }
 
 // ApprovalModel Component
-const ApprovalModel: React.FC<ApprovalModelProps> = ({ open, onClose, onCreated, requestId }) => {
+const ApprovalModel: React.FC<ApprovalModelProps> = ({ open, onClose, onCreated, requestId, requestType }) => {
     // State for form inputs
     const [stepName, setStepName] = useState(""); // Approval step name
     const [remarks, setRemarks] = useState(""); // Approval remarks
     const [status, setStatus] = useState("Pending"); // Approval status
-    const [stepNo, setStepNo] = useState(1); // Step number
     const [loading, setLoading] = useState(false); // Loading state during API call
 
     /**
@@ -42,21 +42,20 @@ const ApprovalModel: React.FC<ApprovalModelProps> = ({ open, onClose, onCreated,
             // POST request to create approval
             const res = await axios.post(`/approvals/create/${requestId}`, {
                 params: {
-                    step_no: stepNo,
                     step_name: stepName,
-                    request_type: "Tasks",
+                    request_type: requestType,
                     remarks,
                     status,
                 },
             });
 
-            if (res.data.header.success) {  
+            if (res.data.header.success) {
 
-            // Show success notification
-            toast.success("Approval created successfully");
-            
-            // Trigger callback with created approval
-            onCreated(res.data.body.approval);
+                // Show success notification
+                toast.success("Approval created successfully");
+
+                // Trigger callback with created approval
+                onCreated(res.data.body.approval);
             } else {
                 toast.error(res.data.header.messages[0].message);
                 return;
@@ -66,8 +65,6 @@ const ApprovalModel: React.FC<ApprovalModelProps> = ({ open, onClose, onCreated,
             setStepName("");
             setRemarks("");
             setStatus("Pending");
-            setStepNo(1);
-
             // Close modal
             onClose();
         } catch (err: any) {
@@ -82,9 +79,9 @@ const ApprovalModel: React.FC<ApprovalModelProps> = ({ open, onClose, onCreated,
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Add New Approval</DialogTitle>
+                    <DialogTitle>Add New Review</DialogTitle>
                     <DialogDescription>
-                        Create a new approval step for this request.
+                        Create a new review step for this request.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -97,19 +94,6 @@ const ApprovalModel: React.FC<ApprovalModelProps> = ({ open, onClose, onCreated,
                             onChange={e => setStepName(e.target.value)}
                             placeholder="Enter step name"
                             required
-                        />
-                    </div>
-
-                    {/* Step Number Input */}
-                    <div>
-                        <label className="block mb-1 text-sm font-medium">Step Number</label>
-                        <Input
-                            type="number"
-                            value={stepNo}
-                            onChange={e => setStepNo(Number(e.target.value))}
-                            placeholder="Enter step number"
-                            required
-                            min={1}
                         />
                     </div>
 
@@ -143,7 +127,8 @@ const ApprovalModel: React.FC<ApprovalModelProps> = ({ open, onClose, onCreated,
                         <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={loading}>
+                        <Button type="submit" className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white transition-all duration-300"
+                            disabled={loading}>
                             {loading ? "Saving..." : "Save"}
                         </Button>
                     </DialogFooter>

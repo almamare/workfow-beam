@@ -258,7 +258,7 @@ const CreateProjectPage: React.FC = () => {
                         type="button" 
                         variant="outline" 
                         onClick={() => router.push('/projects')} 
-                        className="border-orange-200 dark:border-orange-800 hover:text-orange-700 hover:border-orange-300 dark:hover:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
                         Back to Projects
                     </Button>
@@ -279,7 +279,7 @@ const CreateProjectPage: React.FC = () => {
                                         value={form.project_code}
                                         onChange={(e) => updateField('project_code', e.target.value)}
                                         placeholder="XXX-XXX-XXX"
-                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     />
                                     {fieldErrors.project_code && (
                                         <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.project_code}</p>
@@ -293,7 +293,7 @@ const CreateProjectPage: React.FC = () => {
                                         value={form.name}
                                         onChange={(e) => updateField('name', e.target.value)}
                                         placeholder="Project Name"
-                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     />
                                     {fieldErrors.name && <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.name}</p>}
                                 </div>
@@ -312,7 +312,7 @@ const CreateProjectPage: React.FC = () => {
                                     >
                                         <SelectTrigger 
                                             id="client_id" 
-                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200"
+                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200"
                                         >
                                             <SelectValue placeholder={clientsLoading ? 'Loading clients...' : 'Select client'} />
                                         </SelectTrigger>
@@ -321,7 +321,7 @@ const CreateProjectPage: React.FC = () => {
                                                 <SelectItem 
                                                     key={c.id} 
                                                     value={c.id}
-                                                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200"
+                                                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200"
                                                 >
                                                     {c.name} {c.client_no ? `(${c.client_no})` : ''}
                                                 </SelectItem>
@@ -343,7 +343,7 @@ const CreateProjectPage: React.FC = () => {
                                     <Select value={form.type} onValueChange={(val) => updateField('type', val)}>
                                         <SelectTrigger 
                                             id="type" 
-                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200"
+                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200"
                                         >
                                             <SelectValue placeholder="Select type" />
                                         </SelectTrigger>
@@ -352,7 +352,7 @@ const CreateProjectPage: React.FC = () => {
                                                 <SelectItem 
                                                     value={t} 
                                                     key={t}
-                                                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200"
+                                                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200"
                                                 >
                                                     {t}
                                                 </SelectItem>
@@ -370,7 +370,7 @@ const CreateProjectPage: React.FC = () => {
                                     >
                                         <SelectTrigger 
                                             id="fiscal_year" 
-                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-600 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200"
+                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200"
                                         >
                                             <SelectValue placeholder="Year" />
                                         </SelectTrigger>
@@ -379,7 +379,7 @@ const CreateProjectPage: React.FC = () => {
                                                 <SelectItem 
                                                     value={y} 
                                                     key={y}
-                                                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-orange-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-orange-600 dark:focus:text-orange-400 cursor-pointer transition-colors duration-200"
+                                                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200"
                                                 >
                                                     {y}
                                                 </SelectItem>
@@ -396,7 +396,7 @@ const CreateProjectPage: React.FC = () => {
                                 <Label htmlFor="description" className="text-slate-700 dark:text-slate-200">Description (Optional)</Label>
                                 <textarea
                                     id="description"
-                                    className="min-h-[100px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-100 dark:focus-visible:ring-orange-900/50 focus:border-orange-300 dark:focus:border-orange-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="min-h-[100px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-100 dark:focus-visible:ring-sky-900/50 focus:border-sky-300 dark:focus:border-sky-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     value={form.description}
                                     onChange={(e) => updateField('description', e.target.value)}
                                     placeholder="Short project description..."
@@ -416,7 +416,7 @@ const CreateProjectPage: React.FC = () => {
                                     value={form.original_budget ?? ''}
                                     onChange={(e) => updateField('original_budget', e.target.value)}
                                     placeholder="0"
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {fieldErrors.original_budget && (
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.original_budget}</p>
@@ -430,7 +430,7 @@ const CreateProjectPage: React.FC = () => {
                                     value={form.revised_budget ?? ''}
                                     onChange={(e) => updateField('revised_budget', e.target.value)}
                                     placeholder="0"
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {fieldErrors.revised_budget && (
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.revised_budget}</p>
@@ -444,7 +444,7 @@ const CreateProjectPage: React.FC = () => {
                                     value={form.committed_cost ?? ''}
                                     onChange={(e) => updateField('committed_cost', e.target.value)}
                                     placeholder="0"
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {fieldErrors.committed_cost && (
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.committed_cost}</p>
@@ -458,7 +458,7 @@ const CreateProjectPage: React.FC = () => {
                                     value={form.actual_cost ?? ''}
                                     onChange={(e) => updateField('actual_cost', e.target.value)}
                                     placeholder="0"
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-orange-300 dark:focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {fieldErrors.actual_cost && (
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.actual_cost}</p>
@@ -471,7 +471,7 @@ const CreateProjectPage: React.FC = () => {
                                 variant="outline" 
                                 onClick={handleReset} 
                                 disabled={loading} 
-                                className="border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-700 dark:hover:text-orange-300 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                className="border-sky-200 dark:border-sky-800 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-700 dark:hover:text-sky-300 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                             >
                                 <RotateCcw className="h-4 w-4 mr-2" />
                                 Reset
@@ -479,7 +479,7 @@ const CreateProjectPage: React.FC = () => {
                             <Button 
                                 type="submit" 
                                 disabled={loading} 
-                                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 dark:from-orange-600 dark:to-orange-700 dark:hover:from-orange-700 dark:hover:to-orange-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-700 dark:hover:to-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                             >
                                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                                 <Save className="h-4 w-4 mr-2" />

@@ -37,7 +37,7 @@ export function EnhancedCard({
     const cardVariants = {
         default: 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm',
         gradient: 'bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border-slate-200 dark:border-slate-700 shadow-lg hover:shadow-xl dark:hover:shadow-2xl',
-        bordered: 'bg-white dark:bg-slate-800 border-2 border-orange-200 dark:border-orange-800/50 shadow-sm hover:shadow-lg dark:hover:shadow-xl hover:border-orange-300 dark:hover:border-orange-700'
+        bordered: 'bg-white dark:bg-slate-800 border-2 border-sky-200 dark:border-sky-800/50 shadow-sm hover:shadow-lg dark:hover:shadow-xl hover:border-sky-300 dark:hover:border-sky-700'
     };
 
     const sizeClasses = {
