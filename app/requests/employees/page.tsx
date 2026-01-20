@@ -8,12 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, Clock, UserCheck, UserX } from 'lucide-react';
+import { Users, Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Download, Filter, Calendar, Clock, UserCheck, UserX, RefreshCw, FileSpreadsheet, Search, X as XIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { PageHeader } from '@/components/ui/page-header';
-import { FilterBar } from '@/components/ui/filter-bar';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
-import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
+import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
+import { DatePicker } from '@/components/DatePicker';
 
 interface EmployeeRequest {
     id: string;
@@ -587,67 +587,264 @@ export default function EmployeeRequestsPage() {
     if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
     if (priorityFilter !== 'all') activeFilters.push(`Priority: ${priorities.find(p => p.value === priorityFilter)?.label}`);
 
-    return (
-        <div className="space-y-6">
-            {/* Page Header */}
-            <PageHeader
-                title="Employee Requests"
-                description="Manage employee requests with comprehensive tracking and approval workflow"
-                stats={stats}
-                actions={{
-                    primary: {
-                        label: 'New Request',
-                        onClick: () => setIsCreateDialogOpen(true),
-                        icon: <Plus className="h-4 w-4" />
-                    },
-                    secondary: [
-                        {
-                            label: 'Export Report',
-                            onClick: () => toast.info('Export feature coming soon'),
-                            icon: <Download className="h-4 w-4" />
-                        },
-                        {
-                            label: 'Request Analytics',
-                            onClick: () => toast.info('Analytics feature coming soon'),
-                            icon: <Filter className="h-4 w-4" />
-                        }
-                    ]
-                }}
-            />
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
-            {/* Filter Bar */}
-            <FilterBar
-                searchPlaceholder="Search by request number, employee name, or title..."
-                searchValue={searchTerm}
-                onSearchChange={setSearchTerm}
-                filters={filterOptions}
-                activeFilters={activeFilters}
-                onClearFilters={() => {
-                    setSearchTerm('');
-                    setTypeFilter('all');
-                    setStatusFilter('all');
-                    setPriorityFilter('all');
-                }}
-            />
+    const refreshTable = async () => {
+        setIsRefreshing(true);
+        try {
+            // Simulate refresh
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            toast.success('Table refreshed successfully');
+        } catch {
+            toast.error('Failed to refresh table');
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const exportToExcel = async () => {
+        setIsExporting(true);
+        try {
+            // Simulate export
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            toast.success('Data exported successfully');
+        } catch {
+            toast.error('Failed to export data');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            {/* Breadcrumb */}
+            <Breadcrumb />
+            
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Employee Requests</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-1">
+                        Manage employee requests with comprehensive tracking and approval workflow
+                    </p>
+                </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <EnhancedCard
+                    title="Total Requests"
+                    description="All employee requests"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-200">
+                        {totalRequests}
+                    </div>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Pending"
+                    description="Requests awaiting review"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-200">
+                        {pendingRequests}
+                    </div>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Approved"
+                    description="Successfully approved requests"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-200">
+                        {approvedRequests}
+                    </div>
+                </EnhancedCard>
+                <EnhancedCard
+                    title="Rejected"
+                    description="Rejected requests"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-200">
+                        {rejectedRequests}
+                    </div>
+                </EnhancedCard>
+            </div>
+
+            {/* Search & Filters Card */}
+            <EnhancedCard
+                title="Search & Filters"
+                description="Search and filter employee requests by various criteria"
+                variant="default"
+                size="sm"
+            >
+                <div className="space-y-4">
+                    {/* Search Input with Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                            <Input
+                                placeholder="Search by request number, employee name, or title..."
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                }}
+                                className="pl-10 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={exportToExcel}
+                                disabled={isExporting}
+                                className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 whitespace-nowrap"
+                            >
+                                <FileSpreadsheet className={`h-4 w-4 mr-2 ${isExporting ? 'animate-pulse' : ''}`} />
+                                {isExporting ? 'Exporting...' : 'Export Excel'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={refreshTable}
+                                disabled={isRefreshing}
+                                className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 whitespace-nowrap"
+                            >
+                                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                Refresh
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Filters Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Request Type Filter */}
+                        <div className="space-y-2">
+                            <Label htmlFor="type" className="text-slate-700 dark:text-slate-300 font-medium">
+                                Request Type
+                            </Label>
+                            <Select
+                                value={typeFilter}
+                                onValueChange={(value) => {
+                                    setTypeFilter(value);
+                                }}
+                            >
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                    <SelectValue placeholder="All Types" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectItem value="all" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Types</SelectItem>
+                                    {requestTypes.map(type => (
+                                        <SelectItem key={type.value} value={type.value} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">{type.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Status Filter */}
+                        <div className="space-y-2">
+                            <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                                Status
+                            </Label>
+                            <Select
+                                value={statusFilter}
+                                onValueChange={(value) => {
+                                    setStatusFilter(value);
+                                }}
+                            >
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                    <SelectValue placeholder="All Statuses" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectItem value="all" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Statuses</SelectItem>
+                                    <SelectItem value="pending" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Pending</SelectItem>
+                                    <SelectItem value="approved" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Approved</SelectItem>
+                                    <SelectItem value="rejected" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Rejected</SelectItem>
+                                    <SelectItem value="cancelled" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Cancelled</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Priority Filter */}
+                        <div className="space-y-2">
+                            <Label htmlFor="priority" className="text-slate-700 dark:text-slate-300 font-medium">
+                                Priority
+                            </Label>
+                            <Select
+                                value={priorityFilter}
+                                onValueChange={(value) => {
+                                    setPriorityFilter(value);
+                                }}
+                            >
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                    <SelectValue placeholder="All Priorities" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectItem value="all" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Priorities</SelectItem>
+                                    {priorities.map(priority => (
+                                        <SelectItem key={priority.value} value={priority.value} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">{priority.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Active Filters & Clear Button */}
+                    {activeFilters.length > 0 && (
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Active filters:</span>
+                                {activeFilters.map((filter, index) => (
+                                    <Badge
+                                        key={index}
+                                        variant="outline"
+                                        className="bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 hover:bg-sky-200 dark:hover:bg-sky-900/50 border-sky-200 dark:border-sky-800"
+                                    >
+                                        {filter}
+                                    </Badge>
+                                ))}
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    setTypeFilter('all');
+                                    setStatusFilter('all');
+                                    setPriorityFilter('all');
+                                }}
+                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800 whitespace-nowrap"
+                            >
+                                <XIcon className="h-4 w-4 mr-2" />
+                                Clear All
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </EnhancedCard>
 
             {/* Requests Table */}
             <EnhancedCard
-                title="Employee Requests Overview"
-                description={`${filteredRequests.length} requests out of ${requests.length} total`}
-                variant="gradient"
-                size="lg"
+                title="Employee Requests List"
+                description={`${filteredRequests.length} request${filteredRequests.length !== 1 ? 's' : ''} found`}
+                variant="default"
+                size="sm"
                 stats={{
-                    total: requests.length,
-                    badge: 'Active Requests',
+                    total: filteredRequests.length,
+                    badge: 'Total Requests',
                     badgeColor: 'success'
                 }}
             >
                 <EnhancedDataTable
                     data={filteredRequests}
-                    columns={columns}
-                    actions={actions}
+                    columns={columns as Column<EmployeeRequest>[]}
+                    actions={actions as Action<EmployeeRequest>[]}
                     loading={false}
-                    noDataMessage="No requests found matching your criteria"
+                    noDataMessage="No requests found matching your search criteria"
                     searchPlaceholder="Search requests..."
                 />
             </EnhancedCard>

@@ -16,12 +16,12 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Shield, Eye, Check, X, Clock, RefreshCw, FileSpreadsheet, Search, Loader2 } from 'lucide-react';
+import { Shield, Eye, Check, X, Clock, RefreshCw, FileSpreadsheet, Search, Loader2, X as XIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
-import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
+import { Input } from '@/components/ui/input';
 import type { Approval } from '@/stores/types/approvals';
 import axios from '@/utils/axios';
 
@@ -89,12 +89,6 @@ function ApprovalsPageContent() {
     };
 
     const columns: Column<Approval>[] = [
-        {
-            key: 'request_id',
-            header: 'Request ID',
-            sortable: true,
-            render: (value: any) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{value || '-'}</span>
-        },
         {
             key: 'sequence',
             header: 'Sequence',
@@ -295,146 +289,192 @@ function ApprovalsPageContent() {
 
     return (
         <div className="space-y-4">
-            {/* Header */}
+            {/* Breadcrumb */}
             <Breadcrumb />
-            <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
+            
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Approvals</h1>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">Review and track approval workflow for requests</p>
+                    <p className="text-slate-600 dark:text-slate-400 mt-1">
+                        Review and track approval workflow for requests with comprehensive filtering and management tools
+                    </p>
                 </div>
             </div>
 
-
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <EnhancedCard
                     title="Total Approvals"
                     description="All approval records"
                     variant="default"
                     size="sm"
-                    stats={{
-                        total: filteredTotal,
-                        badge: 'Total',
-                        badgeColor: 'default'
-                    }}
                 >
-                    <></>
+                    <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-200">
+                        {filteredTotal}
+                    </div>
                 </EnhancedCard>
                 <EnhancedCard
                     title="Pending Approval"
                     description="Requests awaiting review"
                     variant="default"
                     size="sm"
-                    stats={{
-                        total: pendingCount,
-                        badge: 'Pending',
-                        badgeColor: 'warning'
-                    }}
                 >
-                    <></>
+                    <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-200">
+                        {pendingCount}
+                    </div>
                 </EnhancedCard>
                 <EnhancedCard
                     title="Approved"
                     description="Successfully approved requests"
                     variant="default"
                     size="sm"
-                    stats={{
-                        total: approvedCount,
-                        badge: 'Approved',
-                        badgeColor: 'success'
-                    }}
                 >
-                    <></>
+                    <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-200">
+                        {approvedCount}
+                    </div>
                 </EnhancedCard>
                 <EnhancedCard
                     title="Rejected"
                     description="Rejected requests"
                     variant="default"
                     size="sm"
-                    stats={{
-                        total: rejectedCount,
-                        badge: 'Rejected',
-                        badgeColor: 'error'
-                    }}
                 >
-                    <></>
+                    <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-200">
+                        {rejectedCount}
+                    </div>
                 </EnhancedCard>
             </div>
 
-            {/* Filter Bar */}
-            <FilterBar
-                searchPlaceholder="Search by step name, approver, remarks, sequence, or request ID..."
-                searchValue={search}
-                onSearchChange={(value) => {
-                    setSearch(value);
-                    setPage(1);
-                }}
-                filters={[
-                    {
-                        key: 'status',
-                        label: 'Status',
-                        value: status,
-                        options: [
-                            { key: 'all', label: 'All Statuses', value: 'All' },
-                            ...uniqueStatuses.map(s => ({
-                                key: s,
-                                label: s,
-                                value: s
-                            }))
-                        ],
-                        onValueChange: (value) => {
-                            setStatus(value);
-                            setPage(1);
-                        }
-                    }
-                ]}
-                activeFilters={activeFilters}
-                onClearFilters={() => {
-                    setSearch('');
-                    setStatus('All');
-                    setPage(1);
-                }}
-                actions={
-                    <>
-                        <Button
-                            variant="outline"
-                            onClick={refreshTable}
-                            disabled={isRefreshing || loading}
-                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
-                        >
-                            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={exportToExcel}
-                            disabled={isExporting}
-                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
-                        >
-                            <FileSpreadsheet className="h-4 w-4 mr-2" />
-                            {isExporting ? 'Exporting...' : 'Export Excel'}
-                        </Button>
-                    </>
-                }
-            />
+            {/* Search & Filters Card */}
+            <EnhancedCard
+                title="Search & Filters"
+                description="Search and filter approvals by various criteria"
+                variant="default"
+                size="sm"
+            >
+                <div className="space-y-4">
+                    {/* Search Input with Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                            <Input
+                                placeholder="Search by step name, approver, remarks, sequence, or request ID..."
+                                value={search}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    setPage(1);
+                                }}
+                                className="pl-10 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={exportToExcel}
+                                disabled={isExporting || loading}
+                                className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 whitespace-nowrap"
+                            >
+                                <FileSpreadsheet className={`h-4 w-4 mr-2 ${isExporting ? 'animate-pulse' : ''}`} />
+                                {isExporting ? 'Exporting...' : 'Export Excel'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={refreshTable}
+                                disabled={isRefreshing}
+                                className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 whitespace-nowrap"
+                            >
+                                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                Refresh
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Filters Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Status Filter */}
+                        <div className="space-y-2">
+                            <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                                Status
+                            </Label>
+                            <Select
+                                value={status}
+                                onValueChange={(value) => {
+                                    setStatus(value);
+                                    setPage(1);
+                                }}
+                            >
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                    <SelectValue placeholder="All Statuses" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectItem value="All" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Statuses</SelectItem>
+                                    {uniqueStatuses.map(s => (
+                                        <SelectItem key={s} value={s} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">{s}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Active Filters & Clear Button */}
+                    {activeFilters.length > 0 && (
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Active filters:</span>
+                                {activeFilters.map((filter, index) => (
+                                    <Badge
+                                        key={index}
+                                        variant="outline"
+                                        className="bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 hover:bg-sky-200 dark:hover:bg-sky-900/50 border-sky-200 dark:border-sky-800"
+                                    >
+                                        {filter}
+                                    </Badge>
+                                ))}
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setSearch('');
+                                    setStatus('All');
+                                    setPage(1);
+                                }}
+                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800 whitespace-nowrap"
+                            >
+                                <XIcon className="h-4 w-4 mr-2" />
+                                Clear All
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </EnhancedCard>
 
             {/* Approvals Table */}
             <EnhancedCard
                 title="Approvals List"
-                description={`${filteredTotal} approvals found`}
+                description={`${filteredTotal} approval${filteredTotal !== 1 ? 's' : ''} found`}
                 variant="default"
                 size="sm"
+                stats={{
+                    total: filteredTotal,
+                    badge: 'Total Approvals',
+                    badgeColor: 'success'
+                }}
                 headerActions={
                     <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
                         <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                             <SelectValue placeholder="Items per page" />
                         </SelectTrigger>
                         <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
-                            {[5, 10, 20, 50, 100, 200].map(n => (
-                                <SelectItem key={n} value={String(n)} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">
-                                    {n} per page
-                                </SelectItem>
-                            ))}
+                            <SelectItem value="5" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">5 per page</SelectItem>
+                            <SelectItem value="10" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">10 per page</SelectItem>
+                            <SelectItem value="20" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">20 per page</SelectItem>
+                            <SelectItem value="50" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">50 per page</SelectItem>
+                            <SelectItem value="100" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">100 per page</SelectItem>
+                            <SelectItem value="200" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">200 per page</SelectItem>
                         </SelectContent>
                     </Select>
                 }

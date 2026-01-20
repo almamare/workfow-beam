@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 const instance = axios.create({
     // baseURL: 'http://localhost/beam/api/v1',
-    baseURL: 'https://test.shuarano.com/api/v1',
+    baseURL: 'https://test.yallajayak.com/api/v1',
     headers: {
         'Content-Type': 'application/json',
     },

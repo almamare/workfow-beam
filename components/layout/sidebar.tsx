@@ -28,6 +28,7 @@ import {
     FileCheck,
     Banknote,
     BarChart3,
+    PieChart,
     History,
     UserCircle,
     Plus,
@@ -59,7 +60,7 @@ const iconLibrary: Record<string, any> = {
     Home, Users, FileText, DollarSign, FolderOpen, Package, Shield,
     Wallet, Contact, Settings, Megaphone, Building, TrendingUp,
     Activity, Calculator, ClipboardList, UserCheck, FileEdit,
-    CreditCard, FileCheck, Banknote, BarChart3, History, UserCircle,
+    CreditCard, FileCheck, Banknote, BarChart3, PieChart, History, UserCircle,
     Plus, Eye, List, Edit, Trash2, FileArchive, Landmark, Receipt,
     ChevronDown, ChevronRight
 };
@@ -193,7 +194,9 @@ const routeConfig: Record<string, {
                 subItems: [
                     { href: '/requests/projects?status=Pending', title: 'Pending', color: 'text-yellow-400' },
                     { href: '/requests/projects?status=Approved', title: 'Approved', color: 'text-green-400' },
-                    { href: '/requests/projects?status=Rejected', title: 'Rejected', color: 'text-red-400' }
+                    { href: '/requests/projects?status=Rejected', title: 'Rejected', color: 'text-red-400' },
+                    { href: '/requests/projects?status=Closed', title: 'Closed', color: 'text-slate-400' },
+                    { href: '/requests/projects?status=Complete', title: 'Complete', color: 'text-green-400' },
                 ]
             },
             { href: '/projects/create', title: 'Create Project', icon: 'Plus', color: 'text-green-400' },
@@ -377,6 +380,30 @@ const routeConfig: Record<string, {
             { href: '/profile', title: 'Profile', icon: 'UserCircle', color: 'text-pink-400' },
             { href: '/notifications', title: 'Notifications', icon: 'Megaphone', color: 'text-pink-400' },
             { href: '/history', title: 'History', icon: 'History', color: 'text-slate-400' }
+        ]
+    },
+    '/reports': {
+        title: 'Reports',
+        icon: 'BarChart3',
+        color: 'text-sky-400',
+        menuItems: [
+            { href: '/reports', title: 'All Reports', icon: 'BarChart3', color: 'text-sky-400' },
+        ]
+    },
+    '/statistics': {
+        title: 'Statistics',
+        icon: 'PieChart',
+        color: 'text-fuchsia-400',
+        menuItems: [
+            { href: '/statistics', title: 'Statistics Overview', icon: 'PieChart', color: 'text-fuchsia-400' },
+        ]
+    },
+    '/analysis': {
+        title: 'Analysis',
+        icon: 'TrendingUp',
+        color: 'text-lime-400',
+        menuItems: [
+            { href: '/analysis', title: 'Analysis Dashboard', icon: 'TrendingUp', color: 'text-lime-400' },
         ]
     },
 };

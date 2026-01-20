@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
 import { Loader2, Save, RotateCcw } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { DatePicker } from "@/components/DatePicker";
@@ -45,6 +46,7 @@ type ProjectPayload = {
     committed_cost?: number | string;   // ← اختياري
     actual_cost?: number | string;      // ← اختياري
     description?: string;
+    notes?: string;          // ← ملاحظات طلب إنشاء المشروع
 };
 
 type ClientOption = {
@@ -69,7 +71,8 @@ const initialValues: ProjectPayload = {
     revised_budget: '',
     committed_cost: '',
     actual_cost: '',
-    description: ''
+    description: '',
+    notes: ''
 };
 
 const projectTypes = ['Public', 'Communications', 'Restoration', 'Referral'];
@@ -100,7 +103,7 @@ const CreateProjectPage: React.FC = () => {
             try {
                 setClientsLoading(true);
                 const res = await axios.get('/clients/fetch', {
-                    params: { page: 1, limit: 1000, search: '' }
+                    params: { page: 1, limit: 1000, search: '', status: 'Active' }
                 });
                 const items: any[] =
                     res?.data?.body?.clients?.items ||
@@ -108,7 +111,9 @@ const CreateProjectPage: React.FC = () => {
                     res?.data?.data ||
                     [];
                 if (!canceled) {
-                    const mapped = items.map((c) => ({
+                    // Filter only active clients (in case API doesn't filter properly)
+                    const activeClients = items.filter((c) => c.status === 'Active');
+                    const mapped = activeClients.map((c) => ({
                         id: c.id,
                         name: c.name,
                         client_no: c.client_no,
@@ -394,12 +399,23 @@ const CreateProjectPage: React.FC = () => {
 
                             <div className="space-y-2">
                                 <Label htmlFor="description" className="text-slate-700 dark:text-slate-200">Description (Optional)</Label>
-                                <textarea
+                                <Textarea
                                     id="description"
-                                    className="min-h-[100px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-100 dark:focus-visible:ring-sky-900/50 focus:border-sky-300 dark:focus:border-sky-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                                    value={form.description}
+                                    className="min-h-[100px] w-full bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    value={form.description || ''}
                                     onChange={(e) => updateField('description', e.target.value)}
                                     placeholder="Short project description..."
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="notes" className="text-slate-700 dark:text-slate-200">Project Request Notes (Optional)</Label>
+                                <Textarea
+                                    id="notes"
+                                    className="min-h-[100px] w-full bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    value={form.notes || ''}
+                                    onChange={(e) => updateField('notes', e.target.value)}
+                                    placeholder="Add any notes or comments for the project request..."
                                 />
                             </div>
                         </div>

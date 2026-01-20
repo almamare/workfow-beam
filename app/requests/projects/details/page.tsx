@@ -463,6 +463,7 @@ function ProjectRequestDetails() {
                         onClick={() => router.push('/requests/projects')}
                         className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Requests
                     </Button>
                 </div>
