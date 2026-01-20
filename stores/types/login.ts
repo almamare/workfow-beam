@@ -54,7 +54,18 @@ export interface User {
     type: string;
     number: string;
     status: string;
-    avatar: string;
+    avatar?: string;
     created_at: string;
     updated_at: string;
+    // Additional optional fields from department and employee data
+    department?: string;
+    position?: string;
+    employee_id?: string;
+    hire_date?: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    bio?: string;
+    language?: string;
+    timezone?: string;
 }
