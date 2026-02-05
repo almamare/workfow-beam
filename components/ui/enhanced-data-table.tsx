@@ -39,7 +39,7 @@ interface PaginationProps {
 interface DataTableProps<T> {
     data: T[];
     columns: Column<T>[];
-    actions?: Action<T>[];
+    actions?: Action<T>[] | ((row: T) => Action<T>[]);
     pagination?: PaginationProps;
     loading?: boolean;
     onSearch?: (term: string) => void;
@@ -135,7 +135,7 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                                     <th
                                         key={column.key as string}
                                         className={cn(
-                                            'px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap',
+                                            'px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap text-left',
                                             column.align === 'center' && 'text-center',
                                             column.align === 'right' && 'text-right',
                                             column.sortable && 'cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-200',
@@ -146,7 +146,8 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                                         <div className={cn(
                                             'flex items-center gap-2',
                                             column.align === 'center' && 'justify-center',
-                                            column.align === 'right' && 'justify-end'
+                                            column.align === 'right' && 'justify-end',
+                                            !column.align && 'justify-start'
                                         )}>
                                             <span>{column.header}</span>
                                             {renderSortIcon(column)}
@@ -154,7 +155,7 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                                     </th>
                                 ))}
                                 {showActions && actions.length > 0 && (
-                                    <th className="px-6 py-4 text-right text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700 dark:text-slate-300">
                                         Actions
                                     </th>
                                 )}
@@ -171,8 +172,8 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                                             </td>
                                         ))}
                                         {showActions && actions.length > 0 && (
-                                            <td className="px-4 py-2 text-right">
-                                                <Skeleton className="h-8 w-8 ml-auto bg-slate-200 dark:bg-slate-700" />
+                                            <td className="px-4 py-2 text-left">
+                                                <Skeleton className="h-8 w-8 bg-slate-200 dark:bg-slate-700" />
                                             </td>
                                         )}
                                     </tr>
@@ -217,7 +218,7 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                                                     <td
                                                         key={column.key as string}
                                                         className={cn(
-                                                            'px-4 py-2 text-sm text-slate-900 dark:text-slate-200 whitespace-nowrap',
+                                                            'px-4 py-2 text-sm text-slate-900 dark:text-slate-200 whitespace-nowrap text-left',
                                                             column.align === 'center' && 'text-center',
                                                             column.align === 'right' && 'text-right'
                                                         )}
@@ -227,12 +228,17 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                                                             : (row?.[column.key] ?? '')}
                                                     </td>
                                                 ))}
-                                                {showActions && actions.length > 0 && (
-                                                    <td className="px-4 py-2 text-right">
+                                                {showActions && (() => {
+                                                    const rowActions = typeof actions === 'function' ? actions(row) : (actions || []);
+                                                    return rowActions.length > 0;
+                                                })() && (
+                                                    <td className="px-4 py-2 text-left">
                                                 <div className="flex gap-1 justify-start">
-                                                    {actions
-                                                        .filter(action => !action.hidden || (row && !action.hidden(row)))
-                                                        .map((action, actionIndex) => {
+                                                    {(() => {
+                                                        const rowActions = typeof actions === 'function' ? actions(row) : (actions || []);
+                                                        return rowActions
+                                                            .filter(action => !action.hidden || (row && !action.hidden(row)))
+                                                            .map((action, actionIndex) => {
                                                             // Choose color classes based on action.variant or custom property (optional)
                                                             let colorClasses = "transition-all border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300";
                                                             if (action.variant === 'destructive') {
@@ -259,9 +265,11 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                                                                     title={action.title || action.label}
                                                                 >
                                                                     {action.icon}
+                                                                    <span className="ml-2">{action.label}</span>
                                                                 </Button>
                                                             );
-                                                        })}
+                                                            });
+                                                        })()}
                                                 </div>
                                                     </td>
                                                 )}

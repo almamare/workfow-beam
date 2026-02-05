@@ -20,6 +20,8 @@ import Approvals from '@/stores/slices/approvals';                  // Importing
 import ClientContracts from '@/stores/slices/client-contracts';     // Importing the Client Contracts slice
 import Attachments from '@/stores/slices/attachments';              // Importing the Attachments slice
 import ContractorPayments from '@/stores/slices/contractor-payments'; // Importing the Contractor Payments slice
+import TasksRequestsForApproval from '@/stores/slices/tasks_requests_for_approval'; // Importing the Tasks Requests For Approval slice
+import ClientsRequestsForApproval from '@/stores/slices/clients_requests_for_approval'; // Importing the Clients Requests For Approval slice
 
 
 // This is the Redux store configuration for the login functionality
@@ -36,6 +38,8 @@ const store = configureStore({
         users: UsersSil,                    //
         employees: Employees,
         taskRequests: TaskRequests,
+        tasksRequestsForApproval: TasksRequestsForApproval, // This is the slice for managing task requests pending approval
+        clientsRequestsForApproval: ClientsRequestsForApproval, // This is the slice for managing client requests pending approval
         clientRequests: ClientRequests,      // This is the slice for managing client requests
         notifications: Notifications,       // This is the slice for managing notifications
         forms: Forms,                       // This is the slice for managing forms

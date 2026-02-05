@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense, useState, useCallback } from 'react';
+import { useEffect, Suspense, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
 import { AppDispatch, RootState } from '@/stores/store';
@@ -44,15 +44,18 @@ import {
     Trash2,
     Phone,
     Mail,
+    CheckCircle,
+    XCircle,
 } from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
 import { AttachmentsList } from '@/components/attachments/AttachmentsList';
-import { CreateAttachmentForm } from '@/components/attachments/CreateAttachmentForm';
 import { UpdateAttachmentForm } from '@/components/attachments/UpdateAttachmentForm';
-import ApprovalModel from '@/components/ApprovalModel';
+import { CreateAttachmentCard } from '@/components/attachments/CreateAttachmentCard';
+import { ApprovalModal } from '@/components/ApprovalModal';
 import type { Attachment as AttachmentType } from '@/stores/types/attachments';
+import { CreateReviewForm } from '@/components/reviews/CreateReviewForm';
 
 /* =========================================================
    Hooks
@@ -100,10 +103,17 @@ interface Approval {
     sequence: number;
     step_no: number;
     step_name: string;
+    step_level?: string | number; // Optional field for step level
     remarks: string;
     status: string;
     created_name: string;
+    approver_name?: string; // Optional field for approver name
     created_at: string;
+    updated_at?: string; // Process date
+    step_process?: string; // Alternative process date field
+    processed_at?: string; // Alternative process date field
+    approver_role: string;
+    _sequenceIndex?: number; // Internal index for display (not from server)
 }
 
 
@@ -145,17 +155,20 @@ function ClientRequestDetails() {
     const userLoading = useAppSelector(selectUsersLoading);
     const userError = useAppSelector((state: RootState) => state.users.error);
 
+    // Current logged in user
+    const currentUser = useAppSelector((state: RootState) => state.login.user);
+
     // Attachments Redux State
     const attachments = useAppSelector(selectAttachments);
     const attachmentsLoading = useAppSelector(selectAttachmentsLoading);
     const attachmentsError = useAppSelector(selectAttachmentsError);
 
     // Local State
-    const [attachmentModelOpen, setAttachmentModelOpen] = useState(false);
     const [updateAttachmentModelOpen, setUpdateAttachmentModelOpen] = useState(false);
     const [selectedAttachment, setSelectedAttachment] = useState<AttachmentType | null>(null);
     const [approvals, setApprovals] = useState<Approval[]>([]);
-    const [approvalModelOpen, setApprovalModelOpen] = useState(false);
+    const [selectedApproval, setSelectedApproval] = useState<Approval | null>(null);
+    const [modalAction, setModalAction] = useState<'approve' | 'reject' | null>(null);
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -237,7 +250,13 @@ function ClientRequestDetails() {
         if (!id) return;
         try {
             const res = await axios.get(`/approvals/fetch/${id}`);
-            setApprovals(res.data.body?.approvals?.items || []);
+            const approvalsData = res.data.body?.approvals?.items || [];
+            // Add index to each approval for sequence display
+            const approvalsWithIndex = approvalsData.map((approval: Approval, index: number) => ({
+                ...approval,
+                _sequenceIndex: index + 1
+            }));
+            setApprovals(approvalsWithIndex);
         } catch (error) {
             toast.error("Failed to load approvals");
         }
@@ -251,7 +270,14 @@ function ClientRequestDetails() {
     // Handle errors
     useEffect(() => {
         if (requestError) toast.error(requestError);
-        if (attachmentsError) toast.error(attachmentsError);
+        // Don't show toast for attachments error if it's just "no attachments" or empty list
+        // Only show toast for actual errors (not empty results)
+        if (attachmentsError && 
+            !attachmentsError.toLowerCase().includes('no attachments') &&
+            !attachmentsError.toLowerCase().includes('not found') &&
+            attachmentsError !== 'Unexpected error occurred') {
+            toast.error(attachmentsError);
+        }
     }, [requestError, attachmentsError]);
 
     // Combined loading
@@ -325,18 +351,66 @@ function ClientRequestDetails() {
         await fetchApprovals();
     };
 
+    // Check if current user can approve/reject
+    const canApproveReject = (approval: Approval) => {
+        // Check if request.created_id matches current user
+        if (!currentUser || !request) return false;
+        const currentUserId = (currentUser as any).user_id || (currentUser as any).id;
+        if (request.created_id !== currentUserId) return false;
+        
+        // Check if approval status is Pending
+        if (approval.status !== 'Pending') return false;
+        
+        return true;
+    };
+
+    // Handle approve
+    const handleApprove = (approval: Approval) => {
+        setSelectedApproval(approval);
+        setModalAction('approve');
+    };
+
+    // Handle reject
+    const handleReject = (approval: Approval) => {
+        setSelectedApproval(approval);
+        setModalAction('reject');
+    };
+
+    // Handle modal close
+    const handleModalClose = () => {
+        setSelectedApproval(null);
+        setModalAction(null);
+        fetchApprovals();
+        if (id) {
+            dispatch(fetchTaskRequest({ id }));
+        }
+    };
 
 
     const approvalColumns: Column<Approval>[] = [
         {
             key: 'sequence',
             header: 'Sequence',
-            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 font-mono text-sm">{value || '-'}</span>
+            render: (value: any, row: Approval) => (
+                <span className="text-slate-700 dark:text-slate-300 font-mono text-sm font-semibold">
+                    {row._sequenceIndex || 'N/A'}
+                </span>
+            )
         },
         {
-            key: 'created_name',
-            header: 'Created By',
-            render: (value: any) => <span className="text-slate-700 dark:text-slate-300">{value || '-'}</span>
+            key: 'approver_name',
+            header: 'Approver',
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value ? value : 'N/A'}</span>
+        },
+        {
+            key: 'approver_role',
+            header: 'Role',
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value ? value : 'N/A'}</span>
+        },
+        {
+            key: 'step_name',
+            header: 'Step Name',
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300">{value ? value : 'N/A'}</span>
         },
         {
             key: 'status',
@@ -346,16 +420,6 @@ function ClientRequestDetails() {
                     {value}
                 </Badge>
             )
-        },
-        {
-            key: 'title' as any,
-            header: 'Title',
-            render: (value: any) => <span className="font-medium text-slate-800 dark:text-slate-200">{value || '-'}</span>
-        },
-        {
-            key: 'step_name',
-            header: 'Step Name',
-            render: (value: any) => <span className="font-medium text-slate-800 dark:text-slate-200">{value}</span>
         },
         {
             key: 'remarks',
@@ -368,9 +432,18 @@ function ClientRequestDetails() {
         },
         {
             key: 'created_at',
-            header: 'Date',
+            header: 'Created Date',
             render: (value: any) => (
-                <span className="text-slate-600 dark:text-slate-400">{value ? value : 'N/A'}</span>
+                <span className="text-slate-600 dark:text-slate-400 text-sm">{value ? value : 'N/A'}</span>
+            )
+        },
+        {
+            key: 'updated_at',
+            header: 'Process Date',
+            render: (value: any, row: any) => (
+                <span className="text-slate-600 dark:text-slate-400 text-sm">
+                    {value || row?.step_process || row?.processed_at || 'N/A'}
+                </span>
             )
         }
     ];
@@ -652,21 +725,28 @@ function ClientRequestDetails() {
                 </EnhancedCard>
             </div>
 
+            {/* Add Attachment Card - Fixed Card (only shown when status is Pending) */}
+            {request.status === 'Pending' && (
+                <EnhancedCard
+                    title="Add New Document"
+                    description="Upload a file attachment for this request"
+                    variant="default"
+                    size="sm"
+                >
+                    <CreateAttachmentCard
+                        requestId={request?.id}
+                        requestType={request?.request_type || 'Clients'}
+                        onCreated={handleAttachmentCreated}
+                    />
+                </EnhancedCard>
+            )}
+
             {/* Attachments Section */}
             <EnhancedCard
                 title="Documents History"
                 description={`${attachments.length} file(s) attached to this request`}
                 variant="default"
                 size="sm"
-                headerActions={
-                    <Button
-                        onClick={() => setAttachmentModelOpen(true)}
-                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white transition-all duration-300"
-                    >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Document
-                    </Button>
-                }
             >
                 <AttachmentsList
                     attachments={attachments}
@@ -677,21 +757,29 @@ function ClientRequestDetails() {
                 />
             </EnhancedCard>
 
+            {/* Add Review Card - Fixed Card (only shown when status is Pending) */}
+            {request.status === 'Pending' && (
+                <EnhancedCard
+                    title="Add New Review"
+                    description="Create a new review step for this request"
+                    variant="default"
+                    size="sm"
+                >
+                    <CreateReviewForm
+                        requestId={request?.id}
+                        requestType={request?.request_type || 'Clients'}
+                        lastApprovalId={approvals.length > 0 ? approvals[approvals.length - 1]?.id : undefined}
+                        onCreated={approvalCreated}
+                    />
+                </EnhancedCard>
+            )}
+
             {/* Approvals Section */}
             <EnhancedCard
                 title="Case History"
                 description={`${approvals.length} approval step(s) for this request`}
                 variant="default"
                 size="sm"
-                headerActions={
-                    <Button
-                        onClick={() => setApprovalModelOpen(true)}
-                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white transition-all duration-300"
-                    >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Review
-                    </Button>
-                }
             >
                 <EnhancedDataTable
                     data={approvals}
@@ -703,20 +791,6 @@ function ClientRequestDetails() {
             </EnhancedCard>
 
             {/* Modals */}
-            <ApprovalModel
-                open={approvalModelOpen}
-                onClose={() => setApprovalModelOpen(false)}
-                onCreated={approvalCreated}
-                requestId={request?.id}
-                requestType={request?.request_type || 'Clients'}
-            />
-            <CreateAttachmentForm
-                open={attachmentModelOpen}
-                onClose={() => setAttachmentModelOpen(false)}
-                onSuccess={handleAttachmentCreated}
-                requestId={id || ''}
-                requestType={request?.request_type || 'Clients'}
-            />
             <UpdateAttachmentForm
                 open={updateAttachmentModelOpen}
                 onClose={() => {
@@ -726,6 +800,20 @@ function ClientRequestDetails() {
                 onSuccess={handleAttachmentUpdated}
                 attachment={selectedAttachment}
             />
+            
+            {/* Approval Modal */}
+            {selectedApproval && modalAction && (
+                <ApprovalModal
+                    open={true}
+                    onClose={handleModalClose}
+                    approvalId={selectedApproval.id}
+                    action={modalAction}
+                    requestCode={request?.request_code}
+                    requestType={request?.request_type || 'Clients'}
+                    creatorName={request?.created_by_name}
+                    onSuccess={handleModalClose}
+                />
+            )}
         </div>
     );
 }

@@ -94,6 +94,9 @@ interface Approval {
     status: string;
     created_name: string;
     created_at: string;
+    approver_name?: string;
+    approver_role?: string;
+    step_level?: string | number;
 }
 
 
@@ -321,14 +324,24 @@ function TaskRequestDetails() {
 
     const approvalColumns: Column<Approval>[] = [
         {
-            key: 'sequence',
-            header: 'Sequence',
-            render: (value: any) => <span className="text-slate-500 dark:text-slate-400 font-mono text-sm">{value || '-'}</span>
+            key: 'approver_name',
+            header: 'Approver',
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value ? value : 'N/A'}</span>
         },
         {
-            key: 'created_name',
-            header: 'Created By',
-            render: (value: any) => <span className="text-slate-700 dark:text-slate-300">{value || '-'}</span>
+            key: 'approver_role',
+            header: 'Role',
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value ? value : 'N/A'}</span>
+        },
+        {
+            key: 'step_level',
+            header: 'Step Level',
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value ?'Step '+ value : 'N/A'}</span>
+        },
+        {
+            key: 'step_name',
+            header: 'Step Name',
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300">{value ? value : 'N/A'}</span>
         },
         {
             key: 'status',
@@ -338,16 +351,6 @@ function TaskRequestDetails() {
                     {value}
                 </Badge>
             )
-        },
-        {
-            key: 'title' as any,
-            header: 'Title',
-            render: (value: any) => <span className="font-medium text-slate-800 dark:text-slate-200">{value || '-'}</span>
-        },
-        {
-            key: 'step_name',
-            header: 'Step Name',
-            render: (value: any) => <span className="font-medium text-slate-800 dark:text-slate-200">{value}</span>
         },
         {
             key: 'remarks',
@@ -668,18 +671,20 @@ function TaskRequestDetails() {
 
             {/* Approvals Section */}
             <EnhancedCard
-                title="Approvals"
+                title="Case History"
                 description={`${approvals.length} approval step(s) for this request`}
                 variant="default"
                 size="sm"
                 headerActions={
-                    <Button
-                        onClick={() => setApprovalModelOpen(true)}
-                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Approval
-                    </Button>
+                    request.status === 'Pending' ? (
+                        <Button
+                            onClick={() => setApprovalModelOpen(true)}
+                            className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Review
+                        </Button>
+                    ) : undefined
                 }
             >
                 <EnhancedDataTable
@@ -697,6 +702,7 @@ function TaskRequestDetails() {
                 onClose={() => setApprovalModelOpen(false)}
                 onCreated={approvalCreated}
                 requestId={request?.id}
+                lastApprovalId={approvals.length > 0 ? approvals[approvals.length - 1].id : undefined}
             />
             <CreateAttachmentForm
                 open={attachmentModelOpen}

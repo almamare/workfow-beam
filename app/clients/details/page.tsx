@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
     ArrowLeft, Edit, Trash2, Building, MapPin, DollarSign, Calendar, 
-    CheckCircle, XCircle, Clock, Loader2,
+    CheckCircle, XCircle, Clock, Loader2, Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
@@ -142,6 +142,46 @@ function ClientDetailsContent() {
         const numValue = typeof value === 'string' ? parseFloat(value) : value;
         if (isNaN(numValue)) return '';
         return new Intl.NumberFormat('en-US').format(numValue) + ' ' + currency;
+    };
+
+    const handleDownloadPDF = async () => {
+        if (!client?.id) {
+            toast.error('Client ID is missing');
+            return;
+        }
+
+        try {
+            const response = await axios.get(`/clients/download/${client.id}`, {
+                responseType: 'blob', // Important for file downloads
+            });
+
+            // Create a blob from the response
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            
+            // Create a temporary URL for the blob
+            const url = window.URL.createObjectURL(blob);
+            
+            // Create a temporary anchor element and trigger download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `client_${client.client_no || client.id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            
+            // Clean up
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            toast.success('Client document downloaded successfully');
+        } catch (error: any) {
+            console.error('Error downloading PDF:', error);
+            const errorMessage = 
+                error?.response?.data?.message || 
+                error?.response?.data?.header?.message ||
+                error?.message || 
+                'Failed to download client document';
+            toast.error(errorMessage);
+        }
     };
 
     const handleDelete = async () => {
@@ -410,14 +450,24 @@ function ClientDetailsContent() {
                 variant="default"
                 size="sm"
                 headerActions={
-                    <Button
-                        variant="outline"
-                        onClick={() => router.push(`/clients/update?id=${client.id}`)}
-                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
-                    >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Client
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={handleDownloadPDF}
+                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download PDF
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => router.push(`/clients/update?id=${client.id}`)}
+                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Client
+                        </Button>
+                    </div>
                 }
             >
                 <div className="divide-y divide-slate-200 dark:divide-slate-800 space-y-1">

@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { DeleteDialog } from '@/components/delete-dialog';
-import { Trash2, SquarePen, Plus, RefreshCw, FileSpreadsheet, Eye, X, Search } from 'lucide-react';
+import { Trash2, SquarePen, Plus, RefreshCw, FileSpreadsheet, Eye, X, Search, Download } from 'lucide-react';
 import type { Client } from '@/stores/types/clients';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
@@ -277,27 +277,76 @@ export default function ClientsPage() {
         [dispatch, page, limit, debouncedSearch, clientTypeFilter, statusFilter, dateFrom, dateTo]
     );
 
+    const handleDownloadPDF = async (client: Client) => {
+        if (!client?.id) {
+            toast.error('Client ID is missing');
+            return;
+        }
+
+        try {
+            const response = await axios.get(`/clients/download/${client.id}`, {
+                responseType: 'blob', // Important for file downloads
+            });
+
+            // Create a blob from the response
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            
+            // Create a temporary URL for the blob
+            const url = window.URL.createObjectURL(blob);
+            
+            // Create a temporary anchor element and trigger download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `client_${client.client_no || client.id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            
+            // Clean up
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            toast.success('Client document downloaded successfully');
+        } catch (error: any) {
+            console.error('Error downloading PDF:', error);
+            const errorMessage = 
+                error?.response?.data?.message || 
+                error?.response?.data?.header?.message ||
+                error?.message || 
+                'Failed to download client document';
+            toast.error(errorMessage);
+        }
+    };
+
     const actions: Action<Client>[] = [
         {
-            label: 'View Details',
+            label: 'View',
             icon: <Eye className="h-4 w-4" />,
             onClick: (client: Client) => router.push(`/clients/details?id=${client.id}`),
             variant: 'info' as const
         },
         {
-            label: 'Edit Client',
-            icon: <SquarePen className="h-4 w-4" />,
-            onClick: (client: Client) => router.push(`/clients/update?id=${client.id}`),
-            variant: 'warning' as const
+            label: 'Download',
+            icon: <Download className="h-4 w-4" />,
+            onClick: handleDownloadPDF,
+            variant: 'success' as const,
+            hidden: (client: Client) => client.status !== 'Active'
         },
         {
-            label: 'Delete Client',
+            label: 'Edit',
+            icon: <SquarePen className="h-4 w-4" />,
+            onClick: (client: Client) => router.push(`/clients/update?id=${client.id}`),
+            variant: 'warning' as const,
+            hidden: (client: Client) => client.status === 'Active'
+        },
+        {
+            label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
             onClick: (client: Client) => {
                 setSelectedId(client.id);
                 setOpen(true);
             },
-            variant: 'destructive' as const
+            variant: 'destructive' as const,
+            hidden: (client: Client) => client.status === 'Active'
         },
     ];
 

@@ -1,17 +1,19 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';      
+import React, { useState, useCallback, useMemo, useRef } from 'react';      
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
-import { Loader2, Save, RotateCcw } from 'lucide-react';
+import { Loader2, Save, RotateCcw, Upload, X, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { validateFile, formatFileSize, fileToBase64WithProgress } from '@/utils/fileUtils';
 
 type ClientPayload = {
     name: string;
@@ -33,10 +35,18 @@ const initialValues: ClientPayload = {
 
 const numberFields: (keyof ClientPayload)[] = ['budget'];
 
+interface PendingFile {
+    file: File;
+    title: string;
+    id: string;
+}
+
 const CreateClientPage: React.FC = () => {
     const [form, setForm] = useState<ClientPayload>(initialValues);
     const [loading, setLoading] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
     // Update field
@@ -95,19 +105,6 @@ const CreateClientPage: React.FC = () => {
         return Object.keys(errors).length === 0;
     }, [form]);
 
-    const formattedPayload = useMemo(() => {
-        const payload: any = { ...form };
-        payload.budget = form.budget === '' ? 0 : Number(form.budget);
-        // Remove client_type if not selected
-        if (!payload.client_type) {
-            delete payload.client_type;
-        }
-        // Remove notes if empty (optional field)
-        if (!payload.notes || payload.notes.trim() === '') {
-            delete payload.notes;
-        }
-        return payload as ClientPayload;
-    }, [form]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -117,31 +114,127 @@ const CreateClientPage: React.FC = () => {
         }
         setLoading(true);
         try {
-            // POST to your clients create endpoint
-            const result = await axios.post('/clients/create', { params: formattedPayload });
+            // Prepare payload with attachments
+            const basePayload: any = { ...form };
+            basePayload.budget = form.budget === '' ? 0 : Number(form.budget);
+            // Remove client_type if not selected
+            if (!basePayload.client_type) {
+                delete basePayload.client_type;
+            }
+            // Remove notes if empty (optional field)
+            if (!basePayload.notes || basePayload.notes.trim() === '') {
+                delete basePayload.notes;
+            }
+            
+            // Add attachments if any
+            if (pendingFiles.length > 0) {
+                console.log('Preparing attachments:', pendingFiles.length);
+                const attachments = await Promise.all(
+                    pendingFiles.map(async (pendingFile, index) => {
+                        try {
+                            console.log(`Processing attachment ${index + 1}: ${pendingFile.title}`);
+                            const base64 = await fileToBase64WithProgress(pendingFile.file, () => {});
+                            // Get MIME type from file
+                            const mimeType = pendingFile.file.type || 'application/octet-stream';
+                            // Format base64 with MIME type prefix (as required by API)
+                            const base64WithMime = `data:${mimeType};base64,${base64}`;
+                            
+                            const attachmentData = {
+                                title: pendingFile.title.trim(),
+                                file: base64WithMime,
+                                status: 'Active',
+                                version: '1.0',
+                            };
+                            
+                            console.log(`Attachment ${index + 1} prepared:`, {
+                                title: attachmentData.title,
+                                fileLength: attachmentData.file.length,
+                                status: attachmentData.status,
+                                version: attachmentData.version
+                            });
+                            
+                            return attachmentData;
+                        } catch (error) {
+                            console.error(`Error processing attachment ${index + 1}:`, error);
+                            throw error;
+                        }
+                    })
+                );
+                basePayload.attachments = attachments;
+                console.log('All attachments prepared:', attachments.length);
+            }
+            
+            // POST to clients create endpoint with attachments
+            // The endpoint creates client, generates approval request, and uploads attachments in one transaction
+            console.log('Sending request with payload structure:', {
+                name: basePayload.name,
+                state: basePayload.state,
+                city: basePayload.city,
+                budget: basePayload.budget,
+                client_type: basePayload.client_type,
+                notes: basePayload.notes,
+                attachments: basePayload.attachments 
+                    ? basePayload.attachments.map((att: any, idx: number) => ({
+                        index: idx + 1,
+                        title: att.title,
+                        file: `${att.file.substring(0, 50)}... (length: ${att.file.length})`,
+                        status: att.status,
+                        version: att.version
+                    }))
+                    : 'none'
+            });
+            
+            const result = await axios.post('/clients/create', { params: basePayload });
+            
+            console.log('Response received:', result?.data);
 
             const success =
                 result?.data?.header?.success === true ||
-                !!result?.data?.success ||
-                !!result?.data?.body?.client;
+                result?.data?.success === true ||
+                !!result?.data?.client_id ||
+                !!result?.data?.data?.client_id;
 
             if (success) {
-                toast.success('Client created successfully!');
+                // Extract client ID from response
+                const clientId = 
+                    result?.data?.client_id ||
+                    result?.data?.data?.client_id ||
+                    result?.data?.body?.client_id ||
+                    result?.data?.body?.client?.id ||
+                    result?.data?.data?.client?.id;
+                
+                console.log('Client creation response:', result?.data);
+                console.log('Extracted client ID:', clientId);
+                
+                toast.success(result?.data?.message || 'Client created successfully with attachments!');
                 setForm(initialValues);
-                // Optional: navigate back to list
-                router.push('/clients');
+                setPendingFiles([]);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+                
+                // Navigate to client details if we have an ID, otherwise to list
+                if (clientId) {
+                    router.push(`/clients/details?id=${clientId}`);
+                } else {
+                    router.push('/clients');
+                }
             } else {
                 const msg =
                     result?.data?.header?.messages?.[0]?.message ||
                     result?.data?.header?.message ||
                     result?.data?.message ||
+                    result?.data?.error ||
                     'Failed to create client.';
                 toast.error(msg);
             }
         } catch (error: any) {
+            console.error('Error creating client:', error);
             const msg =
+                error?.response?.data?.header?.messages?.[0]?.message ||
                 error?.response?.data?.header?.message ||
                 error?.response?.data?.message ||
+                error?.response?.data?.error ||
                 error?.message ||
                 'Failed to create client. Please try again.';
             toast.error(msg);
@@ -153,8 +246,45 @@ const CreateClientPage: React.FC = () => {
     const handleReset = () => {
         setForm(initialValues);
         setFieldErrors({});
+        setPendingFiles([]);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
         toast.message('Form reset to initial defaults.');
     };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFiles = e.target.files;
+        if (!selectedFiles || selectedFiles.length === 0) return;
+
+        Array.from(selectedFiles).forEach((file) => {
+            const validation = validateFile(file);
+            if (!validation.valid) {
+                toast.error(`${file.name}: ${validation.error || 'Invalid file'}`);
+                return;
+            }
+
+            const fileId = `${Date.now()}-${Math.random()}`;
+            const title = file.name.replace(/\.[^/.]+$/, '');
+            
+            setPendingFiles(prev => [...prev, { file, title, id: fileId }]);
+        });
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const handleRemoveFile = (fileId: string) => {
+        setPendingFiles(prev => prev.filter(f => f.id !== fileId));
+    };
+
+    const handleUpdateFileTitle = (fileId: string, newTitle: string) => {
+        setPendingFiles(prev => prev.map(f => 
+            f.id === fileId ? { ...f, title: newTitle } : f
+        ));
+    };
+
 
     return (
         <div className="space-y-4">
@@ -266,15 +396,25 @@ const CreateClientPage: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Notes */}
-                        <div className="space-y-2 md:col-span-2 lg:col-span-3">
-                            <Label htmlFor="notes" className="text-slate-700 dark:text-slate-200">Request Notes</Label>
+                    </div>
+                </EnhancedCard>
+
+                {/* Notes Section */}
+                <EnhancedCard
+                    title="Request Notes"
+                    description="Notes for client approval request"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="notes" className="text-slate-700 dark:text-slate-200">Notes</Label>
                             <Textarea
                                 id="notes"
                                 value={form.notes || ''}
                                 onChange={e => updateField('notes', e.target.value)}
-                                placeholder="Enter notes or additional information (optional)..."
-                                rows={4}
+                                placeholder="Province for client approval request"
+                                rows={6}
                                 className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                             />
                             {fieldErrors.notes && (
@@ -282,8 +422,84 @@ const CreateClientPage: React.FC = () => {
                             )}
                         </div>
                     </div>
+                </EnhancedCard>
 
-                    <div className="flex justify-end gap-3 mt-6">
+                {/* Attachments Section */}
+                <EnhancedCard
+                    title="Documents"
+                    description="Attach documents to the client"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="space-y-4">
+                        {/* File Upload Input */}
+                        <div className="space-y-2">
+                            <Label htmlFor="attachments" className="text-slate-700 dark:text-slate-200">Upload Documents</Label>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    ref={fileInputRef}
+                                    id="attachments"
+                                    type="file"
+                                    multiple
+                                    onChange={handleFileChange}
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                                >
+                                    <Upload className="h-4 w-4 mr-2" />
+                                    Select Files
+                                </Button>
+                            </div>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Supported formats: PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG (Max 10MB per file)
+                            </p>
+                        </div>
+
+                        {/* Pending Files List */}
+                        {pendingFiles.length > 0 && (
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-200">Selected Files ({pendingFiles.length})</Label>
+                                <div className="space-y-2">
+                                    {pendingFiles.map((pendingFile) => (
+                                        <div
+                                            key={pendingFile.id}
+                                            className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg"
+                                        >
+                                            <FileText className="h-4 w-4 text-slate-500 dark:text-slate-400 flex-shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                                <Input
+                                                    value={pendingFile.title}
+                                                    onChange={(e) => handleUpdateFileTitle(pendingFile.id, e.target.value)}
+                                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm"
+                                                    placeholder="File title"
+                                                />
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                                    {formatFileSize(pendingFile.file.size)}
+                                                </p>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleRemoveFile(pendingFile.id)}
+                                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </EnhancedCard>
+
+                <div className="flex justify-end gap-3 mt-6">
                         <Button 
                             type="button" 
                             variant="outline" 
@@ -301,10 +517,9 @@ const CreateClientPage: React.FC = () => {
                         >
                             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                             <Save className="h-4 w-4 mr-2" />
-                            {loading ? 'Saving...' : 'Create Client'}
+                            {loading ? 'Creating Client...' : 'Create Client'}
                         </Button>
-                    </div>
-                </EnhancedCard>
+                </div>
             </form>
         </div>
     );

@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { useSelector, useDispatch } from 'react-redux';
+import { AppDispatch } from '@/stores/store';
+import { selectClientsRequestsForApprovalTotal, fetchClientsRequestsForApproval } from '@/stores/slices/clients_requests_for_approval';
 import {
     Home,
     Users,
@@ -40,7 +43,10 @@ import {
     Landmark,
     Receipt,
     ChevronDown,
-    ChevronRight
+    ChevronRight,
+    CheckCircle,
+    Clock,
+    XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -52,6 +58,7 @@ interface MenuItem {
     icon: React.ReactNode;
     href: string;
     color?: string;
+    badge?: number; // Badge count for menu items
     subItems?: { href: string; title: string; icon?: React.ReactNode; color?: string }[];
 }
 
@@ -62,7 +69,7 @@ const iconLibrary: Record<string, any> = {
     Activity, Calculator, ClipboardList, UserCheck, FileEdit,
     CreditCard, FileCheck, Banknote, BarChart3, PieChart, History, UserCircle,
     Plus, Eye, List, Edit, Trash2, FileArchive, Landmark, Receipt,
-    ChevronDown, ChevronRight
+    ChevronDown, ChevronRight, CheckCircle, Clock, XCircle
 };
 
 // Flexible route configuration - completely flexible system
@@ -80,6 +87,9 @@ const routeMapping: Record<string, string> = {
     '/projects/tender/update': '/projects',
     '/budgets': '/projects',
     '/requests/projects': '/projects',
+    '/requests/projects/pending': '/projects',
+    '/requests/projects/approved': '/projects',
+    '/requests/projects/rejected': '/projects',
     '/requests/projects/details': '/projects',
     '/requests/projects/timeline': '/projects',
     
@@ -88,6 +98,11 @@ const routeMapping: Record<string, string> = {
     '/clients/update': '/clients',
     '/clients/details': '/clients',
     '/requests/clients': '/clients',
+    '/requests/clients/pending': '/clients',
+    '/requests/clients/approved': '/clients',
+    '/requests/clients/rejected': '/clients',
+    '/requests/clients/details': '/clients',
+    '/requests/clients/timeline': '/clients',
     '/client-contracts': '/clients',
     '/client-contracts/create': '/clients',
     '/client-contracts/update': '/clients',
@@ -185,22 +200,12 @@ const routeConfig: Record<string, {
         icon: 'FolderOpen',
         color: 'text-indigo-400',
         menuItems: [
-            { href: '/projects', title: 'Projects', icon: 'FolderOpen', color: 'text-indigo-400' },
-            { 
-                href: '/requests/projects', 
-                title: 'Project Requests', 
-                icon: 'FileText', 
-                color: 'text-yellow-400',
-                subItems: [
-                    { href: '/requests/projects?status=Pending', title: 'Pending', color: 'text-yellow-400' },
-                    { href: '/requests/projects?status=Approved', title: 'Approved', color: 'text-green-400' },
-                    { href: '/requests/projects?status=Rejected', title: 'Rejected', color: 'text-red-400' },
-                    { href: '/requests/projects?status=Closed', title: 'Closed', color: 'text-slate-400' },
-                    { href: '/requests/projects?status=Complete', title: 'Complete', color: 'text-green-400' },
-                ]
-            },
-            { href: '/projects/create', title: 'Create Project', icon: 'Plus', color: 'text-green-400' },
+            { href: '/projects', title: 'All Projects List', icon: 'FolderOpen', color: 'text-indigo-400' },
+            { href: '/requests/projects/pending', title: 'Pending Requests', icon: 'Clock', color: 'text-amber-400' },
+            { href: '/requests/projects/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
+            { href: '/requests/projects/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
             { href: '/budgets', title: 'Budgets', icon: 'TrendingUp', color: 'text-teal-400' },
+            { href: '/projects/create', title: 'Create Project', icon: 'Plus', color: 'text-green-400' },
         ]
     },
     '/clients': {
@@ -208,20 +213,10 @@ const routeConfig: Record<string, {
         icon: 'Users',
         color: 'text-purple-400',
         menuItems: [
-            { href: '/clients', title: 'All Clients', icon: 'Users', color: 'text-purple-400' },
-            { 
-                href: '/requests/clients', 
-                title: 'Client Requests', 
-                icon: 'FileText', 
-                color: 'text-yellow-400',
-                subItems: [
-                    { href: '/requests/clients?status=Pending', title: 'Pending', color: 'text-yellow-400' },
-                    { href: '/requests/clients?status=Approved', title: 'Approved', color: 'text-green-400' },
-                    { href: '/requests/clients?status=Rejected', title: 'Rejected', color: 'text-red-400' },
-                    { href: '/requests/clients?status=Closed', title: 'Closed', color: 'text-slate-400' },
-                    { href: '/requests/clients?status=Complete', title: 'Complete', color: 'text-green-400' },
-                ]
-            },
+            { href: '/clients', title: 'All Clients List', icon: 'Users', color: 'text-purple-400' },
+            { href: '/requests/clients/pending', title: 'Pending Requests', icon: 'Clock', color: 'text-amber-400' },
+            { href: '/requests/clients/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
+            { href: '/requests/clients/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
             { href: '/client-contracts', title: 'Client Contracts', icon: 'FileCheck', color: 'text-teal-400' },
             { href: '/client-contracts/create', title: 'Create Client Contract', icon: 'Plus', color: 'text-green-400' },
             { href: '/clients/create', title: 'Create Client', icon: 'Plus', color: 'text-green-400' }
@@ -242,17 +237,9 @@ const routeConfig: Record<string, {
         color: 'text-yellow-400',
         menuItems: [
             { href: '/tasks', title: 'Task Orders', icon: 'ClipboardList', color: 'text-yellow-400' },
-            { 
-                href: '/requests/tasks', 
-                title: 'Task Requests', 
-                icon: 'FileText', 
-                color: 'text-yellow-400',
-                subItems: [
-                    { href: '/requests/tasks?status=Pending', title: 'Pending', color: 'text-yellow-400' },
-                    { href: '/requests/tasks?status=Approved', title: 'Approved', color: 'text-green-400' },
-                    { href: '/requests/tasks?status=Rejected', title: 'Rejected', color: 'text-red-400' }
-                ]
-            },
+            { href: '/requests/tasks/pending', title: 'Pending Requests', icon: 'Clock', color: 'text-yellow-400' },
+            { href: '/requests/tasks/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
+            { href: '/requests/tasks/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
             { href: '/tasks/create', title: 'Create Task', icon: 'Plus', color: 'text-green-400' }
         ]
     },
@@ -418,16 +405,26 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: SidebarProps) {
     const pathname = usePathname();
     const searchParams = useSearchParams();
+    const dispatch = useDispatch<AppDispatch>();
     const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({});
+    
+    // Get pending approvals count for clients
+    const pendingApprovalsCount = useSelector(selectClientsRequestsForApprovalTotal);
+    
+    // Fetch pending approvals count when sidebar mounts (only fetch count, limit to 1 item)
+    // But only if we're NOT on the pending page to avoid clearing data
+    useEffect(() => {
+        // Don't fetch if we're already on the pending page - let the page handle its own data fetching
+        if (pathname !== '/requests/clients/pending') {
+            dispatch(fetchClientsRequestsForApproval({ page: 1, limit: 1, countOnly: true }));
+        }
+    }, [dispatch, pathname]);
 
     // Auto-open collapsible if current path matches a subItem
     useEffect(() => {
         const currentStatus = searchParams.get('status');
         if (currentStatus && pathname === '/requests/clients') {
             setOpenCollapsibles(prev => ({ ...prev, '/requests/clients': true }));
-        }
-        if (currentStatus && pathname === '/requests/projects') {
-            setOpenCollapsibles(prev => ({ ...prev, '/requests/projects': true }));
         }
         if (currentStatus && pathname === '/requests/tasks') {
             setOpenCollapsibles(prev => ({ ...prev, '/requests/tasks': true }));
@@ -487,6 +484,11 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                         color: menuItem.color
                     };
                     
+                    // Add badge count for pending approvals
+                    if (menuItem.href === '/requests/clients/pending') {
+                        item.badge = pendingApprovalsCount;
+                    }
+                    
                     // Add subItems if they exist
                     if (menuItem.subItems && menuItem.subItems.length > 0) {
                         item.subItems = menuItem.subItems.map(subItem => ({
@@ -503,7 +505,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
         }
 
         return items;
-    }, [currentRoute]);
+    }, [currentRoute, pendingApprovalsCount]);
 
     const hideText = collapsed && !mobileOpen;
 
@@ -515,7 +517,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
             const hrefPath = url.pathname;
             const hrefStatus = url.searchParams.get('status');
             
-            // Check if pathname matches
+            // Check if pathname matches exactly
             if (hrefPath !== pathname) {
                 return false;
             }
@@ -530,10 +532,12 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
             
             // If href doesn't have status param, check if current page also doesn't have status
             // This means the base route (without status filter) is active
+            // For pages like /requests/clients/pending, they don't have status params, so just check pathname match
             return currentStatus === null;
         } catch (e) {
             // Fallback to simple pathname check if URL parsing fails
-            return href.split('?')[0] === pathname;
+            const hrefPathOnly = href.split('?')[0];
+            return hrefPathOnly === pathname;
         }
     };
 
@@ -686,6 +690,16 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                                     {(!collapsed || mobileOpen) && (
                                                         <>
                                                             <span className="flex-1 text-left">{item.title}</span>
+                                                            {item.badge !== undefined && item.badge > 0 && (
+                                                                <span className={cn(
+                                                                    "flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold",
+                                                                    isItemActive
+                                                                        ? "bg-white/20 text-white"
+                                                                        : "bg-amber-500 text-white"
+                                                                )}>
+                                                                    {item.badge > 99 ? '99+' : item.badge}
+                                                                </span>
+                                                            )}
                                                             {isOpen ? (
                                                                 <ChevronDown className="h-4 w-4 transition-transform" />
                                                             ) : (
@@ -753,6 +767,16 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                         {(!collapsed || mobileOpen) && (
                                             <>
                                                 <span className="flex-1">{item.title}</span>
+                                                {item.badge !== undefined && item.badge > 0 && (
+                                                    <span className={cn(
+                                                        "flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold",
+                                                        isActive(item.href)
+                                                            ? "bg-white/20 text-white"
+                                                            : "bg-amber-500 text-white"
+                                                    )}>
+                                                        {item.badge > 99 ? '99+' : item.badge}
+                                                    </span>
+                                                )}
                                             </>
                                         )}
                                         {isActive(item.href) && (

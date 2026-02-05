@@ -1,8 +1,9 @@
 'use client';
 
+// REFACTOR-PHASE-1: Updated to use Redux-based auth hook instead of AuthContext
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 function AppContent() {
     const { user, isLoading } = useAuth();

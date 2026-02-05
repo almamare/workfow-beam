@@ -114,3 +114,9 @@ const loginSlice = createSlice({
 // Export actions and reducer
 export const { logout } = loginSlice.actions;
 export default loginSlice.reducer;
+
+// REFACTOR-PHASE-1: Selectors for easier access to auth state
+export const selectUser = (state: { login: LoginState }) => state.login.user;
+export const selectIsAuthenticated = (state: { login: LoginState }) => !!state.login.user;
+export const selectAuthLoading = (state: { login: LoginState }) => state.login.loading;
+export const selectAuthError = (state: { login: LoginState }) => state.login.error;

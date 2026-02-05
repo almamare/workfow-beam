@@ -505,7 +505,7 @@ function ClientRequestsPageContent() {
 
     const actions: Action<ClientRequestWithData>[] = [
         {
-            label: 'View Request Details',
+            label: 'View Request',
             onClick: (request) => {
                 router.push(`/requests/clients/details?id=${request.id}`);
             },
@@ -513,7 +513,7 @@ function ClientRequestsPageContent() {
             variant: 'warning' as const
         },
         {
-            label: 'View Client Details',
+            label: 'View Client',
             onClick: (request) => {
                 if (request.client) {
                     router.push(`/clients/details?id=${request.client.id}`);
@@ -525,7 +525,7 @@ function ClientRequestsPageContent() {
             variant: 'info' as const
         },
         {
-            label: 'Show Approvals Timeline',
+            label: 'Approvals Timeline',
             onClick: (request) => router.push(`/requests/clients/timeline?id=${request.id}`),
             icon: <Clock className="h-4 w-4" />,
             variant: 'info' as const,

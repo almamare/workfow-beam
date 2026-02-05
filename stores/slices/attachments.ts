@@ -216,6 +216,7 @@ const attachmentsSlice = createSlice({
             })
             .addCase(fetchAttachments.fulfilled, (state, action) => {
                 state.loading = false;
+                state.error = null; // Clear any previous errors
                 const payload = action.payload;
 
                 // Handle new API response structure
@@ -225,6 +226,9 @@ const attachmentsSlice = createSlice({
                 // Handle legacy API response structure
                 else if ('body' in payload && payload.body?.attachments) {
                     state.attachments = payload.body.attachments || [];
+                } else {
+                    // Empty response - no attachments (not an error)
+                    state.attachments = [];
                 }
 
                 // Store current request ID from the action meta
@@ -235,8 +239,17 @@ const attachmentsSlice = createSlice({
             })
             .addCase(fetchAttachments.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload || 'Unexpected error occurred';
-                state.attachments = [];
+                // Don't set error for 404 or "not found" - just empty array (no attachments is not an error)
+                const errorMessage = action.payload || '';
+                if (errorMessage.toLowerCase().includes('not found') || 
+                    errorMessage.toLowerCase().includes('no attachments') ||
+                    action.error.code === 'ERR_BAD_REQUEST' && action.error.message?.includes('404')) {
+                    state.error = null; // Clear error - empty list is not an error
+                    state.attachments = [];
+                } else {
+                    state.error = errorMessage || 'Unexpected error occurred';
+                    state.attachments = [];
+                }
             })
             // Create Attachment
             .addCase(createAttachment.pending, (state) => {

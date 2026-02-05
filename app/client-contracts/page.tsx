@@ -297,19 +297,19 @@ export default function ClientContractsPage() {
 
     const actions: Action<ClientContract>[] = [
         {
-            label: 'View Details',
+            label: 'View',
             icon: <Eye className="h-4 w-4" />,
             onClick: (contract: ClientContract) => router.push(`/client-contracts/details?id=${contract.id}`),
             variant: 'info' as const
         },
         {
-            label: 'Edit Contract',
+            label: 'Edit',
             icon: <SquarePen className="h-4 w-4" />,
             onClick: (contract: ClientContract) => router.push(`/client-contracts/update?id=${contract.id}`),
             variant: 'warning' as const
         },
         {
-            label: 'Delete Contract',
+            label: 'Delete',
             icon: <Trash2 className="h-4 w-4" />,
             onClick: (contract: ClientContract) => {
                 setSelectedId(contract.id);

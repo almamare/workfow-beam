@@ -1,8 +1,10 @@
 'use client';
 
+// REFACTOR-PHASE-1: Added ProtectedLayout to ensure authentication before rendering
 import React, { useState } from 'react';
 import { Navbar } from '@/components/layout/navbar';
 import { Sidebar } from '@/components/layout/sidebar';
+import { ProtectedLayout } from '@/components/layout/ProtectedLayout';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -17,19 +19,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <div className="flex h-screen">
-            <Sidebar
-                collapsed={sidebarCollapsed}
-                onToggle={toggleSidebar}
-                mobileOpen={mobileSidebarOpen}
-                setMobileOpen={setMobileSidebarOpen}
-            />
-            <div className="flex-1 flex flex-col overflow-hidden">
-                <Navbar onToggleSidebar={toggleMobileSidebar} />
-                <main className="flex-1 overflow-y-auto p-4 bg-slate-100 dark:bg-slate-900">
-                    {children}
-                </main>
+        <ProtectedLayout>
+            <div className="flex h-screen">
+                <Sidebar
+                    collapsed={sidebarCollapsed}
+                    onToggle={toggleSidebar}
+                    mobileOpen={mobileSidebarOpen}
+                    setMobileOpen={setMobileSidebarOpen}
+                />
+                <div className="flex-1 flex flex-col overflow-hidden">
+                    <Navbar onToggleSidebar={toggleMobileSidebar} />
+                    <main className="flex-1 overflow-y-auto p-4 bg-slate-100 dark:bg-slate-900">
+                        {children}
+                    </main>
+                </div>
             </div>
-        </div>
+        </ProtectedLayout>
     );
 }
