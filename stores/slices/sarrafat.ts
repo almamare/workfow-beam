@@ -8,6 +8,8 @@ import {
     UpdateSarrafParams,
 } from '@/stores/types/sarrafat';
 
+export type { CreateSarrafParams, UpdateSarrafParams } from '@/stores/types/sarrafat';
+
 interface SarrafatState {
     loading: boolean;
     error: string | null;
