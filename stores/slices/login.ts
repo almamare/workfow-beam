@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import Cookies from 'js-cookie';
 import api from '@/utils/axios';
 import { LoginResponse, User } from '@/stores/types/login';
@@ -30,7 +30,7 @@ const initialState: LoginState = {
 
 // Async thunk to perform login request
 export const authentication = createAsyncThunk<
-    User & { token: string },
+    User & { token: string; mustChangePassword: boolean },
     { username: string; password: string },
     { rejectValue: string }
 >(
@@ -45,6 +45,9 @@ export const authentication = createAsyncThunk<
             });
 
             const { header, body } = response.data;
+            const mustChangePassword =
+                Boolean((response.data as LoginResponse).must_change_password) ||
+                Boolean(body?.must_change_password);
 
             // Handle failed login with detailed message
             if (!header.success) {
@@ -68,7 +71,11 @@ export const authentication = createAsyncThunk<
             const userInfo = data.userInfo;
             localStorage.setItem('user_data', JSON.stringify(userInfo));
 
-            return { ...userInfo, token } as User & { token: string };
+            return {
+                ...userInfo,
+                token,
+                mustChangePassword,
+            };
         } catch (error: any) {
             // Fallback if request itself failed
             const message =
@@ -111,16 +118,13 @@ const loginSlice = createSlice({
                 state.error = null;
             })
             // Handle success response and store user and token
-            .addCase(
-                authentication.fulfilled,
-                (state, action: PayloadAction<User & { token: string; mustChangePassword: boolean }>) => {
-                    state.loading = false;
-                    const { token, mustChangePassword, ...user } = action.payload;
-                    state.user = user as User;
-                    state.token = token;
-                    state.mustChangePassword = mustChangePassword;
-                }
-            )
+            .addCase(authentication.fulfilled, (state, action) => {
+                state.loading = false;
+                const { token, mustChangePassword, ...user } = action.payload;
+                state.user = user as User;
+                state.token = token;
+                state.mustChangePassword = mustChangePassword;
+            })
             // Handle failed login and store error message
             .addCase(authentication.rejected, (state, action) => {
                 state.loading = false;

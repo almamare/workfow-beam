@@ -10,7 +10,8 @@ import { Loader2, Save, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useDispatch as useReduxDispatch } from 'react-redux';
 import { AppDispatch } from '@/stores/store';
-import { createSarraf, type CreateSarrafParams } from '@/stores/slices/sarrafat';
+import { createSarraf } from '@/stores/slices/sarrafat';
+import type { CreateSarrafParams } from '@/stores/types/sarrafat';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
@@ -38,10 +39,10 @@ export default function CreateSarrafPage() {
     const dispatch = useReduxDispatch<AppDispatch>();
 
     const updateField = useCallback((name: keyof FormPayload, value: string) => {
-        setForm((prev) => ({ ...prev, [name]: value }));
-        setErrors((prev) => {
+        setForm((prev: FormPayload) => ({ ...prev, [name]: value }));
+        setErrors((prev: Record<string, string>) => {
             const next = { ...prev };
-            delete next[name];
+            delete next[name as string];
             return next;
         });
     }, []);
