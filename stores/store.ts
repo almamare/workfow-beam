@@ -22,7 +22,15 @@ import Attachments from '@/stores/slices/attachments';              // Importing
 import ContractorPayments from '@/stores/slices/contractor-payments'; // Importing the Contractor Payments slice
 import TasksRequestsForApproval from '@/stores/slices/tasks_requests_for_approval'; // Importing the Tasks Requests For Approval slice
 import ClientsRequestsForApproval from '@/stores/slices/clients_requests_for_approval'; // Importing the Clients Requests For Approval slice
-
+import departments from '@/stores/slices/departments';
+import roles from '@/stores/slices/roles';
+import jobTitles from '@/stores/slices/job-titles';
+import permissions from '@/stores/slices/permissions';
+import sarrafat from '@/stores/slices/sarrafat';
+import sarrafBalances from '@/stores/slices/sarraf-balances';
+import financialDisbursements from '@/stores/slices/financial-disbursements';
+import pettyCash from '@/stores/slices/petty-cash';
+import financialLedgerApi from '@/stores/slices/financial-ledger-api';
 
 // This is the Redux store configuration for the login functionality
 // It uses the Redux Toolkit to create a store with a single slice for login.
@@ -50,7 +58,16 @@ const store = configureStore({
         approvals: Approvals,               // This is the slice for managing approvals
         clientContracts: ClientContracts,  // This is the slice for managing client contracts
         attachments: Attachments,           // This is the slice for managing attachments
-        contractorPayments: ContractorPayments // This is the slice for managing contractor payments
+        contractorPayments: ContractorPayments, // This is the slice for managing contractor payments
+        departments,
+        roles,
+        jobTitles,
+        permissions,
+        sarrafat,
+        sarrafBalances,
+        financialDisbursements,
+        pettyCash,
+        financialLedgerApi,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

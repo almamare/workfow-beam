@@ -12,6 +12,7 @@ import {
     ClipboardList,
     Activity,
     Building,
+    Building2,
     UserCircle,
     Bell,
     FileSignature,
@@ -157,6 +158,20 @@ const allMenuItems = [
         title: 'Bank Balances',
         icon: CreditCard,
         href: '/bank-balances',
+        color: 'from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700'
+    },
+    {
+        number: 24,
+        title: 'Sarrafat',
+        icon: Building2,
+        href: '/sarrafat',
+        color: 'from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700'
+    },
+    {
+        number: 25,
+        title: 'Sarraf Balances',
+        icon: Wallet,
+        href: '/sarraf-balances',
         color: 'from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700'
     },
     {

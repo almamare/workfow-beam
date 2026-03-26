@@ -9,17 +9,23 @@ interface LoginState {
     user: User | null;
     token: string | null;
     error: string | null;
+    /** When true, user must be redirected to change-password (BEAM backend) */
+    mustChangePassword: boolean;
 }
 
 // Try to load user and token from localStorage and cookies on app start
 const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user_data') : null;
 const storedToken = typeof window !== 'undefined' ? Cookies.get('token') : null;
 
+const MUST_CHANGE_PASSWORD_KEY = 'auth_must_change_password';
+const storedMustChange = typeof window !== 'undefined' ? localStorage.getItem(MUST_CHANGE_PASSWORD_KEY) : null;
+
 const initialState: LoginState = {
     loading: false,
     user: storedUser ? JSON.parse(storedUser) : null,
     token: storedToken || null,
     error: null,
+    mustChangePassword: storedMustChange === 'true',
 };
 
 // Async thunk to perform login request
@@ -83,8 +89,18 @@ const loginSlice = createSlice({
         logout: (state) => {
             state.user = null;
             state.token = null;
+            state.mustChangePassword = false;
             Cookies.remove('token');
             localStorage.removeItem('user_data');
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('auth_must_change_password');
+            }
+        },
+        clearMustChangePassword: (state) => {
+            state.mustChangePassword = false;
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('auth_must_change_password');
+            }
         },
     },
     extraReducers: (builder) => {
@@ -97,10 +113,12 @@ const loginSlice = createSlice({
             // Handle success response and store user and token
             .addCase(
                 authentication.fulfilled,
-                (state, action: PayloadAction<User & { token: string }>) => {
+                (state, action: PayloadAction<User & { token: string; mustChangePassword: boolean }>) => {
                     state.loading = false;
-                    state.user = action.payload;
-                    state.token = action.payload.token;
+                    const { token, mustChangePassword, ...user } = action.payload;
+                    state.user = user as User;
+                    state.token = token;
+                    state.mustChangePassword = mustChangePassword;
                 }
             )
             // Handle failed login and store error message
@@ -112,7 +130,7 @@ const loginSlice = createSlice({
 });
 
 // Export actions and reducer
-export const { logout } = loginSlice.actions;
+export const { logout, clearMustChangePassword } = loginSlice.actions;
 export default loginSlice.reducer;
 
 // REFACTOR-PHASE-1: Selectors for easier access to auth state
@@ -120,3 +138,4 @@ export const selectUser = (state: { login: LoginState }) => state.login.user;
 export const selectIsAuthenticated = (state: { login: LoginState }) => !!state.login.user;
 export const selectAuthLoading = (state: { login: LoginState }) => state.login.loading;
 export const selectAuthError = (state: { login: LoginState }) => state.login.error;
+export const selectMustChangePassword = (state: { login: LoginState }) => state.login.mustChangePassword;

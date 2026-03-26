@@ -21,7 +21,7 @@ interface ProtectedLayoutProps {
  * FIX: Uses mounted state to prevent hydration mismatches between server and client
  */
 export function ProtectedLayout({ children, requiredRole }: ProtectedLayoutProps) {
-    const { isAuthenticated, isLoading, user } = useAuth();
+    const { isAuthenticated, isLoading, user, mustChangePassword } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const [mounted, setMounted] = useState(false);
@@ -42,12 +42,18 @@ export function ProtectedLayout({ children, requiredRole }: ProtectedLayoutProps
             return;
         }
 
+        // BEAM: If user must change password, redirect to change-password (except when already there)
+        if (mustChangePassword && pathname !== '/change-password') {
+            router.push('/change-password');
+            return;
+        }
+
         // If role is required and user doesn't have it, redirect to dashboard
         if (requiredRole && user?.role !== requiredRole) {
             router.push('/dashboard');
             return;
         }
-    }, [mounted, isAuthenticated, isLoading, user, router, pathname, requiredRole]);
+    }, [mounted, isAuthenticated, isLoading, user, mustChangePassword, router, pathname, requiredRole]);
 
     // FIX: Show consistent loading state during initial render to prevent hydration mismatch
     if (!mounted || isLoading) {

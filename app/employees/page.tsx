@@ -40,6 +40,7 @@ export default function EmployeesPage() {
     const [downloadingCardId, setDownloadingCardId] = useState<string | null>(null);
     const [role, setRole] = useState<'All' | 'Admin' | 'Manager' | 'Employee' | 'Contractor'>('All');
     const [jobTitle, setJobTitle] = useState<string>('All');
+    const [status, setStatus] = useState<string>('All');
 
     useEffect(() => {
         dispatch(fetchEmployees({ 
@@ -47,9 +48,10 @@ export default function EmployeesPage() {
             limit, 
             search, 
             job_title: jobTitle !== 'All' ? jobTitle : undefined,
-            role: role !== 'All' ? role : undefined
-        }));
-    }, [dispatch, page, limit, search, jobTitle, role]);
+            role: role !== 'All' ? role : undefined,
+            status: status !== 'All' ? status : undefined
+        } as any));
+    }, [dispatch, page, limit, search, jobTitle, role, status]);
 
     const jobTitleOptions = useMemo(() => {
         const titles = Array.from(new Set(employees.map(emp => emp.job_title).filter(Boolean)));
@@ -171,8 +173,9 @@ export default function EmployeesPage() {
         if (search) arr.push(`Search: ${search}`);
         if (role !== 'All') arr.push(`Role: ${role}`);
         if (jobTitle !== 'All') arr.push(`Job Title: ${jobTitle}`);
+        if (status !== 'All') arr.push(`Status: ${status}`);
         return arr;
-    }, [search, role, jobTitle]);
+    }, [search, role, jobTitle, status]);
 
     const refreshTable = async () => {
         setIsRefreshing(true);
@@ -182,8 +185,9 @@ export default function EmployeesPage() {
                 limit, 
                 search, 
                 job_title: jobTitle !== 'All' ? jobTitle : undefined,
-                role: role !== 'All' ? role : undefined
-            }));
+                role: role !== 'All' ? role : undefined,
+                status: status !== 'All' ? status : undefined
+            } as any));
             toast.success('Table refreshed successfully');
         } catch {
             toast.error('Failed to refresh table');
@@ -372,6 +376,22 @@ export default function EmployeesPage() {
                             setJobTitle(value);
                             setPage(1);
                         }
+                    },
+                    {
+                        key: 'status',
+                        label: 'Status',
+                        value: status,
+                        options: [
+                            { key: 'All', value: 'All', label: 'All Statuses' },
+                            { key: 'Active', value: 'Active', label: 'Active' },
+                            { key: 'Inactive', value: 'Inactive', label: 'Inactive' },
+                            { key: 'Suspended', value: 'Suspended', label: 'Suspended' },
+                            { key: 'Resigned', value: 'Resigned', label: 'Resigned' }
+                        ],
+                        onValueChange: (value) => {
+                            setStatus(value);
+                            setPage(1);
+                        }
                     }
                 ]}
                 activeFilters={activeFilters}
@@ -379,6 +399,7 @@ export default function EmployeesPage() {
                     setSearch('');
                     setRole('All');
                     setJobTitle('All');
+                    setStatus('All');
                     setPage(1);
                 }}
                 actions={

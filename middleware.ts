@@ -9,6 +9,7 @@ import type { NextRequest } from 'next/server';
 const publicRoutes = ['/login', '/'];
 // Routes that should redirect to login if not authenticated
 const protectedRoutes = [
+    '/change-password',
     '/dashboard',
     '/approvals',
     '/clients',
@@ -38,6 +39,8 @@ const protectedRoutes = [
     '/roles',
     '/permissions',
     '/budgets',
+    '/sarrafat',
+    '/sarraf-balances',
 ];
 
 export function middleware(request: NextRequest) {

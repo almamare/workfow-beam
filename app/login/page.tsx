@@ -54,8 +54,14 @@ export default function LoginPage() {
         try {
             const result = await dispatch(authentication({ username, password }));
             if (authentication.fulfilled.match(result)) {
-                toast.success('Welcome back!');
-                router.push('/dashboard');
+                const payload = result.payload as { mustChangePassword?: boolean };
+                if (payload?.mustChangePassword) {
+                    toast.info('You must change your password before continuing.');
+                    router.push('/change-password');
+                } else {
+                    toast.success('Welcome back!');
+                    router.push('/dashboard');
+                }
             } else {
                 toast.error((result.payload as string) || 'Login failed');
             }

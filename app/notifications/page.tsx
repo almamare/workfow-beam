@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppDispatch } from '@/stores/store';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import {
@@ -12,34 +13,57 @@ import {
     selectNotifications,
     selectNotificationsCounts,
     selectNotificationsLoading,
+    selectNotificationsError,
     selectTotalCount,
     selectUnreadCount,
     selectReadCount,
 } from '@/stores/slices/notifications';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Bell, Check, X, Trash2, RefreshCw, FileSpreadsheet, AlertTriangle, Info, CheckCircle2, XCircle as XCircleIcon } from 'lucide-react';
+import { Bell, Check, X, Trash2, RefreshCw, FileSpreadsheet, AlertTriangle, Info, CheckCircle2, XCircle as XCircleIcon, ExternalLink } from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
 import type { NotificationItem } from '@/stores/types/notifications';
+import { resolveNotificationActionLink, withAppBasePath } from '@/utils/notificationNavigation';
+
+/** Normalize API notification_type for filters (Information | Warning | … → filter key) */
+function typeFilterKey(t?: string): string {
+    if (!t) return 'info';
+    const u = t.toLowerCase();
+    if (u === 'information') return 'info';
+    if (u === 'alert') return 'alert';
+    if (u === 'warning') return 'warning';
+    if (u === 'success') return 'success';
+    return u;
+}
 
 const notificationTypes = [
     { value: 'info', label: 'Information', icon: <Info className="h-4 w-4" /> },
     { value: 'warning', label: 'Warning', icon: <AlertTriangle className="h-4 w-4" /> },
-    { value: 'error', label: 'Error', icon: <XCircleIcon className="h-4 w-4" /> },
+    { value: 'alert', label: 'Alert', icon: <XCircleIcon className="h-4 w-4" /> },
     { value: 'success', label: 'Success', icon: <CheckCircle2 className="h-4 w-4" /> },
-    { value: 'urgent', label: 'Urgent', icon: <AlertTriangle className="h-4 w-4" /> }
+    { value: 'error', label: 'Error', icon: <XCircleIcon className="h-4 w-4" /> },
+    { value: 'urgent', label: 'Urgent', icon: <AlertTriangle className="h-4 w-4" /> },
 ];
 
 export default function NotificationsPage() {
+    const router = useRouter();
     const notifications = useSelector(selectNotifications);
     const counts = useSelector(selectNotificationsCounts);
     const loading = useSelector(selectNotificationsLoading);
+    const fetchError = useSelector(selectNotificationsError);
     const totalItems = useSelector(selectTotalCount);
     const unreadCount = useSelector(selectUnreadCount);
     const readCount = useSelector(selectReadCount);
@@ -47,14 +71,62 @@ export default function NotificationsPage() {
     const dispatch = useReduxDispatch<AppDispatch>();
 
     const [search, setSearch] = useState('');
-    const [type, setType] = useState<'All' | 'info' | 'warning' | 'error' | 'success' | 'urgent'>('All');
+    const [type, setType] = useState<'All' | 'info' | 'warning' | 'alert' | 'error' | 'success' | 'urgent'>('All');
     const [status, setStatus] = useState<'All' | 'Read' | 'Unread'>('All');
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+    const [detailItem, setDetailItem] = useState<NotificationItem | null>(null);
 
     useEffect(() => {
         dispatch(fetchNotifications());
     }, [dispatch]);
+
+    const openNotification = useCallback(
+        async (n: NotificationItem) => {
+            const raw = n.action_link;
+            const hasLink = typeof raw === 'string' && raw.trim().length > 0;
+
+            if (!hasLink) {
+                setDetailItem(n);
+                if (!n.is_read) {
+                    try {
+                        await dispatch(markNotificationAsRead(n.id)).unwrap();
+                    } catch {
+                        /* optional */
+                    }
+                }
+                return;
+            }
+
+            const resolved = resolveNotificationActionLink(raw);
+            if (!resolved) {
+                setDetailItem(n);
+                return;
+            }
+
+            if (resolved.kind === 'external') {
+                if (!n.is_read) {
+                    try {
+                        await dispatch(markNotificationAsRead(n.id)).unwrap();
+                    } catch (err: any) {
+                        toast.error(err || 'Failed to mark as read');
+                    }
+                }
+                window.open(resolved.href, '_blank', 'noopener,noreferrer');
+                return;
+            }
+
+            router.push(withAppBasePath(resolved.href));
+            if (!n.is_read) {
+                try {
+                    await dispatch(markNotificationAsRead(n.id)).unwrap();
+                } catch (err: any) {
+                    toast.error(err || 'Failed to mark as read');
+                }
+            }
+        },
+        [dispatch, router]
+    );
 
     // Filter notifications client-side
     const filteredNotifications = useMemo(() => {
@@ -70,9 +142,9 @@ export default function NotificationsPage() {
             );
         }
 
-        // Filter by type
+        // Filter by type (API: Information, Warning, Alert, Success)
         if (type !== 'All') {
-            filtered = filtered.filter(n => (n.notification_type || 'info') === type);
+            filtered = filtered.filter(n => typeFilterKey(n.notification_type) === type);
         }
 
         // Filter by status
@@ -110,24 +182,39 @@ export default function NotificationsPage() {
             key: 'notification_type', 
             header: 'Type', 
             sortable: true,
-            render: (value: any, notification: NotificationItem) => {
-                const notificationType = notification.notification_type || 'info';
-                const typeConfig = notificationTypes.find(t => t.value === notificationType);
+            render: (_value: unknown, notification: NotificationItem) => {
+                const key = typeFilterKey(notification.notification_type);
+                const typeConfig = notificationTypes.find((t) => t.value === key);
                 const typeColors: Record<string, string> = {
-                    'info': 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-                    'warning': 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800',
-                    'error': 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
-                    'success': 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
-                    'urgent': 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800'
+                    info: 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+                    warning: 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800',
+                    alert: 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
+                    error: 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
+                    success: 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+                    urgent: 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
                 };
                 
                 return (
-                    <Badge variant="outline" className={`${typeColors[notificationType] || typeColors.info} font-medium`}>
+                    <Badge variant="outline" className={`${typeColors[key] || typeColors.info} font-medium`}>
                         {typeConfig?.icon}
-                        <span className="ml-1">{typeConfig?.label || notificationType}</span>
+                        <span className="ml-1">{notification.notification_type || typeConfig?.label || key}</span>
                     </Badge>
                 );
             }
+        },
+        {
+            key: 'action_link',
+            header: 'Link',
+            sortable: false,
+            render: (_v: unknown, n: NotificationItem) =>
+                n.action_link && String(n.action_link).trim() ? (
+                    <Badge variant="outline" className="font-mono text-[10px] max-w-[140px] truncate" title={String(n.action_link)}>
+                        <ExternalLink className="h-3 w-3 mr-1 shrink-0" />
+                        {String(n.action_link)}
+                    </Badge>
+                ) : (
+                    <span className="text-slate-400 text-sm">—</span>
+                ),
         },
         { 
             key: 'created_at', 
@@ -177,6 +264,14 @@ export default function NotificationsPage() {
     ];
 
     const actions: Action<NotificationItem>[] = [
+        {
+            label: 'Open',
+            onClick: (notification: NotificationItem) => {
+                openNotification(notification);
+            },
+            icon: <ExternalLink className="h-4 w-4" />,
+            variant: 'default' as const,
+        },
         {
             label: 'Mark as Read',
             onClick: async (notification: NotificationItem) => {
@@ -287,10 +382,16 @@ export default function NotificationsPage() {
         <div className="space-y-4">
             {/* Header */}
             <Breadcrumb />
+            {fetchError && fetchError !== 'Request canceled' && (
+                <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-800 dark:text-red-200">
+                    {fetchError}
+                </div>
+            )}
+
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Notifications</h1>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">Browse and manage all system notifications</p>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Browse and manage all system notifications. Click a row to open deep links when available.</p>
                 </div>
                 <Button 
                     onClick={markAllRead}
@@ -372,6 +473,7 @@ export default function NotificationsPage() {
                             { key: 'All', value: 'All', label: 'All Types' },
                             { key: 'info', value: 'info', label: 'Information' },
                             { key: 'warning', value: 'warning', label: 'Warning' },
+                            { key: 'alert', value: 'alert', label: 'Alert' },
                             { key: 'error', value: 'error', label: 'Error' },
                             { key: 'success', value: 'success', label: 'Success' },
                             { key: 'urgent', value: 'urgent', label: 'Urgent' },
@@ -434,8 +536,25 @@ export default function NotificationsPage() {
                     loading={loading}
                     noDataMessage="No notifications found matching your search criteria"
                     searchPlaceholder="Search notifications..."
+                    onRowClick={(row) => openNotification(row)}
                 />
             </EnhancedCard>
+
+            <Dialog open={!!detailItem} onOpenChange={(open) => !open && setDetailItem(null)}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>{detailItem?.title || 'Notification'}</DialogTitle>
+                        <DialogDescription className="text-left whitespace-pre-wrap break-words text-slate-700 dark:text-slate-300">
+                            {detailItem?.message}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDetailItem(null)}>
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -34,8 +34,11 @@ interface FetchEmployeesParams {
     page?: number;
     limit?: number;
     search?: string;
-    job_title?: string;
+    /** BEAM: filter by job_title_id (numeric) */
+    job_title?: string | number;
     role?: string;
+    /** BEAM: filter by employee status (Active, Inactive, Suspended, Resigned) */
+    status?: string;
 }
 
 // ================== Async Thunks ==================

@@ -4,7 +4,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
-import { Eye, Download, Trash2, Edit, FileText, Image, File } from 'lucide-react';
+import { Eye, Download, Trash2, Edit, FileText, Image as ImageIcon, File } from 'lucide-react';
 import type { Attachment } from '@/stores/types/attachments';
 import { formatFileSize } from '@/utils/fileUtils';
 import axios from '@/utils/axios';
@@ -31,7 +31,7 @@ export const AttachmentsList: React.FC<AttachmentsListProps> = ({
             return <FileText className="h-4 w-4 text-red-500" />;
         }
         if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].some(ext => fileName.endsWith(ext))) {
-            return <Image className="h-4 w-4 text-blue-500" />;
+            return <ImageIcon className="h-4 w-4 text-blue-500" aria-hidden />;
         }
         return <File className="h-4 w-4 text-slate-500" />;
     };

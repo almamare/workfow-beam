@@ -20,6 +20,7 @@ import {
     Settings,
     Megaphone,
     Building,
+    Building2,
     TrendingUp,
     Activity,
     ArrowLeft,
@@ -46,7 +47,9 @@ import {
     ChevronRight,
     CheckCircle,
     Clock,
-    XCircle
+    XCircle,
+    KeyRound,
+    Inbox,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -65,11 +68,11 @@ interface MenuItem {
 // General icon library - reusable icons that can be used anywhere
 const iconLibrary: Record<string, any> = {
     Home, Users, FileText, DollarSign, FolderOpen, Package, Shield,
-    Wallet, Contact, Settings, Megaphone, Building, TrendingUp,
+    Wallet, Contact, Settings, Megaphone, Building, Building2, TrendingUp, Inbox,
     Activity, Calculator, ClipboardList, UserCheck, FileEdit,
     CreditCard, FileCheck, Banknote, BarChart3, PieChart, History, UserCircle,
     Plus, Eye, List, Edit, Trash2, FileArchive, Landmark, Receipt,
-    ChevronDown, ChevronRight, CheckCircle, Clock, XCircle
+    ChevronDown, ChevronRight, CheckCircle, Clock, XCircle, KeyRound
 };
 
 // Flexible route configuration - completely flexible system
@@ -124,6 +127,8 @@ const routeMapping: Record<string, string> = {
     // Users related pages
     '/users/create': '/users',
     '/users/update': '/users',
+    '/users/details': '/users',
+    '/users/permissions': '/users',
     '/employees': '/users',
     '/employees/create': '/users',
     '/employees/update': '/users',
@@ -132,7 +137,10 @@ const routeMapping: Record<string, string> = {
     
     // Departments related pages
     '/departments': '/users',
-    
+    // Permissions related pages
+    '/permissions': '/users',
+    '/permissions/details': '/users',
+
     // Requests related pages
     '/requests/employees': '/requests',
     '/approvals': '/requests',
@@ -145,6 +153,11 @@ const routeMapping: Record<string, string> = {
     '/financial/cash-ledger': '/financial',
     '/financial/budgets': '/financial',
     '/financial/loans': '/financial',
+    '/financial/disbursements': '/financial',
+    '/financial/disbursements/new': '/financial',
+    '/financial/disbursements/inbox': '/financial',
+    '/financial/petty-cash': '/financial',
+    '/financial/ledger': '/financial',
     
     // Inventory related pages
     '/inventory/items': '/inventory',
@@ -180,7 +193,18 @@ const routeMapping: Record<string, string> = {
     '/bank-balances/update': '/bank-balances',
     '/bank-balances/details': '/bank-balances',
     '/bank-balances/bank': '/bank-balances',
-    
+
+    // Sarrafat (money changers) related pages
+    '/sarrafat/create': '/sarrafat',
+    '/sarrafat/update': '/sarrafat',
+    '/sarrafat/details': '/sarrafat',
+
+    // Sarraf Balances related pages
+    '/sarraf-balances/create': '/sarraf-balances',
+    '/sarraf-balances/update': '/sarraf-balances',
+    '/sarraf-balances/details': '/sarraf-balances',
+    '/sarraf-balances/sarraf': '/sarraf-balances',
+
 };
 
 const routeConfig: Record<string, { 
@@ -248,10 +272,15 @@ const routeConfig: Record<string, {
         icon: 'Users',
         color: 'text-blue-400',
         menuItems: [
-            { href: '/users', title: 'Users', icon: 'Users', color: 'text-blue-400' },
-            { href: '/users/create', title: 'Create User', icon: 'Plus', color: 'text-green-400' },
+            { href: '/users', title: 'All Users List', icon: 'Users', color: 'text-blue-400' },
             { href: '/employees', title: 'Employees', icon: 'UserCheck', color: 'text-emerald-400' },
+            { href: '/roles', title: 'Roles', icon: 'Shield', color: 'text-amber-400' },
+            { href: '/permissions', title: 'Permissions', icon: 'KeyRound', color: 'text-cyan-400' },
+            { href: '/departments', title: 'Departments', icon: 'Building', color: 'text-violet-400' },
+            
+            { href: '/users/create', title: 'Create User', icon: 'Plus', color: 'text-green-400' },
             { href: '/employees/create', title: 'Create Employee', icon: 'Plus', color: 'text-green-400' },
+            { href: '/departments/create', title: 'Create Department', icon: 'Plus', color: 'text-green-400' },
         ]
     },
     '/requests': {
@@ -280,6 +309,10 @@ const routeConfig: Record<string, {
                     { href: '/requests/financial?status=Rejected', title: 'Rejected', color: 'text-red-400' }
                 ]
             },
+            { href: '/financial/disbursements', title: 'Disbursements', icon: 'Banknote', color: 'text-sky-400' },
+            { href: '/financial/disbursements/inbox', title: 'Disbursement inbox', icon: 'Inbox', color: 'text-amber-400' },
+            { href: '/financial/petty-cash', title: 'Petty cash', icon: 'Landmark', color: 'text-emerald-400' },
+            { href: '/financial/ledger', title: 'Financial ledger', icon: 'BarChart3', color: 'text-cyan-400' },
             { href: '/financial/contractor-payments', title: 'Contractor Payments', icon: 'Banknote', color: 'text-green-400' },
             { href: '/financial/cash-ledger', title: 'Cash Ledger', icon: 'BarChart3', color: 'text-emerald-400' },
             { href: '/financial/budgets', title: 'Project Budgets', icon: 'TrendingUp', color: 'text-teal-400' },
@@ -339,6 +372,24 @@ const routeConfig: Record<string, {
         menuItems: [
             { href: '/bank-balances', title: 'Bank Balances', icon: 'Wallet', color: 'text-amber-400' },
             { href: '/bank-balances/create', title: 'Add Balance', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/sarrafat': {
+        title: 'Sarrafat',
+        icon: 'Building2',
+        color: 'text-sky-500',
+        menuItems: [
+            { href: '/sarrafat', title: 'Sarrafat (Money Changers)', icon: 'Building2', color: 'text-sky-500' },
+            { href: '/sarrafat/create', title: 'Add Sarraf', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/sarraf-balances': {
+        title: 'Sarraf Balances',
+        icon: 'Wallet',
+        color: 'text-amber-500',
+        menuItems: [
+            { href: '/sarraf-balances', title: 'Sarraf Balances', icon: 'Wallet', color: 'text-amber-500' },
+            { href: '/sarraf-balances/create', title: 'Add Balance', icon: 'Plus', color: 'text-green-400' }
         ]
     },
     '/client-contracts': {
@@ -433,11 +484,6 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
             setOpenCollapsibles(prev => ({ ...prev, '/requests/financial': true }));
         }
     }, [pathname, searchParams]);
-
-    // Hide sidebar entirely on dashboard
-    if (pathname === '/dashboard') {
-        return null;
-    }
 
     // Find current route and its configuration - find parent route for sub-pages
     const currentRoute = useMemo(() => {
@@ -567,6 +613,11 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [mobileOpen, setMobileOpen]);
+
+    // Hide sidebar entirely on dashboard (after all hooks to satisfy rules-of-hooks)
+    if (pathname === '/dashboard') {
+        return null;
+    }
 
     return (
         <>

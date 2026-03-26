@@ -26,20 +26,29 @@ import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/DatePicker';
+import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
+import { AppDispatch } from '@/stores/store';
+import { fetchJobTitles, selectJobTitles } from '@/stores/slices/job-titles';
+import { fetchDepartments, selectDepartments } from '@/stores/slices/departments';
+import { fetchEmployees, selectEmployees } from '@/stores/slices/employees';
 
-/* ---------- Types ---------- */
+/* ---------- Types (BEAM: job_title_id, department_id, manager_id, status) ---------- */
 type EmployeePayload = {
     name: string;
     surname: string;
     job_title: string;
+    job_title_id?: number | null;
     hire_date: string;
-    salary_grade: number | string; // salary will be converted to number
+    salary_grade: number | string;
     role: string;
     notes?: string;
-    avatar?: string; // must be base64 string (or empty if no image uploaded)
+    avatar?: string;
+    department_id?: string | null;
+    manager_id?: string | null;
+    status?: string | null;
 };
 
-const JOB_TITLE_OPTIONS = ['Accounts', 'Employment', 'Contracts', 'General', 'Financial'];
+const LEGACY_JOB_TITLES = ['Accounts', 'Employment', 'Contracts', 'General', 'Financial'];
 
 /* ---------- Initial empty state ---------- */
 const EMPTY: EmployeePayload = {
@@ -60,6 +69,17 @@ const UpdateEmployeePageContent: React.FC = () => {
     const router = useRouter();
     const params = useSearchParams();
     const employeeId = params.get('id');
+    const dispatch = useReduxDispatch<AppDispatch>();
+
+    useEffect(() => {
+        dispatch(fetchJobTitles());
+        dispatch(fetchDepartments());
+        dispatch(fetchEmployees({ page: 1, limit: 500 }));
+    }, [dispatch]);
+
+    const jobTitlesList = useSelector(selectJobTitles);
+    const departmentsList = useSelector(selectDepartments);
+    const employeesList = useSelector(selectEmployees);
 
     /* ---------- Local state ---------- */
     const [form, setForm] = useState<EmployeePayload>(EMPTY); // form data
@@ -68,7 +88,7 @@ const UpdateEmployeePageContent: React.FC = () => {
 
     /* ---------- Helper: update field ---------- */
     const updateField = useCallback(
-        (name: keyof EmployeePayload, value: string) => {
+        (name: keyof EmployeePayload, value: string | number | undefined) => {
             setForm((prev) => ({ ...prev, [name]: value }));
             // remove error once user edits field
             setErrors((prev) => {
@@ -87,8 +107,26 @@ const UpdateEmployeePageContent: React.FC = () => {
                 setLoading(true);
                 const res = await axios.get(`/employees/fetch/${employeeId}`);
                 if (res?.data?.header?.success) {
-                    const emp = res.data.body.employee;
-                    setForm(emp);
+                    const body = res.data.body as { employee?: Record<string, unknown>; employees?: { items?: Record<string, unknown>[] } };
+                    const emp = (body.employee ?? body.employees?.items?.[0]) as Record<string, unknown>;
+                    if (!emp) {
+                        toast.error('Employee data not found.');
+                        return;
+                    }
+                    setForm({
+                        name: String(emp.name ?? ''),
+                        surname: String(emp.surname ?? ''),
+                        job_title: String(emp.job_title ?? ''),
+                        job_title_id: emp.job_title_id != null ? Number(emp.job_title_id) : undefined,
+                        hire_date: String(emp.hire_date ?? ''),
+                        salary_grade: (emp.salary_grade as number | string) ?? '',
+                        role: String(emp.role ?? ''),
+                        notes: emp.notes != null ? String(emp.notes) : undefined,
+                        avatar: emp.avatar != null ? String(emp.avatar) : undefined,
+                        department_id: emp.department_id != null ? String(emp.department_id) : undefined,
+                        manager_id: emp.manager_id != null ? String(emp.manager_id) : undefined,
+                        status: emp.status != null ? String(emp.status) : undefined,
+                    });
                 } else {
                     toast.error('Failed to load employee data.');
                 }
@@ -164,7 +202,12 @@ const UpdateEmployeePageContent: React.FC = () => {
 
         setLoading(true);
         try {
-            const res = await axios.put(`/employees/update/${employeeId}`, { params: payload });
+            const body: Record<string, unknown> = { ...payload };
+            if (form.job_title_id != null) body.job_title_id = form.job_title_id;
+            if (form.department_id) body.department_id = form.department_id;
+            if (form.manager_id) body.manager_id = form.manager_id;
+            if (form.status) body.status = form.status;
+            const res = await axios.put(`/employees/update/${employeeId}`, body);
 
             if (res?.data?.header.success) {
                 toast.success('Employee updated successfully!');
@@ -253,25 +296,77 @@ const UpdateEmployeePageContent: React.FC = () => {
                                     Job Title *
                                 </Label>
                                 <Select
-                                    value={form.job_title}
-                                    onValueChange={(v) => updateField('job_title', v)}
+                                    value={form.job_title_id != null ? String(form.job_title_id) : form.job_title || ''}
+                                    onValueChange={(v) => {
+                                        const num = v ? parseInt(v, 10) : undefined;
+                                        if (v && !isNaN(num as number)) {
+                                            const jt = jobTitlesList.find((j) => j.id === num);
+                                            updateField('job_title_id', num);
+                                            updateField('job_title', jt ? (jt.title_en ?? jt.title_ar ?? '') : '');
+                                        } else {
+                                            updateField('job_title_id', undefined);
+                                            updateField('job_title', v ?? '');
+                                        }
+                                    }}
                                 >
-                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                                         <SelectValue placeholder="Select job title" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
-                                        {JOB_TITLE_OPTIONS.map((title) => (
-                                            <SelectItem
-                                                key={title}
-                                                value={title}
-                                                className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200"
-                                            >
-                                                {title}
+                                        {jobTitlesList?.length
+                                            ? jobTitlesList.map((j) => (
+                                                <SelectItem key={j.id} value={String(j.id)}>
+                                                    {j.title_en ?? j.title_ar ?? String(j.id)}
+                                                </SelectItem>
+                                            ))
+                                            : LEGACY_JOB_TITLES.map((title) => (
+                                                <SelectItem key={title} value={title}>{title}</SelectItem>
+                                            ))}
+                                    </SelectContent>
+                                </Select>
+                                {errors.job_title && <ErrorText>{errors.job_title}</ErrorText>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Department</Label>
+                                <Select value={form.department_id ?? ''} onValueChange={(v) => updateField('department_id', v || undefined)}>
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectValue placeholder="Select department" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        {departmentsList?.map((d) => (
+                                            <SelectItem key={d.id} value={d.department_id}>{d.name_en ?? d.name_ar ?? d.department_id}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Manager</Label>
+                                <Select value={form.manager_id ?? ''} onValueChange={(v) => updateField('manager_id', v || undefined)}>
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectValue placeholder="Select manager" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        {employeesList?.map((emp) => (
+                                            <SelectItem key={emp.id} value={emp.employee_code ?? emp.id}>
+                                                {emp.name} {emp.surname} {emp.employee_code ? `(${emp.employee_code})` : ''}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                {errors.job_title && <ErrorText>{errors.job_title}</ErrorText>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Status</Label>
+                                <Select value={form.status ?? 'Active'} onValueChange={(v) => updateField('status', v)}>
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectValue placeholder="Status" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        <SelectItem value="Active">Active</SelectItem>
+                                        <SelectItem value="Inactive">Inactive</SelectItem>
+                                        <SelectItem value="Suspended">Suspended</SelectItem>
+                                        <SelectItem value="Resigned">Resigned</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="hire_date" className="text-slate-700 dark:text-slate-300 font-medium">

@@ -1,6 +1,12 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import api from '@/utils/axios';
-import { User, UsersResponse } from '@/stores/types/users';
+import {
+    User,
+    UsersResponse,
+    UserPermissionsResponse,
+    UserPermissionItem,
+    SetUserPermissionItem,
+} from '@/stores/types/users';
 
 // ================== State Interface ==================
 /**
@@ -8,12 +14,14 @@ import { User, UsersResponse } from '@/stores/types/users';
  * Defines the shape of the Redux state for users
  */
 interface UserState {
-    loading: boolean;          // Indicates if data is being fetched
-    error: string | null;      // Stores error messages if requests fail
-    users: User[];             // List of users fetched from the server
-    selectedUser: User | null; // Single user details (if fetched)
-    total: number;             // Total number of users
-    pages: number;             // Total number of pages
+    loading: boolean;
+    error: string | null;
+    users: User[];
+    selectedUser: User | null;
+    total: number;
+    pages: number;
+    /** User permissions (overrides) from GET /users/permissions/{userId} */
+    userPermissions: UserPermissionItem[] | null;
 }
 
 // ================== Initial State ==================
@@ -24,6 +32,7 @@ const initialState: UserState = {
     selectedUser: null,
     total: 0,
     pages: 0,
+    userPermissions: null,
 };
 
 // ================== Params Interface ==================
@@ -125,6 +134,58 @@ export const fetchUsers = createAsyncThunk<
     }
 });
 
+/**
+ * Fetch permissions for a user (overrides only). GET /users/permissions/{userId}
+ */
+export const fetchUserPermissions = createAsyncThunk<
+    UserPermissionsResponse,
+    string,
+    { rejectValue: string }
+>('users/fetchUserPermissions', async (userId, { rejectWithValue }) => {
+    try {
+        const response = await api.get<UserPermissionsResponse>(`/users/permissions/${userId}`);
+        const { header } = response.data;
+        if (!header?.success) {
+            const msg = (header?.messages as { message?: string }[])?.[0]?.message || 'Failed to fetch user permissions';
+            return rejectWithValue(msg);
+        }
+        return response.data;
+    } catch (error: any) {
+        const msg =
+            error.response?.data?.header?.messages?.[0]?.message ||
+            error.message ||
+            'Failed to fetch user permissions';
+        return rejectWithValue(msg);
+    }
+});
+
+/**
+ * Set (replace) user permissions. PUT /users/permissions/{userId}
+ */
+export const setUserPermissions = createAsyncThunk<
+    UserPermissionsResponse,
+    { userId: string; permissions: SetUserPermissionItem[] },
+    { rejectValue: string }
+>('users/setUserPermissions', async ({ userId, permissions }, { rejectWithValue }) => {
+    try {
+        const response = await api.put(`/users/permissions/${userId}`, {
+            params: { permissions },
+        });
+        const { header } = response.data;
+        if (!header?.success) {
+            const msg = (header?.messages as { message?: string }[])?.[0]?.message || 'Failed to set user permissions';
+            return rejectWithValue(msg);
+        }
+        return response.data;
+    } catch (error: any) {
+        const msg =
+            error.response?.data?.header?.messages?.[0]?.message ||
+            error.message ||
+            'Failed to set user permissions';
+        return rejectWithValue(msg);
+    }
+});
+
 // ================== Slice ==================
 /**
  * User Slice - manages users state in Redux store
@@ -133,11 +194,11 @@ const userSlice = createSlice({
     name: 'users',
     initialState,
     reducers: {
-        /**
-         * Clear selected user details from state
-         */
         clearSelectedUser(state) {
             state.selectedUser = null;
+        },
+        clearUserPermissions(state) {
+            state.userPermissions = null;
         },
     },
     extraReducers: (builder) => {
@@ -179,12 +240,23 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload || 'Failed to load user data';
                 state.selectedUser = null;
+            })
+            .addCase(fetchUserPermissions.fulfilled, (state, action: PayloadAction<UserPermissionsResponse>) => {
+                const list = action.payload.body?.permissions;
+                state.userPermissions = Array.isArray(list) ? list : null;
+            })
+            .addCase(fetchUserPermissions.rejected, (state) => {
+                state.userPermissions = null;
+            })
+            .addCase(setUserPermissions.fulfilled, (state, action: PayloadAction<UserPermissionsResponse>) => {
+                const list = action.payload.body?.permissions;
+                state.userPermissions = Array.isArray(list) ? list : null;
             });
     },
 });
 
 // ================== Exports ==================
-export const { clearSelectedUser } = userSlice.actions;
+export const { clearSelectedUser, clearUserPermissions } = userSlice.actions;
 export default userSlice.reducer;
 
 // ================== Selectors ==================
@@ -194,3 +266,4 @@ export const selectTotalPages = (state: { users: UserState }) => state.users.pag
 export const selectTotalItems = (state: { users: UserState }) => state.users.total;
 export const selectSelectedUser = (state: { users: UserState }) => state.users.selectedUser;
 export const selectError = (state: { users: UserState }) => state.users.error;
+export const selectUserPermissions = (state: { users: UserState }) => state.users.userPermissions;

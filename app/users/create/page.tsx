@@ -14,6 +14,8 @@ import {
     selectEmployees,
     selectLoading,
 } from '@/stores/slices/employees';
+import { fetchRoles, selectRoles } from '@/stores/slices/roles';
+import { fetchDepartments, selectDepartments } from '@/stores/slices/departments';
 import type { Employee } from '@/stores/types/employees';
 import {
     Select,
@@ -36,6 +38,9 @@ type UserPayload = {
     phone: string;
     type: string;
     status: string;
+    role_id?: number | null;
+    department_id?: string | null;
+    must_change_password?: number;
 };
 
 // Initial form values
@@ -49,6 +54,9 @@ const initialValues: UserPayload = {
     phone: '',
     type: 'General',
     status: 'Active',
+    role_id: undefined,
+    department_id: undefined,
+    must_change_password: 1,
 };
 
 const CreateUserPage: React.FC = () => {
@@ -58,17 +66,20 @@ const CreateUserPage: React.FC = () => {
     const router = useRouter();
     const dispatch = useReduxDispatch();
 
-    // Fetch employees on mount
+    // Fetch employees, roles, departments on mount (BEAM reference data)
     useEffect(() => {
         dispatch(fetchEmployees({ page: 1, limit: 100, search: '' }) as any);
+        dispatch(fetchRoles() as any);
+        dispatch(fetchDepartments() as any);
     }, [dispatch]);
 
-    // Select employees and loading state from Redux
     const employees = useSelector(selectEmployees);
     const empLoading = useSelector(selectLoading);
+    const roles = useSelector(selectRoles);
+    const departments = useSelector(selectDepartments);
 
     // Update a single field in the form
-    const updateField = useCallback((name: keyof UserPayload, value: string) => {
+    const updateField = useCallback((name: keyof UserPayload, value: string | number | undefined) => {
         setForm(prev => ({ ...prev, [name]: value }));
         setFieldErrors(prev => {
             const clone = { ...prev };
@@ -121,7 +132,11 @@ const CreateUserPage: React.FC = () => {
 
         setLoading(true);
         try {
-            const result = await axios.post('/users/create', { params: form });
+            const body: Record<string, unknown> = { ...form };
+            if (form.role_id != null) body.role_id = form.role_id;
+            if (form.department_id != null) body.department_id = form.department_id;
+            if (form.must_change_password != null) body.must_change_password = form.must_change_password;
+            const result = await axios.post('/users/create', body);
             const success =
                 result?.data?.success === true || result?.data?.header?.success === true;
 
@@ -338,6 +353,63 @@ const CreateUserPage: React.FC = () => {
                                 {fieldErrors.status && (
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.status}</p>
                                 )}
+                            </div>
+
+                            {/* Role (BEAM: role_id from roles/fetch) */}
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Role</Label>
+                                <Select
+                                    value={form.role_id != null ? String(form.role_id) : ''}
+                                    onValueChange={(val) => updateField('role_id', val ? Number(val) : undefined)}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectValue placeholder="Select role" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        {roles?.map((r) => (
+                                            <SelectItem key={r.id} value={String(r.id)}>
+                                                {r.role_name ?? r.role_key}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Department (BEAM: department_id from departments/fetch) */}
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Department</Label>
+                                <Select
+                                    value={form.department_id ?? ''}
+                                    onValueChange={(val) => updateField('department_id', val || undefined)}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectValue placeholder="Select department" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        {departments?.map((d) => (
+                                            <SelectItem key={d.id} value={d.department_id}>
+                                                {d.name_en ?? d.name_ar ?? d.department_id}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Must change password (BEAM: 0 or 1, default 1 for new users) */}
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Require password change on first login</Label>
+                                <Select
+                                    value={form.must_change_password === 1 ? '1' : '0'}
+                                    onValueChange={(val) => updateField('must_change_password', val === '1' ? 1 : 0)}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        <SelectItem value="1">Yes</SelectItem>
+                                        <SelectItem value="0">No</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                     </div>

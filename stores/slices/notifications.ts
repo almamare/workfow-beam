@@ -29,6 +29,7 @@ const normalizeNotification = (item: NotificationItem): NotificationItem => {
         ...item,
         title: item.title ?? 'Notification',
         is_read: !!item.is_read,
+        action_link: item.action_link === undefined ? null : item.action_link,
     };
 };
 
@@ -83,6 +84,7 @@ export const fetchNotifications = createAsyncThunk<
                 return rejectWithValue('Request canceled');
             }
             const msg =
+                err?.response?.data?.header?.messages?.[0]?.message ||
                 err?.response?.data?.header?.message ||
                 err?.message ||
                 'Network error while fetching notifications';

@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from '@/utils/axios';
 import { toast } from 'sonner';
@@ -26,20 +26,29 @@ import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/DatePicker';
+import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
+import { AppDispatch } from '@/stores/store';
+import { fetchJobTitles, selectJobTitles } from '@/stores/slices/job-titles';
+import { fetchDepartments, selectDepartments } from '@/stores/slices/departments';
+import { fetchEmployees, selectEmployees } from '@/stores/slices/employees';
 
-/* ---------- Types ---------- */
+/* ---------- Types (BEAM: job_title_id, department_id, manager_id, status) ---------- */
 type EmployeePayload = {
     name: string;
     surname: string;
     job_title: string;
+    job_title_id?: number | null;
     hire_date: string;
     salary_grade: string;
     role: string;
     notes?: string;
     avatar?: string;
+    department_id?: string | null;
+    manager_id?: string | null;
+    status?: string | null;
 };
 
-const JOB_TITLE_OPTIONS = ['Accounts', 'Employment', 'Contracts', 'General', 'Financial'];
+const LEGACY_JOB_TITLES = ['Accounts', 'Employment', 'Contracts', 'General', 'Financial'];
 
 /* ---------- Initial-state template ---------- */
 const EMPTY: EmployeePayload = {
@@ -51,6 +60,9 @@ const EMPTY: EmployeePayload = {
     role: '',
     notes: '',
     avatar: '',
+    department_id: undefined,
+    manager_id: undefined,
+    status: 'Active',
 };
 
 /* =========================================================
@@ -58,6 +70,17 @@ const EMPTY: EmployeePayload = {
 ========================================================= */
 const CreateEmployeePage: React.FC = () => {
     const router = useRouter();
+    const dispatch = useReduxDispatch<AppDispatch>();
+
+    useEffect(() => {
+        dispatch(fetchJobTitles());
+        dispatch(fetchDepartments());
+        dispatch(fetchEmployees({ page: 1, limit: 500 }));
+    }, [dispatch]);
+
+    const jobTitlesList = useSelector(selectJobTitles);
+    const departmentsList = useSelector(selectDepartments);
+    const employeesList = useSelector(selectEmployees);
 
     /* ---------- Local state ---------- */
     const [form, setForm] = useState<EmployeePayload>(EMPTY);
@@ -66,7 +89,7 @@ const CreateEmployeePage: React.FC = () => {
 
     /* ---------- Helpers ---------- */
     const updateField = useCallback(
-        (name: keyof EmployeePayload, value: string) => {
+        (name: keyof EmployeePayload, value: string | number | undefined) => {
             setForm((prev) => ({ ...prev, [name]: value }));
             setErrors((prev) => {
                 const clone = { ...prev };
@@ -124,7 +147,12 @@ const CreateEmployeePage: React.FC = () => {
 
         setLoading(true);
         try {
-            const res = await axios.post('/employees/create', { params: payload });
+            const body: Record<string, unknown> = { ...payload };
+            if (form.job_title_id != null) body.job_title_id = form.job_title_id;
+            if (form.department_id) body.department_id = form.department_id;
+            if (form.manager_id) body.manager_id = form.manager_id;
+            if (form.status) body.status = form.status;
+            const res = await axios.post('/employees/create', body);
 
             console.log(res);
             if (res?.data?.header.success) {
@@ -216,22 +244,34 @@ const CreateEmployeePage: React.FC = () => {
                                     Job Title *
                                 </Label>
                                 <Select
-                                    value={form.job_title}
-                                    onValueChange={(v) => updateField('job_title', v)}
+                                    value={form.job_title_id != null ? String(form.job_title_id) : form.job_title || ''}
+                                    onValueChange={(v) => {
+                                        const num = v ? parseInt(v, 10) : undefined;
+                                        if (!isNaN(num as number)) {
+                                            const jt = jobTitlesList.find((j) => j.id === num);
+                                            updateField('job_title_id', num);
+                                            updateField('job_title', jt ? (jt.title_en ?? jt.title_ar ?? '') : '');
+                                        } else {
+                                            updateField('job_title_id', undefined);
+                                            updateField('job_title', v);
+                                        }
+                                    }}
                                 >
                                     <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                         <SelectValue placeholder="Select job title" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
-                                        {JOB_TITLE_OPTIONS.map((title) => (
-                                            <SelectItem
-                                                key={title}
-                                                value={title}
-                                                className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200"
-                                            >
-                                                {title}
-                                            </SelectItem>
-                                        ))}
+                                        {jobTitlesList?.length
+                                            ? jobTitlesList.map((j) => (
+                                                <SelectItem key={j.id} value={String(j.id)}>
+                                                    {j.title_en ?? j.title_ar ?? String(j.id)}
+                                                </SelectItem>
+                                            ))
+                                            : LEGACY_JOB_TITLES.map((title) => (
+                                                <SelectItem key={title} value={title}>
+                                                    {title}
+                                                </SelectItem>
+                                            ))}
                                     </SelectContent>
                                 </Select>
                                 {errors.job_title && <ErrorText>{errors.job_title}</ErrorText>}
@@ -261,6 +301,62 @@ const CreateEmployeePage: React.FC = () => {
                                     className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {errors.salary_grade && <ErrorText>{errors.salary_grade}</ErrorText>}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Department</Label>
+                                <Select
+                                    value={form.department_id ?? ''}
+                                    onValueChange={(v) => updateField('department_id', v || undefined)}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectValue placeholder="Select department" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        {departmentsList?.map((d) => (
+                                            <SelectItem key={d.id} value={d.department_id}>
+                                                {d.name_en ?? d.name_ar ?? d.department_id}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Manager</Label>
+                                <Select
+                                    value={form.manager_id ?? ''}
+                                    onValueChange={(v) => updateField('manager_id', v || undefined)}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectValue placeholder="Select manager (employee)" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        {employeesList?.map((emp) => (
+                                            <SelectItem key={emp.id} value={emp.employee_code ?? emp.id}>
+                                                {emp.name} {emp.surname} {emp.employee_code ? `(${emp.employee_code})` : ''}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Status</Label>
+                                <Select
+                                    value={form.status ?? 'Active'}
+                                    onValueChange={(v) => updateField('status', v)}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectValue placeholder="Status" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        <SelectItem value="Active">Active</SelectItem>
+                                        <SelectItem value="Inactive">Inactive</SelectItem>
+                                        <SelectItem value="Suspended">Suspended</SelectItem>
+                                        <SelectItem value="Resigned">Resigned</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <div className="space-y-2">

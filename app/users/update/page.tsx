@@ -6,14 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
-import { Loader2, Save, RotateCcw } from 'lucide-react';
+import { Loader2, Save, RotateCcw, KeyRound } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
+import { AppDispatch } from '@/stores/store';
 import {
     fetchEmployees,
     selectEmployees,
     selectLoading,
 } from '@/stores/slices/employees';
+import { fetchRoles, selectRoles } from '@/stores/slices/roles';
+import { fetchDepartments, selectDepartments } from '@/stores/slices/departments';
 import type { Employee } from '@/stores/types/employees';
 import {
     Select,
@@ -25,7 +28,7 @@ import {
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 
-// User payload type
+// User payload type (BEAM: role_id, department_id)
 type UserPayload = {
     employee_id: string;
     username: string;
@@ -36,6 +39,8 @@ type UserPayload = {
     phone: string;
     type: string;
     status: string;
+    role_id?: number | null;
+    department_id?: string | null;
 };
 
 // Default form values
@@ -58,15 +63,18 @@ const UpdateUserPageContent: React.FC = () => {
     const router = useRouter();
     const params = useSearchParams();
     const userId = params.get('id') || '';
-    const dispatch = useReduxDispatch();
+    const dispatch = useReduxDispatch<AppDispatch>();
 
-    // Redux: Fetch employees list for dropdown
     useEffect(() => {
-        dispatch(fetchEmployees({ page: 1, limit: 100, search: '' }) as any);
+        dispatch(fetchEmployees({ page: 1, limit: 100, search: '' }));
+        dispatch(fetchRoles());
+        dispatch(fetchDepartments());
     }, [dispatch]);
 
     const employees = useSelector(selectEmployees);
     const empLoading = useSelector(selectLoading);
+    const roles = useSelector(selectRoles);
+    const departments = useSelector(selectDepartments);
 
     /**
      * Fetch user data by ID
@@ -77,7 +85,20 @@ const UpdateUserPageContent: React.FC = () => {
         try {
             const res = await axios.get(`/users/fetch/${userId}`);
             if (res.data?.body?.user) {
-                setForm(res.data.body.user);
+                const u = res.data.body.user as Record<string, unknown>;
+                setForm({
+                    employee_id: String(u.employee_id ?? ''),
+                    username: String(u.username ?? ''),
+                    email: String(u.email ?? ''),
+                    password: '',
+                    name: String(u.name ?? ''),
+                    surname: String(u.surname ?? ''),
+                    phone: String(u.phone ?? ''),
+                    type: String(u.type ?? 'General'),
+                    status: String(u.status ?? 'Active'),
+                    role_id: u.role_id != null ? Number(u.role_id) : undefined,
+                    department_id: u.department_id != null ? String(u.department_id) : undefined,
+                });
             }
         } catch (err) {
             toast.error('Failed to load user data.');
@@ -89,8 +110,7 @@ const UpdateUserPageContent: React.FC = () => {
         fetchUser();
     }, [fetchUser]);
 
-    // Update field value
-    const updateField = useCallback((name: keyof UserPayload, value: string) => {
+    const updateField = useCallback((name: keyof UserPayload, value: string | number | undefined) => {
         setForm(prev => ({ ...prev, [name]: value }));
         setFieldErrors(prev => {
             const clone = { ...prev };
@@ -140,8 +160,10 @@ const UpdateUserPageContent: React.FC = () => {
 
         setLoading(true);
         try {
-            // Send PUT request with form data
-            const result = await axios.put(`/users/update/${userId}`, form);
+            const body: Record<string, unknown> = { ...form };
+            if (form.role_id != null) body.role_id = form.role_id;
+            if (form.department_id != null) body.department_id = form.department_id;
+            const result = await axios.put(`/users/update/${userId}`, body);
             const success =
                 result?.data?.success === true || result?.data?.header?.success === true;
 
@@ -178,14 +200,25 @@ const UpdateUserPageContent: React.FC = () => {
                         Modify the details below to update the system user account.
                     </p>
                 </div>
-                <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => router.push('/users')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                <div className="flex gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => router.push(`/users/permissions?id=${userId}`)}
+                        className="border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
-                    Back to Users
-                </Button>
+                        <KeyRound className="h-4 w-4 mr-2" />
+                        صلاحيات المستخدم
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => router.push('/users')}
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    >
+                        Back to Users
+                    </Button>
+                </div>
             </div>
 
             {/* User Form */}
@@ -347,6 +380,46 @@ const UpdateUserPageContent: React.FC = () => {
                                 {fieldErrors.status && (
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.status}</p>
                                 )}
+                            </div>
+
+                            {/* Role (BEAM) */}
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Role</Label>
+                                <Select
+                                    value={form.role_id != null ? String(form.role_id) : ''}
+                                    onValueChange={(val) => updateField('role_id', val ? Number(val) : undefined)}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectValue placeholder="Select role" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        {roles?.map((r) => (
+                                            <SelectItem key={r.id} value={String(r.id)}>
+                                                {r.role_name ?? r.role_key}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Department (BEAM) */}
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Department</Label>
+                                <Select
+                                    value={form.department_id ?? ''}
+                                    onValueChange={(val) => updateField('department_id', val || undefined)}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectValue placeholder="Select department" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                        {departments?.map((d) => (
+                                            <SelectItem key={d.id} value={d.department_id}>
+                                                {d.name_en ?? d.name_ar ?? d.department_id}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                     </div>

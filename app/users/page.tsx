@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import type { User } from '@/stores/types/users';
-import { Edit, Eye, Plus, RefreshCw, FileSpreadsheet } from 'lucide-react';
+import { Edit, Eye, Plus, RefreshCw, FileSpreadsheet, KeyRound } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { FilterBar } from '@/components/ui/filter-bar';
@@ -118,6 +118,16 @@ export default function UsersPage() {
             },
             sortable: true
         },
+        {
+            key: 'last_login',
+            header: 'Last login',
+            sortable: true,
+            render: (value: any) => (
+                <span className="text-slate-600 dark:text-slate-400">
+                    {value ? new Date(value).toLocaleString() : '-'}
+                </span>
+            )
+        },
         { 
             key: 'created_at', 
             header: 'Created At', 
@@ -142,6 +152,12 @@ export default function UsersPage() {
             onClick: (user) => router.push(`/users/update?id=${user.id}`),
             icon: <Edit className="h-4 w-4" />,
             variant: 'warning' as const
+        },
+        {
+            label: 'User permissions',
+            onClick: (user) => router.push(`/users/permissions?id=${user.id}`),
+            icon: <KeyRound className="h-4 w-4" />,
+            variant: 'default' as const
         },
     ];
 

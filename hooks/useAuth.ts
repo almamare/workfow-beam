@@ -12,6 +12,7 @@ export interface AuthHookReturn {
     user: User | null;
     isLoading: boolean;
     isAuthenticated: boolean;
+    mustChangePassword: boolean;
     login: (username: string, password: string) => Promise<void>;
     logout: () => void;
     error: string | null;
@@ -26,6 +27,7 @@ export function useAuth(): AuthHookReturn {
     const user = useSelector((state: RootState) => state.login.user);
     const loading = useSelector((state: RootState) => state.login.loading);
     const error = useSelector((state: RootState) => state.login.error);
+    const mustChangePassword = useSelector((state: RootState) => state.login.mustChangePassword);
 
     const login = useCallback(
         async (username: string, password: string) => {
@@ -45,6 +47,7 @@ export function useAuth(): AuthHookReturn {
         user,
         isLoading: loading,
         isAuthenticated: !!user,
+        mustChangePassword: !!mustChangePassword,
         login,
         logout,
         error,

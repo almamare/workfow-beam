@@ -1,18 +1,26 @@
 // ================= Employee Interface =================
 export interface Employee {
-    id: string;             // Employee ID
-    user_id: string;        // Related user ID
+    id: string;
+    user_id?: string;
     name: string;
     surname: string;
-    job_title: string;      // Job position
-    employee_code: string;  // Employee number/code
-    hire_date: string;      // Hiring date
-    salary_grade: string;   // Salary grade
-    role: string;           // Role in the company
-    notes?: string;         // Additional notes (optional)
-    avatar?: string;        // Profile picture (optional)
-    created_at: string;     // Record creation timestamp
-    updated_at: string;     // Record update timestamp
+    job_title: string;
+    employee_code: string;
+    hire_date: string;
+    salary_grade: string;
+    role?: string;
+    notes?: string;
+    avatar?: string;
+    created_at: string;
+    updated_at: string;
+    /** BEAM: FK to job_titles.id (numeric) */
+    job_title_id?: number | null;
+    /** BEAM: department code */
+    department_id?: string | null;
+    /** BEAM: direct manager's employee_id */
+    manager_id?: string | null;
+    /** BEAM: e.g. Active, Inactive, Suspended, Resigned */
+    status?: string | null;
 }
 
 // ================= Employees Response =================
