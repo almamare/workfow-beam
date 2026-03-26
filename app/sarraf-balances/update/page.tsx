@@ -14,6 +14,7 @@ import { fetchSarrafBalance, updateSarrafBalance, selectSelectedSarrafBalance } 
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
+import type { UpdateSarrafBalanceParams } from '@/stores/types/sarraf-balances';
 
 type FormPayload = { balance: number; notes: string };
 
@@ -68,8 +69,10 @@ function UpdateSarrafBalanceContent() {
         }
         setLoading(true);
         try {
-            const params = { balance: Number(form.balance) || 0 };
-            if (form.notes !== undefined) params.notes = form.notes;
+            const params: UpdateSarrafBalanceParams = {
+                balance: Number(form.balance) || 0,
+                notes: form.notes,
+            };
             const result = await dispatch(updateSarrafBalance({ balanceId, params }));
             if (updateSarrafBalance.rejected.match(result)) {
                 toast.error(result.payload || 'Failed to update balance');
