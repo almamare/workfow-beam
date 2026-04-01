@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -rn sarraf c:MAMPhtdocstodoproject --include=*.tsx --include=*.ts --include=*.js --include=*.jsx --include=*.json --include=*.md --include=*.css --exclude-dir=.next --exclude-dir=node_modules --exclude-dir=.git)"
+    ]
+  }
+}

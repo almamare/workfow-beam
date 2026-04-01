@@ -31,6 +31,7 @@ import sarrafBalances from '@/stores/slices/sarraf-balances';
 import financialDisbursements from '@/stores/slices/financial-disbursements';
 import pettyCash from '@/stores/slices/petty-cash';
 import financialLedgerApi from '@/stores/slices/financial-ledger-api';
+import ai from '@/stores/slices/ai';
 
 // This is the Redux store configuration for the login functionality
 // It uses the Redux Toolkit to create a store with a single slice for login.
@@ -68,6 +69,7 @@ const store = configureStore({
         financialDisbursements,
         pettyCash,
         financialLedgerApi,
+        ai,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

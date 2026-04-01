@@ -4,6 +4,7 @@
 import { ThemeProvider } from '@/contexts/ThemeContext';    // Importing the ThemeProvider from the ThemeContext file
 import ReduxProvider from '@/components/ReduxProvider';     // Importing the ReduxProvider component which wraps the application with the Redux store
 import { Toaster } from 'sonner';          // Importing the Toaster component for toast notifications
+import { FloatingChat } from '@/components/ai/FloatingChat';
 
 
 interface ProvidersProps {
@@ -18,6 +19,7 @@ export function Providers({ children }: ProvidersProps) {
         <ThemeProvider>
             <ReduxProvider>
                 {children}
+                <FloatingChat />
                 <Toaster position="top-right" richColors closeButton className="toaster group" />
             </ReduxProvider>
         </ThemeProvider>

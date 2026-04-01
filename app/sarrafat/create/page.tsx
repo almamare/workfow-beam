@@ -83,15 +83,15 @@ export default function CreateSarrafPage() {
             if (form.notes?.trim()) params.notes = form.notes.trim();
             const result = await dispatch(createSarraf(params));
             if (createSarraf.rejected.match(result)) {
-                toast.error(result.payload || 'Failed to create sarraf');
+                toast.error(result.payload || 'Failed to create exchange');
                 return;
             }
-            toast.success('Sarraf created successfully');
+            toast.success('Exchange created successfully');
             const sarraf = (result.payload as { body?: { sarraf?: { sarraf_id: string } } })?.body?.sarraf;
             if (sarraf?.sarraf_id) router.push(`/sarrafat/details?id=${encodeURIComponent(sarraf.sarraf_id)}`);
             else router.push('/sarrafat');
         } catch {
-            toast.error('Failed to create sarraf');
+            toast.error('Failed to create exchange');
         } finally {
             setLoading(false);
         }
@@ -106,16 +106,16 @@ export default function CreateSarrafPage() {
         <div className="space-y-4">
             <Breadcrumb />
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Add Sarraf</h1>
-                <p className="text-slate-600 dark:text-slate-400 mt-2">Create a new money changer (sarraf). All fields below are required.</p>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Add Exchange</h1>
+                <p className="text-slate-600 dark:text-slate-400 mt-2">Create a new exchange. All fields below are required.</p>
             </div>
 
             <form onSubmit={handleSubmit}>
-                <EnhancedCard title="Sarraf details" description="Name, contact, location, and status" variant="default" size="sm">
+                <EnhancedCard title="Exchange details" description="Name, contact, location, and status" variant="default" size="sm">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         <div className="space-y-2">
-                            <Label htmlFor="sarraf_name">Sarraf name *</Label>
-                            <Input id="sarraf_name" value={form.sarraf_name} onChange={(e) => updateField('sarraf_name', e.target.value)} placeholder="Sarraf name" className="bg-white dark:bg-slate-800" />
+                            <Label htmlFor="sarraf_name">Exchange name *</Label>
+                            <Input id="sarraf_name" value={form.sarraf_name} onChange={(e) => updateField('sarraf_name', e.target.value)} placeholder="Exchange name" className="bg-white dark:bg-slate-800" />
                             {errors.sarraf_name && <p className="text-xs text-red-500">{errors.sarraf_name}</p>}
                         </div>
                         <div className="space-y-2">
@@ -170,7 +170,7 @@ export default function CreateSarrafPage() {
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={handleReset} disabled={loading}><RotateCcw className="h-4 w-4 mr-2" />Reset</Button>
-                        <Button type="submit" disabled={loading}>{loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}Create Sarraf</Button>
+                        <Button type="submit" disabled={loading}>{loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}Create Exchange</Button>
                     </div>
                 </EnhancedCard>
             </form>

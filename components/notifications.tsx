@@ -83,7 +83,6 @@ const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
                         'Failed to fetch notifications';
                     if (!cancelled) {
                         setFetchError(msg);
-                        toast.error(msg);
                         setItems([]);
                     }
                     return;
@@ -119,7 +118,6 @@ const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
                     'Failed to load notifications';
                 if (!cancelled) {
                     setFetchError(msg);
-                    toast.error(msg);
                     setItems([]);
                 }
             } finally {
@@ -329,7 +327,7 @@ const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
                                 Loading…
                             </div>
                         ) : filtered.length === 0 && !fetchError ? (
-                            <div className="py-10 text-center text-muted-foreground text-sm">No notifications to show</div>
+                            null
                         ) : (
                             filtered.map((n) => (
                                 <div

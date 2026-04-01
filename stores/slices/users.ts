@@ -186,6 +186,31 @@ export const setUserPermissions = createAsyncThunk<
     }
 });
 
+/**
+ * Delete a user by ID. DELETE /users/delete/{userId}
+ */
+export const deleteUser = createAsyncThunk<
+    string,
+    string,
+    { rejectValue: string }
+>('users/deleteUser', async (userId, { rejectWithValue }) => {
+    try {
+        const response = await api.delete(`/users/delete/${userId}`);
+        const { header } = response.data;
+        if (!header?.success) {
+            const msg = header?.messages?.[0]?.message || 'Failed to delete user';
+            return rejectWithValue(msg);
+        }
+        return userId;
+    } catch (error: any) {
+        const msg =
+            error.response?.data?.header?.messages?.[0]?.message ||
+            error.message ||
+            'Failed to delete user';
+        return rejectWithValue(msg);
+    }
+});
+
 // ================== Slice ==================
 /**
  * User Slice - manages users state in Redux store
@@ -251,6 +276,13 @@ const userSlice = createSlice({
             .addCase(setUserPermissions.fulfilled, (state, action: PayloadAction<UserPermissionsResponse>) => {
                 const list = action.payload.body?.permissions;
                 state.userPermissions = Array.isArray(list) ? list : null;
+            })
+            .addCase(deleteUser.fulfilled, (state, action: PayloadAction<string>) => {
+                state.users = state.users.filter((u) => u.id !== action.payload);
+                state.total = Math.max(0, state.total - 1);
+            })
+            .addCase(deleteUser.rejected, (state, action) => {
+                state.error = action.payload || 'Failed to delete user';
             });
     },
 });

@@ -6,6 +6,8 @@ import {
     PermissionSingleResponse,
     EffectivePermissionsResponse,
     EffectivePermissionFlags,
+    CreatePermissionParams,
+    UpdatePermissionParams,
 } from '@/stores/types/permissions';
 
 interface PermissionsState {
@@ -98,6 +100,72 @@ export const fetchEffectivePermissions = createAsyncThunk<
     }
 });
 
+export const createPermission = createAsyncThunk<
+    PermissionSingleResponse,
+    CreatePermissionParams,
+    { rejectValue: string }
+>('permissions/create', async (params, { rejectWithValue }) => {
+    try {
+        const response = await api.post<PermissionSingleResponse>('/permissions/create', { params });
+        const { header } = response.data;
+        if (!header?.success) {
+            const msg = (header?.messages as { message?: string }[])?.[0]?.message || 'Failed to create permission';
+            return rejectWithValue(msg);
+        }
+        return response.data;
+    } catch (error: any) {
+        const msg =
+            error.response?.data?.header?.messages?.[0]?.message ||
+            error.message ||
+            'Failed to create permission';
+        return rejectWithValue(msg);
+    }
+});
+
+export const updatePermission = createAsyncThunk<
+    PermissionSingleResponse,
+    { id: number; params: UpdatePermissionParams },
+    { rejectValue: string }
+>('permissions/update', async ({ id, params }, { rejectWithValue }) => {
+    try {
+        const response = await api.put<PermissionSingleResponse>(`/permissions/update/${id}`, { params });
+        const { header } = response.data;
+        if (!header?.success) {
+            const msg = (header?.messages as { message?: string }[])?.[0]?.message || 'Failed to update permission';
+            return rejectWithValue(msg);
+        }
+        return response.data;
+    } catch (error: any) {
+        const msg =
+            error.response?.data?.header?.messages?.[0]?.message ||
+            error.message ||
+            'Failed to update permission';
+        return rejectWithValue(msg);
+    }
+});
+
+export const deletePermission = createAsyncThunk<
+    number,
+    number,
+    { rejectValue: string }
+>('permissions/delete', async (id, { rejectWithValue }) => {
+    try {
+        const response = await api.delete(`/permissions/delete/${id}`);
+        const { header } = response.data;
+        if (!header?.success) {
+            const msg = (header?.messages as { message?: string }[])?.[0]?.message || 'Failed to delete permission';
+            return rejectWithValue(msg);
+        }
+        return id;
+    } catch (error: any) {
+        const msg =
+            error.response?.data?.header?.messages?.[0]?.message ||
+            error.message ||
+            'Failed to delete permission';
+        return rejectWithValue(msg);
+    }
+});
+
 function normalizeListPayload(body: PermissionsListResponse['body']): Permission[] {
     const raw = body?.permissions;
     if (Array.isArray(raw)) return raw;
@@ -142,6 +210,25 @@ const permissionsSlice = createSlice({
             })
             .addCase(fetchEffectivePermissions.fulfilled, (state, action: PayloadAction<EffectivePermissionsResponse>) => {
                 state.effectivePermissions = action.payload.body?.permissions ?? null;
+            })
+            .addCase(createPermission.fulfilled, (state, action: PayloadAction<PermissionSingleResponse>) => {
+                const p = action.payload.body?.permission;
+                if (p) state.permissions.push(p);
+            })
+            .addCase(updatePermission.fulfilled, (state, action: PayloadAction<PermissionSingleResponse>) => {
+                const p = action.payload.body?.permission;
+                if (p) {
+                    const idx = state.permissions.findIndex((x) => x.id === p.id);
+                    if (idx !== -1) state.permissions[idx] = p;
+                    if (state.selectedPermission?.id === p.id) state.selectedPermission = p;
+                }
+            })
+            .addCase(deletePermission.fulfilled, (state, action: PayloadAction<number>) => {
+                state.permissions = state.permissions.filter((p) => p.id !== action.payload);
+                if (state.selectedPermission?.id === action.payload) state.selectedPermission = null;
+            })
+            .addCase(deletePermission.rejected, (state, action) => {
+                state.error = action.payload || 'Failed to delete permission';
             });
     },
 });

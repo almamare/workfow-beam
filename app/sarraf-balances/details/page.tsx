@@ -56,7 +56,7 @@ function SarrafBalanceDetailsContent() {
                     <Button type="button" variant="outline" onClick={() => router.push('/sarraf-balances')}>Back to list</Button>
                     {balance.sarraf_id && (
                         <Button variant="outline" onClick={() => router.push(`/sarraf-balances?sarraf_id=${encodeURIComponent(balance.sarraf_id)}`)}>
-                            <Building2 className="h-4 w-4 mr-2" />Sarraf balances
+                            <Building2 className="h-4 w-4 mr-2" />Exchange balances
                         </Button>
                     )}
                     <Button onClick={() => router.push(`/sarraf-balances/update?id=${encodeURIComponent(balance.balance_id)}`)} className="bg-sky-600 hover:bg-sky-700 text-white"><Edit className="h-4 w-4 mr-2" />Edit</Button>
@@ -66,8 +66,8 @@ function SarrafBalanceDetailsContent() {
             <EnhancedCard title="Balance information" description={`Balance ID: ${balance.balance_id}`} variant="default" size="sm">
                 <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Balance ID</dt><dd className="mt-1 font-mono text-slate-800 dark:text-slate-200">{balance.balance_id}</dd></div>
-                    <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Sarraf ID</dt><dd className="mt-1 font-mono text-slate-800 dark:text-slate-200">{balance.sarraf_id}</dd></div>
-                    <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Sarraf</dt><dd className="mt-1 text-slate-900 dark:text-slate-100">{sarraf?.sarraf_name ?? sarraf?.sarraf_no ?? balance.sarraf_id}</dd></div>
+                    <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Exchange ID</dt><dd className="mt-1 font-mono text-slate-800 dark:text-slate-200">{balance.sarraf_id}</dd></div>
+                    <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Exchange</dt><dd className="mt-1 text-slate-900 dark:text-slate-100">{sarraf?.sarraf_name ?? sarraf?.sarraf_no ?? balance.sarraf_id}</dd></div>
                     <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Currency</dt><dd className="mt-1"><Badge variant="outline" className="font-mono">{balance.currency}</Badge></dd></div>
                     <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Balance</dt><dd className="mt-1 font-mono font-semibold text-slate-900 dark:text-slate-100">{Number(balance.balance).toLocaleString()}</dd></div>
                     <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Last updated</dt><dd className="mt-1 text-slate-600 dark:text-slate-400">{balance.last_updated ? new Date(balance.last_updated).toLocaleString() : '-'}</dd></div>

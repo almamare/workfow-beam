@@ -41,34 +41,73 @@ export const authentication = createAsyncThunk<
     ) => {
         try {
             const response = await api.post<LoginResponse>('/authentication/login', {
-                login: credentials,
+                params: credentials,
             });
 
-            const { header, body } = response.data;
-            const mustChangePassword =
-                Boolean((response.data as LoginResponse).must_change_password) ||
-                Boolean(body?.must_change_password);
+            const responseData = response.data as any;
+            const header = responseData?.header;
+            const body = responseData?.body;
 
             // Handle failed login with detailed message
-            if (!header.success) {
+            if (!header?.success) {
                 const errorMessage =
-                    (header.messages?.[0] as { message?: string })?.message || 'Login failed';
+                    header?.messages?.[0]?.message ||
+                    header?.message ||
+                    'Login failed';
                 return rejectWithValue(errorMessage);
             }
 
-            const { token, expires, data } = body;
+            // Support new format: body.user + body.employee
+            // Support old format: body.data.userInfo
+            const token: string = body?.token;
+            const newFormatUser = body?.user;
+            const oldFormatUser = body?.data?.userInfo;
+            const employee = body?.employee || body?.data?.employee;
 
-            const expiryDate = expires ? new Date(expires) : undefined;
-            if (token && expiryDate) {
-                Cookies.set('token', token, {
-                    expires: expiryDate,
-                    secure: true,
-                    sameSite: 'Strict',
-                    path: '/',
-                });
+            if (!token) {
+                return rejectWithValue('Authentication token missing from response');
             }
 
-            const userInfo = data.userInfo;
+            const rawUser = newFormatUser || oldFormatUser;
+            if (!rawUser) {
+                return rejectWithValue('User data missing from response');
+            }
+
+            const mustChangePassword =
+                rawUser.must_change_password === 1 ||
+                rawUser.must_change_password === true ||
+                Boolean(body?.must_change_password);
+
+            Cookies.set('token', token, {
+                expires: 1,
+                secure: true,
+                sameSite: 'Strict',
+                path: '/',
+            });
+
+            if (mustChangePassword) {
+                localStorage.setItem(MUST_CHANGE_PASSWORD_KEY, 'true');
+            }
+
+            const userInfo = {
+                id: rawUser.id,
+                name: rawUser.name,
+                surname: rawUser.surname,
+                username: rawUser.username,
+                role: rawUser.role,
+                role_id: rawUser.role_id,
+                department_id: rawUser.department_id,
+                status: rawUser.status,
+                last_login: rawUser.last_login,
+                email: rawUser.email,
+                phone: rawUser.phone,
+                number: rawUser.number,
+                role_key: rawUser.role_key,
+                employee_id: employee?.employee_id,
+                hire_date: employee?.hire_date,
+                must_change_password: rawUser.must_change_password,
+            };
+
             localStorage.setItem('user_data', JSON.stringify(userInfo));
 
             return {
@@ -77,9 +116,11 @@ export const authentication = createAsyncThunk<
                 mustChangePassword,
             };
         } catch (error: any) {
-            // Fallback if request itself failed
             const message =
-                error.response?.data?.header?.messages?.[0]?.message ||
+                error?.response?.data?.header?.messages?.[0]?.message ||
+                error?.response?.data?.header?.message ||
+                error?.response?.data?.message ||
+                error?.message ||
                 'Login failed';
             return rejectWithValue(message);
         }

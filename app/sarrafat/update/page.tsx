@@ -91,7 +91,7 @@ function UpdateSarrafContent() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!sarrafId) {
-            toast.error('Missing sarraf ID');
+            toast.error('Missing exchange ID');
             return;
         }
         if (!validate()) {
@@ -114,13 +114,13 @@ function UpdateSarrafContent() {
             };
             const result = await dispatch(updateSarraf({ sarrafId, params }));
             if (updateSarraf.rejected.match(result)) {
-                toast.error(result.payload || 'Failed to update sarraf');
+                toast.error(result.payload || 'Failed to update exchange');
                 return;
             }
-            toast.success('Sarraf updated successfully');
+            toast.success('Exchange updated successfully');
             router.push(`/sarrafat/details?id=${encodeURIComponent(sarrafId)}`);
         } catch {
-            toast.error('Failed to update sarraf');
+            toast.error('Failed to update exchange');
         } finally {
             setLoading(false);
         }
@@ -148,7 +148,7 @@ function UpdateSarrafContent() {
         return (
             <div className="space-y-4">
                 <Breadcrumb />
-                <p className="text-slate-600 dark:text-slate-400">Missing sarraf ID. <Button variant="link" onClick={() => router.push('/sarrafat')}>Back to list</Button></p>
+                <p className="text-slate-600 dark:text-slate-400">Missing exchange ID. <Button variant="link" onClick={() => router.push('/sarrafat')}>Back to list</Button></p>
             </div>
         );
     }
@@ -165,16 +165,16 @@ function UpdateSarrafContent() {
         <div className="space-y-4">
             <Breadcrumb />
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Edit Sarraf</h1>
-                <p className="text-slate-600 dark:text-slate-400 mt-2">Update sarraf information. ID: {sarrafId}</p>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Edit Exchange</h1>
+                <p className="text-slate-600 dark:text-slate-400 mt-2">Update exchange information. ID: {sarrafId}</p>
             </div>
 
             <form onSubmit={handleSubmit}>
-                <EnhancedCard title="Sarraf details" description="Name, contact, location, and status" variant="default" size="sm">
+                <EnhancedCard title="Exchange details" description="Name, contact, location, and status" variant="default" size="sm">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         <div className="space-y-2">
-                            <Label htmlFor="sarraf_name">Sarraf name *</Label>
-                            <Input id="sarraf_name" value={form.sarraf_name} onChange={(e) => updateField('sarraf_name', e.target.value)} placeholder="Sarraf name" className="bg-white dark:bg-slate-800" />
+                            <Label htmlFor="sarraf_name">Exchange name *</Label>
+                            <Input id="sarraf_name" value={form.sarraf_name} onChange={(e) => updateField('sarraf_name', e.target.value)} placeholder="Exchange name" className="bg-white dark:bg-slate-800" />
                             {errors.sarraf_name && <p className="text-xs text-red-500">{errors.sarraf_name}</p>}
                         </div>
                         <div className="space-y-2">

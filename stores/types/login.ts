@@ -7,72 +7,49 @@ export interface LoginResponse {
         status: number;
         success: boolean;
         responseTime: string;
-        messages: string;
+        messages?: { code?: number; type?: string; message: string }[];
     };
-    /** When true, frontend must redirect to change-password; backend clears after next successful login */
-    must_change_password?: boolean;
     body: {
-        expires: string;
         token: string;
-        /** Root-level flag (alternative to top-level); prefer body.must_change_password if present */
-        must_change_password?: boolean;
-        data: {
-            userInfo: {
-                name: string;
-                email: string;
-                phone: string;
-                role: string;
-                type: string;
-                number: string;
-                status: string;
-                created_at: string;
-                updated_at: string;
-                /** Role key e.g. CFO, COM_DIR, SYSADMIN — use for role-based UI */
-                role_key?: string | null;
-                /** Department code e.g. FINANCE, COMMERCIAL */
-                department_id?: string | null;
-                /** ISO datetime of last successful login */
-                last_login?: string | null;
-            };
-            department?: {
-                id: number;
-                name: string;
-                dept_code: string;
-                created_at: string;
-                updated_at: string;
-            };
-            employee?: {
-                job_title?: string;
-                employee_code?: string;
-                hire_date?: string;
-                salary_grade?: string;
-                notes?: string;
-                avatar?: string;
-                created_at?: string;
-                updated_at?: string;
-                /** FK to job title (numeric) */
-                job_title_id?: number | null;
-                /** Department code */
-                department_id?: string | null;
-                /** e.g. Active, Inactive, Suspended, Resigned */
-                status?: string | null;
-            };
+        user: {
+            id: string;
+            name: string;
+            surname: string;
+            username: string;
+            role: string;
+            role_id: number;
+            department_id?: string | null;
+            status: string;
+            /** 0 = no change needed, 1 = must change before proceeding */
+            must_change_password: 0 | 1;
+            last_login?: string | null;
+            email?: string;
+            phone?: string;
+            number?: string;
+            role_key?: string | null;
+        };
+        employee?: {
+            employee_id?: string;
+            job_title?: string;
+            hire_date?: string;
         };
     };
 }
 
 export interface User {
+    id?: string;
     name: string;
     surname?: string;
-    email: string;
-    phone: string;
+    email?: string;
+    phone?: string;
     role: string;
-    type: string;
-    number: string;
+    type?: string;
+    number?: string;
+    username?: string;
     status: string;
     avatar?: string;
-    created_at: string;
-    updated_at: string;
+    created_at?: string;
+    updated_at?: string;
     department?: string;
     position?: string;
     employee_id?: string;
@@ -93,4 +70,6 @@ export interface User {
     job_title_id?: number | null;
     employee_department_id?: string | null;
     employee_status?: string | null;
+    /** 0 = normal, 1 = must change password before proceeding */
+    must_change_password?: 0 | 1;
 }

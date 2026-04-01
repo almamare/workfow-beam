@@ -151,6 +151,62 @@
 }
 
 @layer components {
+  /* AI Response Panel */
+  .ai-response {
+    direction: rtl;
+    text-align: right;
+    font-family: 'Alexandria', 'Segoe UI', sans-serif;
+    line-height: 1.8;
+  }
+
+  .ai-response h1,
+  .ai-response h2,
+  .ai-response h3 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+  }
+
+  .ai-response ul,
+  .ai-response ol {
+    padding-right: 1.5rem;
+    padding-left: 0;
+    margin-bottom: 0.75rem;
+  }
+
+  .ai-response li {
+    margin-bottom: 0.25rem;
+  }
+
+  .ai-response table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .ai-response th,
+  .ai-response td {
+    border: 1px solid hsl(var(--border));
+    padding: 0.5rem 0.75rem;
+  }
+
+  .ai-response th {
+    background: hsl(var(--muted));
+    font-weight: 600;
+  }
+
+  .ai-response p {
+    margin-bottom: 0.75rem;
+  }
+
+  .ai-response code {
+    background: hsl(var(--muted));
+    padding: 0.1rem 0.3rem;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
   /* Brand Gradients */
   .brand-gradient {
     background: linear-gradient(135deg, hsl(var(--brand-sky)), hsl(var(--brand-blue)));

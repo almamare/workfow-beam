@@ -86,9 +86,9 @@ function SarrafBalancesPageContent() {
     const sarrafOptions = Array.isArray(sarrafatList) ? sarrafatList : [];
 
     const columns: Column<SarrafBalance>[] = [
-        { key: 'sarraf_no', header: 'Sarraf No', sortable: true, render: (v: unknown, row: SarrafBalance) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{String(row.sarraf_no ?? row.sarraf_name ?? row.sarraf_id ?? '-')}</span> },
-        { key: 'sarraf_name', header: 'Sarraf Name', sortable: true, render: (v: unknown, row: SarrafBalance) => <span className="font-medium text-slate-800 dark:text-slate-200">{String(v ?? row.sarraf_no ?? row.sarraf_id ?? '-')}</span> },
-        { key: 'sarraf_id', header: 'Sarraf ID', sortable: true, render: (v: unknown) => <span className="font-mono text-xs text-slate-500">{String(v ?? '-')}</span> },
+        { key: 'sarraf_no', header: 'Exchange No', sortable: true, render: (v: unknown, row: SarrafBalance) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{String(row.sarraf_no ?? row.sarraf_name ?? row.sarraf_id ?? '-')}</span> },
+        { key: 'sarraf_name', header: 'Exchange Name', sortable: true, render: (v: unknown, row: SarrafBalance) => <span className="font-medium text-slate-800 dark:text-slate-200">{String(v ?? row.sarraf_no ?? row.sarraf_id ?? '-')}</span> },
+        { key: 'sarraf_id', header: 'Exchange ID', sortable: true, render: (v: unknown) => <span className="font-mono text-xs text-slate-500">{String(v ?? '-')}</span> },
         { key: 'currency', header: 'Currency', sortable: true, render: (v: unknown) => getCurrencyBadge(String(v ?? '-')) },
         { key: 'balance', header: 'Balance', sortable: true, render: (v: unknown) => <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">{Number(v ?? 0).toLocaleString()}</span> },
         { key: 'last_updated', header: 'Last Updated', sortable: true, render: (v: unknown) => <span className="text-slate-600 dark:text-slate-400">{v ? new Date(String(v)).toLocaleString() : '-'}</span> },
@@ -125,7 +125,7 @@ function SarrafBalancesPageContent() {
         const arr: string[] = [];
         if (sarrafFilter !== 'All') {
             const s = sarrafOptions.find((x) => x.sarraf_id === sarrafFilter);
-            arr.push(`Sarraf: ${s?.sarraf_name ?? sarrafFilter}`);
+            arr.push(`Exchange: ${s?.sarraf_name ?? sarrafFilter}`);
         }
         if (currencyFilter !== 'All') arr.push(`Currency: ${currencyFilter}`);
         return arr;
@@ -138,7 +138,7 @@ function SarrafBalancesPageContent() {
     };
 
     const sarrafFilterOptions = [
-        { key: 'All', value: 'All', label: 'All Sarrafat' },
+        { key: 'All', value: 'All', label: 'All Exchanges' },
         ...sarrafOptions.map((s) => ({ key: s.sarraf_id, value: s.sarraf_id, label: `${s.sarraf_no ?? s.sarraf_id} - ${s.sarraf_name}` })),
     ];
     const currencyFilterOptions = [
@@ -151,8 +151,8 @@ function SarrafBalancesPageContent() {
             <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Sarraf Balances</h1>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">Manage balances per sarraf and currency.</p>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Exchange Balance</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Manage balances per exchange and currency.</p>
                 </div>
                 <Button onClick={() => router.push('/sarraf-balances/create' + (sarrafFilter !== 'All' ? `?sarraf_id=${encodeURIComponent(sarrafFilter)}` : ''))} className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg">
                     <Plus className="h-4 w-4 mr-2" />
@@ -165,7 +165,7 @@ function SarrafBalancesPageContent() {
                 searchValue=""
                 onSearchChange={() => {}}
                 filters={[
-                    { key: 'sarraf', label: 'Sarraf', value: sarrafFilter, options: sarrafFilterOptions, onValueChange: (v) => { setSarrafFilter(v); setPage(1); } },
+                    { key: 'sarraf', label: 'Exchange', value: sarrafFilter, options: sarrafFilterOptions, onValueChange: (v) => { setSarrafFilter(v); setPage(1); } },
                     { key: 'currency', label: 'Currency', value: currencyFilter, options: currencyFilterOptions, onValueChange: (v) => { setCurrencyFilter(v); setPage(1); } },
                 ]}
                 activeFilters={activeFilters}
@@ -176,8 +176,8 @@ function SarrafBalancesPageContent() {
             {sarrafFilter !== 'All' && (
                 <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                     <Building2 className="h-4 w-4" />
-                    <span>Showing balances for sarraf: {sarrafOptions.find((s) => s.sarraf_id === sarrafFilter)?.sarraf_name ?? sarrafFilter}</span>
-                    <Button variant="ghost" size="sm" onClick={() => router.push('/sarrafat')}>View Sarrafat</Button>
+                    <span>Showing balances for exchange: {sarrafOptions.find((s) => s.sarraf_id === sarrafFilter)?.sarraf_name ?? sarrafFilter}</span>
+                    <Button variant="ghost" size="sm" onClick={() => router.push('/sarrafat')}>View Exchange</Button>
                 </div>
             )}
 

@@ -36,3 +36,16 @@ export interface EffectivePermissionsResponse {
         permissions: Record<string, EffectivePermissionFlags>;
     };
 }
+
+export interface CreatePermissionParams {
+    permission_key: string;
+    name_en: string;
+    name_ar: string;
+    module: string;
+}
+
+export interface UpdatePermissionParams {
+    name_en?: string;
+    name_ar?: string;
+    module?: string;
+}

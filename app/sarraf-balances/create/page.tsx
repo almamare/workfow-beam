@@ -56,7 +56,7 @@ function CreateSarrafBalanceContent() {
 
     const validate = useCallback(() => {
         const errs: Record<string, string> = {};
-        if (!form.sarraf_id?.trim()) errs.sarraf_id = 'Sarraf is required';
+        if (!form.sarraf_id?.trim()) errs.sarraf_id = 'Exchange is required';
         if (!form.currency?.trim()) errs.currency = 'Currency is required';
         else if (form.currency.length !== 3) errs.currency = 'Currency must be 3 letters (e.g. USD, IQD)';
         if (typeof form.balance !== 'number' && isNaN(Number(form.balance))) errs.balance = 'Balance must be a number';
@@ -83,7 +83,7 @@ function CreateSarrafBalanceContent() {
                 const msg = result.payload || 'Failed to create balance';
                 toast.error(String(msg));
                 if (typeof msg === 'string' && msg.toLowerCase().includes('already exists')) {
-                    toast.info('Edit the existing balance for this sarraf and currency instead.');
+                    toast.info('Edit the existing balance for this exchange and currency instead.');
                 }
                 return;
             }
@@ -111,19 +111,19 @@ function CreateSarrafBalanceContent() {
         <div className="space-y-4">
             <Breadcrumb />
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Add Sarraf Balance</h1>
-                <p className="text-slate-600 dark:text-slate-400 mt-2">Create a new balance for a sarraf. One balance per sarraf + currency.</p>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Add Exchange Balance</h1>
+                <p className="text-slate-600 dark:text-slate-400 mt-2">Create a new balance for an exchange. One balance per exchange + currency.</p>
             </div>
 
             <form onSubmit={handleSubmit}>
-                <EnhancedCard title="Balance details" description="Sarraf, currency, and amount" variant="default" size="sm">
+                <EnhancedCard title="Balance details" description="Exchange, currency, and amount" variant="default" size="sm">
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label>Sarraf *</Label>
+                            <Label>Exchange *</Label>
                             <Select value={form.sarraf_id || 'none'} onValueChange={(v) => updateField('sarraf_id', v === 'none' ? '' : v)}>
-                                <SelectTrigger className="bg-white dark:bg-slate-800"><SelectValue placeholder="Select sarraf" /></SelectTrigger>
+                                <SelectTrigger className="bg-white dark:bg-slate-800"><SelectValue placeholder="Select exchange" /></SelectTrigger>
                                 <SelectContent className="bg-white dark:bg-slate-800">
-                                    <SelectItem value="none">-- Select sarraf --</SelectItem>
+                                    <SelectItem value="none">-- Select exchange --</SelectItem>
                                     {sarrafOptions.map((s) => (
                                         <SelectItem key={s.sarraf_id} value={s.sarraf_id}>{s.sarraf_no ?? s.sarraf_id} – {s.sarraf_name}</SelectItem>
                                     ))}

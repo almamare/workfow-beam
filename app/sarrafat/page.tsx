@@ -63,8 +63,8 @@ export default function SarrafatPage() {
     const sarrafatList = Array.isArray(list) ? list : [];
 
     const columns: Column<Sarraf>[] = [
-        { key: 'sarraf_no', header: 'Sarraf No', sortable: true, render: (v: unknown) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{String(v ?? '-')}</span> },
-        { key: 'sarraf_name', header: 'Sarraf Name', sortable: true, render: (v: unknown, row: Sarraf) => <div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-slate-500 shrink-0" /><span className="font-medium text-slate-800 dark:text-slate-200">{String(v ?? row.sarraf_id ?? '-')}</span></div> },
+        { key: 'sarraf_no', header: 'Exchange No', sortable: true, render: (v: unknown) => <span className="font-mono text-sm text-slate-600 dark:text-slate-400">{String(v ?? '-')}</span> },
+        { key: 'sarraf_name', header: 'Exchange Name', sortable: true, render: (v: unknown, row: Sarraf) => <div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-slate-500 shrink-0" /><span className="font-medium text-slate-800 dark:text-slate-200">{String(v ?? row.sarraf_id ?? '-')}</span></div> },
         { key: 'owner_name', header: 'Owner', sortable: true, render: (v: unknown) => <span className="text-slate-700 dark:text-slate-300">{String(v ?? '-')}</span> },
         { key: 'phone', header: 'Phone', sortable: true, render: (v: unknown) => <span className="text-slate-600 dark:text-slate-400">{String(v ?? '-')}</span> },
         { key: 'governorate', header: 'Governorate', sortable: true, render: (v: unknown) => <span className="text-slate-600 dark:text-slate-400">{String(v ?? '-')}</span> },
@@ -84,15 +84,15 @@ export default function SarrafatPage() {
         try {
             const result = await dispatch(deleteSarraf(sarrafId));
             if (deleteSarraf.rejected.match(result)) {
-                toast.error(result.payload || 'Failed to delete sarraf');
+                toast.error(result.payload || 'Failed to delete exchange');
                 return;
             }
-            toast.success('Sarraf deleted successfully');
+            toast.success('Exchange deleted successfully');
             setDeleteTarget(null);
             setDeletingId(null);
             dispatch(fetchSarrafat({ page, limit, search: search || undefined, status: status !== 'All' ? status : undefined }));
         } catch {
-            toast.error('Failed to delete sarraf');
+            toast.error('Failed to delete exchange');
         } finally {
             setDeletingId(null);
             setDeleteTarget(null);
@@ -124,17 +124,17 @@ export default function SarrafatPage() {
             <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Sarrafat (Money Changers)</h1>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">Manage sarrafat and their balances.</p>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Exchange</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Manage exchanges and their balances.</p>
                 </div>
                 <Button onClick={() => router.push('/sarrafat/create')} className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg">
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Sarraf
+                    Add Exchange
                 </Button>
             </div>
 
             <FilterBar
-                searchPlaceholder="Search sarrafat..."
+                searchPlaceholder="Search exchanges..."
                 searchValue={search}
                 onSearchChange={(v) => { setSearch(v); setPage(1); }}
                 filters={[
@@ -145,7 +145,7 @@ export default function SarrafatPage() {
                 actions={<Button variant="outline" onClick={refreshTable} disabled={isRefreshing || loading} className="border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300"><RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />{isRefreshing ? 'Refreshing...' : 'Refresh'}</Button>}
             />
 
-            <EnhancedCard title="Sarrafat list" description={`${totalItems} sarraf(a)`} variant="default" size="sm" headerActions={
+            <EnhancedCard title="Exchange list" description={`${totalItems} exchange(s)`} variant="default" size="sm" headerActions={
                 <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
                     <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"><SelectValue placeholder="Per page" /></SelectTrigger>
                     <SelectContent className="bg-white dark:bg-slate-800"><SelectItem value="5">5 per page</SelectItem><SelectItem value="10">10 per page</SelectItem><SelectItem value="20">20 per page</SelectItem><SelectItem value="50">50 per page</SelectItem><SelectItem value="100">100 per page</SelectItem></SelectContent>
@@ -157,7 +157,7 @@ export default function SarrafatPage() {
                     actions={actions}
                     loading={loading}
                     pagination={{ currentPage: page, totalPages: totalPages || 1, pageSize: limit, totalItems, onPageChange: setPage }}
-                    noDataMessage="No sarrafat found"
+                    noDataMessage="No exchanges found"
                     searchPlaceholder="Search..."
                 />
             </EnhancedCard>
@@ -165,7 +165,7 @@ export default function SarrafatPage() {
             <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Delete sarraf</AlertDialogTitle>
+                        <AlertDialogTitle>Delete exchange</AlertDialogTitle>
                         <AlertDialogDescription>Are you sure you want to delete &quot;{deleteTarget?.sarraf_name ?? deleteTarget?.sarraf_id}&quot;? This action cannot be undone.</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

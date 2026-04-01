@@ -32,22 +32,42 @@ export interface DisbursementApprovalStep {
 
 export interface Disbursement {
     id: string;
+    /** API field: disbursement_id — same as id */
+    disbursement_id?: string;
+    /** Display number, e.g. DIS-202603-001 */
+    disbursement_no?: string;
     project_id?: string;
     budget_id?: string;
+    /** User ID of the creator */
+    created_id?: string;
     payment_source: PaymentSource;
     source_ref_id: string;
     currency: string;
     amount: number;
     exchange_rate?: number;
+    /** amount × exchange_rate in local currency */
+    amount_local?: number;
     beneficiary_type?: BeneficiaryType;
     beneficiary_name?: string;
+    beneficiary_ref_id?: string;
     beneficiary_ref?: string;
     cost_category?: CostCategory;
     purpose?: string;
     status: DisbursementStatus;
+    /** Current approval step (1–4) */
+    current_step?: number;
+    /** Reason provided when rejected */
+    rejection_reason?: string;
+    /** Reference number used when marking as paid */
+    payment_ref?: string;
+    payment_date?: string;
+    paid_by?: string;
+    notes?: string;
     created_by?: string;
     created_at?: string;
     updated_at?: string;
+    /** Line items (detail only) */
+    items?: DisbursementLineItem[];
     line_items?: DisbursementLineItem[];
     approvals?: DisbursementApprovalStep[];
     attachments?: unknown[];

@@ -136,7 +136,7 @@ export default function NewDisbursementPage() {
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Bank">Bank</SelectItem>
-                                    <SelectItem value="Sarraf">Sarraf</SelectItem>
+                                    <SelectItem value="Sarraf">Exchange</SelectItem>
                                     <SelectItem value="Petty_Cash">Petty cash</SelectItem>
                                 </SelectContent>
                             </Select>

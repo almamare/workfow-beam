@@ -68,7 +68,7 @@ function SarrafBalancesBySarrafContent() {
         return (
             <div className="space-y-4">
                 <Breadcrumb />
-                <p className="text-slate-600 dark:text-slate-400">Missing sarraf ID. <Button variant="link" onClick={() => router.push('/sarraf-balances')}>Back to balances</Button></p>
+                <p className="text-slate-600 dark:text-slate-400">Missing exchange ID. <Button variant="link" onClick={() => router.push('/sarraf-balances')}>Back to balances</Button></p>
             </div>
         );
     }
@@ -82,11 +82,11 @@ function SarrafBalancesBySarrafContent() {
                         <Building2 className="h-8 w-8 text-sky-500" />
                         Balances for: {sarrafInfo?.sarraf_name ?? sarrafInfo?.sarraf_no ?? sarrafId}
                     </h1>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">Sarraf ID: {sarrafId}</p>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Exchange ID: {sarrafId}</p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" onClick={() => router.push('/sarraf-balances')}>All balances</Button>
-                    <Button variant="outline" onClick={() => router.push(`/sarrafat/details?id=${encodeURIComponent(sarrafId)}`)}>View sarraf</Button>
+                    <Button variant="outline" onClick={() => router.push(`/sarrafat/details?id=${encodeURIComponent(sarrafId)}`)}>View exchange</Button>
                     <Button onClick={() => router.push(`/sarraf-balances/create?sarraf_id=${encodeURIComponent(sarrafId)}`)} className="bg-sky-600 hover:bg-sky-700 text-white"><Plus className="h-4 w-4 mr-2" />Add balance</Button>
                 </div>
             </div>
@@ -95,7 +95,7 @@ function SarrafBalancesBySarrafContent() {
                 {loading ? (
                     <div className="py-8 text-center text-slate-500">Loading...</div>
                 ) : list.length === 0 ? (
-                    <div className="py-8 text-center text-slate-500">No balances for this sarraf. <Button variant="link" onClick={() => router.push(`/sarraf-balances/create?sarraf_id=${encodeURIComponent(sarrafId)}`)}>Add balance</Button></div>
+                    <div className="py-8 text-center text-slate-500">No balances for this exchange. <Button variant="link" onClick={() => router.push(`/sarraf-balances/create?sarraf_id=${encodeURIComponent(sarrafId)}`)}>Add balance</Button></div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">

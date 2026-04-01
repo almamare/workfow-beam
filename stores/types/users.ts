@@ -19,6 +19,8 @@ export interface User {
     role_key?: string | null;
     /** BEAM: last login ISO datetime */
     last_login?: string | null;
+    /** 0 = normal, 1 = must change password before proceeding */
+    must_change_password?: 0 | 1 | null;
 }
 
 export interface UsersResponse {

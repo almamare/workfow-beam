@@ -183,7 +183,7 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                                 hideEmptyMessage ? (
                                     // Show empty table (just header, no rows)
                                     null
-                                ) : (
+                                ) : noDataMessage ? (
                                     <tr>
                                         <td
                                             colSpan={columns.length + (showActions && actions.length > 0 ? 1 : 0)}
@@ -197,7 +197,7 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                                             </div>
                                         </td>
                                     </tr>
-                                )
+                                ) : null
                             ) : (
                                 // Data rows
                                 data

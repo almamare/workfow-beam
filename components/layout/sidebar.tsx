@@ -50,6 +50,15 @@ import {
     XCircle,
     KeyRound,
     Inbox,
+    Bot,
+    Sparkles,
+    MessageSquare,
+    ShieldAlert,
+    Brain,
+    Search,
+    LineChart,
+    FileSearch,
+    LayoutDashboard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -72,7 +81,9 @@ const iconLibrary: Record<string, any> = {
     Activity, Calculator, ClipboardList, UserCheck, FileEdit,
     CreditCard, FileCheck, Banknote, BarChart3, PieChart, History, UserCircle,
     Plus, Eye, List, Edit, Trash2, FileArchive, Landmark, Receipt,
-    ChevronDown, ChevronRight, CheckCircle, Clock, XCircle, KeyRound
+    ChevronDown, ChevronRight, CheckCircle, Clock, XCircle, KeyRound,
+    Bot, Sparkles, MessageSquare, ShieldAlert, Brain, Search, LineChart,
+    FileSearch, LayoutDashboard,
 };
 
 // Flexible route configuration - completely flexible system
@@ -145,19 +156,11 @@ const routeMapping: Record<string, string> = {
     '/requests/employees': '/requests',
     '/approvals': '/requests',
     
-    // Financial related pages 
-    '/requests/financial': '/financial',
-    '/requests/financial/details': '/financial',
-    '/requests/financial/timeline': '/financial',
-    '/financial/contractor-payments': '/financial',
-    '/financial/cash-ledger': '/financial',
-    '/financial/budgets': '/financial',
-    '/financial/loans': '/financial',
-    '/financial/disbursements': '/financial',
-    '/financial/disbursements/new': '/financial',
-    '/financial/disbursements/inbox': '/financial',
-    '/financial/petty-cash': '/financial',
-    '/financial/ledger': '/financial',
+    // Financial sub-process pages - each maps to its own config
+    '/requests/financial/details': '/requests/financial',
+    '/requests/financial/timeline': '/requests/financial',
+    '/financial/disbursements/new': '/financial/disbursements',
+    '/financial/disbursements/inbox': '/financial/disbursements',
     
     // Inventory related pages
     '/inventory/items': '/inventory',
@@ -188,36 +191,42 @@ const routeMapping: Record<string, string> = {
     '/invoices/update': '/invoices',
     '/invoices/details': '/invoices',
     
-    // Bank Balances related pages
-    '/bank-balances/create': '/bank-balances',
-    '/bank-balances/update': '/bank-balances',
-    '/bank-balances/details': '/bank-balances',
-    '/bank-balances/bank': '/bank-balances',
+    // Bank Balances related pages - now under banks
+    '/bank-balances/create': '/banks',
+    '/bank-balances/update': '/banks',
+    '/bank-balances/details': '/banks',
+    '/bank-balances/bank': '/banks',
+    '/bank-balances': '/banks',
 
-    // Sarrafat (money changers) related pages
-    '/sarrafat/create': '/sarrafat',
-    '/sarrafat/update': '/sarrafat',
-    '/sarrafat/details': '/sarrafat',
+    // Exchange (formerly Sarrafat) related pages - now under banks
+    '/sarrafat/create': '/banks',
+    '/sarrafat/update': '/banks',
+    '/sarrafat/details': '/banks',
+    '/sarrafat': '/banks',
 
-    // Sarraf Balances related pages
-    '/sarraf-balances/create': '/sarraf-balances',
-    '/sarraf-balances/update': '/sarraf-balances',
-    '/sarraf-balances/details': '/sarraf-balances',
-    '/sarraf-balances/sarraf': '/sarraf-balances',
+    // Exchange Balances (formerly Sarraf Balances) related pages - now under banks
+    '/sarraf-balances/create': '/banks',
+    '/sarraf-balances/update': '/banks',
+    '/sarraf-balances/details': '/banks',
+    '/sarraf-balances/sarraf': '/banks',
+    '/sarraf-balances': '/banks',
+
+    // AI sub-pages - each maps to its own config (no mapping needed, exact match in routeConfig)
 
 };
 
-const routeConfig: Record<string, { 
-    title: string; 
-    icon: string; 
-    color: string; 
-    menuItems: { 
-        href: string; 
-        title: string; 
-        icon: string; 
+const routeConfig: Record<string, {
+    title: string;
+    icon: string;
+    color: string;
+    backLink?: { href: string; title: string };
+    menuItems: {
+        href: string;
+        title: string;
+        icon: string;
         color: string;
         subItems?: { href: string; title: string; icon?: string; color?: string }[];
-    }[] 
+    }[]
 }> = {
     '/projects': {
         title: 'Projects',
@@ -293,30 +302,82 @@ const routeConfig: Record<string, {
             { href: '/approvals', title: 'Approvals', icon: 'FileCheck', color: 'text-rose-400' }
         ]
     },
-    '/financial': {
-        title: 'Financial',
-        icon: 'Wallet',
-        color: 'text-green-400',
+    // Financial - each process has its own isolated sidebar
+    '/requests/financial': {
+        title: 'Financial Requests',
+        icon: 'CreditCard',
+        color: 'text-emerald-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
         menuItems: [
-            { 
-                href: '/requests/financial', 
-                title: 'Financial Requests', 
-                icon: 'CreditCard', 
-                color: 'text-emerald-400',
-                subItems: [
-                    { href: '/requests/financial?status=Pending', title: 'Pending', color: 'text-yellow-400' },
-                    { href: '/requests/financial?status=Approved', title: 'Approved', color: 'text-green-400' },
-                    { href: '/requests/financial?status=Rejected', title: 'Rejected', color: 'text-red-400' }
-                ]
-            },
-            { href: '/financial/disbursements', title: 'Disbursements', icon: 'Banknote', color: 'text-sky-400' },
-            { href: '/financial/disbursements/inbox', title: 'Disbursement inbox', icon: 'Inbox', color: 'text-amber-400' },
-            { href: '/financial/petty-cash', title: 'Petty cash', icon: 'Landmark', color: 'text-emerald-400' },
-            { href: '/financial/ledger', title: 'Financial ledger', icon: 'BarChart3', color: 'text-cyan-400' },
-            { href: '/financial/contractor-payments', title: 'Contractor Payments', icon: 'Banknote', color: 'text-green-400' },
-            { href: '/financial/cash-ledger', title: 'Cash Ledger', icon: 'BarChart3', color: 'text-emerald-400' },
-            { href: '/financial/budgets', title: 'Project Budgets', icon: 'TrendingUp', color: 'text-teal-400' },
-            { href: '/financial/loans', title: 'Loans', icon: 'DollarSign', color: 'text-cyan-400' }
+            { href: '/requests/financial', title: 'All Requests', icon: 'CreditCard', color: 'text-emerald-400' },
+            { href: '/requests/financial?status=Pending', title: 'Pending', icon: 'Clock', color: 'text-yellow-400' },
+            { href: '/requests/financial?status=Approved', title: 'Approved', icon: 'CheckCircle', color: 'text-green-400' },
+            { href: '/requests/financial?status=Rejected', title: 'Rejected', icon: 'XCircle', color: 'text-red-400' },
+        ]
+    },
+    '/financial/disbursements': {
+        title: 'Disbursements',
+        icon: 'Banknote',
+        color: 'text-sky-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/disbursements', title: 'All Disbursements', icon: 'Banknote', color: 'text-sky-400' },
+            { href: '/financial/disbursements/new', title: 'New Disbursement', icon: 'Plus', color: 'text-green-400' },
+            { href: '/financial/disbursements/inbox', title: 'Disbursement Inbox', icon: 'Inbox', color: 'text-amber-400' },
+        ]
+    },
+    '/financial/petty-cash': {
+        title: 'Petty Cash',
+        icon: 'Landmark',
+        color: 'text-emerald-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/petty-cash', title: 'Petty Cash', icon: 'Landmark', color: 'text-emerald-400' },
+        ]
+    },
+    '/financial/ledger': {
+        title: 'Financial Ledger',
+        icon: 'BarChart3',
+        color: 'text-cyan-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/ledger', title: 'Financial Ledger', icon: 'BarChart3', color: 'text-cyan-400' },
+        ]
+    },
+    '/financial/contractor-payments': {
+        title: 'Contractor Payments',
+        icon: 'Banknote',
+        color: 'text-teal-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/contractor-payments', title: 'Contractor Payments', icon: 'Banknote', color: 'text-teal-400' },
+        ]
+    },
+    '/financial/cash-ledger': {
+        title: 'Cash Ledger',
+        icon: 'BarChart3',
+        color: 'text-indigo-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/cash-ledger', title: 'Cash Ledger', icon: 'BarChart3', color: 'text-indigo-400' },
+        ]
+    },
+    '/financial/budgets': {
+        title: 'Project Budgets',
+        icon: 'TrendingUp',
+        color: 'text-violet-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/budgets', title: 'Project Budgets', icon: 'TrendingUp', color: 'text-violet-400' },
+        ]
+    },
+    '/financial/loans': {
+        title: 'Loans',
+        icon: 'DollarSign',
+        color: 'text-rose-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/loans', title: 'Loans', icon: 'DollarSign', color: 'text-rose-400' },
         ]
     },
     '/inventory': {
@@ -352,8 +413,14 @@ const routeConfig: Record<string, {
         icon: 'Landmark',
         color: 'text-cyan-400',
         menuItems: [
-            { href: '/banks', title: 'Banks', icon: 'Landmark', color: 'text-cyan-400' },
-            { href: '/banks/create', title: 'Add Bank', icon: 'Plus', color: 'text-green-400' }
+            { href: '/banks', title: 'All Banks List', icon: 'Landmark', color: 'text-cyan-400' },
+            { href: '/banks/create', title: 'Create Bank', icon: 'Plus', color: 'text-green-400' },
+            { href: '/sarrafat', title: 'Exchange List', icon: 'Building2', color: 'text-sky-400' },
+            { href: '/sarrafat/create', title: 'Create Exchange', icon: 'Plus', color: 'text-green-400' },
+            { href: '/sarraf-balances', title: 'Exchange Balance', icon: 'Wallet', color: 'text-amber-500' },
+            { href: '/sarraf-balances/create', title: 'Create Exchange Balance', icon: 'Plus', color: 'text-green-400' },
+            { href: '/bank-balances', title: 'Bank Balance', icon: 'CreditCard', color: 'text-amber-400' },
+            { href: '/bank-balances/create', title: 'Create Bank Balance', icon: 'Plus', color: 'text-green-400' }
         ]
     },
     '/invoices': {
@@ -363,33 +430,6 @@ const routeConfig: Record<string, {
         menuItems: [
             { href: '/invoices', title: 'Invoices', icon: 'Receipt', color: 'text-rose-400' },
             { href: '/invoices/create', title: 'Add Invoice', icon: 'Plus', color: 'text-green-400' }
-        ]
-    },
-    '/bank-balances': {
-        title: 'Bank Balances',
-        icon: 'Wallet',
-        color: 'text-amber-400',
-        menuItems: [
-            { href: '/bank-balances', title: 'Bank Balances', icon: 'Wallet', color: 'text-amber-400' },
-            { href: '/bank-balances/create', title: 'Add Balance', icon: 'Plus', color: 'text-green-400' }
-        ]
-    },
-    '/sarrafat': {
-        title: 'Sarrafat',
-        icon: 'Building2',
-        color: 'text-sky-500',
-        menuItems: [
-            { href: '/sarrafat', title: 'Sarrafat (Money Changers)', icon: 'Building2', color: 'text-sky-500' },
-            { href: '/sarrafat/create', title: 'Add Sarraf', icon: 'Plus', color: 'text-green-400' }
-        ]
-    },
-    '/sarraf-balances': {
-        title: 'Sarraf Balances',
-        icon: 'Wallet',
-        color: 'text-amber-500',
-        menuItems: [
-            { href: '/sarraf-balances', title: 'Sarraf Balances', icon: 'Wallet', color: 'text-amber-500' },
-            { href: '/sarraf-balances/create', title: 'Add Balance', icon: 'Plus', color: 'text-green-400' }
         ]
     },
     '/client-contracts': {
@@ -442,6 +482,115 @@ const routeConfig: Record<string, {
         color: 'text-lime-400',
         menuItems: [
             { href: '/analysis', title: 'Analysis Dashboard', icon: 'TrendingUp', color: 'text-lime-400' },
+        ]
+    },
+    // AI - each operation has its own isolated sidebar
+    '/ai/chat': {
+        title: 'AI Chat',
+        icon: 'MessageSquare',
+        color: 'text-sky-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/chat', title: 'AI Chat', icon: 'MessageSquare', color: 'text-sky-400' },
+        ]
+    },
+    '/ai/financial': {
+        title: 'Financial Analysis',
+        icon: 'BarChart3',
+        color: 'text-green-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/financial', title: 'Financial Analysis', icon: 'BarChart3', color: 'text-green-400' },
+        ]
+    },
+    '/ai/projects': {
+        title: 'Project Analysis',
+        icon: 'FolderOpen',
+        color: 'text-indigo-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/projects', title: 'Project Analysis', icon: 'FolderOpen', color: 'text-indigo-400' },
+        ]
+    },
+    '/ai/employees': {
+        title: 'Employee Performance',
+        icon: 'UserCheck',
+        color: 'text-emerald-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/employees', title: 'Employee Performance', icon: 'UserCheck', color: 'text-emerald-400' },
+        ]
+    },
+    '/ai/reports': {
+        title: 'Smart Reports',
+        icon: 'FileText',
+        color: 'text-cyan-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/reports', title: 'Smart Reports', icon: 'FileText', color: 'text-cyan-400' },
+        ]
+    },
+    '/ai/anomalies': {
+        title: 'Anomaly Detection',
+        icon: 'ShieldAlert',
+        color: 'text-red-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/anomalies', title: 'Anomaly Detection', icon: 'ShieldAlert', color: 'text-red-400' },
+        ]
+    },
+    '/ai/query': {
+        title: 'Data Query',
+        icon: 'Search',
+        color: 'text-amber-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/query', title: 'Data Query', icon: 'Search', color: 'text-amber-400' },
+        ]
+    },
+    '/ai/approvals': {
+        title: 'Approval Advisor',
+        icon: 'Brain',
+        color: 'text-pink-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/approvals', title: 'Approval Advisor', icon: 'Brain', color: 'text-pink-400' },
+        ]
+    },
+    '/ai/tenders': {
+        title: 'Tender Evaluation',
+        icon: 'FileSearch',
+        color: 'text-orange-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/tenders', title: 'Tender Evaluation', icon: 'FileSearch', color: 'text-orange-400' },
+        ]
+    },
+    '/ai/forecast': {
+        title: 'Forecast',
+        icon: 'LineChart',
+        color: 'text-teal-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/forecast', title: 'Forecast', icon: 'LineChart', color: 'text-teal-400' },
+        ]
+    },
+    '/ai/summarize': {
+        title: 'Summarize',
+        icon: 'Sparkles',
+        color: 'text-fuchsia-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/summarize', title: 'Summarize', icon: 'Sparkles', color: 'text-fuchsia-400' },
+        ]
+    },
+    '/ai/insights': {
+        title: 'Dashboard Insights',
+        icon: 'LayoutDashboard',
+        color: 'text-violet-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/insights', title: 'Dashboard Insights', icon: 'LayoutDashboard', color: 'text-violet-400' },
         ]
     },
 };
@@ -614,8 +763,8 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
         };
     }, [mobileOpen, setMobileOpen]);
 
-    // Hide sidebar entirely on dashboard (after all hooks to satisfy rules-of-hooks)
-    if (pathname === '/dashboard') {
+    // Hide sidebar entirely on dashboard and section overview pages
+    if (pathname === '/dashboard' || pathname === '/financial' || pathname === '/ai') {
         return null;
     }
 
@@ -685,9 +834,9 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                     )}
                 </div>
 
-                {/* Back to Dashboard */}
+                {/* Back to Dashboard + optional Back to Section */}
                 {menuItems.length > 0 && (
-                    <div className="px-4 pt-4 border-b border-slate-700 dark:border-slate-700 pb-3">
+                    <div className="px-4 pt-4 border-b border-slate-700 dark:border-slate-700 pb-3 space-y-1">
                         <Link href="/dashboard">
                             <Button
                                 variant="ghost"
@@ -703,6 +852,23 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                 )}
                             </Button>
                         </Link>
+                        {currentRoute.config?.backLink && (
+                            <Link href={currentRoute.config.backLink.href}>
+                                <Button
+                                    variant="ghost"
+                                    className={cn(
+                                        "w-full justify-start text-slate-400 dark:text-slate-400 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50 transition-all duration-300 text-xs",
+                                        "group"
+                                    )}
+                                    onClick={handleItemClick}
+                                >
+                                    <ArrowLeft className="h-3.5 w-3.5 mr-2" />
+                                    {(!collapsed || mobileOpen) && (
+                                        <span>{currentRoute.config.backLink.title}</span>
+                                    )}
+                                </Button>
+                            </Link>
+                        )}
                     </div>
                 )}
 

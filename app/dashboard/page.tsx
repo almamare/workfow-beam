@@ -28,9 +28,11 @@ import {
     History,
     Package,
     Briefcase,
+    Bot,
 } from 'lucide-react';
 import Link from 'next/link';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { AiInsightsWidget } from '@/components/ai/AiInsightsWidget';
 
 // Essential menu items only
 const allMenuItems = [
@@ -73,7 +75,7 @@ const allMenuItems = [
         number: 6,
         title: 'Financial',
         icon: Wallet,
-        href: '/financial/contractor-payments',
+        href: '/financial',
         color: 'from-green-500 to-green-600 dark:from-green-600 dark:to-green-700'
     },
     {
@@ -154,27 +156,6 @@ const allMenuItems = [
         color: 'from-lime-500 to-lime-600 dark:from-lime-600 dark:to-lime-700'
     },
     {
-        number: 18,
-        title: 'Bank Balances',
-        icon: CreditCard,
-        href: '/bank-balances',
-        color: 'from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700'
-    },
-    {
-        number: 24,
-        title: 'Sarrafat',
-        icon: Building2,
-        href: '/sarrafat',
-        color: 'from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700'
-    },
-    {
-        number: 25,
-        title: 'Sarraf Balances',
-        icon: Wallet,
-        href: '/sarraf-balances',
-        color: 'from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700'
-    },
-    {
         number: 19,
         title: 'Approvals',
         icon: CheckCircle,
@@ -209,6 +190,13 @@ const allMenuItems = [
         href: '/departments',
         color: 'from-teal-500 to-teal-600 dark:from-teal-600 dark:to-teal-700'
     },
+    {
+        number: 26,
+        title: 'AI Assistant',
+        icon: Bot,
+        href: '/ai',
+        color: 'from-violet-500 to-violet-600 dark:from-violet-600 dark:to-violet-700'
+    },
 ];
 
 export default function DashboardPage() {
@@ -234,7 +222,7 @@ export default function DashboardPage() {
                 </p>
             </div>
 
-            {/* Navigation Grid */} 
+            {/* Navigation Grid */}
             <EnhancedCard 
                 title={'Choose the section you want to access'} 
                 description={'Navigate to the section you want to access'} 

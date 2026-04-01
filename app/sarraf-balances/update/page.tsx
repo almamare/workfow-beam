@@ -115,7 +115,7 @@ function UpdateSarrafBalanceContent() {
         <div className="space-y-4">
             <Breadcrumb />
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Edit Sarraf Balance</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Edit Exchange Balance</h1>
                 <p className="text-slate-600 dark:text-slate-400 mt-2">Update balance and notes. Balance ID: {balanceId}</p>
             </div>
 

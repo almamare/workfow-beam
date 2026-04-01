@@ -26,7 +26,7 @@ function SarrafDetailsContent() {
         return (
             <div className="space-y-4">
                 <Breadcrumb />
-                <p className="text-slate-600 dark:text-slate-400">Missing sarraf ID. <Button variant="link" onClick={() => router.push('/sarrafat')}>Back to list</Button></p>
+                <p className="text-slate-600 dark:text-slate-400">Missing exchange ID. <Button variant="link" onClick={() => router.push('/sarrafat')}>Back to list</Button></p>
             </div>
         );
     }
@@ -48,7 +48,7 @@ function SarrafDetailsContent() {
                         <Building2 className="h-8 w-8 text-sky-500" />
                         {sarraf.sarraf_name}
                     </h1>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">Sarraf details (read-only)</p>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Exchange details (read-only)</p>
                 </div>
                 <div className="flex gap-2">
                     <Button type="button" variant="outline" onClick={() => router.push('/sarrafat')}>Back to list</Button>
@@ -57,11 +57,11 @@ function SarrafDetailsContent() {
                 </div>
             </div>
 
-            <EnhancedCard title="Sarraf information" description={`No: ${sarraf.sarraf_no ?? sarraf.sarraf_id}`} variant="default" size="sm">
+            <EnhancedCard title="Exchange information" description={`No: ${sarraf.sarraf_no ?? sarraf.sarraf_id}`} variant="default" size="sm">
                 <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Sarraf ID</dt><dd className="mt-1 font-mono text-slate-800 dark:text-slate-200">{sarraf.sarraf_id}</dd></div>
-                    <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Sarraf No</dt><dd className="mt-1 font-mono text-slate-800 dark:text-slate-200">{sarraf.sarraf_no ?? '-'}</dd></div>
-                    <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Sarraf Name</dt><dd className="mt-1 text-slate-900 dark:text-slate-100">{sarraf.sarraf_name}</dd></div>
+                    <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Exchange ID</dt><dd className="mt-1 font-mono text-slate-800 dark:text-slate-200">{sarraf.sarraf_id}</dd></div>
+                    <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Exchange No</dt><dd className="mt-1 font-mono text-slate-800 dark:text-slate-200">{sarraf.sarraf_no ?? '-'}</dd></div>
+                    <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Exchange Name</dt><dd className="mt-1 text-slate-900 dark:text-slate-100">{sarraf.sarraf_name}</dd></div>
                     <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Owner Name</dt><dd className="mt-1 text-slate-900 dark:text-slate-100">{sarraf.owner_name}</dd></div>
                     <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Phone</dt><dd className="mt-1 text-slate-800 dark:text-slate-200">{sarraf.phone ?? '-'}</dd></div>
                     <div><dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Email</dt><dd className="mt-1 text-slate-800 dark:text-slate-200">{sarraf.email ?? '-'}</dd></div>

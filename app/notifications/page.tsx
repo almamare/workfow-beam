@@ -534,7 +534,7 @@ export default function NotificationsPage() {
                     columns={columns}
                     actions={actions}
                     loading={loading}
-                    noDataMessage="No notifications found matching your search criteria"
+                    noDataMessage=""
                     searchPlaceholder="Search notifications..."
                     onRowClick={(row) => openNotification(row)}
                 />
