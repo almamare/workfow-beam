@@ -8,10 +8,10 @@ import { toast } from 'sonner';
 const getApiBaseUrl = (): string => {
     if (typeof window !== 'undefined') {
         // Client-side: use environment variable
-        return process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.shuarano.com/api/v1';
+        return process.env.NEXT_PUBLIC_API_BASE_URL || 'https://test.shuarano.com/api/v1';
     }
     // Server-side: use environment variable
-    return process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.shuarano.com/api/v1';
+    return process.env.NEXT_PUBLIC_API_BASE_URL || 'https://test.shuarano.com/api/v1';
 };
 
 const instance = axios.create({
