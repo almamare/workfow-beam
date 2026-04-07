@@ -283,8 +283,8 @@ const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
         <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative">
-                        <Bell className="h-4 w-4" />
+                    <Button variant="ghost" size="sm" className="h-10 w-10 p-0 relative shrink-0">
+                        <Bell className="h-5 w-5 text-slate-700 dark:text-slate-300" />
                         {unreadBadge > 0 && (
                             <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-[10px] justify-center rounded-full">
                                 {unreadBadge > badgeCap ? `${badgeCap}+` : unreadBadge}

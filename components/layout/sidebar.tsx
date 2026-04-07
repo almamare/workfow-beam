@@ -106,7 +106,19 @@ const routeMapping: Record<string, string> = {
     '/requests/projects/rejected': '/projects',
     '/requests/projects/details': '/projects',
     '/requests/projects/timeline': '/projects',
-    
+
+    // Project contracts — own sidebar (like clients)
+    '/requests/project-contracts': '/project-contracts',
+    '/requests/project-contracts/pending': '/project-contracts',
+    '/requests/project-contracts/approved': '/project-contracts',
+    '/requests/project-contracts/rejected': '/project-contracts',
+    '/requests/project-contracts/details': '/project-contracts',
+    '/requests/project-contracts/timeline': '/project-contracts',
+    '/project-contracts': '/project-contracts',
+    '/project-contracts/create': '/project-contracts',
+    '/project-contracts/update': '/project-contracts',
+    '/project-contracts/details': '/project-contracts',
+
     // Clients related pages
     '/clients/create': '/clients',
     '/clients/update': '/clients',
@@ -122,10 +134,11 @@ const routeMapping: Record<string, string> = {
     '/client-contracts/update': '/clients',
     '/client-contracts/details': '/clients',
     
-    // Contractors related pages
-    '/contractors/create': '/contractors',
-    '/contractors/update': '/contractors',
-    '/contractors/details': '/contractors',
+    // Contractors — same sidebar as project contracts
+    '/contractors': '/project-contracts',
+    '/contractors/create': '/project-contracts',
+    '/contractors/update': '/project-contracts',
+    '/contractors/details': '/project-contracts',
     
     // Tasks related pages
     '/tasks/create': '/tasks',
@@ -237,8 +250,8 @@ const routeConfig: Record<string, {
             { href: '/requests/projects/pending', title: 'Pending Requests', icon: 'Clock', color: 'text-amber-400' },
             { href: '/requests/projects/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
             { href: '/requests/projects/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
-            { href: '/budgets', title: 'Budgets', icon: 'TrendingUp', color: 'text-teal-400' },
             { href: '/projects/create', title: 'Create Project', icon: 'Plus', color: 'text-green-400' },
+            { href: '/budgets', title: 'Budgets', icon: 'TrendingUp', color: 'text-teal-400' },
         ]
     },
     '/clients': {
@@ -253,15 +266,6 @@ const routeConfig: Record<string, {
             { href: '/client-contracts', title: 'Client Contracts', icon: 'FileCheck', color: 'text-teal-400' },
             { href: '/client-contracts/create', title: 'Create Client Contract', icon: 'Plus', color: 'text-green-400' },
             { href: '/clients/create', title: 'Create Client', icon: 'Plus', color: 'text-green-400' }
-        ]
-    },
-    '/contractors': {
-        title: 'Contractors',
-        icon: 'Building',
-        color: 'text-sky-400',
-        menuItems: [
-            { href: '/contractors', title: 'Contractors', icon: 'Building', color: 'text-sky-400' },
-            { href: '/contractors/create', title: 'Create Contractor', icon: 'Plus', color: 'text-green-400' }
         ]
     },
     '/tasks': {
@@ -286,7 +290,6 @@ const routeConfig: Record<string, {
             { href: '/roles', title: 'Roles', icon: 'Shield', color: 'text-amber-400' },
             { href: '/permissions', title: 'Permissions', icon: 'KeyRound', color: 'text-cyan-400' },
             { href: '/departments', title: 'Departments', icon: 'Building', color: 'text-violet-400' },
-            
             { href: '/users/create', title: 'Create User', icon: 'Plus', color: 'text-green-400' },
             { href: '/employees/create', title: 'Create Employee', icon: 'Plus', color: 'text-green-400' },
             { href: '/departments/create', title: 'Create Department', icon: 'Plus', color: 'text-green-400' },
@@ -440,6 +443,21 @@ const routeConfig: Record<string, {
             { href: '/client-contracts', title: 'Client Contracts', icon: 'FileText', color: 'text-teal-400' },
             { href: '/client-contracts/create', title: 'Add Contract', icon: 'Plus', color: 'text-green-400' }
         ]
+    },
+    '/project-contracts': {
+        title: 'Project Contracts',
+        icon: 'FileCheck',
+        color: 'text-teal-400',
+        menuItems: [
+            { href: '/project-contracts', title: 'All project contracts', icon: 'FileCheck', color: 'text-teal-400' },
+            { href: '/requests/project-contracts/pending', title: 'Pending requests', icon: 'Clock', color: 'text-amber-400' },
+            { href: '/requests/project-contracts/approved', title: 'Approved requests', icon: 'CheckCircle', color: 'text-green-400' },
+            { href: '/requests/project-contracts/rejected', title: 'Rejected requests', icon: 'XCircle', color: 'text-red-400' },
+            { href: '/requests/project-contracts', title: 'All approval requests', icon: 'FileText', color: 'text-sky-400' },
+            { href: '/project-contracts/create', title: 'Create contract', icon: 'Plus', color: 'text-green-400' },
+            { href: '/contractors', title: 'Contractors', icon: 'Building', color: 'text-sky-400' },
+            { href: '/contractors/create', title: 'Create contractor', icon: 'Plus', color: 'text-green-400' },
+        ],
     },
     '/timeline': {
         title: 'Timeline',

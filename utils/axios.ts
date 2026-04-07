@@ -41,12 +41,25 @@ instance.interceptors.request.use(async (config: InternalAxiosRequestConfig) => 
     return config;
 });
 
-// Response interceptor for error handling
+// Response interceptor for error handling (global; slices may still handle specific cases)
 instance.interceptors.response.use(
     (response) => response,
     (error: AxiosError) => {
-        if (error.response?.status === 403) {
+        const status = error.response?.status;
+        if (status === 401 && typeof window !== 'undefined') {
+            const path = window.location.pathname || '';
+            if (!path.startsWith('/login')) {
+                try {
+                    Cookies.remove('token');
+                } catch {
+                    /* ignore */
+                }
+                window.location.assign(`/login?redirect=${encodeURIComponent(path)}`);
+            }
+        } else if (status === 403) {
             toast.error('Access denied');
+        } else if (status !== undefined && status >= 500) {
+            toast.error('Server error. Please try again later.');
         }
         return Promise.reject(error);
     }

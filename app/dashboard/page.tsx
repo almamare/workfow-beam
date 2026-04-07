@@ -11,8 +11,6 @@ import {
     Settings,
     ClipboardList,
     Activity,
-    Building,
-    Building2,
     UserCircle,
     Bell,
     FileSignature,
@@ -29,6 +27,7 @@ import {
     Package,
     Briefcase,
     Bot,
+    FileCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
@@ -52,10 +51,10 @@ const allMenuItems = [
     },
     {
         number: 3,
-        title: 'Contractors',
-        icon: Building,
-        href: '/contractors',
-        color: 'from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700'
+        title: 'Project Contracts',
+        icon: FileCheck,
+        href: '/project-contracts',
+        color: 'from-cyan-500 to-cyan-600 dark:from-cyan-600 dark:to-cyan-700'
     },
     {
         number: 4,

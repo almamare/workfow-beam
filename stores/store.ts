@@ -18,6 +18,7 @@ import Invoices from '@/stores/slices/invoices';                    // Importing
 import BankBalances from '@/stores/slices/bank-balances';           // Importing the Bank Balances slice
 import Approvals from '@/stores/slices/approvals';                  // Importing the Approvals slice
 import ClientContracts from '@/stores/slices/client-contracts';     // Importing the Client Contracts slice
+import projectContracts from '@/stores/slices/project-contracts';
 import Attachments from '@/stores/slices/attachments';              // Importing the Attachments slice
 import ContractorPayments from '@/stores/slices/contractor-payments'; // Importing the Contractor Payments slice
 import TasksRequestsForApproval from '@/stores/slices/tasks_requests_for_approval'; // Importing the Tasks Requests For Approval slice
@@ -58,6 +59,7 @@ const store = configureStore({
         bankBalances: BankBalances,         // This is the slice for managing bank balances
         approvals: Approvals,               // This is the slice for managing approvals
         clientContracts: ClientContracts,  // This is the slice for managing client contracts
+        projectContracts, // Project-scoped contracts
         attachments: Attachments,           // This is the slice for managing attachments
         contractorPayments: ContractorPayments, // This is the slice for managing contractor payments
         departments,

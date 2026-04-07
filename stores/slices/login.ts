@@ -78,9 +78,12 @@ export const authentication = createAsyncThunk<
                 rawUser.must_change_password === true ||
                 Boolean(body?.must_change_password);
 
+            // Secure cookies are not stored on plain HTTP (typical local MAMP); only set on HTTPS
+            const useSecureCookie =
+                typeof window !== 'undefined' && window.location.protocol === 'https:';
             Cookies.set('token', token, {
                 expires: 1,
-                secure: true,
+                secure: useSecureCookie,
                 sameSite: 'Strict',
                 path: '/',
             });

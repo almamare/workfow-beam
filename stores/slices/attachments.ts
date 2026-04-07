@@ -128,7 +128,10 @@ export const updateAttachment = createAsyncThunk<
     { rejectValue: string }
 >('attachments/updateAttachment', async (payload, { rejectWithValue }) => {
     try {
-        const response = await api.put('/attachments', payload);
+        const response = await api.put(
+            `/attachments/update/${encodeURIComponent(payload.attachment_id)}`,
+            { params: payload }
+        );
 
         // Handle new API response structure
         if ('success' in response.data && response.data.success) {

@@ -34,6 +34,7 @@ import {
     LogOut,
     Menu,
     HelpCircle,
+    LayoutDashboard,
 } from 'lucide-react';
 
 /* =========================================================
@@ -174,6 +175,19 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                                 <Sun className="h-5 w-5 text-yellow-500 group-hover:text-sky-400 transition-colors" />
                             )}
                         </Button>
+
+                        {!isDashboard && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-9 w-9 p-0 shrink-0 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors duration-200"
+                                onClick={() => router.push('/dashboard')}
+                                title="لوحة التحكم"
+                                aria-label="العودة إلى لوحة التحكم"
+                            >
+                                <LayoutDashboard className="h-5 w-5 text-sky-600 dark:text-sky-400" />
+                            </Button>
+                        )}
 
                         {/* Notifications menu */}
                         <NotificationsMenu onOpenAll={() => router.push('/notifications')}  />
