@@ -2,6 +2,7 @@
 
 const isDev = process.env.NODE_ENV === 'development';
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+const normalizedApiBaseUrl = apiBaseUrl.replace(/\/+$/, '');
 let apiOrigin = '';
 
 try {
@@ -56,6 +57,17 @@ const nextConfig = {
             {
                 source: '/:path*',
                 headers: securityHeaders,
+            },
+        ];
+    },
+    async rewrites() {
+        if (!normalizedApiBaseUrl) {
+            return [];
+        }
+        return [
+            {
+                source: '/api-proxy/:path*',
+                destination: `${normalizedApiBaseUrl}/:path*`,
             },
         ];
     },

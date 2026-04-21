@@ -6,12 +6,13 @@ import { toast } from 'sonner';
 
 // Get API base URL from environment variable, fallback to default for development
 const getApiBaseUrl = (): string => {
+    const directApiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.mofeia.com/api/v1';
     if (typeof window !== 'undefined') {
-        // Client-side: use environment variable
-        return process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.mofeia.com/api/v1';
+        // Client-side: default to same-origin proxy to avoid browser CORS blocks.
+        return process.env.NEXT_PUBLIC_API_PROXY_BASE || '/api-proxy';
     }
-    // Server-side: use environment variable
-    return process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.mofeia.com/api/v1';
+    // Server-side: call API directly.
+    return directApiBase;
 };
 
 const instance = axios.create({
