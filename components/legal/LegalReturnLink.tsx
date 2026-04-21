@@ -17,8 +17,8 @@ interface LegalReturnLinkProps {
  * cookie exists, otherwise sign-in. Avoids showing only "sign in" to logged-in users.
  */
 export function LegalReturnLink({ variant, className }: LegalReturnLinkProps) {
-    const [href, setHref] = useState(SIGN_IN_PATH);
-    const [label, setLabel] = useState(
+    const [href, setHref] = useState<string>(SIGN_IN_PATH);
+    const [label, setLabel] = useState<string>(
         variant === 'header' ? LEGAL_LINK_LABELS.signIn : LEGAL_LINK_LABELS.signInShort
     );
 

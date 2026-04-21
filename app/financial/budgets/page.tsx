@@ -81,7 +81,13 @@ export default function BudgetsPage() {
 
     // Get unique fiscal years from data
     const fiscalYears = useMemo(() => {
-        const years = [...new Set(items.map(b => b.fiscal_year).filter(Boolean))].sort().reverse();
+        const years = items.reduce<string[]>((acc, b) => {
+            const year = b.fiscal_year;
+            if (!year || acc.includes(year)) return acc;
+            acc.push(year);
+            return acc;
+        }, []);
+        years.sort().reverse();
         return years;
     }, [items]);
 
