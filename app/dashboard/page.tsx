@@ -3,6 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/stores/store';
+import Image from 'next/image';
+import Link from 'next/link';
+import { LEGAL_LINK_LABELS, LEGAL_ROUTES } from '@/lib/legal';
 import {
     Users,
     FileText,
@@ -10,7 +13,6 @@ import {
     Wallet,
     Settings,
     ClipboardList,
-    Activity,
     UserCircle,
     Bell,
     FileSignature,
@@ -21,255 +23,276 @@ import {
     Receipt,
     Landmark,
     TrendingUp,
-    CreditCard,
     CheckCircle,
     History,
     Package,
     Briefcase,
     Bot,
     FileCheck,
+    LayoutGrid,
 } from 'lucide-react';
-import Link from 'next/link';
-import { EnhancedCard } from '@/components/ui/enhanced-card';
-import { AiInsightsWidget } from '@/components/ai/AiInsightsWidget';
 
-// Essential menu items only
-const allMenuItems = [
-    {
-        number: 1,
-        title: 'Clients',
-        icon: UserCircle,
-        href: '/clients',
-        color: 'from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700'
-    },
-    {
-        number: 2,
-        title: 'Projects',
-        icon: FolderOpen,
-        href: '/projects',
-        color: 'from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700'
-    },
-    {
-        number: 3,
-        title: 'Project Contracts',
-        icon: FileCheck,
-        href: '/project-contracts',
-        color: 'from-cyan-500 to-cyan-600 dark:from-cyan-600 dark:to-cyan-700'
-    },
-    {
-        number: 4,
-        title: 'Task Orders',
-        icon: ClipboardList,
-        href: '/tasks',
-        color: 'from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700'
-    },
-    {
-        number: 5,
-        title: 'Users',
-        icon: Users,
-        href: '/users',
-        color: 'from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700'
-    },
-    {
-        number: 6,
-        title: 'Financial',
-        icon: Wallet,
-        href: '/financial',
-        color: 'from-green-500 to-green-600 dark:from-green-600 dark:to-green-700'
-    },
-    {
-        number: 7,
-        title: 'Requests',
-        icon: FileText,
-        href: '/requests/tasks',
-        color: 'from-yellow-500 to-yellow-600 dark:from-yellow-600 dark:to-yellow-700'
-    },
-    {
-        number: 8,
-        title: 'Settings',
-        icon: Settings,
-        href: '/settings',
-        color: 'from-gray-500 to-gray-600 dark:from-gray-600 dark:to-gray-700'
-    },
-    {
-        number: 9,
-        title: 'Notifications',
-        icon: Bell,
-        href: '/notifications',
-        color: 'from-red-500 to-red-600 dark:from-red-600 dark:to-red-700'
-    },
-    {
-        number: 10,
-        title: 'Forms',
-        icon: FileSignature,
-        href: '/forms',
-        color: 'from-teal-500 to-teal-600 dark:from-teal-600 dark:to-teal-700'
-    },
-    {
-        number: 11,
-        title: 'Reports',
-        icon: BarChart2,
-        href: '/reports',
-        color: 'from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700'
-    },
-    {
-        number: 12,
-        title: 'Documents',
-        icon: FileArchive,
-        href: '/documents',
-        color: 'from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700'
-    },
-    {
-        number: 13,
-        title: 'Statistics',
-        icon: PieChart,
-        href: '/statistics',
-        color: 'from-fuchsia-500 to-fuchsia-600 dark:from-fuchsia-600 dark:to-fuchsia-700'
-    },
-    {
-        number: 14,
-        title: 'Permissions',
-        icon: Shield,
-        href: '/permissions',
-        color: 'from-violet-500 to-violet-600 dark:from-violet-600 dark:to-violet-700'
-    },
-    {
-        number: 15,
-        title: 'Invoices',
-        icon: Receipt,
-        href: '/invoices',
-        color: 'from-rose-500 to-rose-600 dark:from-rose-600 dark:to-rose-700'
-    },
-    {
-        number: 16,
-        title: 'Banks',
-        icon: Landmark,
-        href: '/banks',
-        color: 'from-cyan-500 to-cyan-600 dark:from-cyan-600 dark:to-cyan-700'
-    },
-    {
-        number: 17,
-        title: 'Analysis',
-        icon: TrendingUp,
-        href: '/analysis',
-        color: 'from-lime-500 to-lime-600 dark:from-lime-600 dark:to-lime-700'
-    },
-    {
-        number: 19,
-        title: 'Approvals',
-        icon: CheckCircle,
-        href: '/approvals',
-        color: 'from-pink-500 to-pink-600 dark:from-pink-600 dark:to-pink-700'
-    },
-    {
-        number: 20,
-        title: 'Timeline',
-        icon: History,
-        href: '/timeline',
-        color: 'from-slate-500 to-slate-700 dark:from-slate-600 dark:to-slate-800'
-    },
-    {
-        number: 21,
-        title: 'History',
-        icon: History,
-        href: '/history',
-        color: 'from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700'
-    },
-    {
-        number: 22,
-        title: 'Inventory',
-        icon: Package,
-        href: '/inventory/items',
-        color: 'from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700'
-    },
-    {
-        number: 23,
-        title: 'Departments',
-        icon: Briefcase,
-        href: '/departments',
-        color: 'from-teal-500 to-teal-600 dark:from-teal-600 dark:to-teal-700'
-    },
-    {
-        number: 26,
-        title: 'AI Assistant',
-        icon: Bot,
-        href: '/ai',
-        color: 'from-violet-500 to-violet-600 dark:from-violet-600 dark:to-violet-700'
-    },
+/** Product name shown on the dashboard strip (matches app branding). */
+const SYSTEM_NAME = 'BEAM';
+
+// ── Sections ───────────────────────────────────────────────────────────────────
+const sections = [
+    { title: 'Clients', icon: UserCircle, href: '/clients', color: '#7c3aed', bg: '#f5f3ff' },
+    { title: 'Projects', icon: FolderOpen, href: '/projects', color: '#4f46e5', bg: '#eef2ff' },
+    { title: 'Project Contracts', icon: FileCheck, href: '/project-contracts', color: '#0891b2', bg: '#ecfeff' },
+    { title: 'Task Orders', icon: ClipboardList, href: '/tasks', color: '#d97706', bg: '#fffbeb' },
+    { title: 'Users', icon: Users, href: '/users', color: '#2563eb', bg: '#eff6ff' },
+    { title: 'Financial', icon: Wallet, href: '/financial', color: '#059669', bg: '#ecfdf5' },
+    { title: 'Requests', icon: FileText, href: '/requests/tasks', color: '#ca8a04', bg: '#fefce8' },
+    { title: 'Settings', icon: Settings, href: '/settings', color: '#475569', bg: '#f8fafc' },
+    { title: 'Notifications', icon: Bell, href: '/notifications', color: '#dc2626', bg: '#fff1f2' },
+    { title: 'Forms', icon: FileSignature, href: '/forms', color: '#0d9488', bg: '#f0fdfa' },
+    { title: 'Reports', icon: BarChart2, href: '/reports', color: '#0284c7', bg: '#f0f9ff' },
+    { title: 'Documents', icon: FileArchive, href: '/documents', color: '#10b981', bg: '#ecfdf5' },
+    { title: 'Statistics', icon: PieChart, href: '/statistics', color: '#9333ea', bg: '#faf5ff' },
+    { title: 'Permissions', icon: Shield, href: '/permissions', color: '#7c3aed', bg: '#f5f3ff' },
+    { title: 'Invoices', icon: Receipt, href: '/invoices', color: '#e11d48', bg: '#fff1f2' },
+    { title: 'Banks', icon: Landmark, href: '/banks', color: '#0891b2', bg: '#ecfeff' },
+    { title: 'Analysis', icon: TrendingUp, href: '/analysis', color: '#65a30d', bg: '#f7fee7' },
+    { title: 'Approvals', icon: CheckCircle, href: '/approvals', color: '#db2777', bg: '#fdf2f8' },
+    { title: 'Timeline', icon: History, href: '/timeline', color: '#64748b', bg: '#f8fafc' },
+    { title: 'History', icon: History, href: '/history', color: '#4f46e5', bg: '#eef2ff' },
+    { title: 'Inventory', icon: Package, href: '/inventory/items', color: '#ea580c', bg: '#fff7ed' },
+    { title: 'Departments', icon: Briefcase, href: '/departments', color: '#0d9488', bg: '#f0fdfa' },
+    { title: 'AI Assistant', icon: Bot, href: '/ai', color: '#7c3aed', bg: '#f5f3ff' },
 ];
 
+function greeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-    // Explicitly type state as RootState to avoid 'unknown' type error
-    const user = useSelector((state: RootState) => (state as RootState).login.user);
-    const [userName, setUserName] = useState('User');
+    const user = useSelector((state: RootState) => state.login.user);
+    const [userName, setUserName] = useState('');
+    const [dateStr, setDateStr] = useState('');
 
     useEffect(() => {
-        if (user && typeof user.name === 'string') {
-            setUserName(user.name + ' ' + user.surname);
-        }
+        if (user?.name) setUserName(`${user.name} ${user.surname ?? ''}`.trim());
+        setDateStr(new Date().toLocaleDateString('en-GB', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+        }));
     }, [user]);
 
     return (
-        <div className="bg-slate-100 dark:bg-slate-900 transition-colors duration-300 p-3 sm:p-4 md:p-6">
-            {/* Header Section */}
-            <div className="mb-4 md:mb-6">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-sky-600 via-sky-500 to-sky-400 dark:from-sky-400 dark:via-sky-300 dark:to-sky-500 bg-clip-text text-transparent mb-2 leading-tight">
-                    Welcome to Shuaa Al-Ranou Trade & General Contracting
-                </h1>
-                <p className="text-base sm:text-lg md:text-xl text-slate-700 dark:text-slate-300 font-medium">
-                    Welcome, <span className="text-sky-600 dark:text-sky-400 font-semibold">{userName}</span>
-                </p>
+        <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
+
+            {/* ── Brand Header ── */}
+            <header
+                className="relative shrink-0 overflow-hidden border-b border-sky-500/25
+            min-h-[3rem] sm:min-h-[3.5rem]
+            flex items-center
+            rounded-xl
+            px-4 sm:px-6 lg:px-8 py-2
+            bg-[linear-gradient(108deg,hsl(201,96%,14%)_0%,hsl(200,76%,20%)_42%,hsl(215,32%,14%)_100%)]"
+            >
+                {/* Top Accent Line */}
+                <div
+                    className="absolute top-0 left-0 right-0 h-[2px] z-[1]
+                    bg-[linear-gradient(90deg,hsl(43,96%,58%)_0%,hsl(199,85%,72%)_50%,hsl(43,96%,58%)_100%)] opacity-90"
+                    aria-hidden
+                />
+
+                {/* Background Effects (desktop only for performance) */}
+                <div
+                    className="hidden sm:block pointer-events-none absolute inset-0 z-0 opacity-[0.08]"
+                    style={{
+                        backgroundImage:
+                            'radial-gradient(circle at center, rgba(255,255,255,0.5) 1px, transparent 1.2px)',
+                        backgroundSize: '14px 14px',
+                    }}
+                    aria-hidden
+                />
+
+                <div
+                    className="hidden sm:block pointer-events-none absolute inset-0 z-0 opacity-[0.03]
+                    bg-[linear-gradient(125deg,transparent_48%,rgba(255,255,255,0.3)_48%,rgba(255,255,255,0.3)_52%,transparent_52%)]
+                    bg-[length:10px_10px]"
+                    aria-hidden
+                />
+
+                <div
+                    className="hidden sm:block pointer-events-none absolute -right-16 top-1/2 h-[140%] w-40 -translate-y-1/2 rounded-full
+                    bg-sky-400/15 blur-2xl"
+                    aria-hidden
+                />
+
+                {/* Content */}
+                <div className="relative z-[2] flex items-center justify-between w-full gap-3">
+
+                    {/* LEFT SIDE */}
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="min-w-0 max-w-[220px] sm:max-w-none leading-tight space-y-1">
+                            <h1 className="text-sm sm:text-[16px] font-semibold text-white tracking-[0.10em] truncate uppercase">
+                                Shuaa Al-Ranou
+                            </h1>
+
+                            <p className="text-[10px] font-medium uppercase text-sky-200/70 truncate">
+                                Trade &amp; General Contracting
+                            </p>
+
+                            <p className="text-[10px] text-white font-medium tracking-wide truncate">
+                                Enterprise management platform
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* RIGHT SIDE */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3">
+
+                        {/* Badge */}
+                        <div className="flex items-center">
+                            <span
+                                className="inline-flex items-center gap-1 rounded-md border border-emerald-400/20 bg-emerald-500/10
+                              px-2 py-0.5 text-[10px] font-medium text-emerald-100/95 whitespace-nowrap"
+                            >
+                                <Shield className="h-3 w-3 opacity-80" aria-hidden />
+                                Role-based access
+                            </span>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="hidden sm:block h-6 w-px bg-white/10" />
+
+                        {/* User Info */}
+                        <div className="flex flex-col items-start sm:items-end sm:text-right text-xs text-sky-100/85 whitespace-nowrap">
+                            <p>
+                                <span className="text-sky-200/70">{greeting()}, </span>
+                                <span className="font-semibold text-white">
+                                    {userName || 'Welcome'}
+                                </span>
+                            </p>
+
+                            {dateStr && (
+                                <p className="text-[10px] text-white">
+                                    {dateStr}
+                                </p>
+                            )}
+                        </div>
+
+                    </div>
+                </div>
+            </header>
+
+            {/* ── SECTION TITLE ─────────────────────────────────────────────── */}
+            <div className="px-5 sm:px-8 lg:px-10 pt-7 pb-4">
+                <div className="flex items-center gap-3">
+                    <span className="w-[3px] h-5 rounded-full inline-block flex-shrink-0"
+                        style={{ background: 'linear-gradient(180deg,hsl(199,89%,42%),hsl(199,89%,64%))' }} />
+                    <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-widest">
+                        System Modules &nbsp;·&nbsp; {sections.length} sections
+                    </p>
+                </div>
             </div>
 
-            {/* Navigation Grid */}
-            <EnhancedCard 
-                title={'Choose the section you want to access'} 
-                description={'Navigate to the section you want to access'} 
-                variant="default" 
-                size="sm"
-            >
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 sm:gap-3 md:gap-4">
-                    {allMenuItems.map((item) => (
-                        <Link 
-                            key={item.href} 
-                            href={item.href}
-                            className="block group"
+            {/* ── GRID ─────────────────────────────────────────────────────── */}
+            <div className="flex-1 px-3 sm:px-6 lg:px-8 pb-6">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3 sm:gap-4">
+                    {sections.map((s, i) => (
+                        <Link
+                            key={s.href}
+                            href={s.href}
+                            className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-2xl"
                         >
-                            <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:border-sky-400 dark:hover:border-sky-500 hover:shadow-lg dark:hover:shadow-sky-500/10 transition-all duration-300 cursor-pointer h-full active:scale-95">
-                                {/* Background gradient on hover */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-white/50 dark:from-slate-700/30 dark:to-slate-800/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                
-                                {/* Content */}
-                                <div className="relative p-3 sm:p-4 flex flex-col items-center justify-center text-center h-full min-h-[100px] sm:min-h-[120px] md:min-h-[140px]">
-                                    {/* Icon Container */}
-                                    <div className="mb-2 sm:mb-3">
-                                        <div className={`p-2.5 sm:p-3 md:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r ${item.color} group-hover:scale-110 dark:group-hover:shadow-lg transition-all duration-300 inline-block shadow-md dark:shadow-lg`}>
-                                            {item.icon ? (
-                                                <item.icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
-                                            ) : (
-                                                <Activity className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
-                                            )}
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Number and Title */}
-                                    <div className="w-full">
-                                        <h3 className="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors leading-tight line-clamp-2 px-1">
-                                            <span className="text-[11px] sm:text-[12px] md:text-[13px] font-bold text-slate-500 dark:text-slate-400 mr-1">
-                                                {String(item.number).padStart(2, '0')}.
-                                            </span>
-                                            {item.title}
-                                        </h3>
-                                    </div>
+                            <div className="relative flex flex-col items-center justify-center text-center gap-3
+                                bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/60
+                                px-2 py-5 sm:py-6 overflow-hidden
+                                transition-all duration-200
+                                hover:border-transparent hover:shadow-[0_8px_30px_rgba(0,0,0,0.10)] hover:-translate-y-1
+                                active:scale-[0.97] active:translate-y-0 cursor-pointer min-h-[110px] sm:min-h-[130px]">
+
+                                {/* Top micro accent line — appears on hover */}
+                                <div className="absolute top-0 left-4 right-4 h-[2px] rounded-full scale-x-0 group-hover:scale-x-100
+                                    transition-transform duration-300 origin-center"
+                                    style={{ background: s.color }} />
+
+                                {/* Icon container */}
+                                <div
+                                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0
+                                        transition-transform duration-200 group-hover:scale-110"
+                                    style={{ background: s.bg }}
+                                >
+                                    <s.icon
+                                        className="w-6 h-6 sm:w-[26px] sm:h-[26px] transition-colors duration-200"
+                                        style={{ color: s.color }}
+                                    />
                                 </div>
-                                
-                                {/* Hover effect overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl sm:rounded-2xl" />
+
+                                {/* Number + Title */}
+                                <div className="flex items-baseline justify-center gap-1.5 px-1 w-full">
+                                    <span className="font-black text-[13px] sm:text-[14px] leading-none tabular-nums flex-shrink-0
+                                        transition-colors duration-200">
+                                        {String(i + 1).padStart(2, '0')}
+                                    </span>
+                                    -
+                                    <p className="text-slate-700 dark:text-slate-200 font-semibold text-[11.5px] sm:text-[12.5px]
+                                        leading-tight line-clamp-2 transition-colors duration-200
+                                        group-hover:text-sky-700 dark:group-hover:text-sky-400">
+                                        {s.title}
+                                    </p>
+                                </div>
+
+                                {/* Hover background glow */}
+                                <div
+                                    className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-200 pointer-events-none rounded-2xl"
+                                    style={{ background: s.color }}
+                                />
                             </div>
                         </Link>
                     ))}
                 </div>
-            </EnhancedCard>
+            </div>
+
+            {/* ── FOOTER ───────────────────────────────────────────────────── */}
+            <footer className="flex-shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <div className="px-5 sm:px-8 lg:px-10 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+
+                    {/* Left — copyright */}
+                    <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-md overflow-hidden flex-shrink-0 opacity-70">
+                            <img src="/icon-512.png" alt="" className="w-full h-full object-contain" />
+                        </div>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                            © {new Date().getFullYear()}&nbsp;
+                            <span className="font-semibold text-slate-500 dark:text-slate-400">
+                                Shuaa Al-Ranou Trade &amp; General Contracting
+                            </span>
+                            . All rights reserved.
+                            <span className="hidden sm:inline text-slate-300 dark:text-slate-700 mx-2">|</span>
+                            <span className="hidden sm:inline">
+                                Developed by&nbsp;
+                                <span className="font-semibold text-slate-500 dark:text-slate-400">Lebilix LLC</span>
+                            </span>
+                        </p>
+                    </div>
+
+                    {/* Right — legal (same routes as login page) */}
+                    <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 pl-7 sm:pl-0" aria-label="Legal">
+                        <Link
+                            href={LEGAL_ROUTES.privacyPolicy}
+                            className="text-[11px] text-slate-400 dark:text-slate-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors font-medium"
+                        >
+                            {LEGAL_LINK_LABELS.privacyPolicy}
+                        </Link>
+                        <span className="hidden sm:block w-px h-3 bg-slate-200 dark:bg-slate-700 flex-shrink-0" aria-hidden />
+                        <Link
+                            href={LEGAL_ROUTES.termsOfUse}
+                            className="text-[11px] text-slate-400 dark:text-slate-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors font-medium"
+                        >
+                            {LEGAL_LINK_LABELS.termsOfUse}
+                        </Link>
+                    </nav>
+                </div>
+            </footer>
+
         </div>
     );
 }

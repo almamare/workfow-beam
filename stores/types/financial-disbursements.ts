@@ -94,6 +94,16 @@ export interface PettyCashBox {
 }
 
 export interface LedgerEntry {
-    id: string;
+    ledger_id: string;
+    disbursement_id: string;
+    project_id: string;
+    payment_source: 'Bank' | 'Sarraf' | 'Petty_Cash';
+    source_ref_id?: string;
+    currency: string;
+    debit_amount: number;
+    credit_amount: number;
+    balance_after: number;
+    transaction_date: string;
+    posted_by: string;
     [key: string]: unknown;
 }

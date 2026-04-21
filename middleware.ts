@@ -11,6 +11,11 @@ function isPublicPath(pathname: string): boolean {
     if (PUBLIC_PATHS.has(pathname)) {
         return true;
     }
+    // Legal pages must stay readable without a session (linked from login) and must not
+    // bounce authenticated users through session edge-cases on /legal/*.
+    if (pathname.startsWith('/legal/')) {
+        return true;
+    }
     // Next internals & Next API routes (if any)
     if (pathname.startsWith('/_next') || pathname.startsWith('/api')) {
         return true;

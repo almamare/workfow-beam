@@ -1,837 +1,420 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch } from '@/stores/store';
+import {
+    fetchBudgets,
+    selectBudgetItems,
+    selectBudgetLoading,
+    selectBudgetError,
+    selectBudgetMeta,
+} from '@/stores/slices/budgets';
+import { fetchProjects, selectProjects } from '@/stores/slices/projects';
+import type { Budget } from '@/stores/types/budgets';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BarChart3, Plus, Eye, Edit, Trash2, TrendingUp, TrendingDown, AlertTriangle, Download, Filter, CheckCircle, PlayCircle, StopCircle } from 'lucide-react';
+import { DatePicker } from '@/components/DatePicker';
+import { RefreshCw, FileSpreadsheet, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { PageHeader } from '@/components/ui/page-header';
-import { FilterBar } from '@/components/ui/filter-bar';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
-import { EnhancedDataTable } from '@/components/ui/enhanced-data-table';
+import { EnhancedDataTable, Column } from '@/components/ui/enhanced-data-table';
 
-interface Budget {
-    id: string;
-    budgetNumber: string;
-    name: string;
-    department: string;
-    category: string;
-    fiscalYear: string;
-    allocatedAmount: number;
-    spentAmount: number;
-    remainingAmount: number;
-    currency: string;
-    status: 'draft' | 'approved' | 'active' | 'closed' | 'exceeded';
-    startDate: string;
-    endDate: string;
-    description: string;
-    createdBy: string;
-    approvedBy?: string;
-    lastUpdated: string;
+function fmt(n: number | string | null | undefined) {
+    const v = Number(n ?? 0);
+    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(v);
 }
 
-const mockBudgets: Budget[] = [
-    {
-        id: '1',
-        budgetNumber: 'BUD-2024-001',
-        name: 'IT Department Budget',
-        department: 'Information Technology',
-        category: 'Technology',
-        fiscalYear: '2024',
-        allocatedAmount: 500000,
-        spentAmount: 350000,
-        remainingAmount: 150000,
-        currency: '',
-        status: 'active',
-        startDate: '2024-01-01',
-        endDate: '2024-12-31',
-        description: 'Annual budget for IT department operations and equipment',
-        createdBy: 'Ahmed Ali',
-        approvedBy: 'General Manager',
-        lastUpdated: '2024-01-15'
-    },
-    {
-        id: '2',
-        budgetNumber: 'BUD-2024-002',
-        name: 'Marketing Campaign Budget',
-        department: 'Marketing',
-        category: 'Marketing',
-        fiscalYear: '2024',
-        allocatedAmount: 200000,
-        spentAmount: 180000,
-        remainingAmount: 20000,
-        currency: '',
-        status: 'active',
-        startDate: '2024-01-01',
-        endDate: '2024-12-31',
-        description: 'Budget for marketing campaigns and promotional activities',
-        createdBy: 'Fatima Mohamed',
-        approvedBy: 'Marketing Director',
-        lastUpdated: '2024-01-10'
-    },
-    {
-        id: '3',
-        budgetNumber: 'BUD-2024-003',
-        name: 'Office Renovation Budget',
-        department: 'Administration',
-        category: 'Infrastructure',
-        fiscalYear: '2024',
-        allocatedAmount: 100000,
-        spentAmount: 105000,
-        remainingAmount: -5000,
-        currency: '',
-        status: 'exceeded',
-        startDate: '2024-01-01',
-        endDate: '2024-12-31',
-        description: 'Budget for office renovation and improvement projects',
-        createdBy: 'Omar Hassan',
-        approvedBy: 'Administrative Director',
-        lastUpdated: '2024-01-12'
-    },
-    {
-        id: '4',
-        budgetNumber: 'BUD-2024-004',
-        name: 'Training and Development Budget',
-        department: 'Human Resources',
-        category: 'Human Resources',
-        fiscalYear: '2024',
-        allocatedAmount: 75000,
-        spentAmount: 25000,
-        remainingAmount: 50000,
-        currency: '',
-        status: 'active',
-        startDate: '2024-01-01',
-        endDate: '2024-12-31',
-        description: 'Budget for employee training and development programs',
-        createdBy: 'Sara Ahmed',
-        approvedBy: 'HR Director',
-        lastUpdated: '2024-01-08'
-    }
-];
-
-const departments = ['Information Technology', 'Marketing', 'Administration', 'Human Resources', 'Finance', 'Operations'];
-const categories = ['Technology', 'Marketing', 'Infrastructure', 'Human Resources', 'Operations', 'Maintenance', 'Utilities'];
-const fiscalYears = ['2024', '2023', '2025'];
+function escapeCsv(val: any) {
+    const s = String(val ?? '');
+    return s.includes(',') || s.includes('"') ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
 
 export default function BudgetsPage() {
-    const [budgets, setBudgets] = useState<Budget[]>(mockBudgets);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [departmentFilter, setDepartmentFilter] = useState<string>('all');
-    const [categoryFilter, setCategoryFilter] = useState<string>('all');
-    const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [fiscalYearFilter, setFiscalYearFilter] = useState<string>('all');
-    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-    const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
-    const [formData, setFormData] = useState({
-        name: '',
-        department: '',
-        category: '',
-        fiscalYear: '2024',
-        allocatedAmount: '',
-        currency: '',
-        startDate: '',
-        endDate: '',
-        description: ''
-    });
+    const dispatch = useDispatch<AppDispatch>();
+    const items    = useSelector(selectBudgetItems);
+    const loading  = useSelector(selectBudgetLoading);
+    const error    = useSelector(selectBudgetError);
+    const meta     = useSelector(selectBudgetMeta);
+    const projects = useSelector(selectProjects);
 
-    const filteredBudgets = budgets.filter(budget => {
-        const matchesSearch = budget.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            budget.budgetNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            budget.department.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesDepartment = departmentFilter === 'all' || budget.department === departmentFilter;
-        const matchesCategory = categoryFilter === 'all' || budget.category === categoryFilter;
-        const matchesStatus = statusFilter === 'all' || budget.status === statusFilter;
-        const matchesFiscalYear = fiscalYearFilter === 'all' || budget.fiscalYear === fiscalYearFilter;
-        
-        return matchesSearch && matchesDepartment && matchesCategory && matchesStatus && matchesFiscalYear;
-    });
+    const [page, setPage]                   = useState(1);
+    const [limit, setLimit]                 = useState(15);
+    const [search, setSearch]               = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [fiscalYearFilter, setFiscalYearFilter] = useState('');
+    const [projectFilter, setProjectFilter] = useState('');
+    const [isRefreshing, setIsRefreshing]   = useState(false);
+    const [isExporting, setIsExporting]     = useState(false);
 
-    const handleCreate = () => {
-        if (!formData.name || !formData.department || !formData.category || !formData.allocatedAmount) {
-            toast.error('Please fill in all required fields');
-            return;
-        }
+    useEffect(() => { if (error) toast.error(error); }, [error]);
 
-        const allocatedAmount = parseFloat(formData.allocatedAmount);
-        const newBudget: Budget = {
-            id: Date.now().toString(),
-            budgetNumber: `BUD-${formData.fiscalYear}-${String(budgets.length + 1).padStart(3, '0')}`,
-            name: formData.name,
-            department: formData.department,
-            category: formData.category,
-            fiscalYear: formData.fiscalYear,
-            allocatedAmount: allocatedAmount,
-            spentAmount: 0,
-            remainingAmount: allocatedAmount,
-            currency: formData.currency,
-            status: 'draft',
-            startDate: formData.startDate,
-            endDate: formData.endDate,
-            description: formData.description,
-            createdBy: 'Current User',
-            lastUpdated: new Date().toISOString().split('T')[0]
-        };
+    useEffect(() => {
+        dispatch(fetchProjects({ page: 1, limit: 1000 }));
+    }, [dispatch]);
 
-        setBudgets([...budgets, newBudget]);
-        setIsCreateDialogOpen(false);
-        setFormData({
-            name: '',
-            department: '',
-            category: '',
-            fiscalYear: '2024',
-            allocatedAmount: '',
-            currency: '',
-            startDate: '',
-            endDate: '',
-            description: ''
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch(search), 400);
+        return () => clearTimeout(t);
+    }, [search]);
+
+    const lastKeyRef = useRef('');
+    useEffect(() => {
+        const key = JSON.stringify({ page, limit, search: debouncedSearch });
+        if (lastKeyRef.current === key) return;
+        lastKeyRef.current = key;
+        dispatch(fetchBudgets({ page, limit, search: debouncedSearch || undefined }));
+    }, [dispatch, page, limit, debouncedSearch]);
+
+    // Client-side filter by project and fiscal year
+    const filtered = useMemo(() => {
+        return items.filter(b => {
+            const matchProject = !projectFilter || b.project_id === projectFilter;
+            const matchYear    = !fiscalYearFilter || b.fiscal_year === fiscalYearFilter;
+            return matchProject && matchYear;
         });
-        toast.success('Budget created successfully');
+    }, [items, projectFilter, fiscalYearFilter]);
+
+    // Get unique fiscal years from data
+    const fiscalYears = useMemo(() => {
+        const years = [...new Set(items.map(b => b.fiscal_year).filter(Boolean))].sort().reverse();
+        return years;
+    }, [items]);
+
+    // Summary stats
+    const stats = useMemo(() => ({
+        totalOriginal:  filtered.reduce((s, b) => s + Number(b.original_budget  || 0), 0),
+        totalRevised:   filtered.reduce((s, b) => s + Number(b.revised_budget   || 0), 0),
+        totalCommitted: filtered.reduce((s, b) => s + Number(b.committed_cost   || 0), 0),
+        totalActual:    filtered.reduce((s, b) => s + Number(b.actual_cost      || 0), 0),
+    }), [filtered]);
+
+    const refreshTable = async () => {
+        setIsRefreshing(true);
+        try {
+            await dispatch(fetchBudgets({ page, limit, search: debouncedSearch || undefined })).unwrap();
+            toast.success('Table refreshed successfully');
+        } catch { toast.error('Failed to refresh table'); }
+        finally { setIsRefreshing(false); }
     };
 
-    const handleEdit = (budget: Budget) => {
-        setEditingBudget(budget);
-        setFormData({
-            name: budget.name,
-            department: budget.department,
-            category: budget.category,
-            fiscalYear: budget.fiscalYear,
-            allocatedAmount: budget.allocatedAmount.toString(),
-            currency: budget.currency,
-            startDate: budget.startDate,
-            endDate: budget.endDate,
-            description: budget.description
-        });
-        setIsEditDialogOpen(true);
+    const exportCsv = () => {
+        setIsExporting(true);
+        try {
+            const headers = ['Project', 'Fiscal Year', 'Original Budget', 'Revised Budget', 'Committed Cost', 'Actual Cost', 'Remaining', 'Created At'];
+            const rows = filtered.map(b => {
+                const proj     = projects.find(p => p.id === b.project_id);
+                const remaining = Number(b.revised_budget || b.original_budget || 0) - Number(b.actual_cost || 0);
+                return [
+                    escapeCsv(proj?.name ?? b.project_id),
+                    b.fiscal_year || '',
+                    b.original_budget,
+                    b.revised_budget,
+                    b.committed_cost,
+                    b.actual_cost,
+                    remaining,
+                    b.created_at ? String(b.created_at).slice(0, 10) : '',
+                ].join(',');
+            });
+            const csv  = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href = url;
+            a.download = `budgets_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success('Exported successfully');
+        } catch { toast.error('Export failed'); }
+        finally { setIsExporting(false); }
     };
 
-    const handleUpdate = () => {
-        if (!editingBudget) return;
-
-        const allocatedAmount = parseFloat(formData.allocatedAmount);
-        const remainingAmount = allocatedAmount - editingBudget.spentAmount;
-        const status = remainingAmount < 0 ? 'exceeded' : 
-                     remainingAmount === 0 ? 'closed' : 
-                     editingBudget.status === 'draft' ? 'draft' : 'active';
-
-        const updatedBudgets = budgets.map(b =>
-            b.id === editingBudget.id ? { 
-                ...b, 
-                name: formData.name,
-                department: formData.department,
-                category: formData.category,
-                fiscalYear: formData.fiscalYear,
-                allocatedAmount: allocatedAmount,
-                remainingAmount: remainingAmount,
-                currency: formData.currency,
-                startDate: formData.startDate,
-                endDate: formData.endDate,
-                description: formData.description,
-                status: status as Budget['status'],
-                lastUpdated: new Date().toISOString().split('T')[0]
-            } : b
-        );
-
-        setBudgets(updatedBudgets);
-        setIsEditDialogOpen(false);
-        setEditingBudget(null);
-        setFormData({
-            name: '',
-            department: '',
-            category: '',
-            fiscalYear: '2024',
-            allocatedAmount: '',
-            currency: '',
-            startDate: '',
-            endDate: '',
-            description: ''
-        });
-        toast.success('Budget updated successfully');
-    };
-
-    const handleDelete = (id: string) => {
-        setBudgets(budgets.filter(b => b.id !== id));
-        toast.success('Budget deleted successfully');
-    };
-
-    const handleApprove = (id: string) => {
-        setBudgets(prev => prev.map(budget => 
-            budget.id === id 
-                ? { ...budget, status: 'approved' as const, approvedBy: 'General Manager' }
-                : budget
-        ));
-        toast.success('Budget approved');
-    };
-
-    const handleActivate = (id: string) => {
-        setBudgets(prev => prev.map(budget => 
-            budget.id === id 
-                ? { ...budget, status: 'active' as const }
-                : budget
-        ));
-        toast.success('Budget activated');
-    };
-
-    const handleClose = (id: string) => {
-        setBudgets(prev => prev.map(budget => 
-            budget.id === id 
-                ? { ...budget, status: 'closed' as const }
-                : budget
-        ));
-        toast.success('Budget closed');
-    };
-
-    const formatNumber = (amount: number) => {
-        return new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 0
-        }).format(amount);
-    };
-
-    const totalAllocated = filteredBudgets.reduce((sum, budget) => sum + budget.allocatedAmount, 0);
-    const totalSpent = filteredBudgets.reduce((sum, budget) => sum + budget.spentAmount, 0);
-    const totalRemaining = filteredBudgets.reduce((sum, budget) => sum + budget.remainingAmount, 0);
-    const exceededBudgets = filteredBudgets.filter(b => b.status === 'exceeded').length;
-
-    const columns = [
+    const columns: Column<Budget>[] = [
         {
-            key: 'budgetNumber' as keyof Budget,
-            header: 'Budget Number',
-            render: (value: any) => <span className="font-mono text-sm text-slate-600">{value}</span>,
-            sortable: true,
-            width: '140px'
-        },
-        {
-            key: 'name' as keyof Budget,
-            header: 'Budget Name',
-            render: (value: any) => <span className="font-semibold text-slate-800">{value}</span>,
-            sortable: true
-        },
-        {
-            key: 'department' as keyof Budget,
-            header: 'Department',
-            render: (value: any) => (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                    {value}
-                </Badge>
-            ),
-            sortable: true
-        },
-        {
-            key: 'category' as keyof Budget,
-            header: 'Category',
-            render: (value: any) => <span className="text-slate-700">{value}</span>,
-            sortable: true
-        },
-        {
-            key: 'fiscalYear' as keyof Budget,
-            header: 'Fiscal Year',
-            render: (value: any) => <span className="font-semibold text-slate-600">{value}</span>,
-            sortable: true
-        },
-        {
-            key: 'allocatedAmount' as keyof Budget,
-            header: 'Allocated',
-            render: (value: any, budget: Budget) => (
-                <span className="font-semibold text-slate-800">
-                    {formatNumber(value)}
-                </span>
-            ),
-            sortable: true
-        },
-        {
-            key: 'spentAmount' as keyof Budget,
-            header: 'Spent',
-            render: (value: any, budget: Budget) => (
-                <span className="font-semibold text-red-600">
-                    {formatNumber(value)}
-                </span>
-            ),
-            sortable: true
-        },
-        {
-            key: 'remainingAmount' as keyof Budget,
-            header: 'Remaining',
-            render: (value: any, budget: Budget) => {
-                const isNegative = value < 0;
+            key: 'project_id' as keyof Budget,
+            header: 'Project',
+            render: (v: any) => {
+                const proj = projects.find(p => p.id === v);
                 return (
-                    <span className={`font-semibold ${isNegative ? 'text-red-600' : 'text-green-600'}`}>
-                        {formatNumber(value)}
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {proj?.name ?? String(v).slice(0, 12)}
                     </span>
                 );
             },
-            sortable: true
+            sortable: true,
         },
         {
-            key: 'status' as keyof Budget,
-            header: 'Status',
-            render: (value: any) => {
-                const statusColors = {
-                    'draft': 'bg-gray-100 text-gray-700 border-gray-200',
-                    'approved': 'bg-blue-100 text-blue-700 border-blue-200',
-                    'active': 'bg-green-100 text-green-700 border-green-200',
-                    'closed': 'bg-gray-100 text-gray-700 border-gray-200',
-                    'exceeded': 'bg-red-100 text-red-700 border-red-200'
-                };
-                
+            key: 'fiscal_year' as keyof Budget,
+            header: 'Fiscal Year',
+            render: (v: any) => (
+                <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-semibold">
+                    {v || '—'}
+                </Badge>
+            ),
+            sortable: true,
+        },
+        {
+            key: 'original_budget' as keyof Budget,
+            header: 'Original Budget',
+            render: (v: any) => (
+                <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono">
+                    {fmt(v)}
+                </span>
+            ),
+            sortable: true,
+        },
+        {
+            key: 'revised_budget' as keyof Budget,
+            header: 'Revised Budget',
+            render: (v: any, row: Budget) => {
+                const diff = Number(v || 0) - Number(row.original_budget || 0);
                 return (
-                    <Badge variant="outline" className={`${statusColors[value as keyof typeof statusColors]} font-medium`}>
-                        {value.charAt(0).toUpperCase() + value.slice(1)}
-                    </Badge>
+                    <div>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono">{fmt(v)}</span>
+                        {diff !== 0 && (
+                            <span className={`text-xs ml-1 ${diff > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                                ({diff > 0 ? '+' : ''}{fmt(diff)})
+                            </span>
+                        )}
+                    </div>
                 );
             },
-            sortable: true
-        }
+            sortable: true,
+        },
+        {
+            key: 'committed_cost' as keyof Budget,
+            header: 'Committed',
+            render: (v: any) => (
+                <span className="font-semibold text-amber-600 dark:text-amber-400 font-mono">{fmt(v)}</span>
+            ),
+            sortable: true,
+        },
+        {
+            key: 'actual_cost' as keyof Budget,
+            header: 'Actual Cost',
+            render: (v: any) => (
+                <span className="font-semibold text-red-600 dark:text-red-400 font-mono">{fmt(v)}</span>
+            ),
+            sortable: true,
+        },
+        {
+            key: 'revised_budget' as keyof Budget,
+            header: 'Remaining',
+            render: (_: any, row: Budget) => {
+                const budget    = Number(row.revised_budget || row.original_budget || 0);
+                const actual    = Number(row.actual_cost || 0);
+                const remaining = budget - actual;
+                const pct       = budget > 0 ? Math.round((actual / budget) * 100) : 0;
+                return (
+                    <div>
+                        <span className={`font-bold font-mono ${remaining >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                            {remaining < 0 ? '−' : ''}{fmt(Math.abs(remaining))}
+                        </span>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{pct}% spent</div>
+                    </div>
+                );
+            },
+            sortable: false,
+        },
+        {
+            key: 'created_at' as keyof Budget,
+            header: 'Created',
+            render: (v: any) => (
+                <span className="text-slate-500 dark:text-slate-400 text-sm">
+                    {v ? String(v).slice(0, 10) : '—'}
+                </span>
+            ),
+            sortable: true,
+        },
     ];
 
-    const actions = [
-        {
-            label: 'View Details',
-            onClick: (budget: Budget) => toast.info('View details feature coming soon'),
-            icon: <Eye className="h-4 w-4" />
-        },
-        {
-            label: 'Edit Budget',
-            onClick: (budget: Budget) => handleEdit(budget),
-            icon: <Edit className="h-4 w-4" />
-        },
-        {
-            label: 'Approve Budget',
-            onClick: (budget: Budget) => handleApprove(budget.id),
-            icon: <CheckCircle className="h-4 w-4" />,
-            hidden: (budget: Budget) => budget.status !== 'draft'
-        },
-        {
-            label: 'Activate Budget',
-            onClick: (budget: Budget) => handleActivate(budget.id),
-            icon: <PlayCircle className="h-4 w-4" />,
-            hidden: (budget: Budget) => budget.status !== 'approved'
-        },
-        {
-            label: 'Close Budget',
-            onClick: (budget: Budget) => handleClose(budget.id),
-            icon: <StopCircle className="h-4 w-4" />,
-            hidden: (budget: Budget) => budget.status !== 'active'
-        },
-        {
-            label: 'Delete Budget',
-            onClick: (budget: Budget) => handleDelete(budget.id),
-            icon: <Trash2 className="h-4 w-4" />,
-            variant: 'destructive' as const
-        }
-    ];
+    const activeFilters: string[] = [];
+    if (search) activeFilters.push(`Search: ${search}`);
+    if (projectFilter) {
+        const proj = projects.find(p => p.id === projectFilter);
+        activeFilters.push(`Project: ${proj?.name ?? projectFilter}`);
+    }
+    if (fiscalYearFilter) activeFilters.push(`Fiscal Year: ${fiscalYearFilter}`);
 
-    const stats = [
-        {
-            label: 'Total Allocated',
-            value: formatNumber(totalAllocated),
-            change: '+12%',
-            trend: 'up' as const
-        },
-        {
-            label: 'Total Spent',
-            value: formatNumber(totalSpent),
-            change: '+8%',
-            trend: 'up' as const
-        },
-        {
-            label: 'Total Remaining',
-            value: formatNumber(totalRemaining),
-            change: '+15%',
-            trend: 'up' as const
-        },
-        {
-            label: 'Exceeded Budgets',
-            value: exceededBudgets,
-            change: '-2%',
-            trend: 'down' as const
-        }
-    ];
-
-    const filterOptions = [
-        {
-            key: 'department',
-            label: 'Department',
-            value: departmentFilter,
-            options: [
-                { key: 'all', label: 'All Departments', value: 'all' },
-                ...departments.map(dept => ({ key: dept, label: dept, value: dept }))
-            ],
-            onValueChange: setDepartmentFilter
-        },
-        {
-            key: 'category',
-            label: 'Category',
-            value: categoryFilter,
-            options: [
-                { key: 'all', label: 'All Categories', value: 'all' },
-                ...categories.map(cat => ({ key: cat, label: cat, value: cat }))
-            ],
-            onValueChange: setCategoryFilter
-        },
-        {
-            key: 'status',
-            label: 'Status',
-            value: statusFilter,
-            options: [
-                { key: 'all', label: 'All Statuses', value: 'all' },
-                { key: 'draft', label: 'Draft', value: 'draft' },
-                { key: 'approved', label: 'Approved', value: 'approved' },
-                { key: 'active', label: 'Active', value: 'active' },
-                { key: 'closed', label: 'Closed', value: 'closed' },
-                { key: 'exceeded', label: 'Exceeded', value: 'exceeded' }
-            ],
-            onValueChange: setStatusFilter
-        },
-        {
-            key: 'fiscalYear',
-            label: 'Fiscal Year',
-            value: fiscalYearFilter,
-            options: [
-                { key: 'all', label: 'All Years', value: 'all' },
-                ...fiscalYears.map(year => ({ key: year, label: year, value: year }))
-            ],
-            onValueChange: setFiscalYearFilter
-        }
-    ];
-
-    const activeFilters = [];
-    if (searchTerm) activeFilters.push(`Search: ${searchTerm}`);
-    if (departmentFilter !== 'all') activeFilters.push(`Department: ${departmentFilter}`);
-    if (categoryFilter !== 'all') activeFilters.push(`Category: ${categoryFilter}`);
-    if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
-    if (fiscalYearFilter !== 'all') activeFilters.push(`Year: ${fiscalYearFilter}`);
+    const clearFilters = () => {
+        setSearch(''); setProjectFilter(''); setFiscalYearFilter(''); setPage(1);
+    };
 
     return (
-        <div className="space-y-6">
-            {/* Page Header */}
-            <PageHeader
-                title="Budgets Management"
-                description="Manage department budgets and financial planning with comprehensive budget tracking and analysis tools"
-                stats={stats}
-                actions={{
-                    primary: {
-                        label: 'Create Budget',
-                        onClick: () => setIsCreateDialogOpen(true),
-                        icon: <Plus className="h-4 w-4" />
-                    },
-                    secondary: [
-                        {
-                            label: 'Export Report',
-                            onClick: () => toast.info('Export feature coming soon'),
-                            icon: <Download className="h-4 w-4" />
-                        },
-                        {
-                            label: 'Budget Analysis',
-                            onClick: () => toast.info('Analysis feature coming soon'),
-                            icon: <Filter className="h-4 w-4" />
-                        }
-                    ]
-                }}
-            />
+        <div className="space-y-4">
+            <Breadcrumb />
 
-            {/* Filter Bar */}
-            <FilterBar
-                searchPlaceholder="Search by budget name, number, or department..."
-                searchValue={searchTerm}
-                onSearchChange={setSearchTerm}
-                filters={filterOptions}
-                activeFilters={activeFilters}
-                onClearFilters={() => {
-                    setSearchTerm('');
-                    setDepartmentFilter('all');
-                    setCategoryFilter('all');
-                    setStatusFilter('all');
-                    setFiscalYearFilter('all');
-                }}
-            />
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-200">Project Budgets</h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-1 text-sm md:text-base">
+                        Track original, revised, committed, and actual costs across all project budgets
+                    </p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={exportCsv}
+                        disabled={isExporting || filtered.length === 0}
+                        className="border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    >
+                        <FileSpreadsheet className={`h-4 w-4 mr-2 ${isExporting ? 'animate-pulse' : ''}`} />
+                        {isExporting ? 'Exporting...' : 'Export CSV'}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={refreshTable}
+                        disabled={isRefreshing || loading}
+                        className="border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    >
+                        <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                    </Button>
+                </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <EnhancedCard title="Original Budget" description="Total allocated" variant="default" size="sm"
+                    stats={{ total: 0, badge: fmt(stats.totalOriginal), badgeColor: 'default' }}>
+                    <p className="text-xl font-bold text-slate-800 dark:text-slate-200 mt-1 font-mono">{fmt(stats.totalOriginal)}</p>
+                </EnhancedCard>
+                <EnhancedCard title="Revised Budget" description="After amendments" variant="default" size="sm"
+                    stats={{ total: 0, badge: fmt(stats.totalRevised), badgeColor: 'default' }}>
+                    <p className="text-xl font-bold text-slate-800 dark:text-slate-200 mt-1 font-mono">{fmt(stats.totalRevised)}</p>
+                </EnhancedCard>
+                <EnhancedCard title="Actual Cost" description="Amount spent" variant="default" size="sm"
+                    stats={{ total: 0, badge: fmt(stats.totalActual), badgeColor: 'warning' }}>
+                    <p className="text-xl font-bold text-red-600 dark:text-red-400 mt-1 font-mono">{fmt(stats.totalActual)}</p>
+                </EnhancedCard>
+                <EnhancedCard title="Remaining" description="Budget - Actual" variant="default" size="sm"
+                    stats={{ total: 0, badge: fmt(stats.totalRevised - stats.totalActual), badgeColor: 'success' }}>
+                    <p className={`text-xl font-bold mt-1 font-mono ${stats.totalRevised - stats.totalActual >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {fmt(stats.totalRevised - stats.totalActual)}
+                    </p>
+                </EnhancedCard>
+            </div>
+
+            {/* Search & Filters Card */}
+            <EnhancedCard
+                title="Search & Filters"
+                description="Search and filter budgets by project and fiscal year"
+                variant="default"
+                size="sm"
+            >
+                <div className="space-y-4">
+                    {/* Search + Actions */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                            <Input
+                                placeholder="Search budgets..."
+                                value={search}
+                                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                                className="pl-10 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Filters Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Project Filter */}
+                        <div className="space-y-2">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Project</Label>
+                            <Select value={projectFilter || '__all'} onValueChange={v => setProjectFilter(v === '__all' ? '' : v)}>
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 text-slate-900 dark:text-slate-100">
+                                    <SelectValue placeholder="All Projects" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectItem value="__all" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Projects</SelectItem>
+                                    {projects.map(p => (
+                                        <SelectItem key={p.id} value={p.id} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">{p.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Fiscal Year Filter */}
+                        <div className="space-y-2">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Fiscal Year</Label>
+                            <Select value={fiscalYearFilter || '__all'} onValueChange={v => setFiscalYearFilter(v === '__all' ? '' : v)}>
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 text-slate-900 dark:text-slate-100">
+                                    <SelectValue placeholder="All Years" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectItem value="__all" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Fiscal Years</SelectItem>
+                                    {fiscalYears.map(y => (
+                                        <SelectItem key={y} value={y} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">{y}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Active Filters */}
+                    {activeFilters.length > 0 && (
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Active filters:</span>
+                                {activeFilters.map((f, i) => (
+                                    <Badge key={i} variant="outline" className="bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800">
+                                        {f}
+                                    </Badge>
+                                ))}
+                            </div>
+                            <Button variant="outline" size="sm" onClick={clearFilters}
+                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800 whitespace-nowrap">
+                                <X className="h-4 w-4 mr-2" />
+                                Clear All
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </EnhancedCard>
 
             {/* Budgets Table */}
             <EnhancedCard
                 title="Budget Overview"
-                description={`${filteredBudgets.length} budgets out of ${budgets.length} total`}
-                variant="gradient"
-                size="lg"
-                stats={{
-                    total: budgets.length,
-                    badge: 'Active Budgets',
-                    badgeColor: 'success'
-                }}
+                description={`${filtered.length} budget${filtered.length !== 1 ? 's' : ''} found`}
+                variant="default"
+                size="sm"
+                stats={{ total: meta.total, badge: 'Total', badgeColor: 'default' }}
+                headerActions={
+                    <Select value={String(limit)} onValueChange={v => { setLimit(Number(v)); setPage(1); }}>
+                        <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100">
+                            <SelectValue placeholder="Items per page" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                            {[10, 15, 25, 50, 100].map(n => (
+                                <SelectItem key={n} value={String(n)} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">
+                                    {n} per page
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                }
             >
                 <EnhancedDataTable
-                    data={filteredBudgets}
+                    data={filtered}
                     columns={columns}
-                    actions={actions}
-                    loading={false}
-                    noDataMessage="No budgets found matching your criteria"
-                    searchPlaceholder="Search budgets..."
+                    loading={loading}
+                    pagination={{
+                        currentPage:  page,
+                        totalPages:   meta.pages || 1,
+                        pageSize:     limit,
+                        totalItems:   meta.total,
+                        onPageChange: setPage,
+                    }}
+                    noDataMessage="No budgets found. Budgets are linked to projects."
                 />
             </EnhancedCard>
-
-            {/* Create Dialog */}
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Create New Budget</DialogTitle>
-                        <DialogDescription>
-                            Create a new budget for a department or project
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="name">Budget Name</Label>
-                            <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                placeholder="Budget name"
-                                className="mt-1"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="department">Department</Label>
-                                <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue placeholder="Select Department" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {departments.map(dept => (
-                                            <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label htmlFor="category">Category</Label>
-                                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue placeholder="Select Category" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {categories.map(category => (
-                                            <SelectItem key={category} value={category}>{category}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="fiscalYear">Fiscal Year</Label>
-                                <Select value={formData.fiscalYear} onValueChange={(value) => setFormData(prev => ({ ...prev, fiscalYear: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {fiscalYears.map(year => (
-                                            <SelectItem key={year} value={year}>{year}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label htmlFor="currency">Currency</Label>
-                                <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="USD">US Dollar</SelectItem>
-                                        <SelectItem value="EUR">Euro</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="allocatedAmount">Allocated Amount</Label>
-                            <Input
-                                id="allocatedAmount"
-                                type="number"
-                                value={formData.allocatedAmount}
-                                onChange={(e) => setFormData(prev => ({ ...prev, allocatedAmount: e.target.value }))}
-                                placeholder="0"
-                                className="mt-1"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="startDate">Start Date</Label>
-                                <Input
-                                    id="startDate"
-                                    type="date"
-                                    value={formData.startDate}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                                    className="mt-1"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="endDate">End Date</Label>
-                                <Input
-                                    id="endDate"
-                                    type="date"
-                                    value={formData.endDate}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                                    className="mt-1"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="description">Description</Label>
-                            <Textarea
-                                id="description"
-                                value={formData.description}
-                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                placeholder="Budget description"
-                                rows={3}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div className="flex justify-end space-x-2 pt-4">
-                            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button onClick={handleCreate} className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700">
-                                <BarChart3 className="h-4 w-4 mr-2" />
-                                Create Budget
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            {/* Edit Dialog */}
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Edit Budget</DialogTitle>
-                        <DialogDescription>
-                            Update budget information and settings
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="edit-name">Budget Name</Label>
-                            <Input
-                                id="edit-name"
-                                value={formData.name}
-                                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="edit-department">Department</Label>
-                                <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {departments.map(dept => (
-                                            <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label htmlFor="edit-category">Category</Label>
-                                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {categories.map(category => (
-                                            <SelectItem key={category} value={category}>{category}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="edit-fiscalYear">Fiscal Year</Label>
-                                <Select value={formData.fiscalYear} onValueChange={(value) => setFormData(prev => ({ ...prev, fiscalYear: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {fiscalYears.map(year => (
-                                            <SelectItem key={year} value={year}>{year}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label htmlFor="edit-currency">Currency</Label>
-                                <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="USD">US Dollar</SelectItem>
-                                        <SelectItem value="EUR">Euro</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-allocatedAmount">Allocated Amount</Label>
-                            <Input
-                                id="edit-allocatedAmount"
-                                type="number"
-                                value={formData.allocatedAmount}
-                                onChange={(e) => setFormData(prev => ({ ...prev, allocatedAmount: e.target.value }))}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="edit-startDate">Start Date</Label>
-                                <Input
-                                    id="edit-startDate"
-                                    type="date"
-                                    value={formData.startDate}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                                    className="mt-1"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="edit-endDate">End Date</Label>
-                                <Input
-                                    id="edit-endDate"
-                                    type="date"
-                                    value={formData.endDate}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                                    className="mt-1"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-description">Description</Label>
-                            <Textarea
-                                id="edit-description"
-                                value={formData.description}
-                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                rows={3}
-                                className="mt-1"
-                            />
-                        </div>
-                        <div className="flex justify-end space-x-2 pt-4">
-                            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700">
-                                <BarChart3 className="h-4 w-4 mr-2" />
-                                Save Changes
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
         </div>
     );
 }

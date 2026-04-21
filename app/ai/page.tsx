@@ -17,140 +17,158 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 
 const aiMenuItems = [
     {
-        number: '26.1',
         title: 'AI Chat',
         icon: MessageSquare,
         href: '/ai/chat',
-        color: 'from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700',
+        color: '#0284c7',
+        bg: '#f0f9ff',
     },
     {
-        number: '26.2',
         title: 'Financial Analysis',
         icon: BarChart3,
         href: '/ai/financial',
-        color: 'from-green-500 to-green-600 dark:from-green-600 dark:to-green-700',
+        color: '#16a34a',
+        bg: '#f0fdf4',
     },
     {
-        number: '26.3',
         title: 'Project Analysis',
         icon: FolderOpen,
         href: '/ai/projects',
-        color: 'from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700',
+        color: '#4f46e5',
+        bg: '#eef2ff',
     },
     {
-        number: '26.4',
         title: 'Employee Performance',
         icon: UserCheck,
         href: '/ai/employees',
-        color: 'from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700',
+        color: '#059669',
+        bg: '#ecfdf5',
     },
     {
-        number: '26.5',
         title: 'Smart Reports',
         icon: FileText,
         href: '/ai/reports',
-        color: 'from-cyan-500 to-cyan-600 dark:from-cyan-600 dark:to-cyan-700',
+        color: '#0891b2',
+        bg: '#ecfeff',
     },
     {
-        number: '26.6',
         title: 'Anomaly Detection',
         icon: ShieldAlert,
         href: '/ai/anomalies',
-        color: 'from-red-500 to-red-600 dark:from-red-600 dark:to-red-700',
+        color: '#dc2626',
+        bg: '#fef2f2',
     },
     {
-        number: '26.7',
         title: 'Data Query',
         icon: Search,
         href: '/ai/query',
-        color: 'from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700',
+        color: '#d97706',
+        bg: '#fffbeb',
     },
     {
-        number: '26.8',
         title: 'Approval Advisor',
         icon: Brain,
         href: '/ai/approvals',
-        color: 'from-pink-500 to-pink-600 dark:from-pink-600 dark:to-pink-700',
+        color: '#db2777',
+        bg: '#fdf2f8',
     },
     {
-        number: '26.9',
         title: 'Tender Evaluation',
         icon: FileSearch,
         href: '/ai/tenders',
-        color: 'from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700',
+        color: '#ea580c',
+        bg: '#fff7ed',
     },
     {
-        number: '26.10',
         title: 'Forecast',
         icon: LineChart,
         href: '/ai/forecast',
-        color: 'from-teal-500 to-teal-600 dark:from-teal-600 dark:to-teal-700',
+        color: '#0d9488',
+        bg: '#f0fdfa',
     },
     {
-        number: '26.11',
         title: 'Summarize',
         icon: Sparkles,
         href: '/ai/summarize',
-        color: 'from-fuchsia-500 to-fuchsia-600 dark:from-fuchsia-600 dark:to-fuchsia-700',
+        color: '#a21caf',
+        bg: '#fdf4ff',
     },
     {
-        number: '26.12',
         title: 'Dashboard Insights',
         icon: LayoutDashboard,
         href: '/ai/insights',
-        color: 'from-violet-500 to-violet-600 dark:from-violet-600 dark:to-violet-700',
+        color: '#7c3aed',
+        bg: '#f5f3ff',
     },
 ];
 
 export default function AiPage() {
     return (
         <div className="bg-slate-100 dark:bg-slate-900 transition-colors duration-300 p-3 sm:p-4 md:p-6 space-y-4">
-            <div className="mb-4 md:mb-6">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-400 dark:from-violet-400 dark:via-violet-300 dark:to-fuchsia-500 bg-clip-text text-transparent mb-2 leading-tight">
+            <Breadcrumb />
+            <div className="mb-4 md:mb-2">
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
                     AI Assistant
                 </h1>
-                <p className="text-base sm:text-lg text-slate-700 dark:text-slate-300 font-medium">
+                <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
                     Choose the AI operation you want to access
                 </p>
             </div>
 
             <EnhancedCard
                 title="AI Operations"
-                description="Navigate to the AI operation you want to access"
+                description="Navigate through all AI operations from one place"
                 variant="default"
                 size="sm"
             >
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
-                    {aiMenuItems.map((item) => (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3 sm:gap-4">
+                    {aiMenuItems.map((item, i) => (
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="block group"
+                            className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-2xl"
                         >
-                            <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:border-violet-400 dark:hover:border-violet-500 hover:shadow-lg dark:hover:shadow-violet-500/10 transition-all duration-300 cursor-pointer h-full active:scale-95">
-                                <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-white/50 dark:from-slate-700/30 dark:to-slate-800/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="relative flex flex-col items-center justify-center text-center gap-3
+                                bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/60
+                                px-2 py-5 sm:py-6 overflow-hidden
+                                transition-all duration-200
+                                hover:border-transparent hover:shadow-[0_8px_30px_rgba(0,0,0,0.10)] hover:-translate-y-1
+                                active:scale-[0.97] active:translate-y-0 cursor-pointer min-h-[110px] sm:min-h-[130px]">
+                                <div className="absolute top-0 left-4 right-4 h-[2px] rounded-full scale-x-0 group-hover:scale-x-100
+                                    transition-transform duration-300 origin-center"
+                                    style={{ background: item.color }} />
 
-                                <div className="relative p-3 sm:p-4 flex flex-col items-center justify-center text-center h-full min-h-[100px] sm:min-h-[120px] md:min-h-[140px]">
-                                    <div className="mb-2 sm:mb-3">
-                                        <div className={`p-2.5 sm:p-3 md:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r ${item.color} group-hover:scale-110 dark:group-hover:shadow-lg transition-all duration-300 inline-block shadow-md dark:shadow-lg`}>
-                                            <item.icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
-                                        </div>
-                                    </div>
-
-                                    <div className="w-full">
-                                        <h3 className="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors leading-tight line-clamp-2 px-1">
-                                            <span className="text-[11px] sm:text-[12px] md:text-[13px] font-bold text-slate-500 dark:text-slate-400 mr-1">
-                                                {item.number}.
-                                            </span>
-                                            {item.title}
-                                        </h3>
-                                    </div>
+                                <div
+                                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0
+                                        transition-transform duration-200 group-hover:scale-110"
+                                    style={{ background: item.bg }}
+                                >
+                                    <item.icon
+                                        className="w-6 h-6 sm:w-[26px] sm:h-[26px] transition-colors duration-200"
+                                        style={{ color: item.color }}
+                                    />
                                 </div>
 
-                                <div className="absolute inset-0 bg-gradient-to-t from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl sm:rounded-2xl" />
+                                <div className="flex items-baseline justify-center gap-1.5 px-1 w-full">
+                                    <span className="font-black text-[13px] sm:text-[14px] leading-none tabular-nums flex-shrink-0">
+                                        {String(i + 1).padStart(2, '0')}
+                                    </span>
+                                    -
+                                    <p className="text-slate-700 dark:text-slate-200 font-semibold text-[11.5px] sm:text-[12.5px]
+                                        leading-tight line-clamp-2 transition-colors duration-200
+                                        group-hover:text-sky-700 dark:group-hover:text-sky-400">
+                                        {item.title}
+                                    </p>
+                                </div>
+
+                                <div
+                                    className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-200 pointer-events-none rounded-2xl"
+                                    style={{ background: item.color }}
+                                />
                             </div>
                         </Link>
                     ))}

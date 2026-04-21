@@ -1,6 +1,12 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '@/utils/axios';
-import type { ContractorPaymentsResponse, SingleContractorPaymentResponse, ContractorPayment } from '@/stores/types/contractor-payments';
+import type {
+    ContractorPaymentsResponse,
+    SingleContractorPaymentResponse,
+    ContractorPayment,
+    CreateContractorPaymentPayload,
+    UpdateContractorPaymentPayload,
+} from '@/stores/types/contractor-payments';
 import type { RootState } from '@/stores/store';
 
 interface ContractorPaymentsState {
@@ -9,8 +15,8 @@ interface ContractorPaymentsState {
     total: number;
     pages: number;
     loading: boolean;
+    submitting: boolean;
     error: string | null;
-    lastKey?: string;
 }
 
 const initialState: ContractorPaymentsState = {
@@ -19,8 +25,8 @@ const initialState: ContractorPaymentsState = {
     total: 0,
     pages: 0,
     loading: false,
+    submitting: false,
     error: null,
-    lastKey: undefined,
 };
 
 export interface FetchContractorPaymentsParams {
@@ -35,113 +41,109 @@ export interface FetchContractorPaymentsParams {
     to_date?: string;
 }
 
+// ── Fetch list ─────────────────────────────────────────────────────────────
 export const fetchContractorPayments = createAsyncThunk<
     ContractorPaymentsResponse,
     FetchContractorPaymentsParams | void,
-    { rejectValue: string; state: RootState }
->(
-    'contractorPayments/fetchContractorPayments',
-    async (params, { rejectWithValue, signal }) => {
-        try {
-            const { 
-                page = 1, 
-                limit = 10, 
-                search = '', 
-                contractor_id, 
-                project_id, 
-                status, 
-                payment_method, 
-                from_date, 
-                to_date 
-            } = params || {};
-            
-            const requestParams: any = { 
-                page, 
-                limit, 
-                search, 
-                contractor_id, 
-                project_id, 
-                status, 
-                payment_method 
-            };
-            
-            if (from_date) requestParams.from_date = from_date;
-            if (to_date) requestParams.to_date = to_date;
-            
-            const res = await api.get<ContractorPaymentsResponse>('/contractor-payments/fetch', {
-                params: requestParams,
-                signal,
-            });
-
-            const { header } = res.data;
-            if (!header?.success) {
-                const msg =
-                    header?.messages?.[0]?.message ||
-                    header?.message ||
-                    'Failed to fetch contractor payments';
-                return rejectWithValue(msg);
-            }
-
-            return res.data;
-        } catch (err: any) {
-            if (err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED') {
-                return rejectWithValue('Request canceled');
-            }
-            const msg =
-                err?.response?.data?.header?.message ||
-                err?.message ||
-                'Network error while fetching contractor payments';
-            return rejectWithValue(msg);
+    { rejectValue: string }
+>('contractorPayments/fetch', async (params, { rejectWithValue }) => {
+    try {
+        const res = await api.get<ContractorPaymentsResponse>('/contractor-payments/fetch', {
+            params: params || {},
+        });
+        const data = res.data as any;
+        // Support both legacy header/body and new success/data envelope
+        const success = data?.header?.success ?? data?.success ?? false;
+        if (!success) {
+            return rejectWithValue(
+                data?.header?.messages?.[0]?.message ||
+                data?.message ||
+                'Failed to fetch contractor payments'
+            );
         }
-    },
-    {
-        condition: (params, { getState }) => {
-            const st = (getState() as RootState).contractorPayments;
-            const key = JSON.stringify({
-                page: params?.page ?? 1,
-                limit: params?.limit ?? 10,
-                search: params?.search ?? '',
-                contractor_id: params?.contractor_id,
-                project_id: params?.project_id,
-                status: params?.status,
-                payment_method: params?.payment_method,
-            });
-            if (st.loading && st.lastKey === key) return false;
-            return true;
-        },
+        return res.data;
+    } catch (err: any) {
+        return rejectWithValue(err?.response?.data?.header?.messages?.[0]?.message || err?.message || 'Network error');
     }
-);
+});
 
+// ── Fetch single ───────────────────────────────────────────────────────────
 export const fetchContractorPayment = createAsyncThunk<
     SingleContractorPaymentResponse,
     string,
     { rejectValue: string }
->(
-    'contractorPayments/fetchContractorPayment',
-    async (paymentId, { rejectWithValue }) => {
-        try {
-            const res = await api.get<SingleContractorPaymentResponse>(`/contractor-payments/fetch/${paymentId}`);
-            const { header } = res.data;
-            
-            if (!header?.success) {
-                const msg =
-                    header?.messages?.[0]?.message ||
-                    header?.message ||
-                    'Failed to fetch contractor payment';
-                return rejectWithValue(msg);
-            }
-
-            return res.data;
-        } catch (err: any) {
-            const msg =
-                err?.response?.data?.header?.message ||
-                err?.message ||
-                'Network error while fetching contractor payment';
-            return rejectWithValue(msg);
+>('contractorPayments/fetchOne', async (paymentId, { rejectWithValue }) => {
+    try {
+        const res = await api.get<SingleContractorPaymentResponse>(`/contractor-payments/fetch/${paymentId}`);
+        const data = res.data as any;
+        const success = data?.header?.success ?? data?.success ?? false;
+        if (!success) {
+            return rejectWithValue(data?.header?.messages?.[0]?.message || data?.message || 'Not found');
         }
+        return res.data;
+    } catch (err: any) {
+        return rejectWithValue(err?.message || 'Network error');
     }
-);
+});
 
+// ── Create ─────────────────────────────────────────────────────────────────
+export const createContractorPayment = createAsyncThunk<
+    ContractorPayment,
+    CreateContractorPaymentPayload,
+    { rejectValue: string }
+>('contractorPayments/create', async (payload, { rejectWithValue }) => {
+    try {
+        const res = await api.post<any>('/contractor-payments/create', payload);
+        const data = res.data;
+        const success = data?.header?.success ?? data?.success ?? false;
+        if (!success) {
+            return rejectWithValue(data?.header?.messages?.[0]?.message || data?.message || 'Create failed');
+        }
+        return (data?.body?.contractor_payment ?? data?.data?.contractor_payment) as ContractorPayment;
+    } catch (err: any) {
+        return rejectWithValue(err?.response?.data?.header?.messages?.[0]?.message || err?.message || 'Create failed');
+    }
+});
+
+// ── Update ─────────────────────────────────────────────────────────────────
+export const updateContractorPayment = createAsyncThunk<
+    ContractorPayment,
+    { paymentId: string; payload: UpdateContractorPaymentPayload },
+    { rejectValue: string }
+>('contractorPayments/update', async ({ paymentId, payload }, { rejectWithValue }) => {
+    try {
+        const res = await api.put<any>(`/contractor-payments/update/${paymentId}`, payload);
+        const data = res.data;
+        const success = data?.header?.success ?? data?.success ?? false;
+        if (!success) {
+            return rejectWithValue(data?.header?.messages?.[0]?.message || data?.message || 'Update failed');
+        }
+        return (data?.body?.contractor_payment ?? data?.data?.contractor_payment) as ContractorPayment;
+    } catch (err: any) {
+        return rejectWithValue(err?.response?.data?.header?.messages?.[0]?.message || err?.message || 'Update failed');
+    }
+});
+
+// ── Delete ─────────────────────────────────────────────────────────────────
+export const deleteContractorPayment = createAsyncThunk<
+    string,
+    string,
+    { rejectValue: string }
+>('contractorPayments/delete', async (paymentId, { rejectWithValue }) => {
+    try {
+        const res = await api.delete<any>(`/contractor-payments/delete/${paymentId}`);
+        const data = res.data;
+        const success = data?.header?.success ?? data?.success ?? false;
+        if (!success) {
+            return rejectWithValue(data?.header?.messages?.[0]?.message || data?.message || 'Delete failed');
+        }
+        return paymentId;
+    } catch (err: any) {
+        return rejectWithValue(err?.response?.data?.header?.messages?.[0]?.message || err?.message || 'Delete failed');
+    }
+});
+
+// ── Slice ──────────────────────────────────────────────────────────────────
 const contractorPaymentsSlice = createSlice({
     name: 'contractorPayments',
     initialState,
@@ -149,67 +151,95 @@ const contractorPaymentsSlice = createSlice({
         clearSelectedPayment(state) {
             state.selectedPayment = null;
         },
+        clearError(state) {
+            state.error = null;
+        },
     },
     extraReducers: (builder) => {
         builder
-            // Fetch Contractor Payments
-            .addCase(fetchContractorPayments.pending, (state, action) => {
+            // Fetch list
+            .addCase(fetchContractorPayments.pending, (state) => {
                 state.loading = true;
                 state.error = null;
-                const key = JSON.stringify({
-                    page: action.meta.arg?.page ?? 1,
-                    limit: action.meta.arg?.limit ?? 10,
-                    search: action.meta.arg?.search ?? '',
-                    contractor_id: action.meta.arg?.contractor_id,
-                    project_id: action.meta.arg?.project_id,
-                    status: action.meta.arg?.status,
-                    payment_method: action.meta.arg?.payment_method,
-                });
-                state.lastKey = key;
             })
             .addCase(fetchContractorPayments.fulfilled, (state, action: PayloadAction<ContractorPaymentsResponse>) => {
                 state.loading = false;
-                if (action.payload.body?.contractor_payments) {
-                    state.payments = action.payload.body.contractor_payments.items;
-                    state.total = action.payload.body.contractor_payments.total;
-                    state.pages = action.payload.body.contractor_payments.pages;
+                const cp = (action.payload as any)?.body?.contractor_payments
+                    ?? (action.payload as any)?.data?.contractor_payments;
+                if (cp) {
+                    state.payments = cp.items ?? [];
+                    state.total    = cp.total ?? 0;
+                    state.pages    = cp.pages ?? 0;
                 }
             })
             .addCase(fetchContractorPayments.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload || 'Unexpected error occurred';
+                state.error = action.payload ?? 'Unknown error';
                 state.payments = [];
-                state.total = 0;
-                state.pages = 0;
             })
-            // Fetch Single Contractor Payment
+            // Fetch single
             .addCase(fetchContractorPayment.pending, (state) => {
                 state.loading = true;
                 state.error = null;
-                state.selectedPayment = null;
             })
             .addCase(fetchContractorPayment.fulfilled, (state, action: PayloadAction<SingleContractorPaymentResponse>) => {
                 state.loading = false;
-                if (action.payload.body?.contractor_payment) {
-                    state.selectedPayment = action.payload.body.contractor_payment;
-                }
+                const cp = (action.payload as any)?.body?.contractor_payment
+                    ?? (action.payload as any)?.data?.contractor_payment;
+                state.selectedPayment = cp ?? null;
             })
             .addCase(fetchContractorPayment.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload || 'Failed to load contractor payment details';
-                state.selectedPayment = null;
+                state.error = action.payload ?? 'Unknown error';
+            })
+            // Create
+            .addCase(createContractorPayment.pending, (state) => { state.submitting = true; state.error = null; })
+            .addCase(createContractorPayment.fulfilled, (state, action) => {
+                state.submitting = false;
+                if (action.payload) state.payments.unshift(action.payload);
+            })
+            .addCase(createContractorPayment.rejected, (state, action) => {
+                state.submitting = false;
+                state.error = action.payload ?? 'Create failed';
+            })
+            // Update
+            .addCase(updateContractorPayment.pending, (state) => { state.submitting = true; state.error = null; })
+            .addCase(updateContractorPayment.fulfilled, (state, action) => {
+                state.submitting = false;
+                const updated = action.payload;
+                if (updated) {
+                    state.payments = state.payments.map(p =>
+                        p.payment_id === updated.payment_id ? updated : p
+                    );
+                    if (state.selectedPayment?.payment_id === updated.payment_id) {
+                        state.selectedPayment = updated;
+                    }
+                }
+            })
+            .addCase(updateContractorPayment.rejected, (state, action) => {
+                state.submitting = false;
+                state.error = action.payload ?? 'Update failed';
+            })
+            // Delete
+            .addCase(deleteContractorPayment.pending, (state) => { state.submitting = true; state.error = null; })
+            .addCase(deleteContractorPayment.fulfilled, (state, action) => {
+                state.submitting = false;
+                state.payments = state.payments.filter(p => p.payment_id !== action.payload);
+            })
+            .addCase(deleteContractorPayment.rejected, (state, action) => {
+                state.submitting = false;
+                state.error = action.payload ?? 'Delete failed';
             });
     },
 });
 
-export const { clearSelectedPayment } = contractorPaymentsSlice.actions;
+export const { clearSelectedPayment, clearError } = contractorPaymentsSlice.actions;
 export default contractorPaymentsSlice.reducer;
 
-// Selectors
-export const selectContractorPayments = (state: RootState) => state.contractorPayments.payments;
+export const selectContractorPayments        = (state: RootState) => state.contractorPayments.payments;
 export const selectContractorPaymentsLoading = (state: RootState) => state.contractorPayments.loading;
-export const selectContractorPaymentsTotal = (state: RootState) => state.contractorPayments.total;
-export const selectContractorPaymentsPages = (state: RootState) => state.contractorPayments.pages;
-export const selectContractorPaymentsError = (state: RootState) => state.contractorPayments.error;
+export const selectContractorPaymentsSubmitting = (state: RootState) => state.contractorPayments.submitting;
+export const selectContractorPaymentsTotal   = (state: RootState) => state.contractorPayments.total;
+export const selectContractorPaymentsPages   = (state: RootState) => state.contractorPayments.pages;
+export const selectContractorPaymentsError   = (state: RootState) => state.contractorPayments.error;
 export const selectSelectedContractorPayment = (state: RootState) => state.contractorPayments.selectedPayment;
-

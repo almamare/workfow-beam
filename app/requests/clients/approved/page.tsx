@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building, Eye, RefreshCw, FileSpreadsheet, Clock, Search, X, FileText } from 'lucide-react';
+import { Building, Eye, RefreshCw, FileSpreadsheet, Clock, Search, X, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import type { TaskRequest } from '@/stores/types/tasks_requests';
@@ -26,6 +26,7 @@ import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
 import { DatePicker } from '@/components/DatePicker';
 import axios from '@/utils/axios';
+import { getLinkedClientId, isClientProfileComplete } from '@/utils/clientRequestHelpers';
 
 // Extended TaskRequest with client data
 interface ClientRequestWithData extends TaskRequest {
@@ -52,6 +53,7 @@ function ClientsApprovedPageContent() {
     const [isExporting, setIsExporting] = useState(false);
     const [clientsData, setClientsData] = useState<Map<string, Client>>(new Map());
     const [loadingClients, setLoadingClients] = useState<Set<string>>(new Set());
+    const [failedClientIds, setFailedClientIds] = useState<Set<string>>(new Set());
 
     // Filter task requests to only show "Clients" type with "Approved" status
     const clientRequests = useMemo(() => {
@@ -79,18 +81,26 @@ function ClientsApprovedPageContent() {
 
     // Fetch client data for each task request
     const fetchClientData = useCallback(async (clientId: string) => {
-        if (clientsData.has(clientId) || loadingClients.has(clientId)) {
+        if (!clientId || clientsData.has(clientId) || loadingClients.has(clientId)) {
             return;
         }
 
         setLoadingClients(prev => new Set(prev).add(clientId));
+        setFailedClientIds((prev) => {
+            const next = new Set(prev);
+            next.delete(clientId);
+            return next;
+        });
         try {
             const result = await dispatch(fetchClient(clientId)).unwrap();
             if (result?.data?.client) {
                 setClientsData(prev => new Map(prev).set(clientId, result.data!.client));
+            } else {
+                setFailedClientIds((prev) => new Set(prev).add(clientId));
             }
         } catch (error) {
             console.error(`Failed to fetch client ${clientId}:`, error);
+            setFailedClientIds((prev) => new Set(prev).add(clientId));
         } finally {
             setLoadingClients(prev => {
                 const next = new Set(prev);
@@ -102,17 +112,19 @@ function ClientsApprovedPageContent() {
 
     // Fetch client data for all requests
     useEffect(() => {
-        clientRequests.forEach(request => {
-            if (request.task_order_id && !clientsData.has(request.task_order_id)) {
-                fetchClientData(request.task_order_id);
+        clientRequests.forEach((request) => {
+            const linkId = getLinkedClientId(request);
+            if (linkId && !clientsData.has(linkId)) {
+                fetchClientData(linkId);
             }
         });
     }, [clientRequests, fetchClientData, clientsData]);
 
     // Create enriched requests with client data
     const enrichedRequests = useMemo(() => {
-        return clientRequests.map(request => {
-            const client = clientsData.get(request.task_order_id);
+        return clientRequests.map((request) => {
+            const linkId = getLinkedClientId(request);
+            const client = linkId ? clientsData.get(linkId) : undefined;
             return {
                 ...request,
                 client
@@ -145,6 +157,7 @@ function ClientsApprovedPageContent() {
                 to_date: dateTo || undefined,
             }));
             setClientsData(new Map()); // Clear cached clients to refetch
+            setFailedClientIds(new Set());
             toast.success('Table refreshed successfully');
         } catch {
             toast.error('Failed to refresh table');
@@ -175,14 +188,15 @@ function ClientsApprovedPageContent() {
             const exportData = await Promise.all(
                 items.map(async (req: TaskRequest) => {
                     let client: Client | null = null;
-                    if (req.task_order_id) {
+                    const linkId = getLinkedClientId(req);
+                    if (linkId) {
                         try {
-                            const result = await dispatch(fetchClient(req.task_order_id)).unwrap();
+                            const result = await dispatch(fetchClient(linkId)).unwrap();
                             if (result?.data?.client) {
                                 client = result.data.client;
                             }
                         } catch (error) {
-                            console.error(`Failed to fetch client ${req.task_order_id}:`, error);
+                            console.error(`Failed to fetch client ${linkId}:`, error);
                         }
                     }
                     return { req, client };
@@ -256,7 +270,8 @@ function ClientsApprovedPageContent() {
             header: 'Client Name',
             render: (value: any, row: ClientRequestWithData) => {
                 const client = row.client;
-                const isLoading = loadingClientsRef.current.has(row.task_order_id);
+                const linkId = getLinkedClientId(row);
+                const isLoading = linkId ? loadingClientsRef.current.has(linkId) : false;
                 if (isLoading) {
                     return <span className="text-slate-400">Loading...</span>;
                 }
@@ -317,11 +332,59 @@ function ClientsApprovedPageContent() {
                 if (!client?.budget) return <span className="text-slate-400">N/A</span>;
                 return (
                     <span className="font-semibold text-green-600 dark:text-green-400">
-                        {new Intl.NumberFormat('en-US').format(parseFloat(client.budget))} IQD
+                        {new Intl.NumberFormat('en-US').format(parseFloat(String(client.budget).replace(/,/g, '')))} IQD
                     </span>
                 );
             },
             sortable: true
+        },
+        {
+            key: 'client_data_check' as any,
+            header: 'Client data',
+            render: (_: unknown, row: ClientRequestWithData) => {
+                const linkId = getLinkedClientId(row);
+                if (!linkId) {
+                    return (
+                        <Badge variant="outline" className="border-amber-300 text-amber-800 dark:text-amber-200">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            No link ID
+                        </Badge>
+                    );
+                }
+                if (loadingClientsRef.current.has(linkId)) {
+                    return <span className="text-sm text-muted-foreground">Loading…</span>;
+                }
+                if (failedClientIds.has(linkId)) {
+                    return (
+                        <Badge variant="outline" className="border-red-300 text-red-700 dark:text-red-300">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Load failed
+                        </Badge>
+                    );
+                }
+                if (!row.client) {
+                    return (
+                        <Badge variant="outline" className="text-muted-foreground">
+                            Not loaded
+                        </Badge>
+                    );
+                }
+                if (!isClientProfileComplete(row.client)) {
+                    return (
+                        <Badge variant="outline" className="border-amber-300 text-amber-900 dark:text-amber-200">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Incomplete
+                        </Badge>
+                    );
+                }
+                return (
+                    <Badge variant="outline" className="border-emerald-300 text-emerald-800 dark:text-emerald-200">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Complete
+                    </Badge>
+                );
+            },
+            sortable: false
         },
         {
             key: 'status' as keyof ClientRequestWithData,
@@ -351,7 +414,7 @@ function ClientsApprovedPageContent() {
             ),
             sortable: true
         }
-    ], []);
+    ], [failedClientIds]);
 
     const actions: Action<ClientRequestWithData>[] = [
         {
@@ -365,10 +428,11 @@ function ClientsApprovedPageContent() {
         {
             label: 'View Client Details',
             onClick: (request) => {
-                if (request.client) {
+                const linkId = getLinkedClientId(request);
+                if (request.client?.id) {
                     router.push(`/clients/details?id=${request.client.id}`);
-                } else if (request.task_order_id) {
-                    router.push(`/clients/details?id=${request.task_order_id}`);
+                } else if (linkId) {
+                    router.push(`/clients/details?id=${linkId}`);
                 }
             },
             icon: <Eye className="h-4 w-4" />,

@@ -1,43 +1,43 @@
-// Contractor Payment types
+// Contractor Payment types — aligned with contractor_payments DB table
+
 export interface ContractorPayment {
-    id: string;
-    payment_number: string;
+    payment_id: string;
+    payment_no: string;
     contractor_id: string;
     contractor_name?: string;
-    project_id: string;
+    contractor_phone?: string;
+    contractor_email?: string;
+    project_id?: string;
     project_name?: string;
-    amount: string;
     currency: string;
-    payment_method: 'bank_transfer' | 'cash' | 'check' | 'card';
+    amount: number;
+    exchange_rate: number;
+    amount_local: number;
     payment_date: string;
-    description?: string;
-    status: 'pending' | 'approved' | 'paid' | 'rejected' | 'cancelled';
-    invoice_number?: string;
-    invoice_date?: string;
-    approval_date?: string;
-    approved_by?: string;
-    approved_by_name?: string;
-    payment_reference?: string;
-    created_by?: string;
-    created_by_name?: string;
+    payment_method: 'Bank' | 'Cash' | 'Check' | 'Other';
+    payment_ref?: string;
+    bank_id?: string;
+    purpose: string;
+    status: 'Draft' | 'Submitted' | 'Approved' | 'Paid' | 'Cancelled';
     notes?: string;
+    created_id?: string;
+    deleted_at?: string | null;
     created_at: string;
     updated_at: string;
 }
 
+// Legacy envelope helpers
+interface LegacyHeader {
+    requestId: string;
+    status?: number;
+    success: boolean;
+    responseTime: string;
+    message?: string;
+    messages?: { code: number; type: string; message: string }[];
+}
+
 export interface ContractorPaymentsResponse {
-    header: {
-        requestId: string;
-        status?: number;
-        success: boolean;
-        responseTime: string;
-        message?: string;
-        messages?: {
-            code: number;
-            type: string;
-            message: string;
-        }[];
-    };
+    header: LegacyHeader;
     body?: {
         contractor_payments: {
             total: number;
@@ -48,20 +48,38 @@ export interface ContractorPaymentsResponse {
 }
 
 export interface SingleContractorPaymentResponse {
-    header: {
-        requestId: string;
-        status?: number;
-        success: boolean;
-        responseTime: string;
-        message?: string;
-        messages?: {
-            code: number;
-            type: string;
-            message: string;
-        }[];
-    };
+    header: LegacyHeader;
     body?: {
         contractor_payment: ContractorPayment;
     };
 }
 
+export interface CreateContractorPaymentPayload {
+    contractor_id: string;
+    project_id?: string;
+    currency: string;
+    amount: number;
+    exchange_rate?: number;
+    payment_date: string;
+    payment_method?: 'Bank' | 'Cash' | 'Check' | 'Other';
+    payment_ref?: string;
+    bank_id?: string;
+    purpose: string;
+    status?: 'Draft' | 'Submitted';
+    notes?: string;
+}
+
+export interface UpdateContractorPaymentPayload {
+    contractor_id?: string;
+    project_id?: string;
+    currency?: string;
+    amount?: number;
+    exchange_rate?: number;
+    payment_date?: string;
+    payment_method?: 'Bank' | 'Cash' | 'Check' | 'Other';
+    payment_ref?: string;
+    bank_id?: string;
+    purpose?: string;
+    status?: 'Draft' | 'Submitted' | 'Approved' | 'Paid' | 'Cancelled';
+    notes?: string;
+}

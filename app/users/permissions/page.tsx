@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/stores/store';
@@ -11,14 +11,22 @@ import {
     selectSelectedUser,
     selectUserPermissions,
 } from '@/stores/slices/users';
-import { fetchPermissions, selectPermissions } from '@/stores/slices/permissions';
+import {
+    fetchPermissions,
+    selectPermissions,
+    selectPermissionsLoading,
+} from '@/stores/slices/permissions';
 import type { SetUserPermissionItem } from '@/stores/types/users';
 import type { Permission } from '@/stores/types/permissions';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save, KeyRound } from 'lucide-react';
+import { Loader2, Save, KeyRound, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FilterBar } from '@/components/ui/filter-bar';
+import { EnhancedDataTable, Column } from '@/components/ui/enhanced-data-table';
 import { toast } from 'sonner';
 
 type PermissionRow = {
@@ -42,11 +50,16 @@ export default function UserPermissionsPage() {
     const user = useSelector(selectSelectedUser);
     const userPermissions = useSelector(selectUserPermissions);
     const allPermissions = useSelector(selectPermissions);
+    const permissionsLoading = useSelector(selectPermissionsLoading);
     const permissionsList = Array.isArray(allPermissions) ? allPermissions : [];
 
     const [rows, setRows] = useState<PermissionRow[]>([]);
     const [saving, setSaving] = useState(false);
-    const [moduleFilter, setModuleFilter] = useState<string>('');
+    const [moduleFilter, setModuleFilter] = useState<string>('All');
+    const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(15);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
         if (userId) {
@@ -99,25 +112,189 @@ export default function UserPermissionsPage() {
         setRows(list);
     }, [permissionsList, userPermsMap]);
 
-    const toggleFlag = useCallback((permissionId: number, flag: keyof Pick<PermissionRow, 'can_view' | 'can_create' | 'can_edit' | 'can_delete' | 'can_approve'>) => {
-        setRows((prev) =>
-            prev.map((r) =>
-                r.permission_id === permissionId
-                    ? { ...r, [flag]: (r[flag] === 1 ? 0 : 1) as 0 | 1 }
-                    : r
-            )
-        );
-    }, []);
-
     const filteredRows = useMemo(() => {
-        if (!moduleFilter) return rows;
-        return rows.filter((r) => r.module === moduleFilter);
-    }, [rows, moduleFilter]);
+        const moduleScoped =
+            moduleFilter === 'All' ? rows : rows.filter((r) => r.module === moduleFilter);
+
+        if (!search.trim()) return moduleScoped;
+
+        const q = search.toLowerCase();
+        return moduleScoped.filter(
+            (r) =>
+                r.permission_key.toLowerCase().includes(q) ||
+                r.name_en.toLowerCase().includes(q) ||
+                r.module.toLowerCase().includes(q)
+        );
+    }, [rows, moduleFilter, search]);
 
     const modules = useMemo(() => {
         const set = new Set(rows.map((r) => r.module).filter(Boolean));
         return Array.from(set).sort();
     }, [rows]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [moduleFilter, search]);
+
+    const totalItems = filteredRows.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
+
+    useEffect(() => {
+        if (page > totalPages) setPage(totalPages);
+    }, [page, totalPages]);
+
+    const paginatedRows = useMemo(() => {
+        const start = (page - 1) * perPage;
+        return filteredRows.slice(start, start + perPage);
+    }, [filteredRows, page, perPage]);
+
+    const activeFilters = useMemo(() => {
+        const arr: string[] = [];
+        if (search.trim()) arr.push(`Search: ${search}`);
+        if (moduleFilter !== 'All') arr.push(`Module: ${moduleFilter}`);
+        return arr;
+    }, [search, moduleFilter]);
+
+    const refreshTable = async () => {
+        setIsRefreshing(true);
+        try {
+            await dispatch(fetchPermissions({})).unwrap();
+            if (userId) {
+                await dispatch(fetchUserPermissions(userId)).unwrap();
+            }
+            toast.success('Permissions refreshed');
+        } catch {
+            toast.error('Failed to refresh permissions');
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const columns: Column<PermissionRow>[] = [
+        {
+            key: 'permission_key',
+            header: 'Permission key',
+            sortable: true,
+            render: (value: unknown) => (
+                <span className="font-mono text-xs md:text-sm text-slate-700 dark:text-slate-300">
+                    {String(value ?? '-')}
+                </span>
+            ),
+        },
+        {
+            key: 'name_en',
+            header: 'Permission name',
+            sortable: true,
+            render: (value: unknown) => (
+                <span className="font-medium text-slate-800 dark:text-slate-200">{String(value ?? '-')}</span>
+            ),
+        },
+        {
+            key: 'module',
+            header: 'Module',
+            sortable: true,
+            render: (value: unknown) => (
+                <Badge variant="outline" className="font-medium">
+                    {String(value ?? '-')}
+                </Badge>
+            ),
+        },
+        {
+            key: 'can_view',
+            header: 'View',
+            align: 'center',
+            render: (_value: unknown, row: PermissionRow) => (
+                <Checkbox
+                    checked={row.can_view === 1}
+                    onCheckedChange={(checked) =>
+                        setRows((prev) =>
+                            prev.map((r) =>
+                                r.permission_id === row.permission_id
+                                    ? { ...r, can_view: checked === true ? 1 : 0 }
+                                    : r
+                            )
+                        )
+                    }
+                />
+            ),
+        },
+        {
+            key: 'can_create',
+            header: 'Create',
+            align: 'center',
+            render: (_value: unknown, row: PermissionRow) => (
+                <Checkbox
+                    checked={row.can_create === 1}
+                    onCheckedChange={(checked) =>
+                        setRows((prev) =>
+                            prev.map((r) =>
+                                r.permission_id === row.permission_id
+                                    ? { ...r, can_create: checked === true ? 1 : 0 }
+                                    : r
+                            )
+                        )
+                    }
+                />
+            ),
+        },
+        {
+            key: 'can_edit',
+            header: 'Edit',
+            align: 'center',
+            render: (_value: unknown, row: PermissionRow) => (
+                <Checkbox
+                    checked={row.can_edit === 1}
+                    onCheckedChange={(checked) =>
+                        setRows((prev) =>
+                            prev.map((r) =>
+                                r.permission_id === row.permission_id
+                                    ? { ...r, can_edit: checked === true ? 1 : 0 }
+                                    : r
+                            )
+                        )
+                    }
+                />
+            ),
+        },
+        {
+            key: 'can_delete',
+            header: 'Delete',
+            align: 'center',
+            render: (_value: unknown, row: PermissionRow) => (
+                <Checkbox
+                    checked={row.can_delete === 1}
+                    onCheckedChange={(checked) =>
+                        setRows((prev) =>
+                            prev.map((r) =>
+                                r.permission_id === row.permission_id
+                                    ? { ...r, can_delete: checked === true ? 1 : 0 }
+                                    : r
+                            )
+                        )
+                    }
+                />
+            ),
+        },
+        {
+            key: 'can_approve',
+            header: 'Approve',
+            align: 'center',
+            render: (_value: unknown, row: PermissionRow) => (
+                <Checkbox
+                    checked={row.can_approve === 1}
+                    onCheckedChange={(checked) =>
+                        setRows((prev) =>
+                            prev.map((r) =>
+                                r.permission_id === row.permission_id
+                                    ? { ...r, can_approve: checked === true ? 1 : 0 }
+                                    : r
+                            )
+                        )
+                    }
+                />
+            ),
+        },
+    ];
 
     const handleSave = async () => {
         if (!userId) {
@@ -179,16 +356,18 @@ export default function UserPermissionsPage() {
             <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200 flex items-center gap-2">
                         <KeyRound className="h-8 w-8 text-sky-500" />
-                        صلاحيات المستخدم / User permissions: {userDisplay}
+                        User permissions
                     </h1>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">
-                        تعيين تجاوزات الصلاحيات لهذا المستخدم. الصلاحيات الفعلية = صلاحيات الدور + هذه التجاوزات (التجاوزات لها الأولوية).
+                    <p className="text-slate-600 dark:text-slate-400 mt-2 text-sm md:text-base">
+                        Manage permission overrides for <span className="font-semibold text-slate-800 dark:text-slate-200">{userDisplay}</span>.
+                        Effective access = role permissions + these user overrides.
                     </p>
                 </div>
                 <div className="flex gap-2">
                     <Button type="button" variant="outline" onClick={() => router.push('/users')}>
+                        <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to users
                     </Button>
                     <Button onClick={() => router.push(`/users/update?id=${userId}`)} variant="outline">
@@ -201,73 +380,91 @@ export default function UserPermissionsPage() {
                 </div>
             </div>
 
-            {modules.length > 0 && (
-                <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-600 dark:text-slate-400">Filter by module:</span>
-                    <select
-                        value={moduleFilter}
-                        onChange={(e) => setModuleFilter(e.target.value)}
-                        className="rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm"
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <EnhancedCard title="Total permissions" description="Rows in catalog" variant="default" size="sm">
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{rows.length}</div>
+                </EnhancedCard>
+                <EnhancedCard title="Filtered results" description="After search/module filters" variant="default" size="sm">
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{totalItems}</div>
+                </EnhancedCard>
+                <EnhancedCard title="Modules" description="Distinct permission groups" variant="default" size="sm">
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{modules.length}</div>
+                </EnhancedCard>
+                <EnhancedCard title="Current page" description="Pagination position" variant="default" size="sm">
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                        {page} / {totalPages}
+                    </div>
+                </EnhancedCard>
+            </div>
+
+            <FilterBar
+                searchPlaceholder="Search by permission key, name, or module..."
+                searchValue={search}
+                onSearchChange={setSearch}
+                filters={[
+                    {
+                        key: 'module',
+                        label: 'Module',
+                        value: moduleFilter,
+                        options: [
+                            { key: 'All', value: 'All', label: 'All modules' },
+                            ...modules.map((m) => ({ key: m, value: m, label: m })),
+                        ],
+                        onValueChange: setModuleFilter,
+                    },
+                ]}
+                activeFilters={activeFilters}
+                onClearFilters={() => {
+                    setSearch('');
+                    setModuleFilter('All');
+                }}
+                actions={
+                    <Button
+                        variant="outline"
+                        onClick={refreshTable}
+                        disabled={isRefreshing || permissionsLoading}
+                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     >
-                        <option value="">All modules</option>
-                        {modules.map((m) => (
-                            <option key={m} value={m}>
-                                {m}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            )}
+                        <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                    </Button>
+                }
+            />
 
             <EnhancedCard
-                title="User permission overrides"
-                description={`${filteredRows.length} permission(s). These override role permissions. Save replaces all overrides for this user.`}
+                title="Permission overrides table"
+                description={`${totalItems} permission(s). Save replaces all user overrides in one request.`}
                 variant="default"
                 size="sm"
-            >
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-slate-200 dark:border-slate-700">
-                                <th className="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Permission Key</th>
-                                <th className="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Name</th>
-                                <th className="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Module</th>
-                                <th className="text-center py-3 px-2 font-medium text-slate-700 dark:text-slate-300">View</th>
-                                <th className="text-center py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Create</th>
-                                <th className="text-center py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Edit</th>
-                                <th className="text-center py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Delete</th>
-                                <th className="text-center py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Approve</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredRows.map((r) => (
-                                <tr key={r.permission_id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                    <td className="py-2 px-2 font-mono text-slate-700 dark:text-slate-300">{r.permission_key}</td>
-                                    <td className="py-2 px-2 text-slate-700 dark:text-slate-300">{r.name_en}</td>
-                                    <td className="py-2 px-2 text-slate-600 dark:text-slate-400">{r.module}</td>
-                                    <td className="py-2 px-2 text-center">
-                                        <Checkbox checked={r.can_view === 1} onCheckedChange={() => toggleFlag(r.permission_id, 'can_view')} />
-                                    </td>
-                                    <td className="py-2 px-2 text-center">
-                                        <Checkbox checked={r.can_create === 1} onCheckedChange={() => toggleFlag(r.permission_id, 'can_create')} />
-                                    </td>
-                                    <td className="py-2 px-2 text-center">
-                                        <Checkbox checked={r.can_edit === 1} onCheckedChange={() => toggleFlag(r.permission_id, 'can_edit')} />
-                                    </td>
-                                    <td className="py-2 px-2 text-center">
-                                        <Checkbox checked={r.can_delete === 1} onCheckedChange={() => toggleFlag(r.permission_id, 'can_delete')} />
-                                    </td>
-                                    <td className="py-2 px-2 text-center">
-                                        <Checkbox checked={r.can_approve === 1} onCheckedChange={() => toggleFlag(r.permission_id, 'can_approve')} />
-                                    </td>
-                                </tr>
+                headerActions={
+                    <Select value={String(perPage)} onValueChange={(v) => setPerPage(Number(v))}>
+                        <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                            <SelectValue placeholder="Rows per page" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                            {[10, 15, 20, 30, 50, 100].map((n) => (
+                                <SelectItem key={n} value={String(n)}>
+                                    {n} per page
+                                </SelectItem>
                             ))}
-                        </tbody>
-                    </table>
-                    {filteredRows.length === 0 && (
-                        <p className="py-6 text-center text-slate-500">No permissions to display.</p>
-                    )}
-                </div>
+                        </SelectContent>
+                    </Select>
+                }
+            >
+                <EnhancedDataTable
+                    data={paginatedRows}
+                    columns={columns}
+                    loading={permissionsLoading}
+                    pagination={{
+                        currentPage: page,
+                        totalPages,
+                        pageSize: perPage,
+                        totalItems,
+                        onPageChange: setPage,
+                    }}
+                    noDataMessage="No permission rows found"
+                    showActions={false}
+                />
             </EnhancedCard>
         </div>
     );

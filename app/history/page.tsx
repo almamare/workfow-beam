@@ -1,700 +1,267 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch } from '@/stores/store';
+import {
+    fetchApprovalHistory,
+    selectHistoryItems,
+    selectHistoryLoading,
+    selectHistoryTotal,
+    selectHistoryPages,
+    selectHistoryError,
+} from '@/stores/slices/approvals';
+import type { ApprovalHistoryItem } from '@/stores/slices/approvals';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { 
-    History, 
-    RefreshCw, 
-    FileSpreadsheet, 
-    AlertCircle, 
-    Search, 
-    X,
-    CheckCircle,
-    XCircle,
-    Clock,
-    Info,
-    User,
-    FileText,
-    FolderOpen,
-    Building,
-    DollarSign,
-    Shield,
-    Eye
+import { EnhancedDataTable, Column } from '@/components/ui/enhanced-data-table';
+import {
+    History, RefreshCw, FileSpreadsheet,
+    CheckCircle, XCircle, Clock, FileText,
+    FolderOpen, Building, DollarSign, Shield, User,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
-import { DatePicker } from '@/components/DatePicker';
 
-// Date formatting helper
-const formatDateTime = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    try {
-        return new Date(dateString).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    } catch {
-        return 'Invalid date';
-    }
+const STATUS_COLORS: Record<string, string> = {
+    Approved:  'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200',
+    Rejected:  'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200',
+    Pending:   'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200',
+    Cancelled: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200',
 };
 
-interface HistoryItem {
-    id: string;
-    action_type: string;
-    entity_type: string;
-    entity_id: string;
-    entity_name: string;
-    action: string;
-    description?: string;
-    performed_by: string;
-    performed_at: string;
-    old_value?: string;
-    new_value?: string;
-    status?: 'success' | 'failed' | 'pending';
-    ip_address?: string;
+const TYPE_ICONS: Record<string, React.ReactNode> = {
+    Client:          <Building className="h-4 w-4" />,
+    Project:         <FolderOpen className="h-4 w-4" />,
+    Task:            <FileText className="h-4 w-4" />,
+    Financial:       <DollarSign className="h-4 w-4" />,
+    Employment:      <User className="h-4 w-4" />,
+    ProjectContracts:<Shield className="h-4 w-4" />,
+};
+
+const TYPE_COLORS: Record<string, string> = {
+    Client:          'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200',
+    Project:         'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200',
+    Task:            'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200',
+    Financial:       'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200',
+    Employment:      'bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200',
+    ProjectContracts:'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200',
+};
+
+function fmtDate(d?: string) {
+    if (!d) return '—';
+    try { return new Date(d).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+    catch { return d; }
+}
+
+function escapeCsv(v: any) {
+    const s = String(v ?? '');
+    return s.includes(',') || s.includes('"') ? '"' + s.replace(/"/g, '""') + '"' : s;
 }
 
 export default function HistoryPage() {
-    const [search, setSearch] = useState('');
-    const [debouncedSearch, setDebouncedSearch] = useState(search);
-    const [entityTypeFilter, setEntityTypeFilter] = useState<'All' | 'Project' | 'Client' | 'Task' | 'User' | 'Financial' | 'Approval'>('All');
-    const [actionTypeFilter, setActionTypeFilter] = useState<'All' | 'Create' | 'Update' | 'Delete' | 'Approve' | 'Reject' | 'View'>('All');
-    const [dateFrom, setDateFrom] = useState<string>('');
-    const [dateTo, setDateTo] = useState<string>('');
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(10);
+    const dispatch = useDispatch<AppDispatch>();
+    const items   = useSelector(selectHistoryItems);
+    const loading = useSelector(selectHistoryLoading);
+    const total   = useSelector(selectHistoryTotal);
+    const pages   = useSelector(selectHistoryPages);
+    const error   = useSelector(selectHistoryError);
+
+    const [page, setPage]   = useState(1);
+    const [limit, setLimit] = useState(15);
+    const [statusFilter, setStatusFilter] = useState('All');
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const [isExporting, setIsExporting] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [isExporting, setIsExporting]   = useState(false);
 
-    // Mock history data
-    const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+    useEffect(() => { if (error) toast.error(error); }, [error]);
 
+    const lastKeyRef = useRef('');
     useEffect(() => {
-        const t = setTimeout(() => setDebouncedSearch(search), 400);
-        return () => clearTimeout(t);
-    }, [search]);
+        const key = `${page}-${limit}`;
+        if (lastKeyRef.current === key) return;
+        lastKeyRef.current = key;
+        dispatch(fetchApprovalHistory({ page, limit }));
+    }, [dispatch, page, limit]);
 
-    useEffect(() => {
-        setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            const mockHistory: HistoryItem[] = [
-                {
-                    id: '1',
-                    action_type: 'Create',
-                    entity_type: 'Project',
-                    entity_id: 'PROJ-001',
-                    entity_name: 'New Building Project',
-                    action: 'Created new project',
-                    description: 'Project "New Building Project" was created',
-                    performed_by: 'Ahmed Mohamed',
-                    performed_at: '2024-01-15 10:30:00',
-                    new_value: 'Active',
-                    status: 'success',
-                    ip_address: '192.168.1.100'
-                },
-                {
-                    id: '2',
-                    action_type: 'Update',
-                    entity_type: 'Client',
-                    entity_id: 'CLI-002',
-                    entity_name: 'ABC Company',
-                    action: 'Updated client information',
-                    description: 'Client contact information was updated',
-                    performed_by: 'Sara Ali',
-                    performed_at: '2024-01-15 09:15:00',
-                    old_value: 'old-email@example.com',
-                    new_value: 'new-email@example.com',
-                    status: 'success',
-                    ip_address: '192.168.1.101'
-                },
-                {
-                    id: '3',
-                    action_type: 'Approve',
-                    entity_type: 'Approval',
-                    entity_id: 'APP-003',
-                    entity_name: 'Task Request #123',
-                    action: 'Approved task request',
-                    description: 'Task request was approved by supervisor',
-                    performed_by: 'Mohammed Hassan',
-                    performed_at: '2024-01-14 14:20:00',
-                    old_value: 'Pending',
-                    new_value: 'Approved',
-                    status: 'success',
-                    ip_address: '192.168.1.102'
-                },
-                {
-                    id: '4',
-                    action_type: 'Delete',
-                    entity_type: 'Task',
-                    entity_id: 'TASK-004',
-                    entity_name: 'Completed Task Item',
-                    action: 'Deleted task',
-                    description: 'Task was deleted after completion',
-                    performed_by: 'Fatima Saleh',
-                    performed_at: '2024-01-14 11:45:00',
-                    old_value: 'Active',
-                    new_value: 'Deleted',
-                    status: 'success',
-                    ip_address: '192.168.1.103'
-                },
-                {
-                    id: '5',
-                    action_type: 'View',
-                    entity_type: 'Financial',
-                    entity_id: 'FIN-005',
-                    entity_name: 'Budget Report',
-                    action: 'Viewed financial report',
-                    description: 'User viewed budget report for Q1 2024',
-                    performed_by: 'Omar Ibrahim',
-                    performed_at: '2024-01-13 16:30:00',
-                    status: 'success',
-                    ip_address: '192.168.1.104'
-                },
-                {
-                    id: '6',
-                    action_type: 'Reject',
-                    entity_type: 'Approval',
-                    entity_id: 'APP-006',
-                    entity_name: 'Leave Request #456',
-                    action: 'Rejected leave request',
-                    description: 'Leave request was rejected due to insufficient coverage',
-                    performed_by: 'Noor Ahmed',
-                    performed_at: '2024-01-13 13:10:00',
-                    old_value: 'Pending',
-                    new_value: 'Rejected',
-                    status: 'success',
-                    ip_address: '192.168.1.105'
-                }
-            ];
-            setHistoryItems(mockHistory);
-            setLoading(false);
-        }, 500);
-    }, []);
+    const filtered = statusFilter === 'All'
+        ? items
+        : items.filter(i => i.status === statusFilter);
 
-    const refreshHistory = async () => {
+    const refresh = async () => {
         setIsRefreshing(true);
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            toast.success('History refreshed successfully');
-        } catch (err) {
-            toast.error('Failed to refresh history');
-        } finally {
-            setIsRefreshing(false);
-        }
+            await dispatch(fetchApprovalHistory({ page, limit })).unwrap();
+            toast.success('History refreshed');
+        } catch { toast.error('Refresh failed'); }
+        finally { setIsRefreshing(false); }
     };
 
-    const exportHistory = async () => {
+    const exportCsv = () => {
         setIsExporting(true);
         try {
-            // Simulate export
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            toast.success('History exported successfully');
-        } catch (err) {
-            toast.error('Failed to export history');
-        } finally {
-            setIsExporting(false);
-        }
+            const headers = ['ID', 'Request ID', 'Request Type', 'Step', 'Status', 'Remarks', 'Action Date'];
+            const rows = filtered.map(i => [
+                i.id, i.request_id, escapeCsv(i.request_type), escapeCsv(i.step_name),
+                i.status, escapeCsv(i.remarks ?? ''), fmtDate(i.action_date),
+            ].join(','));
+            const blob = new Blob(['\uFEFF' + [headers.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `approval_history_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            toast.success('Exported');
+        } catch { toast.error('Export failed'); }
+        finally { setIsExporting(false); }
     };
 
-    const getActionIcon = (actionType: string) => {
-        switch (actionType) {
-            case 'Create':
-                return <CheckCircle className="h-4 w-4" />;
-            case 'Update':
-                return <FileText className="h-4 w-4" />;
-            case 'Delete':
-                return <XCircle className="h-4 w-4" />;
-            case 'Approve':
-                return <CheckCircle className="h-4 w-4" />;
-            case 'Reject':
-                return <XCircle className="h-4 w-4" />;
-            case 'View':
-                return <Eye className="h-4 w-4" />;
-            default:
-                return <Info className="h-4 w-4" />;
-        }
-    };
-
-    const getActionColor = (actionType: string) => {
-        switch (actionType) {
-            case 'Create':
-            case 'Approve':
-                return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
-            case 'Update':
-                return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
-            case 'Delete':
-            case 'Reject':
-                return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800';
-            case 'View':
-                return 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
-            default:
-                return 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
-        }
-    };
-
-    const getEntityIcon = (entityType: string) => {
-        switch (entityType) {
-            case 'Project':
-                return <FolderOpen className="h-4 w-4" />;
-            case 'Client':
-                return <Building className="h-4 w-4" />;
-            case 'Task':
-                return <FileText className="h-4 w-4" />;
-            case 'User':
-                return <User className="h-4 w-4" />;
-            case 'Financial':
-                return <DollarSign className="h-4 w-4" />;
-            case 'Approval':
-                return <Shield className="h-4 w-4" />;
-            default:
-                return <Info className="h-4 w-4" />;
-        }
-    };
-
-    const getEntityColor = (entityType: string) => {
-        switch (entityType) {
-            case 'Project':
-                return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800';
-            case 'Client':
-                return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800';
-            case 'Task':
-                return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800';
-            case 'User':
-                return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
-            case 'Financial':
-                return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
-            case 'Approval':
-                return 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800';
-            default:
-                return 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
-        }
-    };
-
-    const filteredHistory = useMemo(() => {
-        let items = historyItems;
-
-        // Filter by entity type
-        if (entityTypeFilter !== 'All') {
-            items = items.filter(item => item.entity_type === entityTypeFilter);
-        }
-
-        // Filter by action type
-        if (actionTypeFilter !== 'All') {
-            items = items.filter(item => item.action_type === actionTypeFilter);
-        }
-
-        // Filter by date range
-        if (dateFrom) {
-            items = items.filter(item => new Date(item.performed_at) >= new Date(dateFrom));
-        }
-        if (dateTo) {
-            items = items.filter(item => new Date(item.performed_at) <= new Date(dateTo + 'T23:59:59'));
-        }
-
-        // Filter by search
-        if (debouncedSearch) {
-            const searchLower = debouncedSearch.toLowerCase();
-            items = items.filter(item =>
-                item.entity_name.toLowerCase().includes(searchLower) ||
-                item.action.toLowerCase().includes(searchLower) ||
-                item.description?.toLowerCase().includes(searchLower) ||
-                item.performed_by.toLowerCase().includes(searchLower) ||
-                item.entity_id.toLowerCase().includes(searchLower)
-            );
-        }
-
-        return items;
-    }, [historyItems, entityTypeFilter, actionTypeFilter, dateFrom, dateTo, debouncedSearch]);
-
-    const activeFilters = [];
-    if (search) activeFilters.push(`Search: ${search}`);
-    if (entityTypeFilter !== 'All') activeFilters.push(`Entity: ${entityTypeFilter}`);
-    if (actionTypeFilter !== 'All') activeFilters.push(`Action: ${actionTypeFilter}`);
-    if (dateFrom) activeFilters.push(`From: ${new Date(dateFrom).toLocaleDateString('en-US')}`);
-    if (dateTo) activeFilters.push(`To: ${new Date(dateTo).toLocaleDateString('en-US')}`);
-
-    // Calculate stats
-    const totalHistory = historyItems.length;
-    const todayHistory = historyItems.filter(item => {
-        const itemDate = new Date(item.performed_at);
-        const today = new Date();
-        return itemDate.toDateString() === today.toDateString();
-    }).length;
-    const thisWeekHistory = historyItems.filter(item => {
-        const itemDate = new Date(item.performed_at);
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return itemDate >= weekAgo;
-    }).length;
-    const createActions = historyItems.filter(item => item.action_type === 'Create').length;
-
-    const columns: Column<HistoryItem>[] = [
+    const columns: Column<ApprovalHistoryItem>[] = [
         {
-            key: 'action_type' as keyof HistoryItem,
-            header: 'Action Type',
-            render: (value: any) => (
-                <Badge variant="outline" className={`${getActionColor(value)} flex items-center gap-1 w-fit`}>
-                    {getActionIcon(value)}
-                    {value}
+            key: 'request_type' as keyof ApprovalHistoryItem,
+            header: 'Type',
+            render: (v: any) => (
+                <Badge variant="outline" className={TYPE_COLORS[v] || 'bg-slate-100 text-slate-700 border-slate-200'}>
+                    <span className="mr-1 inline-flex items-center">{TYPE_ICONS[v] ?? <Shield className="h-3.5 w-3.5" />}</span>
+                    {v}
                 </Badge>
             ),
-            sortable: true
+            sortable: true,
         },
         {
-            key: 'entity_type' as keyof HistoryItem,
-            header: 'Entity Type',
-            render: (value: any) => (
-                <Badge variant="outline" className={`${getEntityColor(value)} flex items-center gap-1 w-fit`}>
-                    {getEntityIcon(value)}
-                    {value}
-                </Badge>
-            ),
-            sortable: true
+            key: 'request_id' as keyof ApprovalHistoryItem,
+            header: 'Request',
+            render: (v: any) => <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{String(v).slice(0, 12)}…</span>,
+            sortable: true,
         },
         {
-            key: 'entity_name' as keyof HistoryItem,
-            header: 'Entity Name',
-            render: (value: any, item: HistoryItem) => (
+            key: 'step_name' as keyof ApprovalHistoryItem,
+            header: 'Step',
+            render: (v: any, item: ApprovalHistoryItem) => (
                 <div>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">{value}</span>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">{item.entity_id}</div>
+                    <div className="text-sm font-medium text-slate-800 dark:text-slate-200">{v}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Level {item.step_level} · {item.required_role}</div>
                 </div>
             ),
-            sortable: true
+            sortable: true,
         },
         {
-            key: 'action' as keyof HistoryItem,
-            header: 'Action',
-            render: (value: any) => (
-                <span className="text-slate-700 dark:text-slate-300">{value}</span>
-            ),
-            sortable: true
+            key: 'status' as keyof ApprovalHistoryItem,
+            header: 'Decision',
+            render: (v: any) => {
+                const Icon = v === 'Approved' ? CheckCircle : v === 'Rejected' ? XCircle : Clock;
+                return (
+                    <Badge variant="outline" className={STATUS_COLORS[v] || 'bg-slate-100 text-slate-700 border-slate-200'}>
+                        <Icon className="h-3.5 w-3.5 mr-1" />
+                        {v}
+                    </Badge>
+                );
+            },
+            sortable: true,
         },
         {
-            key: 'description' as keyof HistoryItem,
-            header: 'Description',
-            render: (value: any) => (
-                <span className="text-slate-600 dark:text-slate-400 text-sm">{value || '-'}</span>
-            ),
-            sortable: false
+            key: 'remarks' as keyof ApprovalHistoryItem,
+            header: 'Remarks',
+            render: (v: any) => <span className="text-sm text-slate-600 dark:text-slate-400">{v || '—'}</span>,
+            sortable: false,
         },
         {
-            key: 'performed_by' as keyof HistoryItem,
-            header: 'Performed By',
-            render: (value: any) => (
-                <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-slate-400" />
-                    <span className="text-slate-700 dark:text-slate-300">{value}</span>
-                </div>
-            ),
-            sortable: true
+            key: 'action_date' as keyof ApprovalHistoryItem,
+            header: 'Action Date',
+            render: (v: any) => <span className="text-sm text-slate-500 dark:text-slate-400">{fmtDate(v)}</span>,
+            sortable: true,
         },
-        {
-            key: 'performed_at' as keyof HistoryItem,
-            header: 'Date & Time',
-            render: (value: any) => (
-                <span className="text-slate-600 dark:text-slate-400 text-sm">{formatDateTime(value)}</span>
-            ),
-            sortable: true
-        }
     ];
 
-    const actions: Action<HistoryItem>[] = [
-        {
-            label: 'View Details',
-            icon: <Eye className="h-4 w-4" />,
-            onClick: (item: HistoryItem) => {
-                toast.info(`Viewing details for: ${item.entity_name}`);
-            },
-            variant: 'info' as const
-        }
-    ];
+    const approvedCount = items.filter(i => i.status === 'Approved').length;
+    const rejectedCount = items.filter(i => i.status === 'Rejected').length;
+    const pendingCount  = items.filter(i => i.status === 'Pending').length;
 
     return (
         <div className="space-y-4">
-            {/* Breadcrumb */}
             <Breadcrumb />
-            
-            {/* Page Header */}
-            <div className="flex items-end justify-between gap-4">
+
+            <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
-                        History
+                    <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-3">
+                        <History className="h-8 w-8 text-sky-500" />
+                        Approval History
                     </h1>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">
-                        View complete activity history and audit trail for all system actions and changes
-                    </p>
+                    <p className="text-slate-600 dark:text-slate-400 mt-1">Your approval actions and decisions</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={refreshHistory}
-                        disabled={isRefreshing || loading}
-                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
-                    >
+                    <Button variant="outline" size="sm" onClick={refresh} disabled={isRefreshing}
+                        className="border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50">
                         <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                         {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={exportCsv} disabled={isExporting}
+                        className="border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50">
+                        <FileSpreadsheet className="h-4 w-4 mr-2" />
+                        Export CSV
                     </Button>
                 </div>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <EnhancedCard
-                    title="Total History"
-                    description="All history records"
-                    variant="default"
-                    size="sm"
-                >
-                    <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-200">
-                        {totalHistory}
-                    </div>
-                </EnhancedCard>
-                <EnhancedCard
-                    title="Today"
-                    description="Actions performed today"
-                    variant="default"
-                    size="sm"
-                >
-                    <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-200">
-                        {todayHistory}
-                    </div>
-                </EnhancedCard>
-                <EnhancedCard
-                    title="This Week"
-                    description="Actions this week"
-                    variant="default"
-                    size="sm"
-                >
-                    <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-200">
-                        {thisWeekHistory}
-                    </div>
-                </EnhancedCard>
-                <EnhancedCard
-                    title="Create Actions"
-                    description="Total create actions"
-                    variant="default"
-                    size="sm"
-                >
-                    <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-200">
-                        {createActions}
-                    </div>
-                </EnhancedCard>
+            {/* Summary cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <EnhancedCard title="Total Records" description="In current page" variant="default" size="sm"
+                    stats={{ total, badge: 'Total', badgeColor: 'default' }}><></></EnhancedCard>
+                <EnhancedCard title="Approved" description="Decisions approved" variant="default" size="sm"
+                    stats={{ total: approvedCount, badge: 'Approved', badgeColor: 'success' }}><></></EnhancedCard>
+                <EnhancedCard title="Rejected" description="Decisions rejected" variant="default" size="sm"
+                    stats={{ total: rejectedCount, badge: 'Rejected', badgeColor: 'error' }}><></></EnhancedCard>
+                <EnhancedCard title="Pending" description="Awaiting decision" variant="default" size="sm"
+                    stats={{ total: pendingCount, badge: 'Pending', badgeColor: 'warning' }}><></></EnhancedCard>
             </div>
 
-            {/* Filters Card */}
             <EnhancedCard
-                title="Search & Filters"
-                description="Filter history records by entity type, action type, or date range"
+                title="Approval Records"
+                description={`${total} record${total !== 1 ? 's' : ''}`}
                 variant="default"
                 size="sm"
-            >
-                <div className="space-y-4">
-                    {/* Search Input with Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-3">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-                            <Input
-                                placeholder="Search by entity name, action, description, or user..."
-                                value={search}
-                                onChange={(e) => {
-                                    setSearch(e.target.value);
-                                    setPage(1);
-                                }}
-                                className="pl-10 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={exportHistory}
-                                disabled={isExporting || loading}
-                                className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 whitespace-nowrap"
-                            >
-                                <FileSpreadsheet className={`h-4 w-4 mr-2 ${isExporting ? 'animate-pulse' : ''}`} />
-                                {isExporting ? 'Exporting...' : 'Export Excel'}
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Filters Row */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {/* Entity Type Filter */}
-                        <div className="space-y-2">
-                            <Label htmlFor="entityType" className="text-slate-700 dark:text-slate-300 font-medium">
-                                Entity Type
-                            </Label>
-                            <Select
-                                value={entityTypeFilter}
-                                onValueChange={(value) => {
-                                    setEntityTypeFilter(value as typeof entityTypeFilter);
-                                    setPage(1);
-                                }}
-                            >
-                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
-                                    <SelectValue placeholder="All Entity Types" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-                                    <SelectItem value="All" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Entity Types</SelectItem>
-                                    <SelectItem value="Project" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Project</SelectItem>
-                                    <SelectItem value="Client" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Client</SelectItem>
-                                    <SelectItem value="Task" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Task</SelectItem>
-                                    <SelectItem value="User" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">User</SelectItem>
-                                    <SelectItem value="Financial" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Financial</SelectItem>
-                                    <SelectItem value="Approval" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Approval</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Action Type Filter */}
-                        <div className="space-y-2">
-                            <Label htmlFor="actionType" className="text-slate-700 dark:text-slate-300 font-medium">
-                                Action Type
-                            </Label>
-                            <Select
-                                value={actionTypeFilter}
-                                onValueChange={(value) => {
-                                    setActionTypeFilter(value as typeof actionTypeFilter);
-                                    setPage(1);
-                                }}
-                            >
-                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
-                                    <SelectValue placeholder="All Action Types" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-                                    <SelectItem value="All" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Action Types</SelectItem>
-                                    <SelectItem value="Create" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Create</SelectItem>
-                                    <SelectItem value="Update" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Update</SelectItem>
-                                    <SelectItem value="Delete" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Delete</SelectItem>
-                                    <SelectItem value="Approve" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Approve</SelectItem>
-                                    <SelectItem value="Reject" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Reject</SelectItem>
-                                    <SelectItem value="View" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">View</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* From Date */}
-                        <div className="space-y-2">
-                            <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
-                                From Date
-                            </Label>
-                            <DatePicker
-                                value={dateFrom}
-                                onChange={(value) => {
-                                    setDateFrom(value);
-                                    setPage(1);
-                                }}
-                            />
-                        </div>
-
-                        {/* To Date */}
-                        <div className="space-y-2">
-                            <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
-                                To Date
-                            </Label>
-                            <DatePicker
-                                value={dateTo}
-                                onChange={(value) => {
-                                    setDateTo(value);
-                                    setPage(1);
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Active Filters & Clear Button */}
-                    {activeFilters.length > 0 && (
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Active filters:</span>
-                                {activeFilters.map((filter, index) => (
-                                    <Badge
-                                        key={index}
-                                        variant="outline"
-                                        className="bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 hover:bg-sky-200 dark:hover:bg-sky-900/50 border-sky-200 dark:border-sky-800"
-                                    >
-                                        {filter}
-                                    </Badge>
-                                ))}
-                            </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                    setSearch('');
-                                    setEntityTypeFilter('All');
-                                    setActionTypeFilter('All');
-                                    setDateFrom('');
-                                    setDateTo('');
-                                    setPage(1);
-                                }}
-                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800 whitespace-nowrap"
-                            >
-                                <X className="h-4 w-4 mr-2" />
-                                Clear All
-                            </Button>
-                        </div>
-                    )}
-                </div>
-            </EnhancedCard>
-
-            {/* History Table */}
-            <EnhancedCard
-                title="Activity History"
-                description={`${filteredHistory.length} history record${filteredHistory.length !== 1 ? 's' : ''} found`}
-                variant="default"
-                size="sm"
-                stats={{
-                    total: filteredHistory.length,
-                    badge: 'Total Records',
-                    badgeColor: 'success'
-                }}
                 headerActions={
-                    <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
-                        <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
-                            <SelectValue placeholder="Items per page" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
-                            <SelectItem value="5" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">5 per page</SelectItem>
-                            <SelectItem value="10" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">10 per page</SelectItem>
-                            <SelectItem value="20" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">20 per page</SelectItem>
-                            <SelectItem value="50" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">50 per page</SelectItem>
-                            <SelectItem value="100" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">100 per page</SelectItem>
-                            <SelectItem value="200" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">200 per page</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-2">
+                        <Select value={statusFilter} onValueChange={v => setStatusFilter(v)}>
+                            <SelectTrigger className="w-36">
+                                <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="All">All Status</SelectItem>
+                                <SelectItem value="Approved">Approved</SelectItem>
+                                <SelectItem value="Rejected">Rejected</SelectItem>
+                                <SelectItem value="Pending">Pending</SelectItem>
+                                <SelectItem value="Cancelled">Cancelled</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Select value={String(limit)} onValueChange={v => { setLimit(Number(v)); setPage(1); }}>
+                            <SelectTrigger className="w-32">
+                                <SelectValue placeholder="Per page" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {[10, 15, 25, 50].map(n => (
+                                    <SelectItem key={n} value={String(n)}>{n} per page</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 }
             >
                 <EnhancedDataTable
-                    data={filteredHistory}
+                    data={filtered}
                     columns={columns}
-                    actions={actions}
                     loading={loading}
                     pagination={{
                         currentPage: page,
-                        totalPages: Math.ceil(filteredHistory.length / limit),
+                        totalPages: pages || 1,
                         pageSize: limit,
-                        totalItems: filteredHistory.length,
+                        totalItems: total,
                         onPageChange: setPage,
                     }}
-                    noDataMessage="No history records found matching your search criteria"
-                    searchPlaceholder="Search history..."
+                    noDataMessage="No approval history found. Approval records appear here after you act on requests."
                 />
             </EnhancedCard>
         </div>
     );
 }
-

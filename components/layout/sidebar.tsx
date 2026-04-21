@@ -144,6 +144,9 @@ const routeMapping: Record<string, string> = {
     '/tasks/create': '/tasks',
     '/tasks/update': '/tasks',
     '/tasks/details': '/tasks',
+    '/change-orders': '/tasks',
+    '/change-orders/create': '/tasks',
+    '/change-orders/details': '/tasks',
     '/requests/tasks': '/tasks',
     '/requests/tasks/details': '/tasks',
     '/requests/tasks/timeline': '/tasks',
@@ -274,10 +277,12 @@ const routeConfig: Record<string, {
         color: 'text-yellow-400',
         menuItems: [
             { href: '/tasks', title: 'Task Orders', icon: 'ClipboardList', color: 'text-yellow-400' },
+            { href: '/change-orders', title: 'Change Orders', icon: 'FileEdit', color: 'text-violet-400' },
             { href: '/requests/tasks/pending', title: 'Pending Requests', icon: 'Clock', color: 'text-yellow-400' },
             { href: '/requests/tasks/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
             { href: '/requests/tasks/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
-            { href: '/tasks/create', title: 'Create Task', icon: 'Plus', color: 'text-green-400' }
+            { href: '/tasks/create', title: 'Create Task', icon: 'Plus', color: 'text-green-400' },
+            { href: '/change-orders/create', title: 'Create Change Order', icon: 'Plus', color: 'text-violet-400' },
         ]
     },
     '/users': {
@@ -806,17 +811,15 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                 <div className="flex items-center justify-between px-4 py-[14px] border-b border-slate-700 dark:border-slate-700">
                     {(!collapsed || mobileOpen) && (
                         <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <Image
-                                    src="https://cdn.shuarano.com/img/logo.png"
-                                    alt="Shuaa Al-Ranou logo"
-                                    width={32}
-                                    height={40}
-                                    priority
-                                    className="shrink-0"
-                                    style={{ width: "32px", height: "40px" }}
-                                />
-                            </div>
+                            <Image
+                                src="/icon-192.png"
+                                alt="Shuaa Al-Ranou logo"
+                                width={36}
+                                height={36}
+                                priority
+                                className="shrink-0"
+                                style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' }}
+                            />
 
                             <div
                                 className={cn(

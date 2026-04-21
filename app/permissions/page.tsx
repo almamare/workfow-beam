@@ -5,13 +5,10 @@ import { AppDispatch } from '@/stores/store';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import {
     fetchPermissions,
-    fetchEffectivePermissions,
     selectPermissions,
     selectPermissionsLoading,
-    selectEffectivePermissions,
 } from '@/stores/slices/permissions';
 import type { Permission } from '@/stores/types/permissions';
-import type { EffectivePermissionFlags } from '@/stores/types/permissions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -26,13 +23,14 @@ import { toast } from 'sonner';
 export default function PermissionsPage() {
     const permissions = useSelector(selectPermissions);
     const loading = useSelector(selectPermissionsLoading);
-    const effective = useSelector(selectEffectivePermissions);
     const router = useRouter();
     const dispatch = useReduxDispatch<AppDispatch>();
 
     const [moduleFilter, setModuleFilter] = useState<string>('All');
     const [search, setSearch] = useState('');
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
 
     useEffect(() => {
         dispatch(
@@ -41,10 +39,6 @@ export default function PermissionsPage() {
             })
         );
     }, [dispatch, moduleFilter]);
-
-    useEffect(() => {
-        dispatch(fetchEffectivePermissions());
-    }, [dispatch]);
 
     const permissionsList = Array.isArray(permissions) ? permissions : [];
 
@@ -137,9 +131,21 @@ export default function PermissionsPage() {
         );
     }, [permissionsList, search]);
 
-    const effectiveEntries = effective
-        ? Object.entries(effective)
-        : [];
+    useEffect(() => {
+        setPage(1);
+    }, [moduleFilter, search]);
+
+    const totalItems = filteredBySearch.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
+
+    useEffect(() => {
+        if (page > totalPages) setPage(totalPages);
+    }, [page, totalPages]);
+
+    const paginatedPermissions = useMemo(() => {
+        const start = (page - 1) * perPage;
+        return filteredBySearch.slice(start, start + perPage);
+    }, [filteredBySearch, page, perPage]);
 
     return (
         <div className="space-y-4">
@@ -153,6 +159,13 @@ export default function PermissionsPage() {
                         Reference list of permission keys and modules (read-only)
                     </p>
                 </div>
+                <Button
+                    onClick={() => router.push('/permissions/effective')}
+                    className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-md"
+                >
+                    <KeyRound className="h-4 w-4 mr-2" />
+                    My effective permissions
+                </Button>
             </div>
 
             <FilterBar
@@ -189,63 +202,59 @@ export default function PermissionsPage() {
                 }
             />
 
-            {effectiveEntries.length > 0 && (
-                <EnhancedCard
-                    title="My effective permissions"
-                    description="Current user permissions by key (read-only)"
-                    variant="default"
-                    size="sm"
-                >
-                    <div className="flex flex-wrap gap-2">
-                        {effectiveEntries.slice(0, 24).map(([key, flags]) => (
-                            <Badge
-                                key={key}
-                                variant="outline"
-                                className="font-mono text-xs flex items-center gap-1"
-                            >
-                                <KeyRound className="h-3 w-3" />
-                                {key}
-                                <PermissionFlags flags={flags} />
-                            </Badge>
-                        ))}
-                        {effectiveEntries.length > 24 && (
-                            <Badge variant="outline">+{effectiveEntries.length - 24} more</Badge>
-                        )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <EnhancedCard title="Total permissions" description="Catalog rows" variant="default" size="sm">
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{permissionsList.length}</div>
+                </EnhancedCard>
+                <EnhancedCard title="Filtered results" description="After search/module filters" variant="default" size="sm">
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{totalItems}</div>
+                </EnhancedCard>
+                <EnhancedCard title="Modules" description="Distinct permission groups" variant="default" size="sm">
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{moduleOptions.length}</div>
+                </EnhancedCard>
+                <EnhancedCard title="Current page" description="Pagination position" variant="default" size="sm">
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                        {page} / {totalPages}
                     </div>
                 </EnhancedCard>
-            )}
+            </div>
 
             <EnhancedCard
                 title="Permission list"
-                description={`${filteredBySearch.length} permission(s)`}
+                description={`${totalItems} permission(s)`}
                 variant="default"
                 size="sm"
+                headerActions={
+                    <Select value={String(perPage)} onValueChange={(v) => setPerPage(Number(v))}>
+                        <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                            <SelectValue placeholder="Rows per page" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                            {[10, 15, 20, 30, 50, 100].map((n) => (
+                                <SelectItem key={n} value={String(n)}>
+                                    {n} per page
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                }
             >
                 <EnhancedDataTable
-                    data={filteredBySearch}
+                    data={paginatedPermissions}
                     columns={columns}
                     actions={actions}
                     loading={loading}
+                    pagination={{
+                        currentPage: page,
+                        totalPages,
+                        pageSize: perPage,
+                        totalItems,
+                        onPageChange: setPage,
+                    }}
                     noDataMessage="No permissions found"
                     searchPlaceholder="Search..."
                 />
             </EnhancedCard>
         </div>
-    );
-}
-
-function PermissionFlags({ flags }: { flags: EffectivePermissionFlags }) {
-    const active = [
-        flags.can_view && 'view',
-        flags.can_create && 'create',
-        flags.can_edit && 'edit',
-        flags.can_delete && 'delete',
-        flags.can_approve && 'approve',
-    ].filter(Boolean) as string[];
-    if (active.length === 0) return null;
-    return (
-        <span className="text-slate-500 dark:text-slate-400 ml-1">
-            ({active.join(', ')})
-        </span>
     );
 }

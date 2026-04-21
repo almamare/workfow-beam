@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/stores/store';
 import { useRouter, usePathname } from 'next/navigation';
-import axios from '@/utils/axios';
 
 import { useTheme } from '@/contexts/ThemeContext';
 import { logout } from '@/stores/slices/login';
@@ -62,70 +62,42 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                 {/* Top row */}
                 <div className="flex h-16 md:h-18 items-center justify-between px-3 md:px-6">
                     {/* Sidebar toggle (mobile) + logo */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                         {!isDashboard && (
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-9 w-9 p-0 lg:hidden hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors duration-200"
+                                className="h-9 w-9 p-0 shrink-0 lg:hidden hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors duration-200"
                                 onClick={onToggleSidebar}
                             >
                                 <Menu className="h-5 w-5 text-slate-700 dark:text-slate-300" />
                             </Button>
                         )}
 
-                        {/* Logo and company name - visible on dashboard, hidden when sidebar is visible */}
-                        {isDashboard && (
-                            <div className="flex items-center gap-3">
-                                <div className="relative flex items-center justify-center">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-sky-400/20 to-sky-600/20 dark:from-sky-500/30 dark:to-sky-700/30 rounded-xl blur-sm"></div>
-                                    <div className="relative">
-                                        <Image
-                                            src="https://cdn.shuarano.com/img/logo.png"
-                                            alt="Shuaa Al-Ranou logo"
-                                            width={40}
-                                            height={52}
-                                            priority
-                                            className="shrink-0 drop-shadow-sm"
-                                            style={{ width: "40px", height: "52px" }}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="leading-tight">
-                                    <span className="block text-base md:text-lg font-bold tracking-wide bg-gradient-to-r from-sky-600 to-sky-500 dark:from-sky-400 dark:to-sky-300 bg-clip-text text-transparent">
-                                        Shuaa Al-Ranou
-                                    </span>
-                                    <span className="block text-xs md:text-sm text-slate-600 dark:text-slate-400 font-medium">
-                                        Trade & General Contracting
-                                    </span>
-                                </div>
+                        {/* Company logo + name — always in header */}
+                        <Link
+                            href="/dashboard"
+                            className="flex items-center gap-1 sm:gap-2 min-w-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
+                            aria-label="الصفحة الرئيسية — Shuaa Al-Ranou"
+                        >
+                            <Image
+                                src="/icon-192.png"
+                                alt="Shuaa Al-Ranou"
+                                width={50}
+                                height={50}
+                                priority
+                                className="h-8 w-8 sm:h-10 sm:w-10 shrink-0"
+                                style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}
+                            />
+                            <div className="leading-tight min-w-0 text-left">
+                                <span className="block text-sm sm:text-base md:text-lg font-bold tracking-wide bg-gradient-to-r from-sky-600 to-sky-500 dark:from-sky-400 dark:to-sky-300 bg-clip-text text-transparent truncate uppercase">
+                                    Shuaa Al-Ranou
+                                </span>
+                                <span className="hidden sm:block text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium truncate max-w-[12rem] md:max-w-none">
+                                    Trade & General Contracting
+                                </span>
                             </div>
-                        )}
-
-                        {/* Mobile logo (only shown when NOT on dashboard and on mobile) */}
-                        {!isDashboard && (
-                            <div className="flex items-center gap-2 lg:hidden">
-                                <div className="relative">
-                                    <Image
-                                        src="https://cdn.shuarano.com/img/logo.png"
-                                        alt="Shuaa Al-Ranou logo"
-                                        width={28}
-                                        height={36}
-                                        priority
-                                        className="shrink-0"
-                                        style={{ width: "28px", height: "36px" }}
-                                    />
-                                </div>
-                                <div className="leading-tight">
-                                    <span className="block text-sm font-semibold tracking-wide text-slate-800 dark:text-slate-200">
-                                        Shuaa Al-Ranou
-                                    </span>
-                                    <span className="block text-xs text-slate-500 dark:text-slate-500 font-medium">
-                                        Trade & General Contracting
-                                    </span>
-                                </div>
-                            </div>
-                        )}
+                        </Link>
                     </div>
 
                     {/* Center search (desktop) */}

@@ -11,128 +11,161 @@ import {
     DollarSign,
     Activity,
     Wallet,
+    LayoutDashboard,
 } from 'lucide-react';
 import Link from 'next/link';
-import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 
 const financialMenuItems = [
     {
-        number: '6.1',
         title: 'Financial Requests',
         icon: CreditCard,
         href: '/requests/financial',
-        color: 'from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700',
+        color: '#059669',
+        bg: '#ecfdf5',
     },
     {
-        number: '6.2',
         title: 'Disbursements',
         icon: Banknote,
         href: '/financial/disbursements',
-        color: 'from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700',
+        color: '#0284c7',
+        bg: '#f0f9ff',
     },
     {
-        number: '6.3',
         title: 'Disbursement Inbox',
         icon: Inbox,
         href: '/financial/disbursements/inbox',
-        color: 'from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700',
+        color: '#d97706',
+        bg: '#fffbeb',
     },
     {
-        number: '6.4',
         title: 'Petty Cash',
         icon: Landmark,
         href: '/financial/petty-cash',
-        color: 'from-green-500 to-green-600 dark:from-green-600 dark:to-green-700',
+        color: '#16a34a',
+        bg: '#f0fdf4',
     },
     {
-        number: '6.5',
         title: 'Financial Ledger',
         icon: BarChart3,
         href: '/financial/ledger',
-        color: 'from-cyan-500 to-cyan-600 dark:from-cyan-600 dark:to-cyan-700',
+        color: '#0891b2',
+        bg: '#ecfeff',
     },
     {
-        number: '6.6',
         title: 'Contractor Payments',
         icon: Wallet,
         href: '/financial/contractor-payments',
-        color: 'from-teal-500 to-teal-600 dark:from-teal-600 dark:to-teal-700',
+        color: '#0f766e',
+        bg: '#f0fdfa',
     },
     {
-        number: '6.7',
         title: 'Cash Ledger',
         icon: Activity,
         href: '/financial/cash-ledger',
-        color: 'from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700',
+        color: '#4f46e5',
+        bg: '#eef2ff',
     },
     {
-        number: '6.8',
         title: 'Project Budgets',
         icon: TrendingUp,
         href: '/financial/budgets',
-        color: 'from-violet-500 to-violet-600 dark:from-violet-600 dark:to-violet-700',
+        color: '#7c3aed',
+        bg: '#f5f3ff',
     },
     {
-        number: '6.9',
         title: 'Loans',
         icon: DollarSign,
         href: '/financial/loans',
-        color: 'from-rose-500 to-rose-600 dark:from-rose-600 dark:to-rose-700',
+        color: '#e11d48',
+        bg: '#fff1f2',
+    },
+    {
+        title: 'Dashboard',
+        icon: LayoutDashboard,
+        href: '/dashboard',
+        color: '#0369a1',
+        bg: '#e0f2fe',
     },
 ];
 
 export default function FinancialPage() {
     return (
-        <div className="bg-slate-100 dark:bg-slate-900 transition-colors duration-300 p-3 sm:p-4 md:p-6 space-y-4">
-            <div className="mb-4 md:mb-6">
+        <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
+            {/* Title strip aligned with dashboard spacing */}
+            <div className="px-3 sm:px-6 lg:px-8 pt-3 pb-2">
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
                     Financial Management
                 </h1>
-                <p className="text-base sm:text-lg text-slate-700 dark:text-slate-300 font-medium">
+                <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
                     Choose the financial section you want to access
                 </p>
             </div>
 
-            <EnhancedCard
-                title="Financial Operations"
-                description="Navigate to the financial section you want to access"
-                variant="default"
-                size="sm"
-            >
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
-                    {financialMenuItems.map((item) => (
+            {/* Section label like dashboard */}
+            <div className="px-3 sm:px-6 lg:px-8 pt-4 pb-4">
+                <div className="flex items-center gap-3">
+                    <span
+                        className="w-[3px] h-5 rounded-full inline-block flex-shrink-0"
+                        style={{ background: 'linear-gradient(180deg,hsl(199,89%,42%),hsl(199,89%,64%))' }}
+                    />
+                    <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-widest">
+                        Financial Sections &nbsp;·&nbsp; {financialMenuItems.length} sections
+                    </p>
+                </div>
+            </div>
+
+            {/* Grid dimensions mirrored from dashboard */}
+            <div className="flex-1 px-3 sm:px-6 lg:px-8 pb-6">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3 sm:gap-4">
+                    {financialMenuItems.map((item, i) => (
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="block group"
+                            className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-2xl"
                         >
-                            <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:border-green-400 dark:hover:border-green-500 hover:shadow-lg dark:hover:shadow-green-500/10 transition-all duration-300 cursor-pointer h-full active:scale-95">
-                                <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-white/50 dark:from-slate-700/30 dark:to-slate-800/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="relative flex flex-col items-center justify-center text-center gap-3
+                                bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/60
+                                px-2 py-5 sm:py-6 overflow-hidden
+                                transition-all duration-200
+                                hover:border-transparent hover:shadow-[0_8px_30px_rgba(0,0,0,0.10)] hover:-translate-y-1
+                                active:scale-[0.97] active:translate-y-0 cursor-pointer min-h-[110px] sm:min-h-[130px]">
+                                <div className="absolute top-0 left-4 right-4 h-[2px] rounded-full scale-x-0 group-hover:scale-x-100
+                                    transition-transform duration-300 origin-center"
+                                    style={{ background: item.color }} />
 
-                                <div className="relative p-3 sm:p-4 flex flex-col items-center justify-center text-center h-full min-h-[100px] sm:min-h-[120px] md:min-h-[140px]">
-                                    <div className="mb-2 sm:mb-3">
-                                        <div className={`p-2.5 sm:p-3 md:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r ${item.color} group-hover:scale-110 dark:group-hover:shadow-lg transition-all duration-300 inline-block shadow-md dark:shadow-lg`}>
-                                            <item.icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
-                                        </div>
-                                    </div>
-
-                                    <div className="w-full">
-                                        <h3 className="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors leading-tight line-clamp-2 px-1">
-                                            <span className="text-[11px] sm:text-[12px] md:text-[13px] font-bold text-slate-500 dark:text-slate-400 mr-1">
-                                                {item.number}.
-                                            </span>
-                                            {item.title}
-                                        </h3>
-                                    </div>
+                                <div
+                                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0
+                                        transition-transform duration-200 group-hover:scale-110"
+                                    style={{ background: item.bg }}
+                                >
+                                    <item.icon
+                                        className="w-6 h-6 sm:w-[26px] sm:h-[26px] transition-colors duration-200"
+                                        style={{ color: item.color }}
+                                    />
                                 </div>
 
-                                <div className="absolute inset-0 bg-gradient-to-t from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl sm:rounded-2xl" />
+                                <div className="flex items-baseline justify-center gap-1.5 px-1 w-full">
+                                    <span className="font-black text-[13px] sm:text-[14px] leading-none tabular-nums flex-shrink-0">
+                                        {`6.${i + 1}`}
+                                    </span>
+                                    -
+                                    <p className="text-slate-700 dark:text-slate-200 font-semibold text-[11.5px] sm:text-[12.5px]
+                                        leading-tight line-clamp-2 transition-colors duration-200
+                                        group-hover:text-sky-700 dark:group-hover:text-sky-400">
+                                        {item.title}
+                                    </p>
+                                </div>
+
+                                <div
+                                    className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-200 pointer-events-none rounded-2xl"
+                                    style={{ background: item.color }}
+                                />
                             </div>
                         </Link>
                     ))}
                 </div>
-            </EnhancedCard>
+            </div>
         </div>
     );
 }

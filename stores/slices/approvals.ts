@@ -21,6 +21,12 @@ interface ApprovalsState {
     // State for approval update
     updateLoading: boolean;
     updateError: string | null;
+    // Approval history for current user
+    historyItems: ApprovalHistoryItem[];
+    historyLoading: boolean;
+    historyTotal: number;
+    historyPages: number;
+    historyError: string | null;
 }
 
 // ================== Initial State ==================
@@ -38,6 +44,11 @@ const initialState: ApprovalsState = {
     timelineError: null,
     updateLoading: false,
     updateError: null,
+    historyItems: [],
+    historyLoading: false,
+    historyTotal: 0,
+    historyPages: 0,
+    historyError: null,
 };
 
 // ================== Params Interface ==================
@@ -157,6 +168,48 @@ export const fetchApprovalsByRequestId = createAsyncThunk<
     }
 });
 
+// ── Fetch approval history for current user ────────────────────────────────
+export interface ApprovalHistoryItem {
+    id: string;
+    request_id: string;
+    request_type: string;
+    step_level: number;
+    step_name: string;
+    required_role: string;
+    remarks?: string;
+    status: string;
+    action_date?: string;
+    created_at: string;
+    [key: string]: unknown;
+}
+
+export const fetchApprovalHistory = createAsyncThunk<
+    { items: ApprovalHistoryItem[]; total: number; pages: number },
+    { page?: number; limit?: number } | void,
+    { rejectValue: string }
+>('approvals/fetchHistory', async (params, { rejectWithValue }) => {
+    try {
+        const response = await api.get('/approvals/history', {
+            params: { page: (params as any)?.page || 1, limit: (params as any)?.limit || 15 },
+        });
+        const data = response.data as any;
+        const success = data?.header?.success ?? data?.success ?? false;
+        if (!success) {
+            return rejectWithValue(
+                data?.header?.messages?.[0]?.message || data?.message || 'Failed to fetch history'
+            );
+        }
+        const raw = data?.body?.approvals ?? data?.data?.approvals;
+        if (raw && typeof raw === 'object' && 'items' in raw) {
+            return { items: raw.items ?? [], total: raw.total ?? 0, pages: raw.pages ?? 0 };
+        }
+        const items = Array.isArray(raw) ? raw : [];
+        return { items, total: items.length, pages: 1 };
+    } catch (err: any) {
+        return rejectWithValue(err?.message || 'Network error');
+    }
+});
+
 // ================== Slice ==================
 const approvalsSlice = createSlice({
     name: 'approvals',
@@ -250,6 +303,22 @@ const approvalsSlice = createSlice({
                 state.timelineLoading = false;
                 state.timelineError = action.payload || 'Failed to fetch approval timeline';
                 state.timelineApprovals = [];
+            })
+            // Approval history
+            .addCase(fetchApprovalHistory.pending, (state) => {
+                state.historyLoading = true;
+                state.historyError = null;
+            })
+            .addCase(fetchApprovalHistory.fulfilled, (state, action) => {
+                state.historyLoading = false;
+                state.historyItems = action.payload.items;
+                state.historyTotal = action.payload.total;
+                state.historyPages = action.payload.pages;
+            })
+            .addCase(fetchApprovalHistory.rejected, (state, action) => {
+                state.historyLoading = false;
+                state.historyError = action.payload || 'Failed to fetch history';
+                state.historyItems = [];
             });
     },
 });
@@ -272,4 +341,9 @@ export const selectTimelineLoading = (state: RootState) => state.approvals.timel
 export const selectTimelineError = (state: RootState) => state.approvals.timelineError;
 export const selectUpdateLoading = (state: RootState) => state.approvals.updateLoading;
 export const selectUpdateError = (state: RootState) => state.approvals.updateError;
+export const selectHistoryItems   = (state: RootState) => state.approvals.historyItems;
+export const selectHistoryLoading = (state: RootState) => state.approvals.historyLoading;
+export const selectHistoryTotal   = (state: RootState) => state.approvals.historyTotal;
+export const selectHistoryPages   = (state: RootState) => state.approvals.historyPages;
+export const selectHistoryError   = (state: RootState) => state.approvals.historyError;
 

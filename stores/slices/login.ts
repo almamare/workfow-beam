@@ -29,14 +29,17 @@ const initialState: LoginState = {
 };
 
 // Async thunk to perform login request
+const REMEMBER_ME_KEY       = 'beam_remember_me';
+const REMEMBER_USERNAME_KEY = 'beam_remember_username';
+
 export const authentication = createAsyncThunk<
     User & { token: string; mustChangePassword: boolean },
-    { username: string; password: string },
+    { username: string; password: string; rememberMe?: boolean },
     { rejectValue: string }
 >(
     'login/authentication',
     async (
-        credentials: { username: string; password: string },
+        credentials: { username: string; password: string; rememberMe?: boolean },
         { rejectWithValue }
     ) => {
         try {
@@ -78,15 +81,24 @@ export const authentication = createAsyncThunk<
                 rawUser.must_change_password === true ||
                 Boolean(body?.must_change_password);
 
-            // Secure cookies are not stored on plain HTTP (typical local MAMP); only set on HTTPS
+            const rememberMe = credentials.rememberMe ?? false;
             const useSecureCookie =
                 typeof window !== 'undefined' && window.location.protocol === 'https:';
+
             Cookies.set('token', token, {
-                expires: 1,
+                expires: rememberMe ? 30 : undefined,
                 secure: useSecureCookie,
                 sameSite: 'Strict',
                 path: '/',
             });
+
+            if (rememberMe) {
+                localStorage.setItem(REMEMBER_ME_KEY, 'true');
+                localStorage.setItem(REMEMBER_USERNAME_KEY, credentials.username);
+            } else {
+                localStorage.removeItem(REMEMBER_ME_KEY);
+                localStorage.removeItem(REMEMBER_USERNAME_KEY);
+            }
 
             if (mustChangePassword) {
                 localStorage.setItem(MUST_CHANGE_PASSWORD_KEY, 'true');
@@ -142,9 +154,11 @@ const loginSlice = createSlice({
             state.token = null;
             state.mustChangePassword = false;
             Cookies.remove('token');
-            localStorage.removeItem('user_data');
             if (typeof window !== 'undefined') {
+                localStorage.removeItem('user_data');
                 localStorage.removeItem('auth_must_change_password');
+                localStorage.removeItem(REMEMBER_ME_KEY);
+                localStorage.removeItem(REMEMBER_USERNAME_KEY);
             }
         },
         clearMustChangePassword: (state) => {

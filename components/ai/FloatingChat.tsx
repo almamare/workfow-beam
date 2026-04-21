@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '@/stores/store';
 import { aiChat } from '@/stores/slices/ai';
@@ -16,8 +17,17 @@ interface Turn {
     isError?: boolean;
 }
 
+const HIDDEN_CHAT_PREFIXES = ['/legal/'];
+
+function isChatHiddenPath(pathname: string): boolean {
+    if (pathname === '/login' || pathname === '/change-password') return true;
+    return HIDDEN_CHAT_PREFIXES.some((p) => pathname.startsWith(p));
+}
+
 export function FloatingChat() {
+    const pathname = usePathname();
     const dispatch = useDispatch<AppDispatch>();
+
     const [open, setOpen] = useState(false);
     const [input, setInput] = useState('');
     const [history, setHistory] = useState<Turn[]>([]);
@@ -103,6 +113,10 @@ export function FloatingChat() {
     };
 
     const lastTurnIsError = history.length > 0 && history[history.length - 1].isError;
+
+    if (isChatHiddenPath(pathname)) {
+        return null;
+    }
 
     return (
         <>

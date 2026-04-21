@@ -4,7 +4,9 @@ export interface TaskRequest {
     id: string;                // Unique request ID
     created_id: string;        // ID of the user who created it
     created_by_name: string;   // Name of the user who created it
-    task_order_id: string;     // Related Task Order ID
+    task_order_id: string;     // Related task order ID; for request_type "Clients" stores linked client_id
+    /** When set, preferred over task_order_id for linking to clients row */
+    client_id?: string;
     request_code: string;      // Unique request code
     request_type: string;      // Type of request (e.g., Extension, Material Change)
     status: string;            // Current status (Pending, Approved, Rejected)

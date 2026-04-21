@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { AppDispatch } from '@/stores/store';
 
 import {
@@ -16,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { SquarePen, RefreshCw, FileSpreadsheet, Eye, X, Search } from 'lucide-react';
+import { SquarePen, RefreshCw, FileSpreadsheet, Eye, X, Search, GitPullRequestArrow } from 'lucide-react';
 import type { TaskOrder } from '@/stores/types/task-orders';
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
@@ -246,6 +247,14 @@ export default function TaskOrdersPage() {
                         <p className="text-slate-600 dark:text-slate-400 mt-1">
                             Browse and manage all task orders with comprehensive filtering and management tools
                         </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Link href="/change-orders">
+                            <Button variant="outline" size="sm" className="border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:border-violet-300 dark:hover:border-violet-700">
+                                <GitPullRequestArrow className="h-4 w-4 mr-2" />
+                                Change Orders
+                            </Button>
+                        </Link>
                     </div>
                 </div>
 
