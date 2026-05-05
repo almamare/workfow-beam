@@ -30,6 +30,7 @@ import {
     Bot,
     FileCheck,
     LayoutGrid,
+    HelpCircle,
 } from 'lucide-react';
 
 /** Product name shown on the dashboard strip (matches app branding). */
@@ -60,6 +61,7 @@ const sections = [
     { title: 'Inventory', icon: Package, href: '/inventory/items', color: '#ea580c', bg: '#fff7ed' },
     { title: 'Departments', icon: Briefcase, href: '/departments', color: '#0d9488', bg: '#f0fdfa' },
     { title: 'AI Assistant', icon: Bot, href: '/ai', color: '#7c3aed', bg: '#f5f3ff' },
+    { title: 'Help Center', icon: HelpCircle, href: '/help', color: '#0284c7', bg: '#f0f9ff' },
 ];
 
 function greeting() {

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\MAMP\\\\htdocs\\\\beam\\\\frontend\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Read(//c/MAMP/htdocs/beam/**)"
+    ]
+  }
+}

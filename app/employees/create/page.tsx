@@ -152,7 +152,7 @@ const CreateEmployeePage: React.FC = () => {
             if (form.department_id) body.department_id = form.department_id;
             if (form.manager_id) body.manager_id = form.manager_id;
             if (form.status) body.status = form.status;
-            const res = await axios.post('/employees/create', body);
+            const res = await axios.post('/employees/create', { params: body });
 
             console.log(res);
             if (res?.data?.header.success) {

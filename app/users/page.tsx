@@ -34,7 +34,7 @@ export default function UsersPage() {
 
     const [search, setSearch] = useState('');
     const [status, setStatus] = useState<'All' | 'Active' | 'Inactive' | 'Blocked' | 'Pending'>('All');
-    const [type, setType] = useState<'All' | 'Accounts' | 'Employment' | 'Contracts' | 'General' | 'Financial'>('All');
+    const [type, setType] = useState<'All' | 'Executive' | 'Finance' | 'HR' | 'IT' | 'Legal' | 'Procurement' | 'Operations' | 'Quality' | 'Fleet' | 'Warehouse' | 'Contracts' | 'Audit' | 'Admin'>('All');
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -346,11 +346,19 @@ export default function UsersPage() {
                         value: type,
                         options: [
                             { key: 'All', value: 'All', label: 'All Types' },
-                            { key: 'Accounts', value: 'Accounts', label: 'Accounts' },
-                            { key: 'Employment', value: 'Employment', label: 'Employment' },
+                            { key: 'Executive', value: 'Executive', label: 'Executive' },
+                            { key: 'Finance', value: 'Finance', label: 'Finance' },
+                            { key: 'HR', value: 'HR', label: 'HR' },
+                            { key: 'IT', value: 'IT', label: 'IT' },
+                            { key: 'Legal', value: 'Legal', label: 'Legal' },
+                            { key: 'Procurement', value: 'Procurement', label: 'Procurement' },
+                            { key: 'Operations', value: 'Operations', label: 'Operations' },
+                            { key: 'Quality', value: 'Quality', label: 'Quality' },
+                            { key: 'Fleet', value: 'Fleet', label: 'Fleet' },
+                            { key: 'Warehouse', value: 'Warehouse', label: 'Warehouse' },
                             { key: 'Contracts', value: 'Contracts', label: 'Contracts' },
-                            { key: 'General', value: 'General', label: 'General' },
-                            { key: 'Financial', value: 'Financial', label: 'Financial' }
+                            { key: 'Audit', value: 'Audit', label: 'Audit' },
+                            { key: 'Admin', value: 'Admin', label: 'Admin' }
                         ],
                         onValueChange: (v) => { setType(v as any); setPage(1); }
                     }

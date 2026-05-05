@@ -4,16 +4,9 @@ import axios, { InternalAxiosRequestConfig, AxiosHeaders, AxiosError } from 'axi
 import Cookies from 'js-cookie';
 import { toast } from 'sonner';
 
-// Get API base URL from environment variable, fallback to default for development
-const getApiBaseUrl = (): string => {
-    const directApiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.mofeia.com/api/v1';
-    if (typeof window !== 'undefined') {
-        // Client-side: default to same-origin proxy to avoid browser CORS blocks.
-        return process.env.NEXT_PUBLIC_API_PROXY_BASE || '/api-proxy';
-    }
-    // Server-side: call API directly.
-    return directApiBase;
-};
+// API base URL — browser and server call the API directly (no Next.js /api-proxy rewrite).
+const getApiBaseUrl = (): string =>
+    process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost/beam/api/v1';
 
 const instance = axios.create({
     baseURL: getApiBaseUrl(),

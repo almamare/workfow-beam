@@ -52,7 +52,7 @@ const initialValues: UserPayload = {
     name: '',
     surname: '',
     phone: '',
-    type: 'General',
+    type: 'Admin',
     status: 'Active',
 };
 
@@ -94,7 +94,7 @@ const UpdateUserPageContent: React.FC = () => {
                     name: String(u.name ?? ''),
                     surname: String(u.surname ?? ''),
                     phone: String(u.phone ?? ''),
-                    type: String(u.type ?? 'General'),
+                    type: String(u.type ?? 'Admin'),
                     status: String(u.status ?? 'Active'),
                     role_id: u.role_id != null ? Number(u.role_id) : undefined,
                     department_id: u.department_id != null ? String(u.department_id) : undefined,
@@ -350,11 +350,9 @@ const UpdateUserPageContent: React.FC = () => {
                                         <SelectValue placeholder="Select Type" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
-                                        <SelectItem value="Accounts" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">Accounts</SelectItem>
-                                        <SelectItem value="Employment" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">Employment</SelectItem>
-                                        <SelectItem value="Contracts" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">Contracts</SelectItem>
-                                        <SelectItem value="General" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">General</SelectItem>
-                                        <SelectItem value="Financial" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">Financial</SelectItem>
+                                        {['Executive','Finance','HR','IT','Legal','Procurement','Operations','Quality','Fleet','Warehouse','Contracts','Audit','Admin'].map((t) => (
+                                            <SelectItem key={t} value={t} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">{t}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                                 {fieldErrors.type && (

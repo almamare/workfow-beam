@@ -59,6 +59,7 @@ import {
     LineChart,
     FileSearch,
     LayoutDashboard,
+    HelpCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -83,7 +84,7 @@ const iconLibrary: Record<string, any> = {
     Plus, Eye, List, Edit, Trash2, FileArchive, Landmark, Receipt,
     ChevronDown, ChevronRight, CheckCircle, Clock, XCircle, KeyRound,
     Bot, Sparkles, MessageSquare, ShieldAlert, Brain, Search, LineChart,
-    FileSearch, LayoutDashboard,
+    FileSearch, LayoutDashboard, HelpCircle,
 };
 
 // Flexible route configuration - completely flexible system
@@ -229,6 +230,15 @@ const routeMapping: Record<string, string> = {
 
     // AI sub-pages - each maps to its own config (no mapping needed, exact match in routeConfig)
 
+    // Help sub-pages
+    '/help/getting-started': '/help',
+    '/help/modules': '/help',
+    '/help/navigation': '/help',
+    '/help/departments': '/help',
+    '/help/roles': '/help',
+    '/help/workflows': '/help',
+    '/help/credentials': '/help',
+    '/help/faq': '/help',
 };
 
 const routeConfig: Record<string, {
@@ -616,6 +626,22 @@ const routeConfig: Record<string, {
             { href: '/ai/insights', title: 'Dashboard Insights', icon: 'LayoutDashboard', color: 'text-violet-400' },
         ]
     },
+    '/help': {
+        title: 'Help Center',
+        icon: 'HelpCircle',
+        color: 'text-sky-400',
+        menuItems: [
+            { href: '/help', title: 'Help Center', icon: 'HelpCircle', color: 'text-sky-400' },
+            { href: '/help/getting-started', title: 'Getting Started', icon: 'FileText', color: 'text-indigo-400' },
+            { href: '/help/modules', title: 'System Modules', icon: 'Package', color: 'text-violet-400' },
+            { href: '/help/navigation', title: 'Navigation Guide', icon: 'LayoutDashboard', color: 'text-cyan-400' },
+            { href: '/help/departments', title: 'Departments', icon: 'Building', color: 'text-blue-400' },
+            { href: '/help/roles', title: 'Roles & Permissions', icon: 'Shield', color: 'text-amber-400' },
+            { href: '/help/workflows', title: 'Workflows', icon: 'Activity', color: 'text-teal-400' },
+            { href: '/help/credentials', title: 'Login Credentials', icon: 'KeyRound', color: 'text-emerald-400' },
+            { href: '/help/faq', title: 'FAQ', icon: 'MessageSquare', color: 'text-pink-400' },
+        ]
+    },
 };
 
 interface SidebarProps {
@@ -730,30 +756,24 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
     // Check if route is active - exact match including search params
     const isActive = (href: string) => {
         try {
-            // Parse href to get pathname and search params
             const url = new URL(href, 'http://localhost');
             const hrefPath = url.pathname;
-            const hrefStatus = url.searchParams.get('status');
-            
-            // Check if pathname matches exactly
+
             if (hrefPath !== pathname) {
                 return false;
             }
-            
-            // Get current status from search params
-            const currentStatus = searchParams.get('status');
-            
-            // If href has status param, check if it matches current status
-            if (hrefStatus !== null) {
-                return currentStatus === hrefStatus;
+
+            // Compare all search params from href against current URL
+            const hrefParams = url.searchParams;
+            const paramKeys = Array.from(hrefParams.keys());
+
+            if (paramKeys.length === 0) {
+                // href has no params → only active when current URL also has none of the tracked params
+                return searchParams.get('status') === null && searchParams.get('tab') === null;
             }
-            
-            // If href doesn't have status param, check if current page also doesn't have status
-            // This means the base route (without status filter) is active
-            // For pages like /requests/clients/pending, they don't have status params, so just check pathname match
-            return currentStatus === null;
+
+            return paramKeys.every(key => searchParams.get(key) === hrefParams.get(key));
         } catch (e) {
-            // Fallback to simple pathname check if URL parsing fails
             const hrefPathOnly = href.split('?')[0];
             return hrefPathOnly === pathname;
         }
