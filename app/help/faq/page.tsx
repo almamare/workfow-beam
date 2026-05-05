@@ -40,7 +40,7 @@ export default function FaqPage() {
                     />
                 </div>
 
-                <Badge variant="secondary">{filtered.length} question{filtered.length !== 1 && 's'}</Badge>
+                <Badge variant="default">{filtered.length} question{filtered.length !== 1 && 's'}</Badge>
 
                 {filtered.length > 0 ? (
                     <div className="space-y-3">

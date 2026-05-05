@@ -101,7 +101,7 @@ export default function CredentialsPage() {
                                         <span className="block text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{r.label}</span>
                                     </td>
                                     <td className="py-2.5 px-3">
-                                        <Badge variant="secondary" className={cn('text-[11px] font-medium', TYPE_COLORS[r.type])}>
+                                        <Badge variant="default" className={cn('text-[11px] font-medium', TYPE_COLORS[r.type])}>
                                             {r.type}
                                         </Badge>
                                     </td>
@@ -121,7 +121,7 @@ export default function CredentialsPage() {
                                         <code className="font-mono text-xs text-slate-500 dark:text-slate-400">{r.username}@beam.local</code>
                                     </td>
                                     <td className="py-2.5 px-3">
-                                        <Badge variant="secondary" className={cn('text-[11px] font-medium', TYPE_COLORS[r.type])}>
+                                        <Badge variant="default" className={cn('text-[11px] font-medium', TYPE_COLORS[r.type])}>
                                             {r.type}
                                         </Badge>
                                     </td>

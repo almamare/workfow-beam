@@ -21,7 +21,7 @@ export default function DepartmentsHelpPage() {
             />
 
             <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-sm">
+                <Badge variant="default" className="text-sm">
                     {DEPARTMENTS.length} of {DEPARTMENTS.length}
                 </Badge>
             </div>
@@ -49,7 +49,7 @@ export default function DepartmentsHelpPage() {
                                         <h3 className="font-semibold text-slate-800 dark:text-slate-200 truncate">
                                             {dept.name}
                                         </h3>
-                                        <Badge variant="secondary" className="text-[10px] shrink-0">
+                                        <Badge variant="default" className="text-[10px] shrink-0">
                                             {dept.roles.length} {dept.roles.length === 1 ? 'role' : 'roles'}
                                         </Badge>
                                     </div>
@@ -87,7 +87,7 @@ export default function DepartmentsHelpPage() {
                                         </h4>
                                         <div className="flex flex-wrap gap-1.5">
                                             {dept.heads.map((head) => (
-                                                <Badge key={head} variant="secondary" className="text-xs">
+                                                <Badge key={head} variant="default" className="text-xs">
                                                     {head}
                                                 </Badge>
                                             ))}

@@ -34,7 +34,7 @@ export default function WorkflowsPage() {
                     (sending it back to you with comments). Records must be approved at each level before they become active.
                 </p>
                 <div className="pt-1">
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="default" className="text-xs">
                         {WORKFLOW_STEPS.length} workflows
                     </Badge>
                 </div>
@@ -88,7 +88,7 @@ export default function WorkflowsPage() {
                                                             {step.actor}
                                                         </span>
                                                         <Badge
-                                                            variant="secondary"
+                                                            variant="default"
                                                             className={cn(
                                                                 'text-[10px]',
                                                                 isLast
