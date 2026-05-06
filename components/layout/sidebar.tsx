@@ -1,0 +1,1106 @@
+'use client';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useSelector, useDispatch } from 'react-redux';
+import { AppDispatch } from '@/stores/store';
+import { selectClientsRequestsForApprovalTotal, fetchClientsRequestsForApproval } from '@/stores/slices/clients_requests_for_approval';
+import {
+    Home,
+    Users,
+    FileText,
+    DollarSign,
+    FolderOpen,
+    Package,
+    Shield,
+    X,
+    Wallet,
+    Contact,
+    Settings,
+    Megaphone,
+    Building,
+    Building2,
+    TrendingUp,
+    Activity,
+    ArrowLeft,
+    Calculator,
+    ClipboardList,
+    UserCheck,
+    FileEdit,
+    CreditCard,
+    FileCheck,
+    Banknote,
+    BarChart3,
+    PieChart,
+    History,
+    UserCircle,
+    Plus,
+    Eye,
+    List,
+    Edit,
+    Trash2,
+    FileArchive,
+    Landmark,
+    Receipt,
+    ChevronDown,
+    ChevronRight,
+    CheckCircle,
+    Clock,
+    XCircle,
+    KeyRound,
+    Inbox,
+    Bot,
+    Sparkles,
+    MessageSquare,
+    ShieldAlert,
+    Brain,
+    Search,
+    LineChart,
+    FileSearch,
+    LayoutDashboard,
+    HelpCircle,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
+
+interface MenuItem {
+    title: string;
+    icon: React.ReactNode;
+    href: string;
+    color?: string;
+    badge?: number; // Badge count for menu items
+    subItems?: { href: string; title: string; icon?: React.ReactNode; color?: string }[];
+}
+
+// General icon library - reusable icons that can be used anywhere
+const iconLibrary: Record<string, any> = {
+    Home, Users, FileText, DollarSign, FolderOpen, Package, Shield,
+    Wallet, Contact, Settings, Megaphone, Building, Building2, TrendingUp, Inbox,
+    Activity, Calculator, ClipboardList, UserCheck, FileEdit,
+    CreditCard, FileCheck, Banknote, BarChart3, PieChart, History, UserCircle,
+    Plus, Eye, List, Edit, Trash2, FileArchive, Landmark, Receipt,
+    ChevronDown, ChevronRight, CheckCircle, Clock, XCircle, KeyRound,
+    Bot, Sparkles, MessageSquare, ShieldAlert, Brain, Search, LineChart,
+    FileSearch, LayoutDashboard, HelpCircle,
+};
+
+// Flexible route configuration - completely flexible system
+// Each route can have ANY pages added to its sidebar menu
+// No dependency on path or hierarchy - add any page to any page
+
+// Route mapping - maps related pages to their parent route config
+// Pages in this map will use the same sidebar menu as their parent route
+const routeMapping: Record<string, string> = {
+    // Projects related pages
+    '/projects/create': '/projects',
+    '/projects/update': '/projects',
+    '/projects/details': '/projects',
+    '/projects/tender/create': '/projects',
+    '/projects/tender/update': '/projects',
+    '/budgets': '/projects',
+    '/requests/projects': '/projects',
+    '/requests/projects/pending': '/projects',
+    '/requests/projects/approved': '/projects',
+    '/requests/projects/rejected': '/projects',
+    '/requests/projects/details': '/projects',
+    '/requests/projects/timeline': '/projects',
+
+    // Project contracts — own sidebar
+    '/requests/project-contracts': '/tasks/contracts',
+    '/requests/project-contracts/pending': '/tasks/contracts',
+    '/requests/project-contracts/approved': '/tasks/contracts',
+    '/requests/project-contracts/rejected': '/tasks/contracts',
+    '/requests/project-contracts/details': '/tasks/contracts',
+    '/requests/project-contracts/timeline': '/tasks/contracts',
+    '/project-contracts': '/tasks/contracts',
+    '/project-contracts/create': '/tasks/contracts',
+    '/project-contracts/update': '/tasks/contracts',
+    '/project-contracts/details': '/tasks/contracts',
+
+    // Clients related pages
+    '/clients/create': '/clients',
+    '/clients/update': '/clients',
+    '/clients/details': '/clients',
+    '/requests/clients': '/clients',
+    '/requests/clients/pending': '/clients',
+    '/requests/clients/approved': '/clients',
+    '/requests/clients/rejected': '/clients',
+    '/requests/clients/details': '/clients',
+    '/requests/clients/timeline': '/clients',
+    '/client-contracts': '/tasks/client-contracts',
+    '/client-contracts/create': '/tasks/client-contracts',
+    '/client-contracts/update': '/tasks/client-contracts',
+    '/client-contracts/details': '/tasks/client-contracts',
+    
+    // Contractors — own sidebar
+    '/contractors': '/tasks/contractors',
+    '/contractors/create': '/tasks/contractors',
+    '/contractors/update': '/tasks/contractors',
+    '/contractors/details': '/tasks/contractors',
+    
+    // Task Orders list
+    '/tasks/list': '/tasks/list',
+    '/tasks/create': '/tasks/list',
+    '/tasks/update': '/tasks/list',
+    '/tasks/details': '/tasks/list',
+
+    // Change Orders — own sidebar
+    '/change-orders': '/tasks/change-orders',
+    '/change-orders/create': '/tasks/change-orders',
+    '/change-orders/details': '/tasks/change-orders',
+
+    // Task Requests — own sidebar
+    '/requests/tasks': '/tasks/requests',
+    '/requests/tasks/pending': '/tasks/requests',
+    '/requests/tasks/approved': '/tasks/requests',
+    '/requests/tasks/rejected': '/tasks/requests',
+    '/requests/tasks/details': '/tasks/requests',
+    '/requests/tasks/timeline': '/tasks/requests',
+    
+    // Users related pages
+    '/users/create': '/users',
+    '/users/update': '/users',
+    '/users/details': '/users',
+    '/users/permissions': '/users',
+    '/employees': '/users',
+    '/employees/create': '/users',
+    '/employees/update': '/users',
+    '/employees/details': '/users',
+    '/roles': '/users',
+    
+    // Departments related pages
+    '/departments': '/users',
+    // Permissions related pages
+    '/permissions': '/users',
+    '/permissions/details': '/users',
+
+    // Requests related pages
+    '/requests/employees': '/requests',
+    '/approvals': '/requests',
+    
+    // Financial sub-process pages - each maps to its own config
+    '/requests/financial/details': '/requests/financial',
+    '/requests/financial/timeline': '/requests/financial',
+    '/financial/disbursements/new': '/financial/disbursements',
+    '/financial/disbursements/inbox': '/financial/disbursements',
+    
+    // Inventory related pages
+    '/inventory/items': '/inventory',
+    '/inventory/transactions': '/inventory',
+    
+    // Settings related pages
+    '/profile': '/settings',
+    '/notifications': '/settings',
+    '/history': '/settings',
+    
+    // Forms related pages
+    '/forms/create': '/forms',
+    '/forms/update': '/forms',
+    '/forms/details': '/forms',
+    
+    // Documents related pages
+    '/documents/create': '/documents',
+    '/documents/update': '/documents',
+    '/documents/details': '/documents',
+    
+    // Banks related pages
+    '/banks/create': '/banks',
+    '/banks/update': '/banks',
+    '/banks/details': '/banks',
+    
+    // Invoices related pages
+    '/invoices/create': '/invoices',
+    '/invoices/update': '/invoices',
+    '/invoices/details': '/invoices',
+    
+    // Bank Balances related pages - now under banks
+    '/bank-balances/create': '/banks',
+    '/bank-balances/update': '/banks',
+    '/bank-balances/details': '/banks',
+    '/bank-balances/bank': '/banks',
+    '/bank-balances': '/banks',
+
+    // Exchange (formerly Sarrafat) related pages - now under banks
+    '/sarrafat/create': '/banks',
+    '/sarrafat/update': '/banks',
+    '/sarrafat/details': '/banks',
+    '/sarrafat': '/banks',
+
+    // Exchange Balances (formerly Sarraf Balances) related pages - now under banks
+    '/sarraf-balances/create': '/banks',
+    '/sarraf-balances/update': '/banks',
+    '/sarraf-balances/details': '/banks',
+    '/sarraf-balances/sarraf': '/banks',
+    '/sarraf-balances': '/banks',
+
+    // AI sub-pages - each maps to its own config (no mapping needed, exact match in routeConfig)
+
+    // Help sub-pages
+    '/help/getting-started': '/help',
+    '/help/modules': '/help',
+    '/help/navigation': '/help',
+    '/help/departments': '/help',
+    '/help/roles': '/help',
+    '/help/workflows': '/help',
+    '/help/credentials': '/help',
+    '/help/faq': '/help',
+};
+
+const routeConfig: Record<string, {
+    title: string;
+    icon: string;
+    color: string;
+    backLink?: { href: string; title: string };
+    menuItems: {
+        href: string;
+        title: string;
+        icon: string;
+        color: string;
+        subItems?: { href: string; title: string; icon?: string; color?: string }[];
+    }[]
+}> = {
+    '/projects': {
+        title: 'Projects',
+        icon: 'FolderOpen',
+        color: 'text-indigo-400',
+        menuItems: [
+            { href: '/projects', title: 'All Projects List', icon: 'FolderOpen', color: 'text-indigo-400' },
+            { href: '/requests/projects/pending', title: 'Pending Requests', icon: 'Clock', color: 'text-amber-400' },
+            { href: '/requests/projects/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
+            { href: '/requests/projects/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
+            { href: '/projects/create', title: 'Create Project', icon: 'Plus', color: 'text-green-400' },
+            { href: '/budgets', title: 'Budgets', icon: 'TrendingUp', color: 'text-teal-400' },
+        ]
+    },
+    '/clients': {
+        title: 'Clients',
+        icon: 'Users',
+        color: 'text-purple-400',
+        menuItems: [
+            { href: '/clients', title: 'All Clients List', icon: 'Users', color: 'text-purple-400' },
+            { href: '/requests/clients/pending', title: 'Pending Requests', icon: 'Clock', color: 'text-amber-400' },
+            { href: '/requests/clients/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
+            { href: '/requests/clients/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
+            { href: '/clients/create', title: 'Create Client', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    // Task Orders — each section has its own isolated sidebar
+    '/tasks/list': {
+        title: 'Task Orders',
+        icon: 'ClipboardList',
+        color: 'text-yellow-400',
+        backLink: { href: '/tasks', title: 'Back to Task Orders' },
+        menuItems: [
+            { href: '/tasks/list', title: 'All Task Orders', icon: 'ClipboardList', color: 'text-yellow-400' },
+            { href: '/tasks/create', title: 'Create Task Order', icon: 'Plus', color: 'text-green-400' },
+        ]
+    },
+    '/tasks/change-orders': {
+        title: 'Change Orders',
+        icon: 'FileEdit',
+        color: 'text-violet-400',
+        backLink: { href: '/tasks', title: 'Back to Task Orders' },
+        menuItems: [
+            { href: '/change-orders', title: 'All Change Orders', icon: 'FileEdit', color: 'text-violet-400' },
+            { href: '/change-orders/create', title: 'Create Change Order', icon: 'Plus', color: 'text-green-400' },
+        ]
+    },
+    '/tasks/contractors': {
+        title: 'Contractors',
+        icon: 'Building',
+        color: 'text-sky-400',
+        backLink: { href: '/tasks', title: 'Back to Task Orders' },
+        menuItems: [
+            { href: '/contractors', title: 'All Contractors', icon: 'Building', color: 'text-sky-400' },
+            { href: '/contractors/create', title: 'Create Contractor', icon: 'Plus', color: 'text-green-400' },
+        ]
+    },
+    '/tasks/contracts': {
+        title: 'Project Contracts',
+        icon: 'FileCheck',
+        color: 'text-teal-400',
+        backLink: { href: '/tasks', title: 'Back to Task Orders' },
+        menuItems: [
+            { href: '/project-contracts', title: 'All Project Contracts', icon: 'FileCheck', color: 'text-teal-400' },
+            { href: '/requests/project-contracts/pending', title: 'Pending Requests', icon: 'Clock', color: 'text-amber-400' },
+            { href: '/requests/project-contracts/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
+            { href: '/requests/project-contracts/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
+            { href: '/project-contracts/create', title: 'Create Contract', icon: 'Plus', color: 'text-green-400' },
+        ]
+    },
+    '/tasks/client-contracts': {
+        title: 'Client Contracts',
+        icon: 'FileText',
+        color: 'text-emerald-400',
+        backLink: { href: '/tasks', title: 'Back to Task Orders' },
+        menuItems: [
+            { href: '/client-contracts', title: 'All Client Contracts', icon: 'FileText', color: 'text-emerald-400' },
+            { href: '/client-contracts/create', title: 'Create Client Contract', icon: 'Plus', color: 'text-green-400' },
+        ]
+    },
+    '/tasks/requests': {
+        title: 'Task Requests',
+        icon: 'FileText',
+        color: 'text-amber-400',
+        backLink: { href: '/tasks', title: 'Back to Task Orders' },
+        menuItems: [
+            { href: '/requests/tasks/pending', title: 'Pending Requests', icon: 'Clock', color: 'text-yellow-400' },
+            { href: '/requests/tasks/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
+            { href: '/requests/tasks/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
+        ]
+    },
+    '/users': {
+        title: 'Users',
+        icon: 'Users',
+        color: 'text-blue-400',
+        menuItems: [
+            { href: '/users', title: 'All Users List', icon: 'Users', color: 'text-blue-400' },
+            { href: '/employees', title: 'Employees', icon: 'UserCheck', color: 'text-emerald-400' },
+            { href: '/roles', title: 'Roles', icon: 'Shield', color: 'text-amber-400' },
+            { href: '/permissions', title: 'Permissions', icon: 'KeyRound', color: 'text-cyan-400' },
+            { href: '/departments', title: 'Departments', icon: 'Building', color: 'text-violet-400' },
+            { href: '/users/create', title: 'Create User', icon: 'Plus', color: 'text-green-400' },
+            { href: '/employees/create', title: 'Create Employee', icon: 'Plus', color: 'text-green-400' },
+            { href: '/departments/create', title: 'Create Department', icon: 'Plus', color: 'text-green-400' },
+        ]
+    },
+    '/requests': {
+        title: 'Requests',
+        icon: 'FileText',
+        color: 'text-yellow-400',
+        menuItems: [
+            { href: '/requests/tasks', title: 'Task Requests', icon: 'FileEdit', color: 'text-yellow-400' },
+            { href: '/requests/employees', title: 'Employee Requests', icon: 'Contact', color: 'text-purple-400' },
+            { href: '/approvals', title: 'Approvals', icon: 'FileCheck', color: 'text-rose-400' }
+        ]
+    },
+    // Financial - each process has its own isolated sidebar
+    '/requests/financial': {
+        title: 'Financial Requests',
+        icon: 'CreditCard',
+        color: 'text-emerald-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/requests/financial', title: 'All Requests', icon: 'CreditCard', color: 'text-emerald-400' },
+            { href: '/requests/financial?status=Pending', title: 'Pending', icon: 'Clock', color: 'text-yellow-400' },
+            { href: '/requests/financial?status=Approved', title: 'Approved', icon: 'CheckCircle', color: 'text-green-400' },
+            { href: '/requests/financial?status=Rejected', title: 'Rejected', icon: 'XCircle', color: 'text-red-400' },
+        ]
+    },
+    '/financial/disbursements': {
+        title: 'Disbursements',
+        icon: 'Banknote',
+        color: 'text-sky-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/disbursements', title: 'All Disbursements', icon: 'Banknote', color: 'text-sky-400' },
+            { href: '/financial/disbursements/new', title: 'New Disbursement', icon: 'Plus', color: 'text-green-400' },
+            { href: '/financial/disbursements/inbox', title: 'Disbursement Inbox', icon: 'Inbox', color: 'text-amber-400' },
+        ]
+    },
+    '/financial/petty-cash': {
+        title: 'Petty Cash',
+        icon: 'Landmark',
+        color: 'text-emerald-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/petty-cash', title: 'Petty Cash', icon: 'Landmark', color: 'text-emerald-400' },
+        ]
+    },
+    '/financial/ledger': {
+        title: 'Financial Ledger',
+        icon: 'BarChart3',
+        color: 'text-cyan-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/ledger', title: 'Financial Ledger', icon: 'BarChart3', color: 'text-cyan-400' },
+        ]
+    },
+    '/financial/contractor-payments': {
+        title: 'Contractor Payments',
+        icon: 'Banknote',
+        color: 'text-teal-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/contractor-payments', title: 'Contractor Payments', icon: 'Banknote', color: 'text-teal-400' },
+        ]
+    },
+    '/financial/cash-ledger': {
+        title: 'Cash Ledger',
+        icon: 'BarChart3',
+        color: 'text-indigo-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/cash-ledger', title: 'Cash Ledger', icon: 'BarChart3', color: 'text-indigo-400' },
+        ]
+    },
+    '/financial/budgets': {
+        title: 'Project Budgets',
+        icon: 'TrendingUp',
+        color: 'text-violet-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/budgets', title: 'Project Budgets', icon: 'TrendingUp', color: 'text-violet-400' },
+        ]
+    },
+    '/financial/loans': {
+        title: 'Loans',
+        icon: 'DollarSign',
+        color: 'text-rose-400',
+        backLink: { href: '/financial', title: 'Back to Financial' },
+        menuItems: [
+            { href: '/financial/loans', title: 'Loans', icon: 'DollarSign', color: 'text-rose-400' },
+        ]
+    },
+    '/inventory': {
+        title: 'Inventory',
+        icon: 'Package',
+        color: 'text-sky-400',
+        menuItems: [
+            { href: '/inventory/items', title: 'Items', icon: 'Package', color: 'text-sky-400' },
+            { href: '/inventory/transactions', title: 'Transactions', icon: 'FileText', color: 'text-amber-400' },
+            { href: '/inventory/items', title: 'Add Item', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/forms': {
+        title: 'Forms',
+        icon: 'FileText',
+        color: 'text-cyan-400',
+        menuItems: [
+            { href: '/forms', title: 'Forms', icon: 'FileText', color: 'text-cyan-400' },
+            { href: '/forms/create', title: 'Create Form', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/documents': {
+        title: 'Documents',
+        icon: 'FileArchive',
+        color: 'text-emerald-400',
+        menuItems: [
+            { href: '/documents', title: 'Documents', icon: 'FileArchive', color: 'text-emerald-400' },
+            { href: '/documents/create', title: 'Add Document', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/banks': {
+        title: 'Banks',
+        icon: 'Landmark',
+        color: 'text-cyan-400',
+        menuItems: [
+            { href: '/banks', title: 'All Banks List', icon: 'Landmark', color: 'text-cyan-400' },
+            { href: '/banks/create', title: 'Create Bank', icon: 'Plus', color: 'text-green-400' },
+            { href: '/sarrafat', title: 'Exchange List', icon: 'Building2', color: 'text-sky-400' },
+            { href: '/sarrafat/create', title: 'Create Exchange', icon: 'Plus', color: 'text-green-400' },
+            { href: '/sarraf-balances', title: 'Exchange Balance', icon: 'Wallet', color: 'text-amber-500' },
+            { href: '/sarraf-balances/create', title: 'Create Exchange Balance', icon: 'Plus', color: 'text-green-400' },
+            { href: '/bank-balances', title: 'Bank Balance', icon: 'CreditCard', color: 'text-amber-400' },
+            { href: '/bank-balances/create', title: 'Create Bank Balance', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/invoices': {
+        title: 'Invoices',
+        icon: 'Receipt',
+        color: 'text-rose-400',
+        menuItems: [
+            { href: '/invoices', title: 'Invoices', icon: 'Receipt', color: 'text-rose-400' },
+            { href: '/invoices/create', title: 'Add Invoice', icon: 'Plus', color: 'text-green-400' }
+        ]
+    },
+    '/timeline': {
+        title: 'Timeline',
+        icon: 'History',
+        color: 'text-slate-400',
+        menuItems: [
+            { href: '/timeline', title: 'Timeline', icon: 'History', color: 'text-slate-400' },
+        ]
+    },
+    '/settings': {
+        title: 'Settings',
+        icon: 'Settings',
+        color: 'text-gray-400',
+        menuItems: [
+            { href: '/settings', title: 'General Settings', icon: 'Settings', color: 'text-gray-400' },
+            { href: '/profile', title: 'Profile', icon: 'UserCircle', color: 'text-pink-400' },
+            { href: '/notifications', title: 'Notifications', icon: 'Megaphone', color: 'text-pink-400' },
+            { href: '/history', title: 'History', icon: 'History', color: 'text-slate-400' }
+        ]
+    },
+    '/reports': {
+        title: 'Reports',
+        icon: 'BarChart3',
+        color: 'text-sky-400',
+        menuItems: [
+            { href: '/reports', title: 'All Reports', icon: 'BarChart3', color: 'text-sky-400' },
+        ]
+    },
+    '/statistics': {
+        title: 'Statistics',
+        icon: 'PieChart',
+        color: 'text-fuchsia-400',
+        menuItems: [
+            { href: '/statistics', title: 'Statistics Overview', icon: 'PieChart', color: 'text-fuchsia-400' },
+        ]
+    },
+    '/analysis': {
+        title: 'Analysis',
+        icon: 'TrendingUp',
+        color: 'text-lime-400',
+        menuItems: [
+            { href: '/analysis', title: 'Analysis Dashboard', icon: 'TrendingUp', color: 'text-lime-400' },
+        ]
+    },
+    // AI - each operation has its own isolated sidebar
+    '/ai/chat': {
+        title: 'AI Chat',
+        icon: 'MessageSquare',
+        color: 'text-sky-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/chat', title: 'AI Chat', icon: 'MessageSquare', color: 'text-sky-400' },
+        ]
+    },
+    '/ai/financial': {
+        title: 'Financial Analysis',
+        icon: 'BarChart3',
+        color: 'text-green-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/financial', title: 'Financial Analysis', icon: 'BarChart3', color: 'text-green-400' },
+        ]
+    },
+    '/ai/projects': {
+        title: 'Project Analysis',
+        icon: 'FolderOpen',
+        color: 'text-indigo-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/projects', title: 'Project Analysis', icon: 'FolderOpen', color: 'text-indigo-400' },
+        ]
+    },
+    '/ai/employees': {
+        title: 'Employee Performance',
+        icon: 'UserCheck',
+        color: 'text-emerald-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/employees', title: 'Employee Performance', icon: 'UserCheck', color: 'text-emerald-400' },
+        ]
+    },
+    '/ai/reports': {
+        title: 'Smart Reports',
+        icon: 'FileText',
+        color: 'text-cyan-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/reports', title: 'Smart Reports', icon: 'FileText', color: 'text-cyan-400' },
+        ]
+    },
+    '/ai/anomalies': {
+        title: 'Anomaly Detection',
+        icon: 'ShieldAlert',
+        color: 'text-red-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/anomalies', title: 'Anomaly Detection', icon: 'ShieldAlert', color: 'text-red-400' },
+        ]
+    },
+    '/ai/query': {
+        title: 'Data Query',
+        icon: 'Search',
+        color: 'text-amber-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/query', title: 'Data Query', icon: 'Search', color: 'text-amber-400' },
+        ]
+    },
+    '/ai/approvals': {
+        title: 'Approval Advisor',
+        icon: 'Brain',
+        color: 'text-pink-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/approvals', title: 'Approval Advisor', icon: 'Brain', color: 'text-pink-400' },
+        ]
+    },
+    '/ai/tenders': {
+        title: 'Tender Evaluation',
+        icon: 'FileSearch',
+        color: 'text-orange-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/tenders', title: 'Tender Evaluation', icon: 'FileSearch', color: 'text-orange-400' },
+        ]
+    },
+    '/ai/forecast': {
+        title: 'Forecast',
+        icon: 'LineChart',
+        color: 'text-teal-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/forecast', title: 'Forecast', icon: 'LineChart', color: 'text-teal-400' },
+        ]
+    },
+    '/ai/summarize': {
+        title: 'Summarize',
+        icon: 'Sparkles',
+        color: 'text-fuchsia-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/summarize', title: 'Summarize', icon: 'Sparkles', color: 'text-fuchsia-400' },
+        ]
+    },
+    '/ai/insights': {
+        title: 'Dashboard Insights',
+        icon: 'LayoutDashboard',
+        color: 'text-violet-400',
+        backLink: { href: '/ai', title: 'Back to AI' },
+        menuItems: [
+            { href: '/ai/insights', title: 'Dashboard Insights', icon: 'LayoutDashboard', color: 'text-violet-400' },
+        ]
+    },
+    '/help': {
+        title: 'Help Center',
+        icon: 'HelpCircle',
+        color: 'text-sky-400',
+        menuItems: [
+            { href: '/help', title: 'Help Center', icon: 'HelpCircle', color: 'text-sky-400' },
+            { href: '/help/getting-started', title: 'Getting Started', icon: 'FileText', color: 'text-indigo-400' },
+            { href: '/help/modules', title: 'System Modules', icon: 'Package', color: 'text-violet-400' },
+            { href: '/help/navigation', title: 'Navigation Guide', icon: 'LayoutDashboard', color: 'text-cyan-400' },
+            { href: '/help/departments', title: 'Departments', icon: 'Building', color: 'text-blue-400' },
+            { href: '/help/roles', title: 'Roles & Permissions', icon: 'Shield', color: 'text-amber-400' },
+            { href: '/help/workflows', title: 'Workflows', icon: 'Activity', color: 'text-teal-400' },
+            { href: '/help/credentials', title: 'Login Credentials', icon: 'KeyRound', color: 'text-emerald-400' },
+            { href: '/help/faq', title: 'FAQ', icon: 'MessageSquare', color: 'text-pink-400' },
+        ]
+    },
+};
+
+interface SidebarProps {
+    collapsed: boolean;
+    onToggle: () => void;
+    mobileOpen?: boolean;
+    setMobileOpen?: (open: boolean) => void;
+}
+
+export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: SidebarProps) {
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const dispatch = useDispatch<AppDispatch>();
+    const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({});
+    
+    // Get pending approvals count for clients
+    const pendingApprovalsCount = useSelector(selectClientsRequestsForApprovalTotal);
+    
+    // Fetch pending approvals count when sidebar mounts (only fetch count, limit to 1 item)
+    // But only if we're NOT on the pending page to avoid clearing data
+    useEffect(() => {
+        // Don't fetch if we're already on the pending page - let the page handle its own data fetching
+        if (pathname !== '/requests/clients/pending') {
+            dispatch(fetchClientsRequestsForApproval({ page: 1, limit: 1, countOnly: true }));
+        }
+    }, [dispatch, pathname]);
+
+    // Auto-open collapsible if current path matches a subItem
+    useEffect(() => {
+        const currentStatus = searchParams.get('status');
+        if (currentStatus && pathname === '/requests/clients') {
+            setOpenCollapsibles(prev => ({ ...prev, '/requests/clients': true }));
+        }
+        if (currentStatus && pathname === '/requests/tasks') {
+            setOpenCollapsibles(prev => ({ ...prev, '/requests/tasks': true }));
+        }
+        if (currentStatus && pathname === '/requests/financial') {
+            setOpenCollapsibles(prev => ({ ...prev, '/requests/financial': true }));
+        }
+    }, [pathname, searchParams]);
+
+    // Find current route and its configuration - find parent route for sub-pages
+    const currentRoute = useMemo(() => {
+        // Check route mapping first (for pages that should use another route's config)
+        if (routeMapping[pathname] && routeConfig[routeMapping[pathname]]) {
+            return { path: routeMapping[pathname], config: routeConfig[routeMapping[pathname]] };
+        }
+
+        // Try exact match
+        if (routeConfig[pathname]) {
+            return { path: pathname, config: routeConfig[pathname] };
+        }
+
+        // Find parent route by checking path segments for sub-pages
+        const pathSegments = pathname.split('/').filter(Boolean);
+        for (let i = pathSegments.length; i > 0; i--) {
+            const testPath = '/' + pathSegments.slice(0, i).join('/');
+            // Check if this path is mapped to another route
+            if (routeMapping[testPath] && routeConfig[routeMapping[testPath]]) {
+                return { path: routeMapping[testPath], config: routeConfig[routeMapping[testPath]] };
+            }
+            // Check if this path has its own config
+            if (routeConfig[testPath]) {
+                return { path: testPath, config: routeConfig[testPath] };
+            }
+        }
+
+        return { path: '', config: null };
+    }, [pathname]);
+
+    // Build menu items from configuration - only sub-pages (menuItems), no base route
+    const menuItems = useMemo<MenuItem[]>(() => {
+        const items: MenuItem[] = [];
+
+        if (currentRoute.config) {
+            // Only add menu items (sub-pages), no base route
+            if (currentRoute.config.menuItems) {
+                currentRoute.config.menuItems.forEach(menuItem => {
+                    const MenuIconComponent = iconLibrary[menuItem.icon] || Activity;
+                    const item: MenuItem = {
+                        title: menuItem.title,
+                        icon: <MenuIconComponent className="h-4 w-4" />,
+                        href: menuItem.href,
+                        color: menuItem.color
+                    };
+                    
+                    // Add badge count for pending approvals
+                    if (menuItem.href === '/requests/clients/pending') {
+                        item.badge = pendingApprovalsCount;
+                    }
+                    
+                    // Add subItems if they exist
+                    if (menuItem.subItems && menuItem.subItems.length > 0) {
+                        item.subItems = menuItem.subItems.map(subItem => ({
+                            href: subItem.href,
+                            title: subItem.title,
+                            icon: subItem.icon ? (iconLibrary[subItem.icon] ? React.createElement(iconLibrary[subItem.icon], { className: "h-3 w-3" }) : null) : null,
+                            color: subItem.color
+                        }));
+                    }
+                    
+                    items.push(item);
+                });
+            }
+        }
+
+        return items;
+    }, [currentRoute, pendingApprovalsCount]);
+
+    const hideText = collapsed && !mobileOpen;
+
+    // Check if route is active - exact match including search params
+    const isActive = (href: string) => {
+        try {
+            const url = new URL(href, 'http://localhost');
+            const hrefPath = url.pathname;
+
+            if (hrefPath !== pathname) {
+                return false;
+            }
+
+            // Compare all search params from href against current URL
+            const hrefParams = url.searchParams;
+            const paramKeys = Array.from(hrefParams.keys());
+
+            if (paramKeys.length === 0) {
+                // href has no params → only active when current URL also has none of the tracked params
+                return searchParams.get('status') === null && searchParams.get('tab') === null;
+            }
+
+            return paramKeys.every(key => searchParams.get(key) === hrefParams.get(key));
+        } catch (e) {
+            const hrefPathOnly = href.split('?')[0];
+            return hrefPathOnly === pathname;
+        }
+    };
+
+    // Close mobile sidebar when clicking a link
+    const handleItemClick = () => {
+        if (mobileOpen && setMobileOpen) {
+            setMobileOpen(false);
+        }
+    };
+
+    // Close mobile sidebar if click outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar && !sidebar.contains(e.target as Node)) {
+                if (mobileOpen && setMobileOpen) {
+                    setMobileOpen(false);
+                }
+            }
+        };
+
+        if (mobileOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [mobileOpen, setMobileOpen]);
+
+    // Hide sidebar entirely on dashboard and section overview pages
+    if (pathname === '/dashboard' || pathname === '/financial' || pathname === '/tasks' || pathname === '/ai') {
+        return null;
+    }
+
+    return (
+        <>
+            {/* Mobile overlay */}
+            {mobileOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+                    onClick={() => setMobileOpen?.(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <div className={cn(
+                "sidebar fixed left-0 top-0 z-50 h-screen bg-gradient-to-b from-slate-900 to-slate-800 border-r border-slate-700 dark:border-slate-700 transition-all duration-300 lg:relative lg:translate-x-0 flex flex-col shadow-2xl",
+                mobileOpen ? "translate-x-0 w-72 shadow-2xl" : "lg:block -translate-x-full lg:w-20 lg:translate-x-0",
+                collapsed && !mobileOpen ? "lg:w-20" : "lg:w-72"
+            )}>
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-[14px] border-b border-slate-700 dark:border-slate-700">
+                    {(!collapsed || mobileOpen) && (
+                        <div className="flex items-center gap-3">
+                            <Image
+                                src="/icon-192.png"
+                                alt="Shuaa Al-Ranou logo"
+                                width={36}
+                                height={36}
+                                priority
+                                className="shrink-0"
+                                style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' }}
+                            />
+
+                            <div
+                                className={cn(
+                                    'leading-tight overflow-hidden transition-all duration-300',
+                                    hideText ? 'opacity-0 w-0' : 'opacity-100'
+                                )}
+                            >
+                                <span className="block font-bold text-xl tracking-wide text-white dark:text-white">
+                                    Shuaa Al-Ranou
+                                </span>
+                                <span className="block text-xs text-slate-400 dark:text-slate-400 font-medium">
+                                    Trade & General Contracting
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {(!collapsed || mobileOpen) && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                                if (mobileOpen && setMobileOpen) {
+                                    setMobileOpen(false);
+                                } else {
+                                    onToggle();
+                                }
+                            }}
+                            className="h-8 w-8 p-0 lg:hidden text-slate-400 hover:text-white hover:bg-slate-700 dark:hover:bg-slate-700"
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
+
+                {/* Back to Dashboard + optional Back to Section */}
+                {menuItems.length > 0 && (
+                    <div className="px-4 pt-4 border-b border-slate-700 dark:border-slate-700 pb-3 space-y-1">
+                        <Link href="/dashboard">
+                            <Button
+                                variant="ghost"
+                                className={cn(
+                                    "w-full justify-start text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50 transition-all duration-300",
+                                    "group"
+                                )}
+                                onClick={handleItemClick}
+                            >
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                {(!collapsed || mobileOpen) && (
+                                    <span>Back to Dashboard</span>
+                                )}
+                            </Button>
+                        </Link>
+                        {currentRoute.config?.backLink && (
+                            <Link href={currentRoute.config.backLink.href}>
+                                <Button
+                                    variant="ghost"
+                                    className={cn(
+                                        "w-full justify-start text-slate-400 dark:text-slate-400 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50 transition-all duration-300 text-xs",
+                                        "group"
+                                    )}
+                                    onClick={handleItemClick}
+                                >
+                                    <ArrowLeft className="h-3.5 w-3.5 mr-2" />
+                                    {(!collapsed || mobileOpen) && (
+                                        <span>{currentRoute.config.backLink.title}</span>
+                                    )}
+                                </Button>
+                            </Link>
+                        )}
+                    </div>
+                )}
+
+                {/* Navigation */}
+                <nav className="p-4 flex-1 overflow-y-auto pb-6 scrollbar-thin">  
+                    <div className="space-y-2">
+                        {menuItems.length > 0 ? (
+                            menuItems.map((item, index) => {
+                                const hasSubItems = item.subItems && item.subItems.length > 0;
+                                const isOpen = openCollapsibles[item.href] || false;
+                                const isItemActive = isActive(item.href) || (hasSubItems && item.subItems?.some(sub => isActive(sub.href)));
+
+                                if (hasSubItems) {
+                                    return (
+                                        <Collapsible
+                                            key={`${item.href}-${index}`}
+                                            open={isOpen}
+                                            onOpenChange={(open) => setOpenCollapsibles(prev => ({ ...prev, [item.href]: open }))}
+                                        >
+                                            <CollapsibleTrigger asChild>
+                                                <button
+                                                    className={cn(
+                                                        "group w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative",
+                                                        isItemActive
+                                                            ? "bg-gradient-to-r from-sky-500 to-sky-600 dark:from-sky-500 dark:to-sky-600 text-white shadow-lg shadow-sky-500/25 dark:shadow-sky-500/25"
+                                                            : "text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50 hover:shadow-lg"
+                                                    )}
+                                                    title={collapsed && !mobileOpen ? item.title : undefined}
+                                                >
+                                                    <div className={cn(
+                                                        "transition-colors duration-300",
+                                                        isItemActive ? "text-white dark:text-white" : item.color || "text-slate-400 dark:text-slate-400"
+                                                    )}>
+                                                        {item.icon}
+                                                    </div>
+                                                    {(!collapsed || mobileOpen) && (
+                                                        <>
+                                                            <span className="flex-1 text-left">{item.title}</span>
+                                                            {item.badge !== undefined && item.badge > 0 && (
+                                                                <span className={cn(
+                                                                    "flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold",
+                                                                    isItemActive
+                                                                        ? "bg-white/20 text-white"
+                                                                        : "bg-amber-500 text-white"
+                                                                )}>
+                                                                    {item.badge > 99 ? '99+' : item.badge}
+                                                                </span>
+                                                            )}
+                                                            {isOpen ? (
+                                                                <ChevronDown className="h-4 w-4 transition-transform" />
+                                                            ) : (
+                                                                <ChevronRight className="h-4 w-4 transition-transform" />
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </CollapsibleTrigger>
+                                            <CollapsibleContent className="mt-1 space-y-1">
+                                                {item.subItems?.map((subItem, subIndex) => (
+                                                    <Link
+                                                        key={`${subItem.href}-${subIndex}`}
+                                                        href={subItem.href}
+                                                        className={cn(
+                                                            "group flex items-center gap-4 px-4 py-2.5 ml-6 rounded-lg text-sm font-medium transition-all duration-300 relative",
+                                                            isActive(subItem.href)
+                                                                ? "bg-gradient-to-r from-sky-500/80 to-sky-600/80 dark:from-sky-500/80 dark:to-sky-600/80 text-white shadow-md shadow-sky-500/20 dark:shadow-sky-500/20 font-semibold"
+                                                                : "text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50"
+                                                        )}
+                                                        onClick={handleItemClick}
+                                                    >
+                                                        {subItem.icon && (
+                                                            <div className={cn(
+                                                                "transition-colors duration-300",
+                                                                isActive(subItem.href) ? "text-white dark:text-white" : subItem.color || "text-slate-400 dark:text-slate-400"
+                                                            )}>
+                                                                {subItem.icon}
+                                                            </div>
+                                                        )}
+                                                        {(!collapsed || mobileOpen) && (
+                                                            <>
+                                                                <span className="flex-1">{subItem.title}</span>
+                                                                {isActive(subItem.href) && (
+                                                                    <div className="w-1.5 h-1.5 bg-white dark:bg-white rounded-full"></div>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                    </Link>
+                                                ))}
+                                            </CollapsibleContent>
+                                        </Collapsible>
+                                    );
+                                }
+
+                                return (
+                                    <Link
+                                        key={`${item.href}-${index}`}
+                                        href={item.href}
+                                        className={cn(
+                                            "group flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative",
+                                            isActive(item.href)
+                                                ? "bg-gradient-to-r from-sky-500 to-sky-600 dark:from-sky-500 dark:to-sky-600 text-white shadow-lg shadow-sky-500/25 dark:shadow-sky-500/25"
+                                                : "text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50 hover:shadow-lg"
+                                        )}
+                                        title={collapsed && !mobileOpen ? item.title : undefined}
+                                        onClick={handleItemClick}
+                                    >
+                                        <div className={cn(
+                                            "transition-colors duration-300",
+                                            isActive(item.href) ? "text-white dark:text-white" : item.color || "text-slate-400 dark:text-slate-400"
+                                        )}>
+                                            {item.icon}
+                                        </div>
+                                        {(!collapsed || mobileOpen) && (
+                                            <>
+                                                <span className="flex-1">{item.title}</span>
+                                                {item.badge !== undefined && item.badge > 0 && (
+                                                    <span className={cn(
+                                                        "flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold",
+                                                        isActive(item.href)
+                                                            ? "bg-white/20 text-white"
+                                                            : "bg-amber-500 text-white"
+                                                    )}>
+                                                        {item.badge > 99 ? '99+' : item.badge}
+                                                    </span>
+                                                )}
+                                            </>
+                                        )}
+                                        {isActive(item.href) && (
+                                            <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white dark:bg-white rounded-l-full"></div>
+                                        )}
+                                    </Link>
+                                );
+                            })
+                        ) : (
+                            <div className="text-center py-8 text-slate-400 dark:text-slate-400 text-sm">
+                                {(!collapsed || mobileOpen) ? 'No menu items available' : ''}
+                            </div>
+                        )}
+                    </div>
+                </nav>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-slate-700 dark:border-slate-700">
+                    {(!collapsed || mobileOpen) && (
+                        <div className="bg-gradient-to-r from-slate-800 to-slate-700 dark:from-slate-800 dark:to-slate-700 rounded-lg p-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-gradient-to-r from-sky-500 to-sky-600 dark:from-sky-500 dark:to-sky-600 rounded-full flex items-center justify-center">
+                                    <span className="text-white text-sm font-bold">SA</span>
+                                </div>
+                                <div>
+                                    <p className="text-white dark:text-white text-sm font-medium">System Admin</p>
+                                    <p className="text-slate-400 dark:text-slate-400 text-xs">Online</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </>
+    );
+}

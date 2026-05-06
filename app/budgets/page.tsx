@@ -1,0 +1,412 @@
+'use client';
+
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import type { AppDispatch } from '@/stores/store';
+
+import {
+    fetchBudgets,
+    selectBudgetItems,
+    selectBudgetLoading,
+    selectBudgetMeta,
+} from '@/stores/slices/budgets';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { RefreshCw, FileSpreadsheet, Eye, Search, X } from 'lucide-react';
+import type { Budget } from '@/stores/types/budgets';
+import { toast } from 'sonner';
+import axios from '@/utils/axios';
+import { DatePicker } from '@/components/DatePicker';
+
+export default function BudgetsPage() {
+    /* ─────────────────────────────
+       Redux
+       ───────────────────────────── */
+    const dispatch = useDispatch<AppDispatch>();
+    const budgets = useSelector(selectBudgetItems);
+    const loading = useSelector(selectBudgetLoading);
+    const { total, pages } = useSelector(selectBudgetMeta);
+
+    /* ─────────────────────────────
+       Local state
+       ───────────────────────────── */
+    const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState(search);
+    const [type, setType] = useState<
+        'All' | 'Public' | 'Communications' | 'Restoration' | 'Referral'
+    >('All');
+    const [dateFrom, setDateFrom] = useState<string>('');
+    const [dateTo, setDateTo] = useState<string>('');
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+
+    const router = useRouter();
+
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch(search), 400);
+        return () => clearTimeout(t);
+    }, [search]);
+
+    /* ─────────────────────────────
+       Fetch on mount / param change
+       ───────────────────────────── */
+    const lastKeyRef = useRef<string>('');
+    useEffect(() => {
+        const key = JSON.stringify({ page, limit, search: debouncedSearch, type, date_from: dateFrom, date_to: dateTo });
+        if (lastKeyRef.current === key) return; 
+        lastKeyRef.current = key;
+        dispatch(fetchBudgets({ page, limit, search: debouncedSearch, type: type !== 'All' ? type : undefined }));
+    }, [dispatch, page, limit, debouncedSearch, type, dateFrom, dateTo]);
+
+    const refreshTable = async () => {
+        setIsRefreshing(true);
+        try {
+            await dispatch(fetchBudgets({ page, limit, search: debouncedSearch, type: type !== 'All' ? type : undefined }));
+            toast.success('Table refreshed successfully');
+        } catch (err) {
+            toast.error('Failed to refresh table');
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const exportToExcel = async () => {
+        setIsExporting(true);
+        try {
+            const exportParams: any = {
+                search: debouncedSearch,
+                type: type !== 'All' ? type : undefined,
+                limit: 10000,
+                page: 1
+            };
+            if (dateFrom) exportParams.from_date = dateFrom;
+            if (dateTo) exportParams.to_date = dateTo;
+
+            const { data } = await axios.get('/budgets/fetch', {
+                params: exportParams
+            });
+
+            const headers = ['Fiscal Year', 'Original Budget', 'Revised Budget', 'Committed Cost', 'Actual Cost', 'Created At', 'Updated At'];
+            const csvHeaders = headers.join(',');
+            
+            const escapeCsv = (val: any) => {
+                if (val === null || val === undefined) return '';
+                const str = String(val);
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            };
+            
+            const csvRows = data.body?.budgets?.items?.map((budget: Budget) => {
+                return [
+                    escapeCsv(budget.fiscal_year),
+                    escapeCsv(budget.original_budget || 0),
+                    escapeCsv(budget.revised_budget || 0),
+                    escapeCsv(budget.committed_cost || 0),
+                    escapeCsv(budget.actual_cost || 0),
+                    escapeCsv(budget.created_at),
+                    escapeCsv(budget.updated_at)
+                ].join(',');
+            }) || [];
+
+            const csvContent = [csvHeaders, ...csvRows].join('\n');
+            
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `budgets_${new Date().toISOString().split('T')[0]}.csv`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            window.URL.revokeObjectURL(url);
+            link.remove();
+            
+            toast.success('Budgets exported successfully');
+        } catch (err) {
+            console.error('Export error:', err);
+            toast.error('Failed to export budgets');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    /* ─────────────────────────────
+       Table config
+       ───────────────────────────── */
+    const columns: Column<Budget>[] = [
+        {
+            key: 'fiscal_year',
+            header: 'Fiscal Year',
+            sortable: true,
+        },
+        {
+            key: 'original_budget',
+            header: 'Original Budget',
+            sortable: true,
+        },
+        {
+            key: 'revised_budget',
+            header: 'Revised Budget',
+            sortable: true,
+        },
+        {
+            key: 'committed_cost',
+            header: 'Committed Cost',
+            sortable: true,
+        },
+        {
+            key: 'actual_cost',
+            header: 'Actual Cost',
+            sortable: true,
+        },
+        {
+            key: 'created_at',
+            header: 'Created At',
+            sortable: true,
+        },
+        {
+            key: 'updated_at',
+            header: 'Updated At',
+        },
+    ];
+
+    const actions: Action<Budget>[] = [
+        {
+            label: 'Details',
+            icon: <Eye className="h-4 w-4" />,
+            onClick: (budget) => router.push(`/projects/details?id=${budget.project_id || budget.id}`),
+            variant: 'info' as const
+        },
+    ];
+
+    const activeFilters = [];
+    if (search) activeFilters.push(`Search: ${search}`);
+    if (type !== 'All') activeFilters.push(`Type: ${type}`);
+    if (dateFrom) activeFilters.push(`From: ${new Date(dateFrom).toLocaleDateString('en-US')}`);
+    if (dateTo) activeFilters.push(`To: ${new Date(dateTo).toLocaleDateString('en-US')}`);
+
+    /* ─────────────────────────────
+       Render
+       ───────────────────────────── */
+    return (
+        <>
+            <div className="space-y-4">
+                {/* Breadcrumb */}
+                <Breadcrumb />
+                
+                {/* Page Header */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
+                    <div>
+                        <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-200">Budgets</h1>
+                        <p className="text-slate-600 dark:text-slate-400 mt-1">
+                            Browse and manage all projects budgets with comprehensive filtering and management tools
+                        </p>
+                    </div>
+                </div>
+
+                {/* Search & Filters Card */}
+                <EnhancedCard
+                    title="Search & Filters"
+                    description="Search and filter budgets by various criteria"
+                    variant="default"
+                    size="sm"
+                >
+                    <div className="space-y-4">
+                        {/* Search Input with Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                                <Input
+                                    placeholder="Search by fiscal year, project type..."
+                                    value={search}
+                                    onChange={(e) => {
+                                        setSearch(e.target.value);
+                                        setPage(1);
+                                    }}
+                                    className="pl-10 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={exportToExcel}
+                                    disabled={isExporting || loading}
+                                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 whitespace-nowrap"
+                                >
+                                    <FileSpreadsheet className={`h-4 w-4 mr-2 ${isExporting ? 'animate-pulse' : ''}`} />
+                                    {isExporting ? 'Exporting...' : 'Export Excel'}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={refreshTable}
+                                    disabled={isRefreshing}
+                                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 whitespace-nowrap"
+                                >
+                                    <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                    Refresh
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Filters Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Project Type Filter */}
+                            <div className="space-y-2">
+                                <Label htmlFor="type" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    Project Type
+                                </Label>
+                                <Select
+                                    value={type}
+                                    onValueChange={(value) => {
+                                        setType(value as typeof type);
+                                        setPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                        <SelectValue placeholder="All Types" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                        <SelectItem value="All" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">All Types</SelectItem>
+                                        <SelectItem value="Public" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Public</SelectItem>
+                                        <SelectItem value="Communications" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Communications</SelectItem>
+                                        <SelectItem value="Restoration" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Restoration</SelectItem>
+                                        <SelectItem value="Referral" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">Referral</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* From Date */}
+                            <div className="space-y-2">
+                                <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    From Date
+                                </Label>
+                                <DatePicker
+                                    value={dateFrom}
+                                    onChange={(value) => {
+                                        setDateFrom(value);
+                                        setPage(1);
+                                    }}
+                                />
+                            </div>
+
+                            {/* To Date */}
+                            <div className="space-y-2">
+                                <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                                    To Date
+                                </Label>
+                                <DatePicker
+                                    value={dateTo}
+                                    onChange={(value) => {
+                                        setDateTo(value);
+                                        setPage(1);
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Active Filters & Clear Button */}
+                        {activeFilters.length > 0 && (
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                                {/* Active Filters */}
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Active filters:</span>
+                                    {activeFilters.map((filter, index) => (
+                                        <Badge
+                                            key={index}
+                                            variant="outline"
+                                            className="bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 hover:bg-sky-200 dark:hover:bg-sky-900/50 border-sky-200 dark:border-sky-800"
+                                        >
+                                            {filter}
+                                        </Badge>
+                                    ))}
+                                </div>
+
+                                {/* Clear All Button */}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setSearch('');
+                                        setType('All');
+                                        setDateFrom('');
+                                        setDateTo('');
+                                        setPage(1);
+                                    }}
+                                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800 whitespace-nowrap"
+                                >
+                                    <X className="h-4 w-4 mr-2" />
+                                    Clear All
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </EnhancedCard>
+
+                {/* Budgets Table */}
+                <EnhancedCard
+                    title="Budgets List"
+                    description={`${total} budget${total !== 1 ? 's' : ''} found`}
+                    variant="default"
+                    size="sm"
+                    stats={{
+                        total: total,
+                        badge: 'Total Budgets',
+                        badgeColor: 'success'
+                    }}
+                    headerActions={
+                        <Select
+                            value={String(limit)}
+                            onValueChange={(v) => {
+                                setLimit(Number(v));
+                                setPage(1);
+                            }}
+                        >
+                            <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                                <SelectValue placeholder="Items per page" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                <SelectItem value="5" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">5 per page</SelectItem>
+                                <SelectItem value="10" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">10 per page</SelectItem>
+                                <SelectItem value="20" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">20 per page</SelectItem>
+                                <SelectItem value="50" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">50 per page</SelectItem>
+                                <SelectItem value="100" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">100 per page</SelectItem>
+                                <SelectItem value="200" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">200 per page</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    }
+                >
+                    <EnhancedDataTable
+                        data={budgets}
+                        columns={columns}
+                        actions={actions}
+                        loading={loading}
+                        pagination={{
+                            currentPage: page,
+                            totalPages: pages,
+                            pageSize: limit,
+                            totalItems: total,
+                            onPageChange: setPage,
+                        }}
+                        noDataMessage="No budgets found matching your search criteria"
+                        searchPlaceholder="Search budgets..."
+                    />
+                </EnhancedCard>
+            </div>
+        </>
+    );
+}
