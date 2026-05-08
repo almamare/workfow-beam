@@ -60,7 +60,7 @@ export function ProtectedLayout({ children, requiredRole }: ProtectedLayoutProps
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                     <p className="text-slate-600 dark:text-slate-400">Loading...</p>
                 </div>
             </div>
@@ -72,7 +72,7 @@ export function ProtectedLayout({ children, requiredRole }: ProtectedLayoutProps
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                     <p className="text-slate-600 dark:text-slate-400">Redirecting to login...</p>
                 </div>
             </div>

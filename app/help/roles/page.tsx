@@ -22,15 +22,15 @@ export default function RolesPermissionsPage() {
             />
 
             {/* ── What Are Permissions? ── */}
-            <SectionCard icon={Shield} iconColor="bg-sky-500" title="How Permissions Work" subtitle="A simple guide to understanding access levels">
+            <SectionCard icon={Shield} iconColor="bg-brand-sky-500" title="How Permissions Work" subtitle="A simple guide to understanding access levels">
                 <div className="space-y-4">
                     <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                         Every user in BEAM is assigned a <strong>Role</strong> (like Finance Staff, HR Director, or Operations Manager).
                         Your role determines what you can see and do in the system. Each role has a set of <strong>permission flags</strong> for
                         every module — these flags control whether you can view records, create new ones, edit existing ones, delete them, or approve requests.
                     </p>
-                    <div className="rounded-lg bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-800 p-4">
-                        <p className="text-sm text-sky-700 dark:text-sky-400">
+                    <div className="rounded-lg bg-brand-sky-50 dark:bg-brand-sky-950/20 border border-brand-sky-200 dark:border-brand-sky-800 p-4">
+                        <p className="text-sm text-brand-sky-700 dark:text-brand-sky-400">
                             <strong>Example:</strong> A Finance Staff member can view financial records and create new disbursements,
                             but cannot delete records or approve payments. A Finance Manager can do everything Finance Staff can, plus approve payments.
                             The CFO can do everything, including final sign-off on large transactions.
@@ -137,7 +137,7 @@ export default function RolesPermissionsPage() {
             </div>
 
             {/* ── Roles Matrix Table ── */}
-            <SectionCard icon={Shield} iconColor="bg-sky-500" title="All System Roles" subtitle="What each role can do across the system">
+            <SectionCard icon={Shield} iconColor="bg-brand-sky-500" title="All System Roles" subtitle="What each role can do across the system">
                 <div className="overflow-x-auto -mx-6 px-6">
                     <table className="w-full text-sm border-collapse min-w-[700px]">
                         <thead>

@@ -220,7 +220,7 @@ const CreateDocumentPage: React.FC = () => {
                     type="button"
                     variant="outline"
                     onClick={() => router.push('/documents')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                 >
                     Back to Documents
                 </Button>
@@ -246,7 +246,7 @@ const CreateDocumentPage: React.FC = () => {
                                     value={form.title}
                                     placeholder="Enter document title"
                                     onChange={e => updateField('title', e.target.value)}
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                     minLength={3}
                                 />
                                 {fieldErrors.title && (
@@ -265,7 +265,7 @@ const CreateDocumentPage: React.FC = () => {
                                     placeholder="Enter document description (optional)"
                                     onChange={e => updateField('description', e.target.value)}
                                     rows={4}
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                             </div>
 
@@ -281,8 +281,8 @@ const CreateDocumentPage: React.FC = () => {
                                         onDrop={handleDrop}
                                         className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                                             isDragging
-                                                ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
-                                                : 'border-slate-300 dark:border-slate-600 hover:border-sky-400 dark:hover:border-sky-500'
+                                                ? 'border-brand-sky-500 bg-brand-sky-50 dark:bg-brand-sky-900/20'
+                                                : 'border-slate-300 dark:border-slate-600 hover:border-brand-sky-400 dark:hover:border-brand-sky-500'
                                         }`}
                                     >
                                         <Upload className="h-12 w-12 mx-auto mb-4 text-slate-400 dark:text-slate-500" />
@@ -296,7 +296,7 @@ const CreateDocumentPage: React.FC = () => {
                                             type="button"
                                             variant="outline"
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                                            className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                                         >
                                             <Upload className="h-4 w-4 mr-2" />
                                             Select File
@@ -349,7 +349,7 @@ const CreateDocumentPage: React.FC = () => {
                             variant="outline"
                             onClick={handleReset}
                             disabled={loading}
-                            className="border-sky-200 dark:border-sky-800 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-700 dark:hover:text-sky-300 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                            className="border-brand-sky-200 dark:border-brand-sky-800 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 hover:text-brand-sky-700 dark:hover:text-brand-sky-300 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                         >
                             <RotateCcw className="h-4 w-4 mr-2" />
                             Reset Form
@@ -357,7 +357,7 @@ const CreateDocumentPage: React.FC = () => {
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                            className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                         >
                             {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                             {loading ? 'Uploading...' : 'Upload Document'}

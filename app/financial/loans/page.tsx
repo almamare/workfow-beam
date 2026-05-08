@@ -571,7 +571,7 @@ export default function LoansPage() {
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Loans Management</h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-2">Manage employee and contractor loans with comprehensive tracking</p>
                 </div>
-                <Button onClick={openCreate} className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg">
+                <Button onClick={openCreate} className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg">
                     <Plus className="h-4 w-4 mr-2" /> New Loan
                 </Button>
             </div>
@@ -606,12 +606,12 @@ export default function LoansPage() {
                 actions={
                     <>
                         <Button variant="outline" onClick={refreshTable} disabled={isRefreshing}
-                            className="border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50">
+                            className="border-brand-sky-200 dark:border-brand-sky-800 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50">
                             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                             {isRefreshing ? 'Refreshing...' : 'Refresh'}
                         </Button>
                         <Button variant="outline" onClick={exportCsv} disabled={isExporting}
-                            className="border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50">
+                            className="border-brand-sky-200 dark:border-brand-sky-800 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50">
                             <FileSpreadsheet className="h-4 w-4 mr-2" />
                             {isExporting ? 'Exporting...' : 'Export CSV'}
                         </Button>
@@ -667,7 +667,7 @@ export default function LoansPage() {
                         <Button
                             onClick={handleCreate}
                             disabled={submitting}
-                            className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white"
+                            className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white"
                         >
                             <CreditCard className="h-4 w-4 mr-2" />
                             {submitting ? 'Creating...' : 'Create Loan'}
@@ -689,7 +689,7 @@ export default function LoansPage() {
                         <Button
                             onClick={handleUpdate}
                             disabled={submitting}
-                            className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white"
+                            className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white"
                         >
                             <CreditCard className="h-4 w-4 mr-2" />
                             {submitting ? 'Saving...' : 'Save Changes'}

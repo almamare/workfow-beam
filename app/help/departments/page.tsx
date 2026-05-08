@@ -62,7 +62,7 @@ export default function DepartmentsHelpPage() {
 
                             <button
                                 onClick={() => setExpandedDept(isExpanded ? null : dept.id)}
-                                className="flex items-center gap-1 text-xs font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition-colors"
+                                className="flex items-center gap-1 text-xs font-medium text-brand-sky-600 dark:text-brand-sky-400 hover:text-brand-sky-700 dark:hover:text-brand-sky-300 transition-colors"
                             >
                                 {isExpanded ? (
                                     <>

@@ -126,7 +126,7 @@ export default function CreateRolePage() {
                     type="button"
                     variant="outline"
                     onClick={() => router.push('/roles')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700"
                 >
                     Back to list
                 </Button>

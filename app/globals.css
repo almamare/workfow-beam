@@ -13,8 +13,8 @@
   --popover: 0 0% 100%;
   --popover-foreground: 200 17% 33%;
 
-  /* Primary Brand Colors - Sky Theme */
-  --primary: 199 89% 48%;              /* Brand Sky */
+  /* Primary brand — #0058de (hsl ~216 100% 44%) */
+  --primary: 216 100% 44%;
   --primary-foreground: 0 0% 100%;
 
   --secondary: 30 20% 94%;             /* Light Gray */
@@ -23,7 +23,7 @@
   --muted: 30 20% 94%;                 /* Muted Gray */
   --muted-foreground: 200 10% 50%;
 
-  --accent: 199 89% 48%;               /* Same as Brand */
+  --accent: 216 100% 44%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 60%;            /* Red */
@@ -31,43 +31,43 @@
 
   --border: 200 15% 85%;               /* Light Border */
   --input: 200 15% 85%;
-  --ring: 199 89% 48%;                 /* Focus Ring */
+  --ring: 216 100% 44%;                 /* Focus Ring */
 
   --radius: 0.75rem;                   /* Rounded Corners */
   
-  /* Extended Brand Palette */
-  --brand-sky: 199 89% 48%;            /* Primary Sky */
-  --brand-sky-light: 198 93% 60%;      /* Light Sky */
-  --brand-sky-dark: 201 96% 32%;       /* Dark Sky */
-  --brand-sky-50: 204 100% 97%;        /* Very Light Sky */
-  --brand-sky-100: 204 96% 94%;        /* Light Sky */
-  --brand-sky-200: 200 94% 87%;        /* Lighter Sky */
-  --brand-sky-300: 199 89% 73%;        /* Light Sky */
-  --brand-sky-400: 198 93% 60%;        /* Medium Sky */
-  --brand-sky-500: 199 89% 48%;        /* Primary Sky */
-  --brand-sky-600: 200 98% 39%;        /* Dark Sky */
-  --brand-sky-700: 201 96% 32%;        /* Darker Sky */
-  --brand-sky-800: 201 94% 27%;        /* Very Dark Sky */
-  --brand-sky-900: 202 80% 24%;        /* Darkest Sky */
+  /* Extended brand palette (#0058de) */
+  --brand-sky: 216 100% 44%;
+  --brand-sky-light: 216 90% 58%;
+  --brand-sky-dark: 216 85% 28%;
+  --brand-sky-50: 216 100% 97%;
+  --brand-sky-100: 216 95% 93%;
+  --brand-sky-200: 216 88% 85%;
+  --brand-sky-300: 216 82% 72%;
+  --brand-sky-400: 216 95% 58%;
+  --brand-sky-500: 216 100% 44%;
+  --brand-sky-600: 216 100% 37%;
+  --brand-sky-700: 216 95% 30%;
+  --brand-sky-800: 216 85% 23%;
+  --brand-sky-900: 216 72% 15%;
   
   /* Keep old orange variables for backward compatibility (will be replaced) */
-  --brand-orange: 199 89% 48%;         /* Primary Sky (mapped) */
-  --brand-orange-light: 198 93% 60%;   /* Light Sky (mapped) */
-  --brand-orange-dark: 201 96% 32%;    /* Dark Sky (mapped) */
-  --brand-orange-50: 204 100% 97%;     /* Very Light Sky (mapped) */
-  --brand-orange-100: 204 96% 94%;     /* Light Sky (mapped) */
-  --brand-orange-200: 200 94% 87%;     /* Lighter Sky (mapped) */
-  --brand-orange-300: 199 89% 73%;     /* Light Sky (mapped) */
-  --brand-orange-400: 198 93% 60%;     /* Medium Sky (mapped) */
-  --brand-orange-500: 199 89% 48%;     /* Primary Sky (mapped) */
-  --brand-orange-600: 200 98% 39%;     /* Dark Sky (mapped) */
-  --brand-orange-700: 201 96% 32%;     /* Darker Sky (mapped) */
-  --brand-orange-800: 201 94% 27%;     /* Very Dark Sky (mapped) */
-  --brand-orange-900: 202 80% 24%;     /* Darkest Sky (mapped) */
+  --brand-orange: 216 100% 44%;
+  --brand-orange-light: 216 90% 58%;
+  --brand-orange-dark: 216 85% 28%;
+  --brand-orange-50: 216 100% 97%;
+  --brand-orange-100: 216 95% 93%;
+  --brand-orange-200: 216 88% 85%;
+  --brand-orange-300: 216 82% 72%;
+  --brand-orange-400: 216 95% 58%;
+  --brand-orange-500: 216 100% 44%;
+  --brand-orange-600: 216 100% 37%;
+  --brand-orange-700: 216 95% 30%;
+  --brand-orange-800: 216 85% 23%;
+  --brand-orange-900: 216 72% 15%;
   
   /* Supporting Colors */
-  --brand-gold: 45 100% 50%;           /* Gold Accent */
-  --brand-blue: 210 100% 50%;          /* Blue Accent */
+  --brand-gold: 216 75% 72%;           /* Light blue accent (replaces gold) */
+  --brand-blue: 216 85% 58%;           /* Gradient partner */
   --brand-green: 120 100% 40%;         /* Green Success */
   --brand-red: 0 100% 50%;             /* Red Error */
   --brand-yellow: 45 100% 60%;         /* Yellow Warning */
@@ -97,7 +97,7 @@
   --popover: 0 0% 6%;
   --popover-foreground: 0 0% 100%;
 
-  --primary: 199 89% 48%;              /* Keep Brand Sky */
+  --primary: 216 100% 44%;              /* Brand blue #0058de */
   --primary-foreground: 0 0% 100%;
 
   --secondary: 200 15% 15%;            /* Dark Secondary */
@@ -114,22 +114,23 @@
 
   --border: 200 10% 25%;               /* Dark Border */
   --input: 200 10% 25%;
-  --ring: 199 89% 48%;                 /* Keep Brand Ring */
+  --ring: 216 100% 44%;                 /* Brand ring */
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+
+  html {
+    scroll-behavior: smooth;
+    font-optical-sizing: auto;
+  }
   
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
-  }
-  
-  /* Smooth scrolling */
-  html {
-    scroll-behavior: smooth;
+    font-variation-settings: "wdth" 100;
   }
   
   /* Custom scrollbar */
@@ -147,7 +148,7 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-sky-400 dark:bg-sky-500;
+    @apply bg-brand-sky-400 dark:bg-brand-sky-500;
   }
 }
 
@@ -538,7 +539,7 @@
   .status-active   { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800; }
   .status-inactive { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100  text-slate-600  border border-slate-200  dark:bg-slate-800      dark:text-slate-400  dark:border-slate-700;  }
   .status-pending  { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100  text-amber-700  border border-amber-200  dark:bg-amber-900/30  dark:text-amber-400   dark:border-amber-800;  }
-  .status-approved { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100    text-sky-700    border border-sky-200    dark:bg-sky-900/30    dark:text-sky-400     dark:border-sky-800;    }
+  .status-approved { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-sky-100 text-brand-sky-800 border border-brand-sky-200 dark:bg-brand-sky-900/30 dark:text-brand-sky-300 dark:border-brand-sky-800; }
   .status-rejected { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100    text-red-700    border border-red-200    dark:bg-red-900/30    dark:text-red-400     dark:border-red-800;    }
   .status-draft    { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 border border-violet-200 dark:bg-violet-900/30 dark:text-violet-400  dark:border-violet-800; }
   .status-complete { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-100   text-teal-700   border border-teal-200   dark:bg-teal-900/30   dark:text-teal-400    dark:border-teal-800;   }
@@ -552,14 +553,14 @@
     @apply text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed;
   }
   .section-divider {
-    @apply h-0.5 w-12 rounded-full bg-gradient-to-r from-sky-500 to-sky-400 mt-2;
+    @apply h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-sky-600 to-brand-sky-400 mt-2;
   }
 
   /* ── STANDARD FORM INPUTS (consistent across all pages) ── */
   .input-field {
     @apply h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800
            text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500
-           focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-150;
+           focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-500/20 transition-all duration-150;
   }
   .input-field-icon {
     @apply pl-9;
@@ -591,11 +592,47 @@
   .icon-box {
     @apply w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0;
   }
-  .icon-box-sky    { @apply icon-box bg-sky-100    dark:bg-sky-900/40    text-sky-600    dark:text-sky-400;    }
+  .icon-box-sky    { @apply icon-box bg-brand-sky-100 dark:bg-brand-sky-900/40 text-brand-sky-600 dark:text-brand-sky-400; }
   .icon-box-green  { @apply icon-box bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400; }
   .icon-box-amber  { @apply icon-box bg-amber-100  dark:bg-amber-900/40  text-amber-600  dark:text-amber-400;  }
   .icon-box-red    { @apply icon-box bg-red-100    dark:bg-red-900/40    text-red-600    dark:text-red-400;    }
   .icon-box-violet { @apply icon-box bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400; }
+
+  /* ── HEADER BRAND TITLE ── */
+  .header-brand-title {
+    @apply block truncate uppercase font-extrabold leading-tight tracking-[0.08em]
+           text-sm sm:text-base md:text-lg;
+    background: linear-gradient(
+      90deg,
+      hsl(var(--brand-sky-800)) 0%,
+      hsl(var(--brand-sky-600)) 35%,
+      hsl(var(--brand-sky-500)) 70%,
+      hsl(var(--brand-sky-400)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+
+  .dark .header-brand-title {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--brand-sky-300)) 0%,
+      hsl(var(--brand-sky-200)) 55%,
+      hsl(var(--brand-sky-100)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 1px 10px rgba(0, 88, 222, 0.25);
+  }
+
+  .header-brand-subtitle {
+    @apply hidden sm:block truncate max-w-[12rem] md:max-w-none
+           text-[11px] md:text-xs font-semibold tracking-[0.06em]
+           text-slate-500 dark:text-slate-300/90;
+  }
 }
 
 /* Custom Animations */

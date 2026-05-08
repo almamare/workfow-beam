@@ -43,7 +43,7 @@ function DepartmentDetailsContent() {
     if (!department || (department.department_id !== departmentId && String(department.id) !== departmentId)) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
             </div>
         );
     }
@@ -56,7 +56,7 @@ function DepartmentDetailsContent() {
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <Building className="h-8 w-8 text-sky-500" />
+                        <Building className="h-8 w-8 text-brand-sky-500" />
                         {department.name_en ?? department.name_ar ?? department.department_id}
                     </h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-2">
@@ -68,13 +68,13 @@ function DepartmentDetailsContent() {
                         type="button"
                         variant="outline"
                         onClick={() => router.push('/departments')}
-                        className="border-sky-200 dark:border-sky-800"
+                        className="border-brand-sky-200 dark:border-brand-sky-800"
                     >
                         Back to list
                     </Button>
                     <Button
                         onClick={() => router.push(`/departments/update?id=${department.department_id ?? department.id}`)}
-                        className="bg-sky-600 hover:bg-sky-700 text-white"
+                        className="bg-brand-sky-600 hover:bg-brand-sky-700 text-white"
                     >
                         <Edit className="h-4 w-4 mr-2" />
                         Edit

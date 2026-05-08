@@ -159,7 +159,7 @@ export const ApprovalModal: React.FC<ApprovalModalProps> = ({
                                     : 'ملاحظات (اختياري)...'
                             }
                             rows={4}
-                            className="min-h-[100px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-100 dark:focus-visible:ring-sky-900/50 focus:border-sky-300 dark:focus:border-sky-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                            className="min-h-[100px] w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky-100 dark:focus-visible:ring-brand-sky-900/50 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                             required={action === 'reject'}
                         />
                         {error && (

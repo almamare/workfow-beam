@@ -62,13 +62,13 @@ export default function CredentialsPage() {
             {/* All System Users Table */}
             <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 space-y-4">
                 <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-sky-500 text-white shrink-0">
+                    <div className="p-2.5 rounded-xl bg-brand-sky-500 text-white shrink-0">
                         <Shield className="h-5 w-5" />
                     </div>
                     <div>
                         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">All System Users</h2>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            Default password for non-admin accounts: <code className="font-mono font-semibold text-sky-600 dark:text-sky-400">Beam@2026</code>
+                            Default password for non-admin accounts: <code className="font-mono font-semibold text-brand-sky-600 dark:text-brand-sky-400">Beam@2026</code>
                         </p>
                     </div>
                 </div>
@@ -140,7 +140,7 @@ export default function CredentialsPage() {
                 <div className="space-y-1">
                     <h3 className="font-semibold text-slate-800 dark:text-slate-200">Email Format</h3>
                     <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                        All user email addresses follow the format <code className="font-mono font-semibold text-sky-600 dark:text-sky-400">username@beam.local</code>.
+                        All user email addresses follow the format <code className="font-mono font-semibold text-brand-sky-600 dark:text-brand-sky-400">username@beam.local</code>.
                         For example: <code className="font-mono text-slate-500">hr_dir@beam.local</code>, <code className="font-mono text-slate-500">cfo@beam.local</code>, <code className="font-mono text-slate-500">admin@beam.local</code>.
                     </p>
                 </div>

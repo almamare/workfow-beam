@@ -390,7 +390,7 @@ export default function EmployeeRequestsPage() {
                     'overtime': 'bg-green-50 text-green-700 border-green-200',
                     'advance': 'bg-yellow-50 text-yellow-700 border-yellow-200',
                     'training': 'bg-purple-50 text-purple-700 border-purple-200',
-                    'equipment': 'bg-sky-50 text-sky-700 border-sky-200',
+                    'equipment': 'bg-brand-sky-50 text-brand-sky-700 border-brand-sky-200',
                     'other': 'bg-gray-50 text-gray-700 border-gray-200'
                 };
                 
@@ -442,7 +442,7 @@ export default function EmployeeRequestsPage() {
                 const priorityColors = {
                     'low': 'bg-gray-50 text-gray-700 border-gray-200',
                     'medium': 'bg-blue-50 text-blue-700 border-blue-200',
-                    'high': 'bg-sky-50 text-sky-700 border-sky-200',
+                    'high': 'bg-brand-sky-50 text-brand-sky-700 border-brand-sky-200',
                     'urgent': 'bg-red-50 text-red-700 border-red-200'
                 };
                 
@@ -693,7 +693,7 @@ export default function EmployeeRequestsPage() {
                                 onChange={(e) => {
                                     setSearchTerm(e.target.value);
                                 }}
-                                className="pl-10 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
+                                className="pl-10 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
                             />
                         </div>
                         <div className="flex items-center gap-2">
@@ -702,7 +702,7 @@ export default function EmployeeRequestsPage() {
                                 size="sm"
                                 onClick={exportToExcel}
                                 disabled={isExporting}
-                                className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 whitespace-nowrap"
+                                className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20 whitespace-nowrap"
                             >
                                 <FileSpreadsheet className={`h-4 w-4 mr-2 ${isExporting ? 'animate-pulse' : ''}`} />
                                 {isExporting ? 'Exporting...' : 'Export Excel'}
@@ -712,7 +712,7 @@ export default function EmployeeRequestsPage() {
                                 size="sm"
                                 onClick={refreshTable}
                                 disabled={isRefreshing}
-                                className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 whitespace-nowrap"
+                                className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20 whitespace-nowrap"
                             >
                                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                                 Refresh
@@ -733,7 +733,7 @@ export default function EmployeeRequestsPage() {
                                     setTypeFilter(value);
                                 }}
                             >
-                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100">
                                     <SelectValue placeholder="All Types" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -756,7 +756,7 @@ export default function EmployeeRequestsPage() {
                                     setStatusFilter(value);
                                 }}
                             >
-                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100">
                                     <SelectValue placeholder="All Statuses" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -780,7 +780,7 @@ export default function EmployeeRequestsPage() {
                                     setPriorityFilter(value);
                                 }}
                             >
-                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100">
                                     <SelectValue placeholder="All Priorities" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -802,7 +802,7 @@ export default function EmployeeRequestsPage() {
                                     <Badge
                                         key={index}
                                         variant="outline"
-                                        className="bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 hover:bg-sky-200 dark:hover:bg-sky-900/50 border-sky-200 dark:border-sky-800"
+                                        className="bg-brand-sky-100 dark:bg-brand-sky-900/30 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-200 dark:hover:bg-brand-sky-900/50 border-brand-sky-200 dark:border-brand-sky-800"
                                     >
                                         {filter}
                                     </Badge>
@@ -1034,7 +1034,7 @@ export default function EmployeeRequestsPage() {
                             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleCreate} className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700">
+                            <Button onClick={handleCreate} className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700">
                                 <Users className="h-4 w-4 mr-2" />
                                 Create Request
                             </Button>
@@ -1222,7 +1222,7 @@ export default function EmployeeRequestsPage() {
                             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700">
+                            <Button onClick={handleUpdate} className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700">
                                 <Users className="h-4 w-4 mr-2" />
                                 Save Changes
                             </Button>

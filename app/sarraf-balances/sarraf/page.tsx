@@ -79,7 +79,7 @@ function SarrafBalancesBySarrafContent() {
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <Building2 className="h-8 w-8 text-sky-500" />
+                        <Building2 className="h-8 w-8 text-brand-sky-500" />
                         Balances for: {sarrafInfo?.sarraf_name ?? sarrafInfo?.sarraf_no ?? sarrafId}
                     </h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-2">Exchange ID: {sarrafId}</p>
@@ -87,7 +87,7 @@ function SarrafBalancesBySarrafContent() {
                 <div className="flex gap-2">
                     <Button variant="outline" onClick={() => router.push('/sarraf-balances')}>All balances</Button>
                     <Button variant="outline" onClick={() => router.push(`/sarrafat/details?id=${encodeURIComponent(sarrafId)}`)}>View exchange</Button>
-                    <Button onClick={() => router.push(`/sarraf-balances/create?sarraf_id=${encodeURIComponent(sarrafId)}`)} className="bg-sky-600 hover:bg-sky-700 text-white"><Plus className="h-4 w-4 mr-2" />Add balance</Button>
+                    <Button onClick={() => router.push(`/sarraf-balances/create?sarraf_id=${encodeURIComponent(sarrafId)}`)} className="bg-brand-sky-600 hover:bg-brand-sky-700 text-white"><Plus className="h-4 w-4 mr-2" />Add balance</Button>
                 </div>
             </div>
 

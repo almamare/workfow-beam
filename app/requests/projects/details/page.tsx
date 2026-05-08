@@ -88,7 +88,7 @@ const getProjectTypeColor = (type?: string) => {
         'Public': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
         'Communications': 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
         'Restoration': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
-        'Referral': 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800',
+        'Referral': 'bg-brand-sky-100 dark:bg-brand-sky-900/30 text-brand-sky-700 dark:text-brand-sky-300 border-brand-sky-200 dark:border-brand-sky-800',
     };
     return colors[type] || 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
 };
@@ -259,7 +259,7 @@ function ProjectRequestDetails() {
     if (loading && !request) {
         return (
             <Centered>
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                 <p className="text-slate-500 dark:text-slate-400">Loading details...</p>
             </Centered>
         );
@@ -272,7 +272,7 @@ function ProjectRequestDetails() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/requests/projects')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Requests
@@ -288,7 +288,7 @@ function ProjectRequestDetails() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/requests/projects')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Requests
@@ -464,7 +464,7 @@ function ProjectRequestDetails() {
                     <Button
                         variant="outline"
                         onClick={() => router.push('/requests/projects')}
-                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Requests
@@ -575,7 +575,7 @@ function ProjectRequestDetails() {
                             <Button
                                 variant="outline"
                                 onClick={() => router.push(`/projects/details?id=${project.id}`)}
-                                className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                                className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                             >
                                 <Eye className="h-4 w-4 mr-2" />
                                 View Full Project Details
@@ -652,7 +652,7 @@ function ProjectRequestDetails() {
                 headerActions={
                     <Button
                         onClick={() => setAttachmentModelOpen(true)}
-                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white transition-all duration-300"
+                        className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white transition-all duration-300"
                     >
                         <Plus className="h-4 w-4 mr-2" />
                         Add Document
@@ -678,7 +678,7 @@ function ProjectRequestDetails() {
                     request.status === 'Pending' ? (
                         <Button
                             onClick={() => setApprovalModelOpen(true)}
-                            className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white transition-all duration-300"
+                            className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white transition-all duration-300"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Add Review
@@ -732,7 +732,7 @@ export default function Page() {
         <Suspense
             fallback={
                 <Centered>
-                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                     <p className="text-slate-500 dark:text-slate-400">Loading details...</p>
                 </Centered>
             }

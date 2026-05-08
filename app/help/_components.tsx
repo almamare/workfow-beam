@@ -76,7 +76,7 @@ export function StepList({ steps }: { steps: string[] }) {
         <ol className="space-y-2">
             {steps.map((step, i) => (
                 <li key={i} className="flex gap-3 items-start">
-                    <div className="w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-full bg-brand-sky-500 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
                         {i + 1}
                     </div>
                     <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{step}</p>

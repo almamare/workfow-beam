@@ -216,7 +216,7 @@ function ClientRequestTimeline() {
     if (loading && !request) {
         return (
             <Centered>
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                 <p className="text-slate-500 dark:text-slate-400">Loading timeline...</p>
             </Centered>
         );
@@ -229,7 +229,7 @@ function ClientRequestTimeline() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/requests/clients')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Requests
@@ -245,7 +245,7 @@ function ClientRequestTimeline() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/requests/clients')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Requests
@@ -272,7 +272,7 @@ function ClientRequestTimeline() {
                     <Button
                         variant="outline"
                         onClick={() => router.push(`/requests/clients/details?id=${request.id}`)}
-                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Details
@@ -281,7 +281,7 @@ function ClientRequestTimeline() {
                         variant="outline"
                         onClick={refreshTimeline}
                         disabled={isRefreshing || loading}
-                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                     >
                         <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                         {isRefreshing ? 'Refreshing...' : 'Refresh'}
@@ -350,7 +350,7 @@ function ClientRequestTimeline() {
             >
                 {approvalsLoading ? (
                     <Centered>
-                        <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                        <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                         <p className="text-slate-500 dark:text-slate-400">Loading timeline...</p>
                     </Centered>
                 ) : sortedApprovals.length === 0 ? (
@@ -462,7 +462,7 @@ export default function Page() {
         <Suspense
             fallback={
                 <Centered>
-                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                     <p className="text-slate-500 dark:text-slate-400">Loading timeline...</p>
                 </Centered>
             }

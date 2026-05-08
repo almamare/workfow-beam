@@ -93,7 +93,7 @@ export default function WorkflowsPage() {
                                                                 'text-[10px]',
                                                                 isLast
                                                                     ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                                                                    : 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
+                                                                    : 'bg-brand-sky-100 text-brand-sky-700 dark:bg-brand-sky-900/30 dark:text-brand-sky-300',
                                                             )}
                                                         >
                                                             {step.status}
@@ -114,12 +114,12 @@ export default function WorkflowsPage() {
             </div>
 
             {/* Workflow Notes */}
-            <div className="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/20 p-6 space-y-3">
+            <div className="rounded-xl border border-brand-sky-200 dark:border-brand-sky-800 bg-brand-sky-50 dark:bg-brand-sky-950/20 p-6 space-y-3">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-sky-500 text-white shrink-0">
+                    <div className="p-2 rounded-lg bg-brand-sky-500 text-white shrink-0">
                         <Info className="h-4 w-4" />
                     </div>
-                    <h3 className="text-sm font-semibold text-sky-800 dark:text-sky-300">Workflow Notes</h3>
+                    <h3 className="text-sm font-semibold text-brand-sky-800 dark:text-brand-sky-300">Workflow Notes</h3>
                 </div>
                 <ul className="space-y-2">
                     {[
@@ -129,8 +129,8 @@ export default function WorkflowsPage() {
                         'System Administrators can approve records directly if there is an urgent need.',
                         'You can see the full approval history from any record\'s detail page under the "Timeline" tab.',
                     ].map((note) => (
-                        <li key={note} className="flex items-start gap-2 text-sm text-sky-700 dark:text-sky-400">
-                            <CheckCircle className="h-4 w-4 text-sky-500 shrink-0 mt-0.5" />
+                        <li key={note} className="flex items-start gap-2 text-sm text-brand-sky-700 dark:text-brand-sky-400">
+                            <CheckCircle className="h-4 w-4 text-brand-sky-500 shrink-0 mt-0.5" />
                             {note}
                         </li>
                     ))}

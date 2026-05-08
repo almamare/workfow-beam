@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { Suspense, useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/stores/store';
@@ -27,7 +27,15 @@ type PermissionRow = {
     can_approve: 0 | 1;
 };
 
-export default function RolePermissionsPage() {
+export default function RolePermissionsPageWrapper() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" /></div>}>
+            <RolePermissionsPage />
+        </Suspense>
+    );
+}
+
+function RolePermissionsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const idParam = searchParams.get('id') ?? '';
@@ -160,7 +168,7 @@ export default function RolePermissionsPage() {
     if (!role || role.id !== roleId) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
             </div>
         );
     }
@@ -171,7 +179,7 @@ export default function RolePermissionsPage() {
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <KeyRound className="h-8 w-8 text-sky-500" />
+                        <KeyRound className="h-8 w-8 text-brand-sky-500" />
                         Manage permissions: {role.role_name ?? role.role_key}
                     </h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-2">

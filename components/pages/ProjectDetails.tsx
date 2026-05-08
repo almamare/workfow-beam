@@ -292,7 +292,7 @@ function ProjectDetailsPageContent() {
                         Manage details for <span className="font-semibold">{project.name}</span>
                     </p>
                 </div>
-                <Button onClick={() => router.push(`/projects/tender/create?id=${projectId}`)} className="flex items-center gap-2 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                <Button onClick={() => router.push(`/projects/tender/create?id=${projectId}`)} className="flex items-center gap-2 bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
                     + Create Tender
                 </Button>
             </div>
@@ -305,7 +305,7 @@ function ProjectDetailsPageContent() {
             >
                 <div className="flex flex-wrap gap-3 items-center justify-start">
                     <Select value={status} onValueChange={(v) => setStatus(v as ProjectStatus)}>
-                        <SelectTrigger className="w-48 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                        <SelectTrigger className="w-48 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                             <SelectValue placeholder="Change Status" />
                         </SelectTrigger>
                         <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
@@ -313,7 +313,7 @@ function ProjectDetailsPageContent() {
                                 <SelectItem 
                                     key={s} 
                                     value={s as ProjectStatus}
-                                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200"
+                                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200"
                                 >
                                     {s}
                                 </SelectItem>
@@ -322,7 +322,7 @@ function ProjectDetailsPageContent() {
                     </Select>
 
                     {/* 1) Update first (primary) */}
-                    <Button onClick={handleStatusUpdate} className="flex items-center gap-2 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Button onClick={handleStatusUpdate} className="flex items-center gap-2 bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
                         <CheckCircle2 className="w-4 h-4" /> Update Status
                     </Button>
 
@@ -331,7 +331,7 @@ function ProjectDetailsPageContent() {
                         variant="outline"
                         onClick={() => projectId && downloadProject(projectId, 'project')}
                         disabled={projectIsDownload}
-                        className="border-sky-200 hover:border-sky-300 hover:text-sky-700 text-sky-700 hover:bg-sky-50"
+                        className="border-brand-sky-200 hover:border-brand-sky-300 hover:text-brand-sky-700 text-brand-sky-700 hover:bg-brand-sky-50"
                     >
                         {projectIsDownload ? (
                             <>
@@ -349,7 +349,7 @@ function ProjectDetailsPageContent() {
                         variant="outline"
                         onClick={() => projectId && downloadTender(projectId, 'tender')}
                         disabled={tenderIsDownload}
-                        className="border-sky-200 hover:border-sky-300 hover:text-sky-700 text-sky-700 hover:bg-sky-50"
+                        className="border-brand-sky-200 hover:border-brand-sky-300 hover:text-brand-sky-700 text-brand-sky-700 hover:bg-brand-sky-50"
                     >
                         {tenderIsDownload ? (
                             <>

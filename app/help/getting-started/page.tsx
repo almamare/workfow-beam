@@ -17,7 +17,7 @@ const STEPS = [
     {
         num: '01',
         icon: LogIn,
-        iconColor: 'bg-sky-500',
+        iconColor: 'bg-brand-sky-500',
         title: 'Log In to BEAM',
         description:
             'Access the system by navigating to the BEAM login page. Enter your credentials — every user account follows the email format username@beam.local with the password assigned by your administrator. Your session stays secure and you remain logged in until you sign out.',
@@ -149,7 +149,7 @@ const STEPS = [
 const KEY_CONCEPTS = [
     {
         icon: Shield,
-        iconColor: 'bg-sky-500',
+        iconColor: 'bg-brand-sky-500',
         term: 'Role',
         definition: 'Your role (like CEO, Finance Manager, or HR Staff) determines what you can see and do in the system. BEAM has 24 different roles, each with their own set of permissions.',
     },
@@ -205,7 +205,7 @@ export default function GettingStartedPage() {
             {/* Quick overview stats */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {[
-                    { value: '6', label: 'Steps', color: 'text-sky-500', bg: 'bg-sky-50 dark:bg-sky-950/20' },
+                    { value: '6', label: 'Steps', color: 'text-brand-sky-500', bg: 'bg-brand-sky-50 dark:bg-brand-sky-950/20' },
                     { value: '24', label: 'Module Cards', color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-950/20' },
                     { value: '~5 min', label: 'Read Time', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/20' },
                 ].map(s => (
@@ -219,11 +219,11 @@ export default function GettingStartedPage() {
             </div>
 
             {/* System Requirements */}
-            <SectionCard icon={Monitor} iconColor="bg-sky-500" title="System Requirements" subtitle="Make sure your environment is ready">
+            <SectionCard icon={Monitor} iconColor="bg-brand-sky-500" title="System Requirements" subtitle="Make sure your environment is ready">
                 <div className="grid md:grid-cols-2 gap-5">
                     <div className="space-y-3">
                         <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                            <Globe className="h-4 w-4 text-sky-500" />
+                            <Globe className="h-4 w-4 text-brand-sky-500" />
                             Supported Browsers
                         </h3>
                         <div className="grid grid-cols-2 gap-2">
@@ -240,7 +240,7 @@ export default function GettingStartedPage() {
                     </div>
                     <div className="space-y-3">
                         <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                            <Monitor className="h-4 w-4 text-sky-500" />
+                            <Monitor className="h-4 w-4 text-brand-sky-500" />
                             Additional Requirements
                         </h3>
                         <ul className="space-y-2">
@@ -272,7 +272,7 @@ export default function GettingStartedPage() {
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-xs font-bold text-sky-500 bg-sky-50 dark:bg-sky-950/30 px-2 py-0.5 rounded-full">
+                                    <span className="text-xs font-bold text-brand-sky-500 bg-brand-sky-50 dark:bg-brand-sky-950/30 px-2 py-0.5 rounded-full">
                                         Step {step.num}
                                     </span>
                                 </div>
@@ -284,7 +284,7 @@ export default function GettingStartedPage() {
                         {/* How-to steps */}
                         <div className="px-6 pb-4">
                             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
-                                <BookOpen className="h-4 w-4 text-sky-500" />
+                                <BookOpen className="h-4 w-4 text-brand-sky-500" />
                                 How to do it
                             </h3>
                             <StepList steps={step.details} />
@@ -299,7 +299,7 @@ export default function GettingStartedPage() {
                             <ul className="space-y-2">
                                 {step.tips.map((tip, i) => (
                                     <li key={i} className="flex items-start gap-2.5 text-sm text-slate-600 dark:text-slate-400">
-                                        <Info className="h-4 w-4 text-sky-400 shrink-0 mt-0.5" />
+                                        <Info className="h-4 w-4 text-brand-sky-400 shrink-0 mt-0.5" />
                                         {tip}
                                     </li>
                                 ))}
@@ -310,7 +310,7 @@ export default function GettingStartedPage() {
             })}
 
             {/* Key Concepts Glossary */}
-            <SectionCard icon={BookOpen} iconColor="bg-sky-500" title="Key Concepts" subtitle="Essential terminology you'll encounter throughout BEAM">
+            <SectionCard icon={BookOpen} iconColor="bg-brand-sky-500" title="Key Concepts" subtitle="Essential terminology you'll encounter throughout BEAM">
                 <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {KEY_CONCEPTS.map(concept => {
                         const Icon = concept.icon;

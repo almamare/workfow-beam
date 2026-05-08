@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { Suspense, useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/stores/store';
@@ -41,7 +41,15 @@ type PermissionRow = {
     can_approve: 0 | 1;
 };
 
-export default function UserPermissionsPage() {
+export default function UserPermissionsPageWrapper() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" /></div>}>
+            <UserPermissionsPage />
+        </Suspense>
+    );
+}
+
+function UserPermissionsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userId = searchParams.get('id') ?? '';
@@ -346,7 +354,7 @@ export default function UserPermissionsPage() {
     if (!user || user.id !== userId) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
             </div>
         );
     }
@@ -357,7 +365,7 @@ export default function UserPermissionsPage() {
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <KeyRound className="h-8 w-8 text-sky-500" />
+                        <KeyRound className="h-8 w-8 text-brand-sky-500" />
                         User permissions
                     </h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-2 text-sm md:text-base">
@@ -423,7 +431,7 @@ export default function UserPermissionsPage() {
                         variant="outline"
                         onClick={refreshTable}
                         disabled={isRefreshing || permissionsLoading}
-                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                     >
                         <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                         {isRefreshing ? 'Refreshing...' : 'Refresh'}

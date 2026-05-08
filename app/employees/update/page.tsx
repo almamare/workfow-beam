@@ -72,7 +72,7 @@ const UpdateEmployeePageContent: React.FC = () => {
     const dispatch = useReduxDispatch<AppDispatch>();
 
     useEffect(() => {
-        dispatch(fetchJobTitles());
+        dispatch(fetchJobTitles({ page: 1, limit: 500 }));
         dispatch(fetchDepartments());
         dispatch(fetchEmployees({ page: 1, limit: 500 }));
     }, [dispatch]);
@@ -248,7 +248,7 @@ const UpdateEmployeePageContent: React.FC = () => {
                     type="button"
                     variant="outline"
                     onClick={() => router.push('/employees')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                 >
                     Back to Employees
                 </Button>
@@ -273,7 +273,7 @@ const UpdateEmployeePageContent: React.FC = () => {
                                     value={form.name}
                                     placeholder="e.g. Ahmed"
                                     onChange={(e) => updateField('name', e.target.value)}
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {errors.name && <ErrorText>{errors.name}</ErrorText>}
                             </div>
@@ -286,7 +286,7 @@ const UpdateEmployeePageContent: React.FC = () => {
                                     value={form.surname}
                                     placeholder="e.g. Saleh"
                                     onChange={(e) => updateField('surname', e.target.value)}
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {errors.surname && <ErrorText>{errors.surname}</ErrorText>}
                             </div>
@@ -299,7 +299,7 @@ const UpdateEmployeePageContent: React.FC = () => {
                                     onValueChange={(v) => {
                                         const num = v ? parseInt(v, 10) : undefined;
                                         if (v && !isNaN(num as number)) {
-                                            const jt = jobTitlesList.find((j) => j.id === num);
+                                            const jt = jobTitlesList.find((j) => Number(j.id) === num);
                                             updateField('job_title_id', num);
                                             updateField('job_title', jt ? (jt.title_en ?? jt.title_ar ?? '') : '');
                                         } else {
@@ -387,7 +387,7 @@ const UpdateEmployeePageContent: React.FC = () => {
                                     value={form.salary_grade}
                                     placeholder="e.g. 750000"
                                     onChange={(e) => updateField('salary_grade', e.target.value)}
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {errors.salary_grade && <ErrorText>{errors.salary_grade}</ErrorText>}
                             </div>
@@ -399,20 +399,20 @@ const UpdateEmployeePageContent: React.FC = () => {
                                     value={form.role}
                                     onValueChange={(v) => updateField('role', v)}
                                 >
-                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                         <SelectValue placeholder="Select role" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
-                                        <SelectItem value="Manager" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">
+                                        <SelectItem value="Manager" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200">
                                             Manager
                                         </SelectItem>
-                                        <SelectItem value="Supervisor" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">
+                                        <SelectItem value="Supervisor" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200">
                                             Supervisor
                                         </SelectItem>
-                                        <SelectItem value="Employee" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">
+                                        <SelectItem value="Employee" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200">
                                             Employee
                                         </SelectItem>
-                                        <SelectItem value="Admin" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">
+                                        <SelectItem value="Admin" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200">
                                             Admin
                                         </SelectItem>
                                     </SelectContent>
@@ -430,7 +430,7 @@ const UpdateEmployeePageContent: React.FC = () => {
                                 placeholder="e.g. Updated notes"
                                 value={form.notes ?? ''}
                                 onChange={(e) => updateField('notes', e.target.value)}
-                                className="min-h-[120px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                className="min-h-[120px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                             />
                         </div>
 
@@ -443,7 +443,7 @@ const UpdateEmployeePageContent: React.FC = () => {
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50"
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50"
                             />
                             {form.avatar && (
                                 <img
@@ -460,7 +460,7 @@ const UpdateEmployeePageContent: React.FC = () => {
                                 variant="outline"
                                 onClick={handleReset}
                                 disabled={loading}
-                                className="border-sky-200 dark:border-sky-800 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-700 dark:hover:text-sky-300 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                                className="border-brand-sky-200 dark:border-brand-sky-800 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 hover:text-brand-sky-700 dark:hover:text-brand-sky-300 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                             >
                                 <RotateCcw className="h-4 w-4 mr-2" />
                                 Reset Form
@@ -468,7 +468,7 @@ const UpdateEmployeePageContent: React.FC = () => {
                             <Button
                                 type="submit"
                                 disabled={loading}
-                                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                                className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                             >
                                 {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                                 {loading ? 'Updating...' : 'Update Employee'}

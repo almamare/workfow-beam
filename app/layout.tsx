@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Providers } from '@/components/providers';
+import { openSans } from '@/lib/fonts';
 import './globals.css';
 
 export const dynamic = 'force-dynamic';
@@ -71,17 +72,18 @@ export const metadata: Metadata = {
     icons: {
         icon: [
             { url: '/favicon.ico', sizes: 'any' },
+            { url: '/logo.png', sizes: 'any', type: 'image/png' },
             { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
             { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
         ],
-        apple: [{ url: '/apple-touch-icon.png' }],
+        apple: [{ url: '/logo.png' }],
     },
 };
 
 export const viewport: Viewport = {
     themeColor: [
-        { media: '(prefers-color-scheme: light)', color: '#1e3a5f' },
-        { media: '(prefers-color-scheme: dark)', color: '#1a3352' },
+        { media: '(prefers-color-scheme: light)', color: '#0058de' },
+        { media: '(prefers-color-scheme: dark)', color: '#0047b3' },
     ],
     width: 'device-width',
     initialScale: 1,
@@ -90,7 +92,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en">
+        <html lang="en" className={openSans.variable}>
             <body>
                 <Providers>{children}</Providers>
             </body>

@@ -226,7 +226,7 @@ function FinancialRequestDetails() {
     if (loading && !request) {
         return (
             <Centered>
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                 <p className="text-slate-500 dark:text-slate-400">Loading details...</p>
             </Centered>
         );
@@ -239,7 +239,7 @@ function FinancialRequestDetails() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/requests/financial')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Requests
@@ -255,7 +255,7 @@ function FinancialRequestDetails() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/requests/financial')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Requests
@@ -431,7 +431,7 @@ function FinancialRequestDetails() {
                     <Button
                         variant="outline"
                         onClick={() => router.push('/requests/financial')}
-                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                     >
                         Back to Requests
                     </Button>
@@ -457,7 +457,7 @@ function FinancialRequestDetails() {
                     size="sm"
                 >
                     <div className="text-xl md:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-sky-500" />
+                        <DollarSign className="h-5 w-5 text-brand-sky-500" />
                         {request.request_type || 'Financial'}
                     </div>
                 </EnhancedCard>
@@ -566,7 +566,7 @@ function FinancialRequestDetails() {
                 headerActions={
                     <Button
                         onClick={() => setAttachmentModelOpen(true)}
-                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                         <Plus className="h-4 w-4 mr-2" />
                         Add Attachment
@@ -591,7 +591,7 @@ function FinancialRequestDetails() {
                 headerActions={
                     <Button
                         onClick={() => setApprovalModelOpen(true)}
-                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                         <Plus className="h-4 w-4 mr-2" />
                         Add Approval
@@ -642,7 +642,7 @@ export default function Page() {
         <Suspense
             fallback={
                 <Centered>
-                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                     <p className="text-slate-500 dark:text-slate-400">Loading details...</p>
                 </Centered>
             }

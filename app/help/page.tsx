@@ -86,14 +86,14 @@ export default function HelpCenterPage() {
             <div>
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Help Center</h1>
                 <p className="text-slate-600 dark:text-slate-400 mt-2">
-                    Complete documentation and tutorials for <span className="font-semibold text-sky-600 dark:text-sky-400">BEAM</span> — Business Enterprise Asset Management
+                    Complete documentation and tutorials for <span className="font-semibold text-brand-sky-600 dark:text-brand-sky-400">BEAM</span> — Business Enterprise Asset Management
                 </p>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {[
-                    { value: '14', label: 'Modules', color: 'text-sky-500', bg: 'bg-sky-50 dark:bg-sky-950/20' },
+                    { value: '14', label: 'Modules', color: 'text-brand-sky-500', bg: 'bg-brand-sky-50 dark:bg-brand-sky-950/20' },
                     { value: '13', label: 'Departments', color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-950/20' },
                     { value: '24', label: 'Roles', color: 'text-violet-500', bg: 'bg-violet-50 dark:bg-violet-950/20' },
                     { value: '5', label: 'Access Levels', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/20' },
@@ -112,7 +112,7 @@ export default function HelpCenterPage() {
             <div className="grid md:grid-cols-2 gap-6">
                 <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 space-y-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-xl bg-sky-500 text-white shrink-0">
+                        <div className="p-2.5 rounded-xl bg-brand-sky-500 text-white shrink-0">
                             <Info className="h-5 w-5" />
                         </div>
                         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">About BEAM</h2>
@@ -138,7 +138,7 @@ export default function HelpCenterPage() {
                             { icon: DollarSign, text: 'Process payments, track budgets, and manage finances', color: 'text-emerald-500' },
                             { icon: ClipboardList, text: 'Create projects, contracts, and task orders', color: 'text-amber-500' },
                             { icon: ThumbsUp, text: 'Submit and approve requests through multi-stage workflows', color: 'text-purple-500' },
-                            { icon: Eye, text: 'Generate reports, export data, and analyze performance', color: 'text-sky-500' },
+                            { icon: Eye, text: 'Generate reports, export data, and analyze performance', color: 'text-brand-sky-500' },
                         ].map(item => {
                             const Icon = item.icon;
                             return (
@@ -201,10 +201,10 @@ export default function HelpCenterPage() {
                                         <span className="text-xs font-medium text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded-full">{section.tag}</span>
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">{section.title}</h3>
+                                        <h3 className="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-brand-sky-600 dark:group-hover:text-brand-sky-400 transition-colors">{section.title}</h3>
                                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{section.desc}</p>
                                     </div>
-                                    <div className="flex items-center gap-1 text-xs font-medium text-sky-600 dark:text-sky-400">
+                                    <div className="flex items-center gap-1 text-xs font-medium text-brand-sky-600 dark:text-brand-sky-400">
                                         Read more <ChevronRight className="h-3 w-3" />
                                     </div>
                                 </div>

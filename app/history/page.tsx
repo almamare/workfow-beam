@@ -46,7 +46,7 @@ const TYPE_COLORS: Record<string, string> = {
     Project:         'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200',
     Task:            'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200',
     Financial:       'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200',
-    Employment:      'bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200',
+    Employment:      'bg-brand-sky-50 dark:bg-brand-sky-900/30 text-brand-sky-700 dark:text-brand-sky-300 border-brand-sky-200',
     ProjectContracts:'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200',
 };
 
@@ -185,19 +185,19 @@ export default function HistoryPage() {
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-3">
-                        <History className="h-8 w-8 text-sky-500" />
+                        <History className="h-8 w-8 text-brand-sky-500" />
                         Approval History
                     </h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-1">Your approval actions and decisions</p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={refresh} disabled={isRefreshing}
-                        className="border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50">
+                        className="border-brand-sky-200 dark:border-brand-sky-800 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50">
                         <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                         {isRefreshing ? 'Refreshing...' : 'Refresh'}
                     </Button>
                     <Button variant="outline" size="sm" onClick={exportCsv} disabled={isExporting}
-                        className="border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50">
+                        className="border-brand-sky-200 dark:border-brand-sky-800 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50">
                         <FileSpreadsheet className="h-4 w-4 mr-2" />
                         Export CSV
                     </Button>

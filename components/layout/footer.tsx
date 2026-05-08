@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Building2, Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
+import Image from 'next/image';
+import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -10,11 +11,15 @@ export default function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {/* Company Info */}
                     <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-orange to-brand-gold">
-                                <Building2 className="h-5 w-5 text-white" />
-                            </div>
-                            <span className="text-xl font-bold bg-gradient-to-r from-brand-orange to-brand-gold bg-clip-text text-transparent">
+                        <div className="flex flex-col gap-2">
+                            <Image
+                                src="/logo.png"
+                                alt="Shuaa Al-Ranou"
+                                width={140}
+                                height={42}
+                                className="h-9 w-auto max-w-[140px] object-contain object-left"
+                            />
+                            <span className="text-xl font-bold bg-gradient-to-r from-brand-sky-700 to-brand-sky-500 bg-clip-text text-transparent">
                                 Shuaa Al-Ranou
                             </span>
                         </div>

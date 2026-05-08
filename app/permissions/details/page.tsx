@@ -42,7 +42,7 @@ function PermissionDetailsContent() {
     if (!permission || permission.id !== permissionId) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
             </div>
         );
     }
@@ -53,7 +53,7 @@ function PermissionDetailsContent() {
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <KeyRound className="h-8 w-8 text-sky-500" />
+                        <KeyRound className="h-8 w-8 text-brand-sky-500" />
                         {permission.name_en ?? permission.name_ar ?? permission.permission_key}
                     </h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-2">
@@ -64,7 +64,7 @@ function PermissionDetailsContent() {
                     type="button"
                     variant="outline"
                     onClick={() => router.push('/permissions')}
-                    className="border-sky-200 dark:border-sky-800"
+                    className="border-brand-sky-200 dark:border-brand-sky-800"
                 >
                     Back to list
                 </Button>

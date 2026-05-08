@@ -89,17 +89,17 @@ export default function DashboardPage() {
 
             {/* ── Brand Header ── */}
             <header
-                className="relative shrink-0 overflow-hidden border-b border-sky-500/25
+                className="relative shrink-0 overflow-hidden border-b border-brand-sky-500/25
             min-h-[3rem] sm:min-h-[3.5rem]
             flex items-center
             rounded-xl
             px-4 sm:px-6 lg:px-8 py-2
-            bg-[linear-gradient(108deg,hsl(201,96%,14%)_0%,hsl(200,76%,20%)_42%,hsl(215,32%,14%)_100%)]"
+            bg-[linear-gradient(135deg,hsl(216,85%,20%)_0%,hsl(216,100%,32%)_60%,hsl(216,95%,42%)_100%)]"
             >
                 {/* Top Accent Line */}
                 <div
                     className="absolute top-0 left-0 right-0 h-[2px] z-[1]
-                    bg-[linear-gradient(90deg,hsl(43,96%,58%)_0%,hsl(199,85%,72%)_50%,hsl(43,96%,58%)_100%)] opacity-90"
+                    bg-[linear-gradient(90deg,hsl(216,95%,42%)_0%,hsl(216,90%,48%)_50%,hsl(216,95%,42%)_100%)] opacity-90"
                     aria-hidden
                 />
 
@@ -123,7 +123,7 @@ export default function DashboardPage() {
 
                 <div
                     className="hidden sm:block pointer-events-none absolute -right-16 top-1/2 h-[140%] w-40 -translate-y-1/2 rounded-full
-                    bg-sky-400/15 blur-2xl"
+                    bg-brand-sky-400/15 blur-2xl"
                     aria-hidden
                 />
 
@@ -137,7 +137,7 @@ export default function DashboardPage() {
                                 Shuaa Al-Ranou
                             </h1>
 
-                            <p className="text-[10px] font-medium uppercase text-sky-200/70 truncate">
+                            <p className="text-[10px] font-medium uppercase text-brand-sky-200/70 truncate">
                                 Trade &amp; General Contracting
                             </p>
 
@@ -165,9 +165,9 @@ export default function DashboardPage() {
                         <div className="hidden sm:block h-6 w-px bg-white/10" />
 
                         {/* User Info */}
-                        <div className="flex flex-col items-start sm:items-end sm:text-right text-xs text-sky-100/85 whitespace-nowrap">
+                        <div className="flex flex-col items-start sm:items-end sm:text-right text-xs text-brand-sky-100/85 whitespace-nowrap">
                             <p>
-                                <span className="text-sky-200/70">{greeting()}, </span>
+                                <span className="text-brand-sky-200/70">{greeting()}, </span>
                                 <span className="font-semibold text-white">
                                     {userName || 'Welcome'}
                                 </span>
@@ -188,7 +188,7 @@ export default function DashboardPage() {
             <div className="px-5 sm:px-8 lg:px-10 pt-7 pb-4">
                 <div className="flex items-center gap-3">
                     <span className="w-[3px] h-5 rounded-full inline-block flex-shrink-0"
-                        style={{ background: 'linear-gradient(180deg,hsl(199,89%,42%),hsl(199,89%,64%))' }} />
+                        style={{ background: 'linear-gradient(135deg,hsl(216,100%,36%) 0%,hsl(216,90%,48%) 100%)' }} />
                     <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-widest">
                         System Modules &nbsp;·&nbsp; {sections.length} sections
                     </p>
@@ -202,7 +202,7 @@ export default function DashboardPage() {
                         <Link
                             key={s.href}
                             href={s.href}
-                            className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-2xl"
+                            className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky-500 rounded-2xl"
                         >
                             <div className="relative flex flex-col items-center justify-center text-center gap-3
                                 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/60
@@ -237,7 +237,7 @@ export default function DashboardPage() {
                                     -
                                     <p className="text-slate-700 dark:text-slate-200 font-semibold text-[11.5px] sm:text-[12.5px]
                                         leading-tight line-clamp-2 transition-colors duration-200
-                                        group-hover:text-sky-700 dark:group-hover:text-sky-400">
+                                        group-hover:text-brand-sky-700 dark:group-hover:text-brand-sky-400">
                                         {s.title}
                                     </p>
                                 </div>
@@ -280,14 +280,14 @@ export default function DashboardPage() {
                     <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 pl-7 sm:pl-0" aria-label="Legal">
                         <Link
                             href={LEGAL_ROUTES.privacyPolicy}
-                            className="text-[11px] text-slate-400 dark:text-slate-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors font-medium"
+                            className="text-[11px] text-slate-400 dark:text-slate-500 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 transition-colors font-medium"
                         >
                             {LEGAL_LINK_LABELS.privacyPolicy}
                         </Link>
                         <span className="hidden sm:block w-px h-3 bg-slate-200 dark:bg-slate-700 flex-shrink-0" aria-hidden />
                         <Link
                             href={LEGAL_ROUTES.termsOfUse}
-                            className="text-[11px] text-slate-400 dark:text-slate-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors font-medium"
+                            className="text-[11px] text-slate-400 dark:text-slate-500 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 transition-colors font-medium"
                         >
                             {LEGAL_LINK_LABELS.termsOfUse}
                         </Link>

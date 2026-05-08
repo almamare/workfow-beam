@@ -267,7 +267,7 @@ export default function PendingApprovalsPage() {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                className="pr-10 w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-100 dark:focus-visible:ring-sky-900/50 focus:border-sky-300 dark:focus:border-sky-500"
+                                className="pr-10 w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky-100 dark:focus-visible:ring-brand-sky-900/50 focus:border-brand-sky-300 dark:focus:border-brand-sky-500"
                             />
                         </div>
                     </div>
@@ -289,7 +289,7 @@ export default function PendingApprovalsPage() {
                     <div className="flex gap-2">
                         <Button
                             onClick={handleSearch}
-                            className="flex-1 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white"
+                            className="flex-1 bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white"
                         >
                             <Search className="h-4 w-4 mr-2" />
                             بحث
@@ -321,7 +321,7 @@ export default function PendingApprovalsPage() {
             >
                 {loading ? (
                     <div className="flex items-center justify-center py-12">
-                        <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                        <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                         <p className="text-slate-500 dark:text-slate-400 mr-3">جاري التحميل...</p>
                     </div>
                 ) : error ? (

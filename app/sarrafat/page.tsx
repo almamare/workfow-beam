@@ -127,7 +127,7 @@ export default function SarrafatPage() {
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Exchange</h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-2">Manage exchanges and their balances.</p>
                 </div>
-                <Button onClick={() => router.push('/sarrafat/create')} className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg">
+                <Button onClick={() => router.push('/sarrafat/create')} className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Exchange
                 </Button>
@@ -142,7 +142,7 @@ export default function SarrafatPage() {
                 ]}
                 activeFilters={activeFilters}
                 onClearFilters={() => { setSearch(''); setStatus('All'); setPage(1); }}
-                actions={<Button variant="outline" onClick={refreshTable} disabled={isRefreshing || loading} className="border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300"><RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />{isRefreshing ? 'Refreshing...' : 'Refresh'}</Button>}
+                actions={<Button variant="outline" onClick={refreshTable} disabled={isRefreshing || loading} className="border-brand-sky-200 dark:border-brand-sky-800 text-brand-sky-700 dark:text-brand-sky-300"><RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />{isRefreshing ? 'Refreshing...' : 'Refresh'}</Button>}
             />
 
             <EnhancedCard title="Exchange list" description={`${totalItems} exchange(s)`} variant="default" size="sm" headerActions={

@@ -93,7 +93,7 @@ function DetailsInner() {
     if (loading || !contract) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[40vh] gap-2">
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                 <p className="text-slate-500">Loading…</p>
             </div>
         );
@@ -205,7 +205,7 @@ export default function ProjectContractDetailsPage() {
         <Suspense
             fallback={
                 <div className="flex justify-center py-20">
-                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                 </div>
             }
         >

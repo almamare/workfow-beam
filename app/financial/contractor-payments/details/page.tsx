@@ -107,7 +107,7 @@ function ContractorPaymentDetailInner() {
     if (loading && !payment) {
         return (
             <div className="flex justify-center py-24">
-                <Loader2 className="h-10 w-10 animate-spin text-sky-500" />
+                <Loader2 className="h-10 w-10 animate-spin text-brand-sky-500" />
             </div>
         );
     }
@@ -165,7 +165,7 @@ function ContractorPaymentDetailInner() {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="border-sky-200 text-sky-700 hover:bg-sky-50 dark:border-sky-700 dark:text-sky-300"
+                            className="border-brand-sky-200 text-brand-sky-700 hover:bg-brand-sky-50 dark:border-brand-sky-700 dark:text-brand-sky-300"
                             onClick={() => router.push(`/financial/contractor-payments/update?id=${payment.payment_id}`)}
                         >
                             <SquarePen className="h-4 w-4 mr-1.5" />
@@ -173,7 +173,7 @@ function ContractorPaymentDetailInner() {
                         </Button>
                     )}
                     {canSubmit && (
-                        <Button size="sm" className="bg-sky-600 hover:bg-sky-700 text-white" onClick={() => setSubmitOpen(true)}>
+                        <Button size="sm" className="bg-brand-sky-600 hover:bg-brand-sky-700 text-white" onClick={() => setSubmitOpen(true)}>
                             <Send className="h-4 w-4 mr-1.5" />
                             Submit
                         </Button>
@@ -253,7 +253,7 @@ function ContractorPaymentDetailInner() {
                         {payment.project_id && (
                             <DetailRow icon={<Hash className="h-4 w-4" />} label="Project ID" value={
                                 <button
-                                    className="font-mono text-xs text-sky-600 hover:underline"
+                                    className="font-mono text-xs text-brand-sky-600 hover:underline"
                                     onClick={() => router.push(`/projects/details?id=${payment.project_id}`)}
                                 >
                                     {payment.project_id}
@@ -285,7 +285,7 @@ function ContractorPaymentDetailInner() {
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                            className="bg-sky-600 hover:bg-sky-700"
+                            className="bg-brand-sky-600 hover:bg-brand-sky-700"
                             disabled={submitting}
                             onClick={async (e) => {
                                 e.preventDefault();
@@ -455,7 +455,7 @@ function ContractorPaymentDetailInner() {
 
 export default function ContractorPaymentDetailPage() {
     return (
-        <Suspense fallback={<div className="flex justify-center py-24"><Loader2 className="h-10 w-10 animate-spin text-sky-500" /></div>}>
+        <Suspense fallback={<div className="flex justify-center py-24"><Loader2 className="h-10 w-10 animate-spin text-brand-sky-500" /></div>}>
             <ContractorPaymentDetailInner />
         </Suspense>
     );

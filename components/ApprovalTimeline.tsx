@@ -103,7 +103,7 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({ requestId, o
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                 <p className="text-slate-500 dark:text-slate-400 mr-3">جاري التحميل...</p>
             </div>
         );

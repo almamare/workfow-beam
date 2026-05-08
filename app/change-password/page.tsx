@@ -37,7 +37,7 @@ export default function ChangePasswordPage() {
     })();
 
     const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'][strength] ?? '';
-    const strengthColor = ['', 'bg-red-500', 'bg-amber-500', 'bg-yellow-400', 'bg-emerald-500', 'bg-sky-500'][strength] ?? '';
+    const strengthColor = ['', 'bg-red-500', 'bg-amber-500', 'bg-yellow-400', 'bg-emerald-500', 'bg-brand-sky-500'][strength] ?? '';
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -73,20 +73,20 @@ export default function ChangePasswordPage() {
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 px-4 py-12">
 
             {/* Subtle brand glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-sky-500/10 dark:bg-sky-500/5 blur-3xl rounded-full pointer-events-none" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-brand-sky-500/10 dark:bg-brand-sky-500/5 blur-3xl rounded-full pointer-events-none" />
 
             <div className="relative w-full max-w-[420px]">
 
                 {/* Logo */}
                 <div className="flex flex-col items-center mb-8 gap-3">
-                    <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-lg ring-2 ring-sky-200 dark:ring-sky-800">
+                    <div className="rounded-2xl overflow-hidden shadow-lg ring-2 ring-brand-sky-200 dark:ring-brand-sky-800 px-3 py-2 bg-white dark:bg-slate-900">
                         <Image
-                            src="/icon-192-maskable.png"
+                            src="/logo.png"
                             alt="Shuaa Al-Ranou"
-                            width={56}
-                            height={56}
+                            width={160}
+                            height={48}
                             priority
-                            className="w-full h-full object-cover"
+                            className="h-10 w-auto max-w-[160px] object-contain"
                         />
                     </div>
                     <div className="text-center">
@@ -99,14 +99,14 @@ export default function ChangePasswordPage() {
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden">
 
                     {/* Card top accent */}
-                    <div className="h-1 w-full bg-gradient-to-r from-sky-500 via-sky-400 to-sky-600" />
+                    <div className="h-1 w-full bg-gradient-to-r from-brand-sky-500 via-brand-sky-400 to-brand-sky-600" />
 
                     <div className="px-6 pt-6 pb-8 space-y-6">
 
                         {/* Header */}
                         <div className="flex items-start gap-4">
-                            <div className="w-11 h-11 rounded-xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center flex-shrink-0">
-                                <KeyRound className="h-5 w-5 text-sky-600 dark:text-sky-400" />
+                            <div className="w-11 h-11 rounded-xl bg-brand-sky-100 dark:bg-brand-sky-900/40 flex items-center justify-center flex-shrink-0">
+                                <KeyRound className="h-5 w-5 text-brand-sky-600 dark:text-brand-sky-400" />
                             </div>
                             <div>
                                 <h1 className="text-xl font-extrabold text-slate-800 dark:text-white leading-tight">
@@ -127,7 +127,7 @@ export default function ChangePasswordPage() {
                                     Current Password
                                 </Label>
                                 <div className="relative group">
-                                    <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                                    <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-sky-500 transition-colors" />
                                     <Input
                                         id="current"
                                         type={showCurrent ? 'text' : 'password'}
@@ -137,10 +137,10 @@ export default function ChangePasswordPage() {
                                         onChange={(e) => setCurrentPassword(e.target.value)}
                                         required
                                         disabled={loading}
-                                        className="pl-10 pr-10 h-11 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all"
+                                        className="pl-10 pr-10 h-11 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-500/20 transition-all"
                                     />
                                     <button type="button" tabIndex={-1}
-                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500 transition-colors"
+                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-sky-500 transition-colors"
                                         onClick={() => setShowCurrent(v => !v)}>
                                         {showCurrent ? <EyeOff size={15} /> : <Eye size={15} />}
                                     </button>
@@ -153,7 +153,7 @@ export default function ChangePasswordPage() {
                                     New Password
                                 </Label>
                                 <div className="relative group">
-                                    <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                                    <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-sky-500 transition-colors" />
                                     <Input
                                         id="new"
                                         type={showNew ? 'text' : 'password'}
@@ -164,10 +164,10 @@ export default function ChangePasswordPage() {
                                         required
                                         minLength={6}
                                         disabled={loading}
-                                        className="pl-10 pr-10 h-11 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all"
+                                        className="pl-10 pr-10 h-11 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-500/20 transition-all"
                                     />
                                     <button type="button" tabIndex={-1}
-                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500 transition-colors"
+                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-sky-500 transition-colors"
                                         onClick={() => setShowNew(v => !v)}>
                                         {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
                                     </button>
@@ -193,7 +193,7 @@ export default function ChangePasswordPage() {
                                     Confirm New Password
                                 </Label>
                                 <div className="relative group">
-                                    <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                                    <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-sky-500 transition-colors" />
                                     <Input
                                         id="confirm"
                                         type={showConfirm ? 'text' : 'password'}
@@ -208,11 +208,11 @@ export default function ChangePasswordPage() {
                                                 ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
                                                 : confirmPassword && confirmPassword === newPassword
                                                 ? 'border-emerald-400 focus:border-emerald-500 focus:ring-emerald-500/20'
-                                                : 'border-slate-200 dark:border-slate-700 focus:border-sky-500 focus:ring-sky-500/20'
+                                                : 'border-slate-200 dark:border-slate-700 focus:border-brand-sky-500 focus:ring-brand-sky-500/20'
                                         }`}
                                     />
                                     <button type="button" tabIndex={-1}
-                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500 transition-colors"
+                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-sky-500 transition-colors"
                                         onClick={() => setShowConfirm(v => !v)}>
                                         {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
                                     </button>
@@ -227,7 +227,7 @@ export default function ChangePasswordPage() {
                                 type="submit"
                                 disabled={loading}
                                 className="w-full h-11 rounded-xl font-semibold text-[15px] text-white shadow-md hover:shadow-lg active:scale-[0.98] transition-all duration-150 mt-2"
-                                style={{ background: loading ? undefined : 'linear-gradient(135deg, hsl(199,89%,40%) 0%, hsl(199,89%,52%) 100%)' }}
+                                style={{ background: loading ? undefined : 'linear-gradient(135deg, hsl(216,100%,36%) 0%, hsl(216,90%,48%) 100%)' }}
                             >
                                 {loading ? (
                                     <>

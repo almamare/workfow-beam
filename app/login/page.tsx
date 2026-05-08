@@ -246,7 +246,7 @@ export default function LoginPage() {
 
             {/* ── LEFT BRAND PANEL ─────────────────────────────────────────── */}
             <aside className="hidden lg:flex lg:w-[46%] xl:w-[42%] flex-col relative overflow-hidden"
-                style={{ background: 'linear-gradient(160deg, hsl(201,96%,20%) 0%, hsl(199,89%,32%) 55%, hsl(198,93%,42%) 100%)' }}>
+                style={{ background: 'linear-gradient(160deg, hsl(216,85%,16%) 0%, hsl(216,100%,28%) 55%, hsl(216,100%,42%) 100%)' }}>
 
                 {/* Decorative background rings */}
                 <svg className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
@@ -273,24 +273,24 @@ export default function LoginPage() {
 
                 {/* Top accent bar */}
                 <div className="absolute top-0 left-0 right-0 h-1"
-                    style={{ background: 'linear-gradient(90deg, hsl(45,100%,50%), hsl(199,89%,70%), hsl(45,100%,50%))' }} />
+                    style={{ background: 'linear-gradient(90deg, hsl(216,100%,44%), hsl(216,85%,58%), hsl(216,100%,44%))' }} />
 
                 {/* Large watermark icon */}
                 <div className="absolute bottom-[-40px] right-[-40px] opacity-[0.06] pointer-events-none select-none">
-                    <Image src="/icon-512.png" alt="" width={340} height={340} aria-hidden className="object-contain" />
+                    <Image src="/logo.png" alt="" width={340} height={340} aria-hidden className="object-contain max-w-[340px] h-auto" />
                 </div>
 
                 {/* Content */}
                 <div className="relative flex flex-col h-full px-10 xl:px-14 py-10">
 
                     {/* Logo + name */}
-                    <div className="flex items-center">
-                        <div className="w-14 h-14 flex items-center overflow-hidden">
-                            <Image src="/icon-512.png" alt="Shuaa Al-Ranou" width={50} height={50} priority className="object-contain" />
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center min-h-[52px]">
+                            <Image src="/logo.png" alt="Shuaa Al-Ranou" width={160} height={48} priority className="h-12 w-auto max-w-[160px] object-contain object-left" />
                         </div>
                         <div>
                             <p className="text-white font-bold text-xl leading-tight tracking-wide uppercase">Shuaa Al-Ranou</p>
-                            <p className="text-sky-200 text-xs font-medium uppercase">Trade & General Contracting</p>
+                            <p className="text-brand-sky-200 text-xs font-medium uppercase">Trade & General Contracting</p>
                         </div>
                     </div>
 
@@ -298,13 +298,13 @@ export default function LoginPage() {
                     <div className="mt-auto mb-auto pt-16">
                         <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-6">
                             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                            <span className="text-sky-100 text-xs font-medium tracking-wide">Enterprise Management Platform</span>
+                            <span className="text-brand-sky-100 text-xs font-medium tracking-wide">Enterprise Management Platform</span>
                         </div>
                         <h1 className="text-white font-extrabold leading-[1.1] mb-4" style={{ fontSize: 'clamp(2rem, 3vw, 2.75rem)' }}>
                             Manage Every<br />
-                            <span style={{ color: 'hsl(45,100%,60%)' }}>Project with Precision</span>
+                            <span style={{ color: 'hsl(216,95%,72%)' }}>Project with Precision</span>
                         </h1>
-                        <p className="text-sky-200 text-base leading-relaxed max-w-sm">
+                        <p className="text-brand-sky-200 text-base leading-relaxed max-w-sm">
                             A complete operations platform for contracting companies — from project creation to financial closure.
                         </p>
                     </div>
@@ -314,11 +314,11 @@ export default function LoginPage() {
                         {features.map(({ icon: Icon, title, description }) => (
                             <div key={title} className="flex items-start gap-4">
                                 <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center">
-                                    <Icon className="w-5 h-5 text-sky-200" />
+                                    <Icon className="w-5 h-5 text-brand-sky-200" />
                                 </div>
                                 <div>
                                     <p className="text-white font-semibold text-sm">{title}</p>
-                                    <p className="text-sky-300 text-xs leading-relaxed mt-0.5">{description}</p>
+                                    <p className="text-brand-sky-300 text-xs leading-relaxed mt-0.5">{description}</p>
                                 </div>
                             </div>
                         ))}
@@ -326,7 +326,7 @@ export default function LoginPage() {
 
                     {/* Bottom copyright */}
                     <div className="border-t border-white/10 pt-5">
-                        <p className="text-sky-400 text-xs">
+                        <p className="text-brand-sky-400 text-xs">
                             © {new Date().getFullYear()} Shuaa Al-Ranou Trade & General Contracting. All rights reserved.
                         </p>
                     </div>
@@ -339,12 +339,12 @@ export default function LoginPage() {
                 {/* Mobile logo */}
                 <div className="lg:hidden flex items-center gap-3 mb-10">
                     <Image
-                        src="/icon-192.png"
+                        src="/logo.png"
                         alt="Shuaa Al-Ranou"
-                        width={44}
-                        height={44}
+                        width={140}
+                        height={42}
                         priority
-                        className="object-contain"
+                        className="h-10 w-auto max-w-[140px] object-contain object-left"
                         style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.12))' }}
                     />
                     <div>
@@ -370,13 +370,13 @@ export default function LoginPage() {
                                 Username
                             </Label>
                             <div className="relative group">
-                                <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-sky-500 transition-colors duration-150" />
+                                <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-sky-500 transition-colors duration-150" />
                                 <Input
                                     id="username"
                                     type="text"
                                     autoComplete="username"
                                     placeholder="Enter your username"
-                                    className="pl-10 h-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-150"
+                                    className="pl-10 h-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-500/20 transition-all duration-150"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     required
@@ -391,13 +391,13 @@ export default function LoginPage() {
                                 Password
                             </Label>
                             <div className="relative group">
-                                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-sky-500 transition-colors duration-150" />
+                                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-sky-500 transition-colors duration-150" />
                                 <Input
                                     id="password"
                                     type={showPassword ? 'text' : 'password'}
                                     autoComplete="current-password"
                                     placeholder="Enter your password"
-                                    className="pl-10 pr-11 h-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-150"
+                                    className="pl-10 pr-11 h-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-500/20 transition-all duration-150"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
@@ -406,7 +406,7 @@ export default function LoginPage() {
                                 <button
                                     type="button"
                                     tabIndex={-1}
-                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500 transition-colors duration-150 focus:outline-none"
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-sky-500 transition-colors duration-150 focus:outline-none"
                                     onClick={() => setShowPassword((v) => !v)}
                                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 >
@@ -422,7 +422,7 @@ export default function LoginPage() {
                                     id="remember"
                                     checked={rememberMe}
                                     onCheckedChange={(v) => setRememberMe(v as boolean)}
-                                    className="data-[state=checked]:bg-sky-600 data-[state=checked]:border-sky-600"
+                                    className="data-[state=checked]:bg-brand-sky-600 data-[state=checked]:border-brand-sky-600"
                                 />
                                 <span className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">
                                     Remember me
@@ -430,7 +430,7 @@ export default function LoginPage() {
                             </label>
                             <button
                                 type="button"
-                                className="text-sm font-medium text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 transition-colors focus:outline-none"
+                                className="text-sm font-medium text-brand-sky-600 hover:text-brand-sky-700 dark:text-brand-sky-400 dark:hover:text-brand-sky-300 transition-colors focus:outline-none"
                                 onClick={openReset}
                             >
                                 Forgot password?
@@ -442,7 +442,7 @@ export default function LoginPage() {
                             type="submit"
                             disabled={busy}
                             className="w-full h-12 rounded-xl font-semibold text-[15px] text-white shadow-md hover:shadow-lg active:scale-[0.98] transition-all duration-150 mt-2 disabled:opacity-70"
-                            style={{ background: busy ? undefined : 'linear-gradient(135deg, hsl(199,89%,40%) 0%, hsl(199,89%,52%) 100%)' }}
+                            style={{ background: busy ? undefined : 'linear-gradient(135deg, hsl(216,100%,36%) 0%, hsl(216,90%,48%) 100%)' }}
                         >
                             {busy ? (
                                 <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Signing in…</>
@@ -465,9 +465,9 @@ export default function LoginPage() {
                     </div>
 
                     {/* Security badge */}
-                    <div className="flex items-center gap-3 rounded-xl border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-900/20 px-4 py-3">
-                        <ShieldCheck className="h-5 w-5 text-sky-500 flex-shrink-0" />
-                        <p className="text-xs text-sky-700 dark:text-sky-300 leading-relaxed">
+                    <div className="flex items-center gap-3 rounded-xl border border-brand-sky-100 dark:border-brand-sky-900/50 bg-brand-sky-50 dark:bg-brand-sky-900/20 px-4 py-3">
+                        <ShieldCheck className="h-5 w-5 text-brand-sky-500 flex-shrink-0" />
+                        <p className="text-xs text-brand-sky-700 dark:text-brand-sky-300 leading-relaxed">
                             Your connection is encrypted with enterprise-grade security.
                         </p>
                     </div>
@@ -479,13 +479,13 @@ export default function LoginPage() {
                     >
                         <Link
                             href={LEGAL_ROUTES.privacyPolicy}
-                            className="text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-200 underline-offset-2 hover:underline"
+                            className="text-brand-sky-600 hover:text-brand-sky-800 dark:text-brand-sky-400 dark:hover:text-brand-sky-200 underline-offset-2 hover:underline"
                         >
                             {LEGAL_LINK_LABELS.privacyPolicy}
                         </Link>
                         <Link
                             href={LEGAL_ROUTES.termsOfUse}
-                            className="text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-200 underline-offset-2 hover:underline"
+                            className="text-brand-sky-600 hover:text-brand-sky-800 dark:text-brand-sky-400 dark:hover:text-brand-sky-200 underline-offset-2 hover:underline"
                         >
                             {LEGAL_LINK_LABELS.termsOfUse}
                         </Link>
@@ -506,7 +506,7 @@ export default function LoginPage() {
 
                     {/* ── Gradient header ── */}
                     <div className="flex-shrink-0 relative overflow-hidden"
-                        style={{ background: 'linear-gradient(135deg, hsl(201,96%,22%) 0%, hsl(199,89%,36%) 60%, hsl(198,93%,46%) 100%)' }}>
+                        style={{ background: 'linear-gradient(135deg, hsl(216,85%,20%) 0%, hsl(216,100%,32%) 60%, hsl(216,95%,42%) 100%)' }}>
 
                         {/* subtle ring decorations */}
                         <svg className="absolute inset-0 w-full h-full opacity-[0.08] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
@@ -529,7 +529,7 @@ export default function LoginPage() {
                                         <DialogTitle className="text-white text-xl font-bold leading-tight">
                                             {STEP_LABELS[resetStep]}
                                         </DialogTitle>
-                                        <DialogDescription className="text-sky-200 text-sm leading-snug mt-0.5">
+                                        <DialogDescription className="text-brand-sky-200 text-sm leading-snug mt-0.5">
                                             {STEP_DESCRIPTIONS[resetStep]}
                                         </DialogDescription>
                                     </div>
@@ -548,13 +548,13 @@ export default function LoginPage() {
                                                     <div className="flex flex-col items-center gap-1 flex-shrink-0">
                                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${
                                                             done   ? 'bg-emerald-400 border-emerald-400 text-white' :
-                                                            active ? 'bg-white border-white text-sky-700' :
+                                                            active ? 'bg-white border-white text-brand-sky-700' :
                                                                      'bg-white/10 border-white/30 text-white/50'
                                                         }`}>
                                                             {done ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
                                                         </div>
                                                         <span className={`text-[10px] font-medium whitespace-nowrap ${
-                                                            done || active ? 'text-sky-100' : 'text-white/40'
+                                                            done || active ? 'text-brand-sky-100' : 'text-white/40'
                                                         }`}>
                                                             {['Identity', 'Verify', 'Password'][i]}
                                                         </span>
@@ -580,11 +580,11 @@ export default function LoginPage() {
                                 <form onSubmit={handleSendOtp} className="space-y-5">
 
                                     {/* Info alert */}
-                                    <div className="flex gap-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-xl px-4 py-3.5">
-                                        <ShieldCheck className="w-5 h-5 text-sky-500 flex-shrink-0 mt-0.5" />
+                                    <div className="flex gap-3 bg-brand-sky-50 dark:bg-brand-sky-900/20 border border-brand-sky-200 dark:border-brand-sky-800 rounded-xl px-4 py-3.5">
+                                        <ShieldCheck className="w-5 h-5 text-brand-sky-500 flex-shrink-0 mt-0.5" />
                                         <div className="space-y-0.5">
-                                            <p className="text-sm font-semibold text-sky-800 dark:text-sky-300">Secure Recovery Process</p>
-                                            <p className="text-xs text-sky-600 dark:text-sky-400 leading-relaxed">
+                                            <p className="text-sm font-semibold text-brand-sky-800 dark:text-brand-sky-300">Secure Recovery Process</p>
+                                            <p className="text-xs text-brand-sky-600 dark:text-brand-sky-400 leading-relaxed">
                                                 Enter your registered username or email. We will verify it exists in the system,
                                                 then send a one-time code to the linked email address.
                                                 The code expires in <strong>15 minutes</strong> and can only be used once.
@@ -597,11 +597,11 @@ export default function LoginPage() {
                                             Username or Email Address
                                         </Label>
                                         <div className="relative group">
-                                            <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                                            <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-sky-500 transition-colors" />
                                             <Input
                                                 type="text"
                                                 placeholder="Enter your username or email"
-                                                className="pl-10 h-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all"
+                                                className="pl-10 h-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-500/20 transition-all"
                                                 value={identity}
                                                 onChange={(e) => setIdentity(e.target.value)}
                                                 autoFocus
@@ -618,7 +618,7 @@ export default function LoginPage() {
                                         type="submit"
                                         disabled={resetBusy || !identity.trim()}
                                         className="w-full h-12 rounded-xl font-semibold text-[15px] text-white shadow-md hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-60"
-                                        style={{ background: 'linear-gradient(135deg, hsl(199,89%,40%) 0%, hsl(199,89%,54%) 100%)' }}
+                                        style={{ background: 'linear-gradient(135deg, hsl(216,100%,36%) 0%, hsl(216,90%,48%) 100%)' }}
                                     >
                                         {resetBusy
                                             ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Sending Reset Code…</>
@@ -663,8 +663,8 @@ export default function LoginPage() {
                                                     disabled={resetBusy}
                                                     className={`w-12 h-16 sm:w-14 sm:h-16 text-center text-2xl font-extrabold rounded-2xl border-2 outline-none transition-all disabled:opacity-50 ${
                                                         digit
-                                                            ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 shadow-sm shadow-sky-200 dark:shadow-sky-900/40'
-                                                            : 'border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20'
+                                                            ? 'border-brand-sky-500 bg-brand-sky-50 dark:bg-brand-sky-900/30 text-brand-sky-700 dark:text-brand-sky-300 shadow-sm shadow-[0_2px_8px_rgba(0,88,222,0.12)] dark:shadow-none'
+                                                            : 'border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-brand-sky-400 focus:ring-2 focus:ring-brand-sky-400/20'
                                                     }`}
                                                 />
                                             ))}
@@ -678,7 +678,7 @@ export default function LoginPage() {
                                         type="submit"
                                         disabled={resetBusy || otp.join('').length !== 6}
                                         className="w-full h-12 rounded-xl font-semibold text-[15px] text-white shadow-md hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-60"
-                                        style={{ background: 'linear-gradient(135deg, hsl(199,89%,40%) 0%, hsl(199,89%,54%) 100%)' }}
+                                        style={{ background: 'linear-gradient(135deg, hsl(216,100%,36%) 0%, hsl(216,90%,48%) 100%)' }}
                                     >
                                         {resetBusy
                                             ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Verifying Code…</>
@@ -690,7 +690,7 @@ export default function LoginPage() {
                                         <span className="text-sm text-slate-400">Didn't receive the code?</span>
                                         <button
                                             type="button"
-                                            className="text-sm font-semibold text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 transition-colors underline-offset-2 hover:underline"
+                                            className="text-sm font-semibold text-brand-sky-600 hover:text-brand-sky-700 dark:text-brand-sky-400 dark:hover:text-brand-sky-300 transition-colors underline-offset-2 hover:underline"
                                             onClick={() => { setResetStep('identity'); setOtp(['','','','','','']); }}
                                             disabled={resetBusy}
                                         >
@@ -738,11 +738,11 @@ export default function LoginPage() {
                                                 New Password
                                             </Label>
                                             <div className="relative group">
-                                                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                                                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-sky-500 transition-colors" />
                                                 <Input
                                                     type={showNew ? 'text' : 'password'}
                                                     placeholder="Create a strong password"
-                                                    className="pl-10 pr-11 h-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all"
+                                                    className="pl-10 pr-11 h-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-500/20 transition-all"
                                                     value={newPass}
                                                     onChange={(e) => setNewPass(e.target.value)}
                                                     autoFocus
@@ -750,7 +750,7 @@ export default function LoginPage() {
                                                     disabled={resetBusy}
                                                 />
                                                 <button type="button" tabIndex={-1}
-                                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500 transition-colors focus:outline-none"
+                                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-sky-500 transition-colors focus:outline-none"
                                                     onClick={() => setShowNew((v) => !v)}>
                                                     {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
                                                 </button>
@@ -792,7 +792,7 @@ export default function LoginPage() {
                                                 Confirm New Password
                                             </Label>
                                             <div className="relative group">
-                                                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                                                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-sky-500 transition-colors" />
                                                 <Input
                                                     type={showConfirm ? 'text' : 'password'}
                                                     placeholder="Re-enter the new password"
@@ -801,7 +801,7 @@ export default function LoginPage() {
                                                             ? match
                                                                 ? 'border-emerald-400 focus:border-emerald-500 focus:ring-emerald-500/20'
                                                                 : 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
-                                                            : 'border-slate-200 dark:border-slate-700 focus:border-sky-500 focus:ring-sky-500/20'
+                                                            : 'border-slate-200 dark:border-slate-700 focus:border-brand-sky-500 focus:ring-brand-sky-500/20'
                                                     }`}
                                                     value={confirmPass}
                                                     onChange={(e) => setConfirmPass(e.target.value)}
@@ -809,7 +809,7 @@ export default function LoginPage() {
                                                     disabled={resetBusy}
                                                 />
                                                 <button type="button" tabIndex={-1}
-                                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500 transition-colors focus:outline-none"
+                                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-sky-500 transition-colors focus:outline-none"
                                                     onClick={() => setShowConfirm((v) => !v)}>
                                                     {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                                                 </button>
@@ -832,7 +832,7 @@ export default function LoginPage() {
                                             type="submit"
                                             disabled={resetBusy || !newPass || !confirmPass || !match || strength < 1}
                                             className="w-full h-12 rounded-xl font-semibold text-[15px] text-white shadow-md hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-60"
-                                            style={{ background: 'linear-gradient(135deg, hsl(199,89%,40%) 0%, hsl(199,89%,54%) 100%)' }}
+                                            style={{ background: 'linear-gradient(135deg, hsl(216,100%,36%) 0%, hsl(216,90%,48%) 100%)' }}
                                         >
                                             {resetBusy
                                                 ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Saving New Password…</>
@@ -872,7 +872,7 @@ export default function LoginPage() {
                                             'Consider using a password manager.',
                                         ].map((tip) => (
                                             <div key={tip} className="flex items-start gap-2">
-                                                <ShieldCheck className="w-3.5 h-3.5 text-sky-500 flex-shrink-0 mt-0.5" />
+                                                <ShieldCheck className="w-3.5 h-3.5 text-brand-sky-500 flex-shrink-0 mt-0.5" />
                                                 <span className="text-xs text-slate-500 dark:text-slate-400">{tip}</span>
                                             </div>
                                         ))}
@@ -880,7 +880,7 @@ export default function LoginPage() {
 
                                     <Button
                                         className="w-full h-12 rounded-xl font-semibold text-[15px] text-white shadow-md hover:shadow-lg active:scale-[0.98] transition-all"
-                                        style={{ background: 'linear-gradient(135deg, hsl(199,89%,40%) 0%, hsl(199,89%,54%) 100%)' }}
+                                        style={{ background: 'linear-gradient(135deg, hsl(216,100%,36%) 0%, hsl(216,90%,48%) 100%)' }}
                                         onClick={() => setResetOpen(false)}
                                     >
                                         <LogIn className="mr-2 h-5 w-5" />Back to Sign In
@@ -893,7 +893,7 @@ export default function LoginPage() {
                     {/* ── Footer ── */}
                     {resetStep !== 'done' && (
                         <div className="flex-shrink-0 border-t border-slate-100 dark:border-slate-800 px-6 sm:px-8 py-3 flex items-center gap-2 bg-slate-50/80 dark:bg-slate-900/50 backdrop-blur-sm">
-                            <ShieldCheck className="w-3.5 h-3.5 text-sky-500 flex-shrink-0" />
+                            <ShieldCheck className="w-3.5 h-3.5 text-brand-sky-500 flex-shrink-0" />
                             <p className="text-[11px] text-slate-400 leading-tight">
                                 This process is protected with rate limiting and encrypted OTP delivery. Your account remains secure.
                             </p>

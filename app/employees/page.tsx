@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import type { Employee } from '@/stores/types/employees';
-import { Edit, Eye, Plus, RefreshCw, FileSpreadsheet, ArrowDownToLine } from 'lucide-react';
+import { Edit, Eye, Plus, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { FilterBar } from '@/components/ui/filter-bar';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
@@ -37,7 +37,6 @@ export default function EmployeesPage() {
     const [limit, setLimit] = useState(10);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
-    const [downloadingCardId, setDownloadingCardId] = useState<string | null>(null);
     const [role, setRole] = useState<'All' | 'Admin' | 'Manager' | 'Employee' | 'Contractor'>('All');
     const [jobTitle, setJobTitle] = useState<string>('All');
     const [status, setStatus] = useState<string>('All');
@@ -92,7 +91,7 @@ export default function EmployeesPage() {
     const columns: Column<Employee>[] = [
         { 
             key: 'employee_code', 
-            header: 'Employee Code', 
+            header: 'EMP NO.', 
             render: (value: any) => <span className="text-slate-500 dark:text-slate-400 font-mono text-sm">{value}</span>,
             sortable: true
         },
@@ -124,7 +123,7 @@ export default function EmployeesPage() {
                     'Admin': 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
                     'Manager': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
                     'Employee': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
-                    'Contractor': 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800'
+                    'Contractor': 'bg-brand-sky-100 dark:bg-brand-sky-900/30 text-brand-sky-700 dark:text-brand-sky-300 border-brand-sky-200 dark:border-brand-sky-800'
                 };
                 
                 return (
@@ -157,13 +156,14 @@ export default function EmployeesPage() {
             sortable: true 
         },
         {
-            key: 'notes',
-            header: 'Notes',
+            key: 'created_at',
+            header: 'Created At',
             render: (value: any) => (
-                <span className="text-slate-500 dark:text-slate-400 text-sm">
-                    {value ? (value.length > 30 ? `${value.substring(0, 30)}...` : value) : '-'}
+                <span className="text-slate-600 dark:text-slate-400 text-sm">
+                    {value ? value : '-'}
                 </span>
             ),
+            sortable: true
         }
     ];
 
@@ -209,7 +209,7 @@ export default function EmployeesPage() {
                 }
             });
 
-            const headers = ['Employee Code', 'Job Title', 'First Name', 'Last Name', 'Role', 'Hire Date', 'Salary Grade', 'Notes'];
+            const headers = ['Employee Code', 'Job Title', 'First Name', 'Last Name', 'Role', 'Hire Date', 'Salary Grade', 'Created At'];
             const csvHeaders = headers.join(',');
             const csvRows = (data?.body?.employees?.items || data?.body?.items || []).map((emp: any) => {
                 return [
@@ -220,7 +220,7 @@ export default function EmployeesPage() {
                     emp.role,
                     emp.hire_date ? new Date(emp.hire_date).toLocaleDateString('en-US') : '',
                     emp.salary_grade,
-                    escapeCsv(emp.notes || '')
+                    emp.created_at ? new Date(emp.created_at).toLocaleDateString('en-US') : ''
                 ].join(',');
             });
             const csvContent = [csvHeaders, ...csvRows].join('\n');
@@ -239,31 +239,6 @@ export default function EmployeesPage() {
         }
     };
 
-    const downloadEmployeeCard = async (employee: Employee) => {
-        if (!employee?.id || downloadingCardId) return;
-        setDownloadingCardId(employee.id);
-        try {
-            const { data } = await axios.get(`/employees/card/${employee.id}`, {
-                responseType: 'blob',
-            });
-
-            const blob = new Blob([data], { type: 'application/pdf' });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${employee.name || 'Employee'}_${employee.employee_code || 'card'}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.URL.revokeObjectURL(url);
-            toast.success('Employee card downloaded');
-        } catch {
-            toast.error('Failed to download employee card');
-        } finally {
-            setDownloadingCardId(null);
-        }
-    };
-
     const actions: Action<Employee>[] = [
         {
             label: 'View Details',
@@ -276,12 +251,6 @@ export default function EmployeesPage() {
             onClick: (employee) => router.push(`/employees/update?id=${employee.id}`),
             icon: <Edit className="h-4 w-4" />,
             variant: 'warning'
-        },
-        {
-            label: 'Download Card',
-            onClick: (employee) => downloadEmployeeCard(employee),
-            icon: <ArrowDownToLine className="h-4 w-4" />,
-            variant: 'success'
         }
     ];
 
@@ -296,7 +265,7 @@ export default function EmployeesPage() {
                 </div>
                 <Button 
                     onClick={() => router.push('/employees/create')}
-                    className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                     <Plus className="h-4 w-4 mr-2" /> Create Employee
                 </Button>
@@ -337,7 +306,7 @@ export default function EmployeesPage() {
 
             {/* Filter Bar */}
             <FilterBar
-                searchPlaceholder="Search by employee code, name, or job title..."
+                searchPlaceholder="Search by EMP NO., name, or job title..."
                 searchValue={search}
                 onSearchChange={(value) => {
                     setSearch(value);
@@ -408,7 +377,7 @@ export default function EmployeesPage() {
                             variant="outline"
                             onClick={refreshTable}
                             disabled={isRefreshing || loading}
-                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                            className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                         >
                             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                             {isRefreshing ? 'Refreshing...' : 'Refresh'}
@@ -417,7 +386,7 @@ export default function EmployeesPage() {
                             variant="outline"
                             onClick={exportToExcel}
                             disabled={isExporting}
-                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                            className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                         >
                             <FileSpreadsheet className="h-4 w-4 mr-2" />
                             {isExporting ? 'Exporting...' : 'Export Excel'}
@@ -434,12 +403,12 @@ export default function EmployeesPage() {
                 size="sm"
                 headerActions={
                     <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
-                        <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+                        <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                             <SelectValue placeholder="Items per page" />
                         </SelectTrigger>
                         <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
                             {[5, 10, 20, 50, 100, 200].map(n => (
-                                <SelectItem key={n} value={String(n)} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">
+                                <SelectItem key={n} value={String(n)} className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200">
                                     {n} per page
                                 </SelectItem>
                             ))}

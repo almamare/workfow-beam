@@ -21,7 +21,7 @@ export default function ModulesPage() {
             />
 
             <div className="flex items-center gap-2">
-                <Badge className="bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300 hover:bg-sky-100">
+                <Badge className="bg-brand-sky-100 text-brand-sky-700 dark:bg-brand-sky-900/30 dark:text-brand-sky-300 hover:bg-brand-sky-100">
                     14 modules
                 </Badge>
             </div>
@@ -53,7 +53,7 @@ export default function ModulesPage() {
 
                                     <button
                                         onClick={() => setExpandedModule(isExpanded ? null : idx)}
-                                        className="mt-3 flex items-center gap-1.5 text-xs font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition-colors"
+                                        className="mt-3 flex items-center gap-1.5 text-xs font-medium text-brand-sky-600 dark:text-brand-sky-400 hover:text-brand-sky-700 dark:hover:text-brand-sky-300 transition-colors"
                                     >
                                         {isExpanded ? 'Hide details' : 'View features'}
                                         <ChevronDown
@@ -79,7 +79,7 @@ export default function ModulesPage() {
                                     {mod.howTo.length > 0 && (
                                         <div>
                                             <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
-                                                <ChevronRight className="h-4 w-4 text-sky-500" />
+                                                <ChevronRight className="h-4 w-4 text-brand-sky-500" />
                                                 How To
                                             </h4>
                                             <div className="space-y-4">

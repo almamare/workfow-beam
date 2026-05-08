@@ -181,7 +181,7 @@ const UpdateProjectPageContent: React.FC = () => {
                         type="button" 
                         variant="outline" 
                         onClick={() => router.push('/projects')}
-                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                     >
                         Back to Projects
                     </Button>
@@ -208,7 +208,7 @@ const UpdateProjectPageContent: React.FC = () => {
                                 <Label htmlFor="description" className="text-slate-700 dark:text-slate-200">Description (Optional)</Label>
                                 <textarea 
                                     id="description" 
-                                    className="w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-100 dark:focus-visible:ring-sky-900/50 focus:border-sky-300 dark:focus:border-sky-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" 
+                                    className="w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky-100 dark:focus-visible:ring-brand-sky-900/50 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500" 
                                     value={form.description} 
                                     onChange={e => updateField('description', e.target.value)} 
                                     placeholder="Short description..." 
@@ -243,14 +243,14 @@ const UpdateProjectPageContent: React.FC = () => {
                                 variant="outline" 
                                 onClick={handleReset} 
                                 disabled={loading}
-                                className="border-sky-200 dark:border-sky-800 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-700 dark:hover:text-sky-300 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                                className="border-brand-sky-200 dark:border-brand-sky-800 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 hover:text-brand-sky-700 dark:hover:text-brand-sky-300 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                             >
                                 <RotateCcw className="h-4 w-4 mr-2" /> Reset
                             </Button>
                             <Button 
                                 type="submit" 
                                 disabled={loading}
-                                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-700 dark:hover:to-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                                className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 dark:from-brand-sky-600 dark:to-brand-sky-700 dark:hover:from-brand-sky-700 dark:hover:to-brand-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                             >
                                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                                 <Save className="h-4 w-4 mr-2" />
@@ -281,7 +281,7 @@ const InputGroup = ({ label, value, name, error, onChange, type = 'text', inputM
             inputMode={inputMode} 
             value={value} 
             onChange={e => onChange(name, e.target.value)}
-            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700  focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700  focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
         />
         {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
     </div>
@@ -293,7 +293,7 @@ const SelectGroup = ({ label, value, options, name, error, onChange }: any) => (
         <Select value={value} onValueChange={val => onChange(name, val)}>
             <SelectTrigger 
                 id={name}
-                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200"
+                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200"
             >
                 <SelectValue placeholder="Select" />
             </SelectTrigger>
@@ -302,7 +302,7 @@ const SelectGroup = ({ label, value, options, name, error, onChange }: any) => (
                     <SelectItem 
                         value={o} 
                         key={o}
-                        className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200"
+                        className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200"
                     >
                         {o}
                     </SelectItem>

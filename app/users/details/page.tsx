@@ -93,7 +93,7 @@ function UserDetailsContent() {
                 <Breadcrumb />
                 <p className="text-slate-600 dark:text-slate-400">
                     User ID is missing.{' '}
-                    <Button variant="link" className="text-sky-600" onClick={() => router.push('/users')}>
+                    <Button variant="link" className="text-brand-sky-600" onClick={() => router.push('/users')}>
                         Back to Users
                     </Button>
                 </p>
@@ -104,7 +104,7 @@ function UserDetailsContent() {
     if (loading || (user && user.id !== userId)) {
         return (
             <Centered>
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                 <p className="text-slate-500 dark:text-slate-400">Loading user details…</p>
             </Centered>
         );
@@ -117,7 +117,7 @@ function UserDetailsContent() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/users')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Users
@@ -133,7 +133,7 @@ function UserDetailsContent() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/users')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 text-brand-sky-700 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Users
@@ -164,7 +164,7 @@ function UserDetailsContent() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/users')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 shrink-0"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20 shrink-0"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Users
@@ -214,14 +214,14 @@ function UserDetailsContent() {
                     </Button>
                     <Button
                         onClick={() => router.push(`/users/permissions?id=${user.id}`)}
-                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-md"
+                        className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-md"
                     >
                         <KeyRound className="h-4 w-4 mr-2" />
                         Permissions
                     </Button>
                     <Button
                         onClick={() => router.push(`/users/update?id=${user.id}`)}
-                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-md"
+                        className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-md"
                     >
                         <Edit className="h-4 w-4 mr-2" />
                         Edit user

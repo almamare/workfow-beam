@@ -149,7 +149,7 @@ function UpdateDepartmentContent() {
     if (initialLoad && !department) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
             </div>
         );
     }
@@ -173,7 +173,7 @@ function UpdateDepartmentContent() {
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Edit Department</h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-2">Update department details. Only changed fields are sent.</p>
                 </div>
-                <Button type="button" variant="outline" onClick={() => router.push('/departments')} className="border-sky-200 dark:border-sky-800 hover:text-sky-700">Back to list</Button>
+                <Button type="button" variant="outline" onClick={() => router.push('/departments')} className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700">Back to list</Button>
             </div>
 
             <form onSubmit={handleSubmit}>

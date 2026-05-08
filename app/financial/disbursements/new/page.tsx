@@ -203,7 +203,7 @@ export default function NewDisbursementPage() {
                         </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-4">
-                        <Button type="submit" disabled={loading} className="bg-sky-600 hover:bg-sky-700 text-white">
+                        <Button type="submit" disabled={loading} className="bg-brand-sky-600 hover:bg-brand-sky-700 text-white">
                             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                             Save draft
                         </Button>

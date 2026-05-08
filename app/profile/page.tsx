@@ -206,13 +206,13 @@ export default function ProfilePage() {
                         <div className="relative">
                             <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-slate-200 dark:border-slate-700">
                                 <AvatarImage src={profileData.avatar} alt={profileData.name} />
-                                <AvatarFallback className="bg-gradient-to-br from-sky-500 to-sky-600 text-white text-2xl md:text-3xl font-bold">
+                                <AvatarFallback className="bg-gradient-to-br from-brand-sky-500 to-brand-sky-600 text-white text-2xl md:text-3xl font-bold">
                                     {getInitials()}
                                 </AvatarFallback>
                             </Avatar>
                             <label
                                 htmlFor="avatar-upload"
-                                className="absolute bottom-0 right-0 p-2 bg-sky-500 hover:bg-sky-600 text-white rounded-full cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300"
+                                className="absolute bottom-0 right-0 p-2 bg-brand-sky-500 hover:bg-brand-sky-600 text-white rounded-full cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300"
                             >
                                 <Camera className="h-4 w-4" />
                                 <input
@@ -294,7 +294,7 @@ export default function ProfilePage() {
                                 id="name"
                                 value={profileData.name}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                             />
                         </div>
                         <div className="space-y-2">
@@ -303,7 +303,7 @@ export default function ProfilePage() {
                                 id="surname"
                                 value={profileData.surname}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, surname: e.target.value }))}
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                             />
                         </div>
                         <div className="space-y-2">
@@ -313,7 +313,7 @@ export default function ProfilePage() {
                                 type="email"
                                 value={profileData.email}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                             />
                         </div>
                         <div className="space-y-2">
@@ -323,7 +323,7 @@ export default function ProfilePage() {
                                 type="tel"
                                 value={profileData.phone}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                             />
                         </div>
                         <div className="space-y-2">
@@ -332,7 +332,7 @@ export default function ProfilePage() {
                                 id="employee_id"
                                 value={profileData.employee_id || ''}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, employee_id: e.target.value }))}
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 font-mono"
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 font-mono"
                                 placeholder="EMP-001"
                             />
                         </div>
@@ -343,7 +343,7 @@ export default function ProfilePage() {
                                 type="date"
                                 value={profileData.hire_date || ''}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, hire_date: e.target.value }))}
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                             />
                         </div>
                     </div>
@@ -357,7 +357,7 @@ export default function ProfilePage() {
                                 id="position"
                                 value={profileData.position}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, position: e.target.value }))}
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                             />
                         </div>
                         <div className="space-y-2">
@@ -366,7 +366,7 @@ export default function ProfilePage() {
                                 id="department"
                                 value={profileData.department}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, department: e.target.value }))}
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                             />
                         </div>
                     </div>
@@ -377,7 +377,7 @@ export default function ProfilePage() {
                             id="address"
                             value={profileData.address || ''}
                             onChange={(e) => setProfileData(prev => ({ ...prev, address: e.target.value }))}
-                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                             placeholder="Street address"
                         />
                     </div>
@@ -389,7 +389,7 @@ export default function ProfilePage() {
                                 id="city"
                                 value={profileData.city || ''}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, city: e.target.value }))}
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                             />
                         </div>
                         <div className="space-y-2">
@@ -398,7 +398,7 @@ export default function ProfilePage() {
                                 id="country"
                                 value={profileData.country || ''}
                                 onChange={(e) => setProfileData(prev => ({ ...prev, country: e.target.value }))}
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                             />
                         </div>
                     </div>
@@ -409,7 +409,7 @@ export default function ProfilePage() {
                             id="bio"
                             value={profileData.bio || ''}
                             onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
-                            className="min-h-[100px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                            className="min-h-[100px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                             placeholder="Tell us about yourself..."
                             rows={4}
                         />
@@ -419,7 +419,7 @@ export default function ProfilePage() {
                         <Button 
                             onClick={handleSaveProfile} 
                             disabled={isSaving}
-                            className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-700 dark:hover:to-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                            className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 dark:from-brand-sky-600 dark:to-brand-sky-700 dark:hover:from-brand-sky-700 dark:hover:to-brand-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                         >
                             {isSaving ? (
                                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -447,7 +447,7 @@ export default function ProfilePage() {
                                 value={profileData.language}
                                 onValueChange={(value) => setProfileData(prev => ({ ...prev, language: value }))}
                             >
-                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100">
                                     <SelectValue placeholder="Select language" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -463,7 +463,7 @@ export default function ProfilePage() {
                                 value={profileData.timezone}
                                 onValueChange={(value) => setProfileData(prev => ({ ...prev, timezone: value }))}
                             >
-                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100">
                                     <SelectValue placeholder="Select timezone" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -479,7 +479,7 @@ export default function ProfilePage() {
                         <Button 
                             onClick={handleSaveProfile} 
                             disabled={isSaving}
-                            className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-700 dark:hover:to-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                            className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 dark:from-brand-sky-600 dark:to-brand-sky-700 dark:hover:from-brand-sky-700 dark:hover:to-brand-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                         >
                             {isSaving ? (
                                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -508,7 +508,7 @@ export default function ProfilePage() {
                                 type={showPassword ? 'text' : 'password'}
                                 value={currentPassword}
                                 onChange={(e) => setCurrentPassword(e.target.value)}
-                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 pr-10"
+                                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 pr-10"
                                 placeholder="Enter current password"
                             />
                             <Button
@@ -534,7 +534,7 @@ export default function ProfilePage() {
                             type={showPassword ? 'text' : 'password'}
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                             placeholder="Enter new password"
                         />
                         <p className="text-xs text-slate-500 dark:text-slate-400">Password must be at least 6 characters long</p>
@@ -547,7 +547,7 @@ export default function ProfilePage() {
                             type={showPassword ? 'text' : 'password'}
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                             placeholder="Confirm new password"
                         />
                     </div>
@@ -556,7 +556,7 @@ export default function ProfilePage() {
                         <Button 
                             onClick={handleChangePassword} 
                             disabled={isSaving || !currentPassword || !newPassword || !confirmPassword}
-                            className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-700 dark:hover:to-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                            className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 dark:from-brand-sky-600 dark:to-brand-sky-700 dark:hover:from-brand-sky-700 dark:hover:to-brand-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                         >
                             {isSaving ? (
                                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />

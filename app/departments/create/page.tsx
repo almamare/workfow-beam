@@ -127,7 +127,7 @@ export default function CreateDepartmentPage() {
                     type="button"
                     variant="outline"
                     onClick={() => router.push('/departments')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700"
                 >
                     Back to list
                 </Button>

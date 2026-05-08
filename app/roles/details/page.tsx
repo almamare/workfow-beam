@@ -41,7 +41,7 @@ function RoleDetailsContent() {
     if (!role || role.id !== roleId) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
             </div>
         );
     }
@@ -52,7 +52,7 @@ function RoleDetailsContent() {
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <Shield className="h-8 w-8 text-sky-500" />
+                        <Shield className="h-8 w-8 text-brand-sky-500" />
                         {role.role_name ?? role.role_key}
                     </h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-2">
@@ -64,20 +64,20 @@ function RoleDetailsContent() {
                         type="button"
                         variant="outline"
                         onClick={() => router.push('/roles')}
-                        className="border-sky-200 dark:border-sky-800"
+                        className="border-brand-sky-200 dark:border-brand-sky-800"
                     >
                         Back to list
                     </Button>
                     <Button
                         onClick={() => router.push(`/roles/permissions?id=${role.id}`)}
-                        className="bg-sky-600 hover:bg-sky-700 text-white"
+                        className="bg-brand-sky-600 hover:bg-brand-sky-700 text-white"
                     >
                         <KeyRound className="h-4 w-4 mr-2" />
                         Manage permissions
                     </Button>
                     <Button
                         onClick={() => router.push(`/roles/update?id=${role.id}`)}
-                        className="bg-sky-600 hover:bg-sky-700 text-white"
+                        className="bg-brand-sky-600 hover:bg-brand-sky-700 text-white"
                     >
                         <Edit className="h-4 w-4 mr-2" />
                         Edit

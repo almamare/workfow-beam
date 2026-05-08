@@ -169,7 +169,7 @@ export const SYSTEM_MODULES = [
         ],
     },
     {
-        icon: FileText, color: 'bg-sky-500', label: 'Documents',
+        icon: FileText, color: 'bg-brand-sky-500', label: 'Documents',
         desc: 'Official documents, file attachments, and document archiving. Centralized document management for the entire organization.',
         features: [
             'Upload and categorize official documents',
@@ -339,8 +339,8 @@ export const DEPARTMENTS = [
         responsibilities: ['Conduct quality inspections', 'Sign off on completed task orders', 'Maintain quality standards documentation', 'Perform internal quality audits', 'Recommend process improvements'],
     },
     {
-        id: 'FLEET', icon: Truck, color: 'from-sky-500 to-blue-600',
-        bg: 'bg-sky-50 dark:bg-sky-950/20', border: 'border-sky-200 dark:border-sky-800',
+        id: 'FLEET', icon: Truck, color: 'from-brand-sky-500 to-blue-600',
+        bg: 'bg-brand-sky-50 dark:bg-brand-sky-950/20', border: 'border-brand-sky-200 dark:border-brand-sky-800',
         name: 'Fleet Management',
         desc: 'Vehicle and equipment management, scheduled maintenance, and fleet operations. Tracks all company vehicles, equipment, and their maintenance schedules.',
         longDesc: 'Fleet Management oversees all company vehicles and heavy equipment. The department tracks vehicle assignments, schedules preventive maintenance, manages fuel consumption, and ensures all equipment is operational and compliant with safety regulations.',
@@ -435,14 +435,14 @@ export const TYPE_COLORS: Record<string, string> = {
     Procurement: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
     Operations: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
     Quality: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300',
-    Fleet: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
+    Fleet: 'bg-brand-sky-100 text-brand-sky-700 dark:bg-brand-sky-900/30 dark:text-brand-sky-300',
     Warehouse: 'bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-300',
     Contracts: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
     Audit: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
 };
 
 export const NAVIGATION_SECTIONS = [
-    { title: 'Dashboard', icon: LayoutDashboard, color: 'bg-sky-500', desc: 'Your home page after logging in. Shows all system modules as cards in a grid. Click any card to go directly to that module.', where: 'Home page' },
+    { title: 'Dashboard', icon: LayoutDashboard, color: 'bg-brand-sky-500', desc: 'Your home page after logging in. Shows all system modules as cards in a grid. Click any card to go directly to that module.', where: 'Home page' },
     { title: 'Sidebar Navigation', icon: Navigation, color: 'bg-indigo-500', desc: 'Each module has its own sidebar menu. When you enter a module, the sidebar shows only the pages and actions for that module. Use "Back to Dashboard" to return.', where: 'All pages' },
     { title: 'Breadcrumb Trail', icon: Search, color: 'bg-violet-500', desc: 'The breadcrumb at the top of every page shows where you are. Click any part of it to jump back to a previous page.', where: 'All pages' },
     { title: 'Search & Filters', icon: Search, color: 'bg-emerald-500', desc: 'Use the search bar and filter dropdowns on listing pages to quickly find what you need by name, number, status, or other criteria.', where: 'List pages' },

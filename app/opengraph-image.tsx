@@ -10,7 +10,7 @@ export default function Image() {
         (
             <div
                 style={{
-                    background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 60%, #1a3352 100%)',
+                    background: 'linear-gradient(135deg, #0058de 0%, #003d99 55%, #001f52 100%)',
                     width: '100%',
                     height: '100%',
                     display: 'flex',

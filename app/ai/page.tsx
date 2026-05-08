@@ -130,7 +130,7 @@ export default function AiPage() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-2xl"
+                            className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky-500 rounded-2xl"
                         >
                             <div className="relative flex flex-col items-center justify-center text-center gap-3
                                 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/60
@@ -160,7 +160,7 @@ export default function AiPage() {
                                     -
                                     <p className="text-slate-700 dark:text-slate-200 font-semibold text-[11.5px] sm:text-[12.5px]
                                         leading-tight line-clamp-2 transition-colors duration-200
-                                        group-hover:text-sky-700 dark:group-hover:text-sky-400">
+                                        group-hover:text-brand-sky-700 dark:group-hover:text-brand-sky-400">
                                         {item.title}
                                     </p>
                                 </div>

@@ -268,7 +268,7 @@ export default function BudgetsPage() {
                         size="sm"
                         onClick={exportCsv}
                         disabled={isExporting || filtered.length === 0}
-                        className="border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        className="border-brand-sky-200 dark:border-brand-sky-800 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                     >
                         <FileSpreadsheet className={`h-4 w-4 mr-2 ${isExporting ? 'animate-pulse' : ''}`} />
                         {isExporting ? 'Exporting...' : 'Export CSV'}
@@ -278,7 +278,7 @@ export default function BudgetsPage() {
                         size="sm"
                         onClick={refreshTable}
                         disabled={isRefreshing || loading}
-                        className="border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        className="border-brand-sky-200 dark:border-brand-sky-800 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                     >
                         <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                         {isRefreshing ? 'Refreshing...' : 'Refresh'}
@@ -324,7 +324,7 @@ export default function BudgetsPage() {
                                 placeholder="Search budgets..."
                                 value={search}
                                 onChange={e => { setSearch(e.target.value); setPage(1); }}
-                                className="pl-10 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
+                                className="pl-10 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-300"
                             />
                         </div>
                     </div>
@@ -335,7 +335,7 @@ export default function BudgetsPage() {
                         <div className="space-y-2">
                             <Label className="text-slate-700 dark:text-slate-300 font-medium">Project</Label>
                             <Select value={projectFilter || '__all'} onValueChange={v => setProjectFilter(v === '__all' ? '' : v)}>
-                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 text-slate-900 dark:text-slate-100">
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 text-slate-900 dark:text-slate-100">
                                     <SelectValue placeholder="All Projects" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -351,7 +351,7 @@ export default function BudgetsPage() {
                         <div className="space-y-2">
                             <Label className="text-slate-700 dark:text-slate-300 font-medium">Fiscal Year</Label>
                             <Select value={fiscalYearFilter || '__all'} onValueChange={v => setFiscalYearFilter(v === '__all' ? '' : v)}>
-                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 text-slate-900 dark:text-slate-100">
+                                <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 text-slate-900 dark:text-slate-100">
                                     <SelectValue placeholder="All Years" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -370,7 +370,7 @@ export default function BudgetsPage() {
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Active filters:</span>
                                 {activeFilters.map((f, i) => (
-                                    <Badge key={i} variant="outline" className="bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800">
+                                    <Badge key={i} variant="outline" className="bg-brand-sky-100 dark:bg-brand-sky-900/30 text-brand-sky-700 dark:text-brand-sky-300 border-brand-sky-200 dark:border-brand-sky-800">
                                         {f}
                                     </Badge>
                                 ))}

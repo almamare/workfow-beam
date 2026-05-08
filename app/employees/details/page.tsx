@@ -1,497 +1,898 @@
 /* eslint-disable @next/next/no-img-element */
-/* =========================================================
-   src/app/employees/details/page.tsx
-   Employee Details – Branded design (orange + slate), dark mode
-=========================================================== */
-
 'use client';
 
-import { useEffect, useState, useCallback, Suspense } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from '@/utils/axios';
 import { toast } from 'sonner';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { DeleteDialog } from '@/components/delete-dialog';
-import { EnhancedCard } from '@/components/ui/enhanced-card';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import {
-    Loader2,
-    SquarePen,
-    Trash2,
-    ArrowLeft,
-    ArrowDownToLine,
-    Building,
-    User,
-    Briefcase,
-    RefreshCw,
-} from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedDataTable, Column } from '@/components/ui/enhanced-data-table';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+    ArrowDownToLine,
+    ArrowLeft,
+    CalendarDays,
+    CreditCard,
+    Eye,
+    ExternalLink,
+    Loader2,
+    Mail,
+    Pencil,
+    Phone,
+    Printer,
+    RefreshCw,
+    Replace,
+    ShieldOff,
+} from 'lucide-react';
 
-/* ---------- Types ---------- */
+/* ───────────── Types ───────────── */
 type Employee = {
     id: string;
-    name: string;
-    surname: string;
-    job_title: string;
-    employee_code: string;
-    hire_date: string;
-    salary_grade: string;
-    role: string;
-    notes: string;
+    name?: string;
+    surname?: string;
+    job_title?: string | null;
+    job_title_id?: number | string | null;
+    employee_code?: string;
+    role?: string;
+    hire_date?: string;
+    salary_grade?: string | number;
+    status?: string;
     avatar?: string;
-    created_at: string;
-    updated_at: string;
+    notes?: string | null;
+    department_id?: string | null;
+    department_name?: string | null;
+    manager_id?: string | null;
+    manager_name?: string | null;
+    created_at?: string;
+    updated_at?: string;
 };
 
-type User = {
-    id: string;
-    username: string;
-    name: string;
-    surname: string;
-    number: string;
-    email: string;
-    phone: string;
-    role: string;
-    type: string;
-    status: string;
-    created_at: string;
-    updated_at: string;
+type UserData = {
+    id?: string;
+    name?: string | null;
+    surname?: string | null;
+    number?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    username?: string | null;
+    role?: string | null;
+    type?: string | null;
+    status?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
 };
 
-interface ApiResponse {
-    employee: Employee;
-    user: User | null;
-}
+type CardRow = {
+    card_id: string;
+    employee_id: string;
+    card_number: string;
+    card_number_raw: string;
+    issue_date: string;
+    expiry_date: string;
+    status: 'Active' | 'Expired' | 'Lost' | 'Revoked' | 'Replaced';
+    print_count: number | string;
+    last_printed_at?: string | null;
+    notes?: string | null;
+    created_at?: string;
+};
 
-/* ---------- Badge Classes ---------- */
-const statusBadgeClasses = (status: string) => {
-    const statusMap: Record<string, string> = {
-        'Active': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
-        'Disabled': 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
-        'Locked': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-        'Inactive': 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
+type PrintRow = {
+    print_id: string;
+    print_serial: string;
+    printed_by?: string | null;
+    printed_ip?: string | null;
+    user_agent?: string | null;
+    printed_at: string;
+    printer_name?: string | null;
+    printer_surname?: string | null;
+    printer_username?: string | null;
+};
+
+/* ───────────── Helpers ───────────── */
+const STATUS_STYLES: Record<string, { bg: string; text: string; ring: string; label: string }> = {
+    Active:   { bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-700 dark:text-emerald-300', ring: 'ring-emerald-200 dark:ring-emerald-800', label: 'Active' },
+    Expired:  { bg: 'bg-amber-50   dark:bg-amber-900/20',   text: 'text-amber-700   dark:text-amber-300',   ring: 'ring-amber-200   dark:ring-amber-800',   label: 'Expired' },
+    Lost:     { bg: 'bg-rose-50    dark:bg-rose-900/20',    text: 'text-rose-700    dark:text-rose-300',    ring: 'ring-rose-200    dark:ring-rose-800',    label: 'Lost' },
+    Revoked:  { bg: 'bg-rose-50    dark:bg-rose-900/20',    text: 'text-rose-700    dark:text-rose-300',    ring: 'ring-rose-200    dark:ring-rose-800',    label: 'Revoked' },
+    Replaced: { bg: 'bg-slate-100  dark:bg-slate-800',      text: 'text-slate-700   dark:text-slate-300',   ring: 'ring-slate-200   dark:ring-slate-700',   label: 'Replaced' },
+};
+
+const formatDate = (s?: string | null) => {
+    if (!s) return '—';
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return s;
+    return d.toLocaleDateString('en-CA');
+};
+
+const formatDateTime = (s?: string | null) => {
+    if (!s) return '—';
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return s;
+    return d.toLocaleString('en-CA', { hour12: false }).replace(',', '');
+};
+
+/* ───────────── UI atoms (aligned with client request details page) ───────────── */
+const SKY_OUTLINE_BTN =
+    'border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20';
+
+const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+        Pending: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+        Approved: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+        Rejected: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+        Active: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+        Inactive: 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800',
+        Expired: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+        Lost: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+        Revoked: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+        Replaced: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+        Suspended: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
+        Complete: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        Completed: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
     };
-    return statusMap[status] || statusMap['Active'];
+    return (
+        colors[status] ||
+        'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
+    );
 };
 
-const roleBadgeClasses = (role: string) => {
-    const roleMap: Record<string, string> = {
-        'Admin': 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-        'Manager': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-        'Employee': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
-        'Contractor': 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800'
-    };
-    return roleMap[role] || roleMap['Employee'];
+const Centered: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">{children}</div>
+);
+
+const Detail: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
+    <div className="flex items-start justify-between gap-4 py-2">
+        <span className="font-medium text-slate-700 dark:text-slate-200">{label}</span>
+        <span className="text-slate-600 dark:text-slate-400 text-right break-words max-w-[65%]">{value ?? 'N/A'}</span>
+    </div>
+);
+
+const StatusBadge: React.FC<{ status?: string }> = ({ status }) => {
+    const s = STATUS_STYLES[status ?? 'Active'] ?? STATUS_STYLES.Active;
+    return (
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ring-1 ${s.bg} ${s.text} ${s.ring}`}>
+            <span className={`inline-block w-1.5 h-1.5 rounded-full ${status === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+            {s.label}
+        </span>
+    );
 };
 
-/* =========================================================
-   Component
-=========================================================== */
-function EmployeeDetailsContent() {
+/* ─────────────────────────── Page ─────────────────────────── */
+const EmployeeDetailsContent: React.FC = () => {
     const router = useRouter();
     const params = useSearchParams();
-    const id = params.get('id');
+    const employeeId = params.get('id') ?? '';
 
-    const [data, setData] = useState<ApiResponse | null>(null);
     const [loading, setLoading] = useState(true);
-    const [open, setOpen] = useState(false);
-    const [deleting, setDeleting] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+    const [employee, setEmployee] = useState<Employee | null>(null);
+    const [user, setUser] = useState<UserData | null>(null);
+    const [card, setCard] = useState<CardRow | null>(null);
+    const [prints, setPrints] = useState<PrintRow[]>([]);
     const [downloading, setDownloading] = useState(false);
-    const [selectedStatus, setSelectedStatus] = useState<string>('');
-    const [updatingStatus, setUpdatingStatus] = useState(false);
+    const [previewing, setPreviewing] = useState(false);
+    const [printing, setPrinting] = useState(false);
+    const [revokeOpen, setRevokeOpen] = useState(false);
+    const [replaceOpen, setReplaceOpen] = useState(false);
+    const [revokeReason, setRevokeReason] = useState('');
+    const [actionBusy, setActionBusy] = useState(false);
 
-    /* ---------- Fetch employee ---------- */
-    const load = useCallback(async () => {
-        if (!id) {
-            toast.error('Missing employee id');
-            router.push('/employees');
-            return;
-        }
-        setLoading(true);
+    const verifyUrl = useMemo(() => {
+        const base = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/api\/v1\/?$/, '');
+        if (!employeeId) return '';
+        return `${base}/verify/employee/${encodeURIComponent(employeeId)}`;
+    }, [employeeId]);
+
+    /* ───────── Data fetchers ───────── */
+    const loadAll = useCallback(async (showSpinner = true) => {
+        if (!employeeId) return;
+        if (showSpinner) setLoading(true);
         try {
-            const res = await axios.get(`/employees/fetch/${id}`);
-            const d: ApiResponse = res?.data?.body;
-            if (!d?.employee?.id) throw new Error('Employee not found');
-            setData(d);
-            // Set initial status from user if exists
-            if (d?.user?.status) {
-                setSelectedStatus(d.user.status);
+            const [empRes, cardRes] = await Promise.all([
+                axios.get(`/employees/fetch/${employeeId}`),
+                axios.get(`/employees/card-info/${employeeId}`),
+            ]);
+
+            const empBody = empRes.data?.body ?? {};
+            const empItem =
+                empBody?.employees?.items?.[0] ??
+                empBody?.employee ??
+                empBody?.items?.[0] ??
+                null;
+            setEmployee(empItem);
+            setUser(empBody?.user ?? null);
+
+            const cardBody = cardRes.data?.body ?? {};
+            setCard(cardBody?.card ?? null);
+            setPrints(Array.isArray(cardBody?.prints) ? cardBody.prints : []);
+            // backfill employee from card-info if employee fetch failed
+            if (!empItem && cardBody?.employee) {
+                setEmployee(cardBody.employee);
             }
-        } catch (err: any) {
-            toast.error(err?.response?.data?.message || err?.message || 'Unable to load employee');
-            router.push('/employees');
+        } catch (err) {
+            // axios interceptor already toasts on auth/server errors; only show data error here
+            console.error('loadAll error', err);
+            toast.error('Failed to load employee details.');
         } finally {
             setLoading(false);
         }
-    }, [id, router]);
+    }, [employeeId]);
 
     useEffect(() => {
-        load();
-    }, [load]);
-
-    /* ---------- Delete ---------- */
-    const handleDelete = async () => {
-        if (!id) return;
-        try {
-            setDeleting(true);
-            await axios.delete(`/employees/delete/${id}`);
-            toast.success('Employee deleted successfully');
+        if (!employeeId) {
+            toast.error('Missing employee ID');
             router.push('/employees');
+            return;
+        }
+        loadAll(true);
+    }, [employeeId, loadAll, router]);
+
+    /* ───────── Actions ───────── */
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        await loadAll(false);
+        setRefreshing(false);
+        toast.success('Refreshed');
+    };
+
+    const fetchCardBlob = async (preview: boolean): Promise<Blob | null> => {
+        const url = preview
+            ? `/employees/card-preview/${employeeId}`
+            : `/employees/card/${employeeId}`;
+        try {
+            const { data } = await axios.get(url, { responseType: 'blob' });
+            return new Blob([data], { type: 'application/pdf' });
         } catch {
-            toast.error('Failed to delete employee');
-        } finally {
-            setDeleting(false);
-            setOpen(false);
+            return null;
         }
     };
 
-    /* ---------- Download Employee Card ---------- */
-    const employeeCard = async (id: string, fileName = 'EmployeeCard') => {
+    const handleDownload = async () => {
+        if (!employeeId) return;
         setDownloading(true);
         try {
-            const { data } = await axios.get(`/employees/card/${id}`, {
-                responseType: 'blob',
-            });
-
-            const blob = new Blob([data], { type: 'application/pdf' });
+            const blob = await fetchCardBlob(false);
+            if (!blob) throw new Error();
             const url = window.URL.createObjectURL(blob);
-
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${fileName}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-
+            const a = document.createElement('a');
+            a.href = url;
+            const code = employee?.employee_code || 'card';
+            a.download = `${(employee?.name || 'employee').replace(/\s+/g, '_')}_${code}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
             window.URL.revokeObjectURL(url);
-        } catch (err) {
-            toast.error('Failed to download employee card');
+            toast.success('Card PDF downloaded — print logged');
+            void loadAll(false);
+        } catch {
+            toast.error('Failed to download card PDF');
         } finally {
             setDownloading(false);
         }
     };
 
-    /* ---------- Change User Status ---------- */
-    const handleStatusChange = async () => {
-        if (!id || !data?.user?.id || !selectedStatus) {
-            toast.error('Missing required information');
-            return;
-        }
-
-        if (selectedStatus === data.user.status) {
-            toast.info('Status is already set to this value');
-            return;
-        }
-
-        setUpdatingStatus(true);
+    const handlePreview = async () => {
+        if (!employeeId) return;
+        setPreviewing(true);
         try {
-            const res = await axios.put(`/users/update/${data.user.id}`, {
-                status: selectedStatus
-            });
-
-            if (res?.data?.header?.success || res?.data?.success) {
-                toast.success('Status updated successfully');
-                // Reload employee data to get updated status
-                await load();
-            } else {
-                toast.error(res?.data?.header?.messages?.[0]?.message || 'Failed to update status');
+            const blob = await fetchCardBlob(true);
+            if (!blob) throw new Error();
+            const url = window.URL.createObjectURL(blob);
+            const win = window.open(url, '_blank', 'noopener');
+            if (!win) {
+                // Pop-up blocked — fall back to anchor click
+                const a = document.createElement('a');
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
             }
-        } catch (err: any) {
-            toast.error(err?.response?.data?.message || err?.message || 'Failed to update status');
+            // revoke URL after the new tab has had time to load it
+            setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
+            toast.success('Preview opened — not logged as a print');
+        } catch {
+            toast.error('Failed to open preview');
         } finally {
-            setUpdatingStatus(false);
+            setPreviewing(false);
         }
     };
 
-    /* ---------- Loading skeleton ---------- */
+    const handlePrintNow = async () => {
+        if (!employeeId) return;
+        setPrinting(true);
+        try {
+            const blob = await fetchCardBlob(false);
+            if (!blob) throw new Error();
+            const url = window.URL.createObjectURL(blob);
+            // Open in a hidden iframe to trigger print; falls back to opening a tab
+            // when iframe printing is blocked by the browser's PDF plugin.
+            const frame = document.createElement('iframe');
+            frame.style.position = 'fixed';
+            frame.style.right = '0';
+            frame.style.bottom = '0';
+            frame.style.width = '0';
+            frame.style.height = '0';
+            frame.style.border = '0';
+            frame.src = url;
+            document.body.appendChild(frame);
+            frame.onload = () => {
+                try {
+                    frame.contentWindow?.focus();
+                    frame.contentWindow?.print();
+                } catch {
+                    window.open(url, '_blank', 'noopener');
+                }
+            };
+            setTimeout(() => {
+                try { frame.remove(); } catch { /* noop */ }
+                window.URL.revokeObjectURL(url);
+            }, 60_000);
+            toast.success('Print dialog opened — print logged');
+            void loadAll(false);
+        } catch {
+            toast.error('Failed to open print dialog');
+        } finally {
+            setPrinting(false);
+        }
+    };
+
+    const handleRevoke = async () => {
+        if (!employeeId) return;
+        setActionBusy(true);
+        try {
+            await axios.post(`/employees/card-revoke/${employeeId}`, { reason: revokeReason || null });
+            toast.success('Card revoked');
+            setRevokeOpen(false);
+            setRevokeReason('');
+            await loadAll(false);
+        } catch {
+            toast.error('Failed to revoke card');
+        } finally {
+            setActionBusy(false);
+        }
+    };
+
+    const handleReplace = async () => {
+        if (!employeeId) return;
+        setActionBusy(true);
+        try {
+            await axios.post(`/employees/card-replace/${employeeId}`, {});
+            toast.success('Replacement card issued');
+            setReplaceOpen(false);
+            await loadAll(false);
+        } catch {
+            toast.error('Failed to replace card');
+        } finally {
+            setActionBusy(false);
+        }
+    };
+
+    const copyVerifyUrl = async () => {
+        if (!verifyUrl) return;
+        try {
+            await navigator.clipboard.writeText(verifyUrl);
+            toast.success('Verify link copied');
+        } catch {
+            toast.error('Failed to copy link');
+        }
+    };
+
+    /* ───────── Loading / 404 ───────── */
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
-                <p className="text-slate-500 dark:text-slate-400">Loading employee…</p>
-            </div>
+            <Centered>
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
+                <p className="text-slate-500 dark:text-slate-400">Loading details...</p>
+            </Centered>
         );
     }
-    if (!data) return null;
 
-    const { employee, user } = data;
+    if (!employee) {
+        return (
+            <Centered>
+                <p className="text-rose-600 dark:text-rose-400">Employee not found</p>
+                <Button variant="outline" onClick={() => router.push('/employees')} className={SKY_OUTLINE_BTN}>
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Employees
+                </Button>
+            </Centered>
+        );
+    }
 
-    /* =========================================================
-       Render
-    ========================================================= */
+    const fullName = `${employee.name ?? ''} ${employee.surname ?? ''}`.trim() || 'Unnamed Employee';
+    const role = employee.role ?? 'Employee';
+
+    const departmentLine =
+        employee.department_name && employee.department_id
+            ? `${employee.department_name} (${employee.department_id})`
+            : employee.department_name || employee.department_id || '—';
+
+    const managerLine = employee.manager_name
+        ? `${employee.manager_name}${employee.manager_id ? ` · ${employee.manager_id}` : ''}`
+        : employee.manager_id
+            ? String(employee.manager_id)
+            : '—';
+
+    const userColumns: Column<any>[] = [
+        {
+            key: 'number',
+            header: 'User Number',
+            render: (value: any) => (
+                <span className="text-slate-600 dark:text-slate-400 font-mono text-sm">{value || 'N/A'}</span>
+            ),
+        },
+        {
+            key: 'name',
+            header: 'Full Name',
+            render: (_value: any, row: any) => (
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {`${row?.name || ''} ${row?.surname || ''}`.trim() || 'N/A'}
+                </span>
+            ),
+        },
+        {
+            key: 'email',
+            header: 'Email',
+            render: (value: any) => (
+                <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                    <Mail className="h-3 w-3" />
+                    {value || 'N/A'}
+                </span>
+            ),
+        },
+        {
+            key: 'phone',
+            header: 'Phone',
+            render: (value: any) => (
+                <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                    <Phone className="h-3 w-3" />
+                    {value || 'N/A'}
+                </span>
+            ),
+        },
+        {
+            key: 'role',
+            header: 'Role',
+            render: (value: any) => (
+                <Badge
+                    variant="outline"
+                    className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+                >
+                    {value || 'N/A'}
+                </Badge>
+            ),
+        },
+        {
+            key: 'type',
+            header: 'Type',
+            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value || 'N/A'}</span>,
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            render: (value: any) => (
+                <Badge variant="outline" className={`${getStatusColor(value || '')} font-medium`}>
+                    {value || 'N/A'}
+                </Badge>
+            ),
+        },
+        {
+            key: 'created_at',
+            header: 'Created At',
+            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value ? value : 'N/A'}</span>,
+        },
+    ];
+
+    const printColumns: Column<PrintRow>[] = [
+        {
+            key: 'print_serial',
+            header: 'Print Serial',
+            render: (value: string) => (
+                <span className="font-mono text-xs font-bold text-brand-sky-700 dark:text-brand-sky-300 bg-brand-sky-50 dark:bg-brand-sky-900/30 px-2 py-1 rounded ring-1 ring-brand-sky-100 dark:ring-brand-sky-900/50">
+                    {value || 'N/A'}
+                </span>
+            ),
+        },
+        {
+            key: 'printed_by',
+            header: 'Printed By',
+            render: (_v: string | null | undefined, row: PrintRow) =>
+                row.printer_name
+                    ? `${row.printer_name} ${row.printer_surname ?? ''}`.trim()
+                    : row.printer_username || '—',
+        },
+        {
+            key: 'printed_ip',
+            header: 'IP Address',
+            render: (value: string | null | undefined) => (
+                <span className="font-mono text-xs text-slate-600 dark:text-slate-400">{value || '—'}</span>
+            ),
+        },
+        {
+            key: 'printed_at',
+            header: 'Date / Time',
+            render: (value: string) => (
+                <span className="text-slate-600 dark:text-slate-400 text-sm flex items-center gap-1">
+                    <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                    {formatDateTime(value)}
+                </span>
+            ),
+        },
+    ];
+
     return (
         <div className="space-y-4">
-            {/* Breadcrumb */}
             <Breadcrumb />
 
-            {/* Header */}
-            <div className="flex items-end justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
                         Employee Details
                     </h1>
-                    {employee.employee_code && (
-                        <p className="text-slate-600 dark:text-slate-400 mt-1">
-                            Code: {employee.employee_code}
-                        </p>
-                    )}
                     <p className="text-slate-600 dark:text-slate-400 mt-2">
-                        Review employee information and manage actions.
+                        A brief overview of the employee record, linked account, ID card, and print audit trail.
                     </p>
                 </div>
-                <Button
-                    variant="outline"
-                    onClick={() => router.push('/employees')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
-                >
-                    Back to Employees
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" onClick={() => router.push('/employees')} className={SKY_OUTLINE_BTN}>
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Back to Employees
+                    </Button>
+                    <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className={SKY_OUTLINE_BTN}>
+                        <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                        Refresh
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => router.push(`/employees/update?id=${employeeId}`)}
+                        className={SKY_OUTLINE_BTN}
+                    >
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                    </Button>
+                </div>
             </div>
 
-            {/* Stat cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Profile Section */}
-                <EnhancedCard
-                    title="Employee Name"
-                    description={employee.employee_code || undefined}
-                    variant="default"
-                    size="sm"
-                >
-                    <div className="flex items-center gap-4">
-                        <img
-                            src={employee.avatar || '/placeholder-avatar.png'}
-                            alt={employee.name || 'Not Found'}
-                            className="h-20 w-20 rounded-lg object-cover border-2 border-slate-200 dark:border-slate-700"
-                        />
-                        <div>
-                            <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                                {employee.name || 'Not Found'} {employee.surname || ''}
-                            </div>
-                            <Badge variant="outline" className={`${roleBadgeClasses(employee.role || 'Employee')} mt-2`}>
-                                {employee.role || 'Not Found'}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <EnhancedCard title="Employee Code" description="Human-readable code" variant="default" size="sm">
+                    <div className="text-lg md:text-lg font-bold text-slate-900 dark:text-slate-100 font-mono">
+                        {employee.employee_code || 'N/A'}
+                    </div>
+                </EnhancedCard>
+                <EnhancedCard title="Full Name" description="Employee name" variant="default" size="sm">
+                    <div className="text-lg md:text-lg font-bold text-slate-900 dark:text-slate-100">{fullName}</div>
+                </EnhancedCard>
+                <EnhancedCard title="Employment Status" description="Current HR status" variant="default" size="sm">
+                    <div className="flex items-center gap-2 text-xl md:text-lg font-bold text-slate-900 dark:text-slate-100">
+                        {employee.status ? (
+                            <Badge variant="outline" className={getStatusColor(employee.status)}>
+                                {employee.status}
                             </Badge>
-                        </div>
+                        ) : (
+                            'N/A'
+                        )}
                     </div>
                 </EnhancedCard>
-
-                <EnhancedCard
-                    title="Job Title"
-                    description="Current position"
-                    variant="default"
-                    size="sm"
-                >
-                    <div className="flex items-center gap-2">
-                        <Briefcase className="h-5 w-5 text-slate-400 dark:text-slate-500" />
-                        <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                            {employee.job_title || 'Not Found'}
-                        </div>
-                    </div>
-                </EnhancedCard>
-
-                <EnhancedCard
-                    title="Role"
-                    description="Employee role"
-                    variant="default"
-                    size="sm"
-                >
-                    <div className="flex items-center gap-2">
-                        <User className="h-5 w-5 text-slate-400 dark:text-slate-500" />
-                        <Badge variant="outline" className={roleBadgeClasses(employee.role || 'Employee')}>
-                            {employee.role || 'Not Found'}
-                        </Badge>
+                <EnhancedCard title="ID Card" description="Card state & prints" variant="default" size="sm">
+                    <div className="text-lg md:text-lg font-bold text-slate-900 dark:text-slate-100">
+                        {card ? (
+                            <span className="flex flex-col gap-1">
+                                <Badge variant="outline" className={`${getStatusColor(card.status)} w-fit`}>
+                                    {card.status}
+                                </Badge>
+                                <span className="text-sm font-normal text-slate-600 dark:text-slate-400">
+                                    Prints logged: {String(card.print_count ?? 0)}
+                                </span>
+                            </span>
+                        ) : (
+                            'No card on file'
+                        )}
                     </div>
                 </EnhancedCard>
             </div>
 
-            {/* Actions */}
             <EnhancedCard
-                title="Actions"
-                description="Update status, delete, or download employee card"
+                title="Linked User Account"
+                description={user ? 'Login profile tied to this employee' : 'No account linked'}
                 variant="default"
                 size="sm"
             >
-                <div className="space-y-4">
-                    {/* Status Change Section */}
-                    {user && (
-                        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
-                            <div className="flex-1 space-y-2">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Change User Status
-                                </label>
-                                <Select
-                                    value={selectedStatus}
-                                    onValueChange={setSelectedStatus}
-                                    disabled={updatingStatus}
-                                >
-                                    <SelectTrigger className="w-full sm:w-[200px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
-                                        <SelectValue placeholder="Select Status" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
-                                        <SelectItem value="Active" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">
-                                            Active
-                                        </SelectItem>
-                                        <SelectItem value="Disabled" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">
-                                            Disabled
-                                        </SelectItem>
-                                        <SelectItem value="Locked" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">
-                                            Locked
-                                        </SelectItem>
-                                        <SelectItem value="Inactive" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-sky-600 dark:focus:text-sky-400 cursor-pointer transition-colors duration-200">
-                                            Inactive
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <Button
-                                onClick={handleStatusChange}
-                                disabled={updatingStatus || !selectedStatus || selectedStatus === user.status}
-                                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {updatingStatus ? (
-                                    <>
-                                        <Loader2 className="animate-spin h-4 w-4 mr-2" /> Updating...
-                                    </>
-                                ) : (
-                                    <>
-                                        <RefreshCw className="h-4 w-4 mr-2" /> Change Status
-                                    </>
-                                )}
-                            </Button>
-                        </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-wrap gap-2">
-                        <Button
-                            variant="outline"
-                            onClick={() => employee.id && employeeCard(employee.id, 'EmployeeCard')}
-                            disabled={downloading}
-                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
-                        >
-                            {downloading ? (
-                                <>
-                                    <Loader2 className="animate-spin w-4 h-4 mr-2" /> Loading...
-                                </>
-                            ) : (
-                                <>
-                                    <ArrowDownToLine className="w-4 h-4 mr-2" /> Employee Card
-                                </>
-                            )}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => router.push(`/employees/update?id=${employee.id}`)}
-                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
-                        >
-                            <SquarePen className="h-4 w-4 mr-2" />
-                            Edit Employee
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => setOpen(true)}
-                            className="border-rose-200 dark:border-rose-800 hover:border-rose-300 dark:hover:border-rose-700 hover:text-rose-700 dark:hover:text-rose-300 text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/20"
-                        >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                        </Button>
-                    </div>
-                </div>
+                <EnhancedDataTable
+                    data={user ? [user] : []}
+                    columns={userColumns}
+                    actions={[]}
+                    loading={false}
+                    noDataMessage="No login account is linked to this employee."
+                    hideEmptyMessage={false}
+                    showActions={false}
+                />
             </EnhancedCard>
 
-            {/* Information cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <EnhancedCard title="Employee Information" description="Employee information" variant="default" size="sm">
-                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                        <Detail label="Employee Code" value={employee.employee_code || 'N/A'} />
-                        <Detail label="Hire Date" value={employee.hire_date ? employee.hire_date : 'N/A'} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+                <EnhancedCard title="Employment" description="Role, organization, and compensation" variant="default" size="sm">
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800 space-y-1">
                         <Detail label="Job Title" value={employee.job_title || 'N/A'} />
                         <Detail
-                            label="Role"
+                            label="Job Title ID"
                             value={
-                                <Badge variant="outline" className={roleBadgeClasses(employee.role || 'Employee')}>
-                                    {employee.role || 'N/A'}
-                                </Badge>
+                                employee.job_title_id != null && String(employee.job_title_id) !== '' ? (
+                                    <span className="font-mono text-sm">{String(employee.job_title_id)}</span>
+                                ) : (
+                                    'N/A'
+                                )
                             }
                         />
-                        <Detail label="Salary Grade" value={employee.salary_grade || 'N/A'} />
-                            <Detail label="Created" value={employee.created_at || 'N/A'} />
-                        <Detail label="Updated" value={employee.updated_at || 'N/A'} />
+                        <Detail label="Work Role" value={role} />
+                        <Detail label="Hire Date" value={formatDate(employee.hire_date)} />
+                        <Detail label="Department" value={departmentLine} />
+                        <Detail label="Manager" value={managerLine} />
+                        <Detail
+                            label="Salary Grade"
+                            value={
+                                employee.salary_grade != null &&
+                                Number(String(employee.salary_grade).replace(/,/g, '')) > 0 ? (
+                                    <span className="font-mono">{String(employee.salary_grade)}</span>
+                                ) : (
+                                    'Not set'
+                                )
+                            }
+                        />
+                        {employee.notes ? (
+                            <div className="py-2">
+                                <span className="font-medium text-slate-700 dark:text-slate-200 block mb-2">Notes</span>
+                                <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{employee.notes}</p>
+                            </div>
+                        ) : null}
                     </div>
                 </EnhancedCard>
 
-                <EnhancedCard title="User Account" description={user ? "Associated user account details" : "No user account linked"} variant="default" size="sm">
-                    {user ? (
-                        <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                            <Detail label="Username" value={user.username || 'N/A'} />
-                            <Detail label="Email" value={user.email || 'N/A'} />
-                            <Detail label="Phone" value={user.phone || 'N/A'} />
-                            <Detail label="Role" value={user.role || 'N/A'} />
-                            <Detail
-                                label="Status"
-                                value={
-                                    <Badge variant="outline" className={statusBadgeClasses(user.status || 'Active')}>
-                                        {user.status || 'N/A'}
-                                    </Badge>
-                                }
-                            />
-                            <Detail label="Created" value={user.created_at || 'N/A'} />
-                            <Detail label="Updated" value={user.updated_at || 'N/A'} />
-                        </div>
-                    ) : (
-                        <p className="text-slate-600 dark:text-slate-400">No user account linked to this employee.</p>
-                    )}
+                <EnhancedCard title="System Record" description="Identifiers and timestamps" variant="default" size="sm">
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800 space-y-1">
+                        <Detail
+                            label="Employee Record ID"
+                            value={<span className="font-mono text-xs break-all">{employee.id}</span>}
+                        />
+                        <Detail
+                            label="Linked User ID"
+                            value={
+                                user?.id ? <span className="font-mono text-xs break-all">{user.id}</span> : 'N/A'
+                            }
+                        />
+                        <Detail label="Record Created" value={formatDateTime(employee.created_at)} />
+                        <Detail label="Record Updated" value={formatDateTime(employee.updated_at)} />
+                    </div>
                 </EnhancedCard>
             </div>
 
-            {/* Note section */}
-            <EnhancedCard title="Note" description="Additional comments" variant="default" size="sm">
-                <p className="text-sm md:text-base text-slate-600 dark:text-slate-400">
-                    {employee.notes || 'No note for this employee.'}
-                </p>
+            <EnhancedCard
+                title="ID Card & Verification"
+                description="Official card data, public verify link, and lifecycle actions"
+                variant="default"
+                size="sm"
+                headerActions={
+                    <div className="flex flex-wrap gap-2 justify-end">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handlePreview}
+                            disabled={previewing || !employeeId}
+                            className={SKY_OUTLINE_BTN}
+                        >
+                            {previewing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Eye className="h-4 w-4 mr-1" />}
+                            Preview
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handlePrintNow}
+                            disabled={printing || !employeeId}
+                            className={SKY_OUTLINE_BTN}
+                        >
+                            {printing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Printer className="h-4 w-4 mr-1" />}
+                            Print
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleDownload}
+                            disabled={downloading || !employeeId}
+                            className={SKY_OUTLINE_BTN}
+                        >
+                            {downloading ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            ) : (
+                                <ArrowDownToLine className="h-4 w-4 mr-1" />
+                            )}
+                            Download
+                        </Button>
+                    </div>
+                }
+            >
+                {card ? (
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800 space-y-1">
+                        <Detail label="Card Status" value={<StatusBadge status={card.status} />} />
+                        <Detail
+                            label="Card Number"
+                            value={<span className="font-mono tracking-wider">{card.card_number}</span>}
+                        />
+                        <Detail
+                            label="Card Number (raw)"
+                            value={<span className="font-mono text-xs">{card.card_number_raw}</span>}
+                        />
+                        <Detail
+                            label="Card Record ID"
+                            value={<span className="font-mono text-xs break-all">{card.card_id}</span>}
+                        />
+                        <Detail label="Issue Date" value={formatDate(card.issue_date)} />
+                        <Detail label="Expiry Date" value={formatDate(card.expiry_date)} />
+                        <Detail label="Total Prints (logged)" value={String(card.print_count ?? 0)} />
+                        <Detail label="Last Printed" value={formatDateTime(card.last_printed_at)} />
+                        {card.notes ? <Detail label="Card Notes" value={card.notes} /> : null}
+                        {card.created_at ? (
+                            <Detail label="Card Record Created" value={formatDateTime(card.created_at)} />
+                        ) : null}
+                        <div className="py-3 space-y-2">
+                            <span className="font-medium text-slate-700 dark:text-slate-200">Verification URL</span>
+                            <p className="text-xs font-mono text-slate-600 dark:text-slate-400 break-all bg-slate-50 dark:bg-slate-900/50 p-2 rounded border border-slate-200 dark:border-slate-700">
+                                {verifyUrl || '—'}
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                <Button size="sm" variant="outline" onClick={copyVerifyUrl} disabled={!verifyUrl} className={SKY_OUTLINE_BTN}>
+                                    Copy link
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => verifyUrl && window.open(verifyUrl, '_blank', 'noopener')}
+                                    disabled={!verifyUrl}
+                                    className={SKY_OUTLINE_BTN}
+                                >
+                                    <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                                    Open
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                        <CreditCard className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                        No ID card issued yet. Use <span className="font-semibold">Download</span> above to generate the first
+                        card (creates the record and logs a print).
+                    </div>
+                )}
+                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex flex-wrap gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => setReplaceOpen(true)}
+                        disabled={actionBusy || !card}
+                        className="border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300"
+                    >
+                        <Replace className="h-4 w-4 mr-2" />
+                        Replace Card
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setRevokeOpen(true)}
+                        disabled={actionBusy || !card || card.status === 'Revoked' || card.status === 'Replaced'}
+                        className="border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300"
+                    >
+                        <ShieldOff className="h-4 w-4 mr-2" />
+                        Revoke Card
+                    </Button>
+                </div>
             </EnhancedCard>
 
-            {/* Delete Dialog */}
-            <DeleteDialog
-                open={open}
-                onClose={() => !deleting && setOpen(false)}
-                onConfirm={handleDelete}
-            />
+            <EnhancedCard
+                title="Print History"
+                description={`${prints.length} print event${prints.length === 1 ? '' : 's'} logged for this card`}
+                variant="default"
+                size="sm"
+            >
+                <EnhancedDataTable
+                    data={prints}
+                    columns={printColumns}
+                    actions={[]}
+                    loading={false}
+                    noDataMessage="No print events yet. Download or Print logs an entry."
+                    hideEmptyMessage={true}
+                    showActions={false}
+                />
+            </EnhancedCard>
+
+            {/* ───────── Revoke dialog ───────── */}
+            <AlertDialog open={revokeOpen} onOpenChange={setRevokeOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Revoke this card?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            The card will immediately become invalid. Anyone scanning the QR code or barcode will see a
+                            REVOKED status. The card record stays in the audit trail.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="space-y-2">
+                        <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Reason (optional)</label>
+                        <textarea
+                            value={revokeReason}
+                            onChange={(e) => setRevokeReason(e.target.value)}
+                            rows={3}
+                            placeholder="e.g. Reported lost, employee resigned, security incident…"
+                            className="w-full px-3 py-2 text-sm border rounded-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+                        />
+                    </div>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={actionBusy}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                void handleRevoke();
+                            }}
+                            disabled={actionBusy}
+                            className="bg-rose-600 hover:bg-rose-700"
+                        >
+                            {actionBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                            Revoke Card
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* ───────── Replace dialog ───────── */}
+            <AlertDialog open={replaceOpen} onOpenChange={setReplaceOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Issue a replacement card?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            The current card will be archived as <b>Replaced</b> and a brand-new card with a fresh
+                            number, fresh barcode, and fresh validity period (2 years) will be issued. The previous
+                            card&apos;s print history is preserved for audit.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={actionBusy}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                void handleReplace();
+                            }}
+                            disabled={actionBusy}
+                            className="bg-indigo-600 hover:bg-indigo-700"
+                        >
+                            {actionBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                            Issue New Card
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
-}
+};
 
-/* =========================================================
-   Reusable components
-=========================================================== */
-const Detail: React.FC<{ label: string; value: React.ReactNode }> = ({
-    label,
-    value,
-}) => (
-    <div className="flex items-start justify-between gap-4 py-2">
-        <span className="font-medium text-slate-700 dark:text-slate-200">{label}</span>
-        <span className="text-slate-600 dark:text-slate-400 text-right">{value}</span>
-    </div>
-);
-
-/* ---------- date helper ---------- */
-function fmt(date?: string) {
-    if (!date) return 'Not Found';
-    try {
-        return new Date(date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
-    } catch {
-        return 'Invalid date';
-    }
-}
-
-export default function Page() {
+/* Suspense wrapper to keep useSearchParams happy in production builds. */
+export default function EmployeeDetailsPage() {
     return (
-        <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading employee...</div>}>
+        <Suspense
+            fallback={
+                <Centered>
+                    <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
+                    <p className="text-slate-500 dark:text-slate-400">Loading details...</p>
+                </Centered>
+            }
+        >
             <EmployeeDetailsContent />
         </Suspense>
     );

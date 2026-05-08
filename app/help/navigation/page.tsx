@@ -89,7 +89,7 @@ export default function NavigationGuidePage() {
                                     </div>
                                     <div className="min-w-0">
                                         <h3 className="font-semibold text-slate-800 dark:text-slate-200">{section.title}</h3>
-                                        <span className="text-xs font-medium text-sky-600 dark:text-sky-400">{section.where}</span>
+                                        <span className="text-xs font-medium text-brand-sky-600 dark:text-brand-sky-400">{section.where}</span>
                                     </div>
                                 </div>
                                 <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{section.desc}</p>
@@ -100,11 +100,11 @@ export default function NavigationGuidePage() {
             </div>
 
             {/* Page Layout Anatomy */}
-            <SectionCard icon={Monitor} iconColor="bg-sky-500" title="Page Layout Anatomy" subtitle="Every listing page in BEAM follows this consistent 6-part structure">
+            <SectionCard icon={Monitor} iconColor="bg-brand-sky-500" title="Page Layout Anatomy" subtitle="Every listing page in BEAM follows this consistent 6-part structure">
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {PAGE_LAYOUT_STEPS.map(step => (
                         <div key={step.num} className="flex gap-3 items-start p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
-                            <div className="w-7 h-7 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
+                            <div className="w-7 h-7 rounded-full bg-brand-sky-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
                                 {step.num}
                             </div>
                             <div className="min-w-0">
@@ -145,7 +145,7 @@ export default function NavigationGuidePage() {
                         const TipIcon = tip.icon;
                         return (
                             <div key={tip.text} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
-                                <TipIcon className="h-4 w-4 text-sky-500 shrink-0 mt-0.5" />
+                                <TipIcon className="h-4 w-4 text-brand-sky-500 shrink-0 mt-0.5" />
                                 <p className="text-sm text-slate-600 dark:text-slate-400">{tip.text}</p>
                             </div>
                         );
@@ -158,7 +158,7 @@ export default function NavigationGuidePage() {
                 <div className="grid sm:grid-cols-3 gap-4">
                     <div className="rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 space-y-2">
                         <div className="flex items-center gap-2">
-                            <Monitor className="h-4 w-4 text-sky-500" />
+                            <Monitor className="h-4 w-4 text-brand-sky-500" />
                             <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Desktop</h4>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">

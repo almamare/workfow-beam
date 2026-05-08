@@ -86,7 +86,7 @@ function DisbursementDetailInner() {
     if (loading && !d) {
         return (
             <div className="flex justify-center py-20">
-                <Loader2 className="h-10 w-10 animate-spin text-sky-500" />
+                <Loader2 className="h-10 w-10 animate-spin text-brand-sky-500" />
             </div>
         );
     }
@@ -136,7 +136,7 @@ function DisbursementDetailInner() {
                     )}
                     {canSubmit && (
                         <Button
-                            className="bg-sky-600 text-white"
+                            className="bg-brand-sky-600 text-white"
                             onClick={() =>
                                 run(() => dispatch(submitDisbursement(id)).unwrap(), 'Submitted for approval')
                             }

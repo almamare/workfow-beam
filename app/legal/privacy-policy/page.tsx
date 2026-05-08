@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage() {
                 <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
                     <LegalReturnLink
                         variant="header"
-                        className="text-sm font-medium text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300"
+                        className="text-sm font-medium text-brand-sky-600 hover:text-brand-sky-700 dark:text-brand-sky-400 dark:hover:text-brand-sky-300"
                     />
                     <span className="text-xs text-slate-500">Last updated: 2026-04-20</span>
                 </div>
@@ -139,7 +139,7 @@ export default function PrivacyPolicyPage() {
                 </section>
 
                 <footer className="pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-4 text-sm">
-                    <Link href={LEGAL_ROUTES.termsOfUse} className="text-sky-600 hover:underline dark:text-sky-400">
+                    <Link href={LEGAL_ROUTES.termsOfUse} className="text-brand-sky-600 hover:underline dark:text-brand-sky-400">
                         {LEGAL_LINK_LABELS.termsOfUse}
                     </Link>
                     <LegalReturnLink

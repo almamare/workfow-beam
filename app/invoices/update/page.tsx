@@ -274,7 +274,7 @@ const UpdateInvoicePageContent: React.FC = () => {
             <div className="space-y-4">
                 <Breadcrumb />
                 <div className="flex items-center justify-center py-20">
-                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                 </div>
             </div>
         );
@@ -311,7 +311,7 @@ const UpdateInvoicePageContent: React.FC = () => {
                     type="button"
                     variant="outline"
                     onClick={() => router.push('/invoices')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                 >
                     Back to Invoices
                 </Button>
@@ -540,7 +540,7 @@ const UpdateInvoicePageContent: React.FC = () => {
                             type="button"
                             variant="outline"
                             onClick={addItem}
-                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                            className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Add Item
@@ -600,8 +600,8 @@ const UpdateInvoicePageContent: React.FC = () => {
                             {/* Total */}
                             <div className="space-y-2">
                                 <Label className="text-slate-700 dark:text-slate-300 font-medium">Total</Label>
-                                <div className="p-3 bg-gradient-to-r from-sky-50 to-sky-100 dark:from-sky-900/20 dark:to-sky-800/20 rounded-lg border-2 border-sky-300 dark:border-sky-700">
-                                    <span className="font-mono text-2xl font-bold text-sky-700 dark:text-sky-300">
+                                <div className="p-3 bg-gradient-to-r from-brand-sky-50 to-brand-sky-100 dark:from-brand-sky-900/20 dark:to-brand-sky-800/20 rounded-lg border-2 border-brand-sky-300 dark:border-brand-sky-700">
+                                    <span className="font-mono text-2xl font-bold text-brand-sky-700 dark:text-brand-sky-300">
                                         {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(total)}
                                     </span>
                                 </div>
@@ -617,7 +617,7 @@ const UpdateInvoicePageContent: React.FC = () => {
                         variant="outline"
                         onClick={handleReset}
                         disabled={loading}
-                        className="border-sky-200 dark:border-sky-800 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-700 dark:hover:text-sky-300 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        className="border-brand-sky-200 dark:border-brand-sky-800 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 hover:text-brand-sky-700 dark:hover:text-brand-sky-300 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                     >
                         <RotateCcw className="h-4 w-4 mr-2" />
                         Reset Form
@@ -625,7 +625,7 @@ const UpdateInvoicePageContent: React.FC = () => {
                     <Button
                         type="submit"
                         disabled={loading}
-                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                         {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                         {loading ? 'Updating...' : 'Update Invoice'}

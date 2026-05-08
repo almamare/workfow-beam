@@ -106,7 +106,7 @@ function UpdateSarrafBalanceContent() {
     if (initialLoad && !balance) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
             </div>
         );
     }

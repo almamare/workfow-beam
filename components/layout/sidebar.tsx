@@ -311,10 +311,10 @@ const routeConfig: Record<string, {
     '/tasks/contractors': {
         title: 'Contractors',
         icon: 'Building',
-        color: 'text-sky-400',
+        color: 'text-brand-sky-400',
         backLink: { href: '/tasks', title: 'Back to Task Orders' },
         menuItems: [
-            { href: '/contractors', title: 'All Contractors', icon: 'Building', color: 'text-sky-400' },
+            { href: '/contractors', title: 'All Contractors', icon: 'Building', color: 'text-brand-sky-400' },
             { href: '/contractors/create', title: 'Create Contractor', icon: 'Plus', color: 'text-green-400' },
         ]
     },
@@ -393,10 +393,10 @@ const routeConfig: Record<string, {
     '/financial/disbursements': {
         title: 'Disbursements',
         icon: 'Banknote',
-        color: 'text-sky-400',
+        color: 'text-brand-sky-400',
         backLink: { href: '/financial', title: 'Back to Financial' },
         menuItems: [
-            { href: '/financial/disbursements', title: 'All Disbursements', icon: 'Banknote', color: 'text-sky-400' },
+            { href: '/financial/disbursements', title: 'All Disbursements', icon: 'Banknote', color: 'text-brand-sky-400' },
             { href: '/financial/disbursements/new', title: 'New Disbursement', icon: 'Plus', color: 'text-green-400' },
             { href: '/financial/disbursements/inbox', title: 'Disbursement Inbox', icon: 'Inbox', color: 'text-amber-400' },
         ]
@@ -458,9 +458,9 @@ const routeConfig: Record<string, {
     '/inventory': {
         title: 'Inventory',
         icon: 'Package',
-        color: 'text-sky-400',
+        color: 'text-brand-sky-400',
         menuItems: [
-            { href: '/inventory/items', title: 'Items', icon: 'Package', color: 'text-sky-400' },
+            { href: '/inventory/items', title: 'Items', icon: 'Package', color: 'text-brand-sky-400' },
             { href: '/inventory/transactions', title: 'Transactions', icon: 'FileText', color: 'text-amber-400' },
             { href: '/inventory/items', title: 'Add Item', icon: 'Plus', color: 'text-green-400' }
         ]
@@ -490,7 +490,7 @@ const routeConfig: Record<string, {
         menuItems: [
             { href: '/banks', title: 'All Banks List', icon: 'Landmark', color: 'text-cyan-400' },
             { href: '/banks/create', title: 'Create Bank', icon: 'Plus', color: 'text-green-400' },
-            { href: '/sarrafat', title: 'Exchange List', icon: 'Building2', color: 'text-sky-400' },
+            { href: '/sarrafat', title: 'Exchange List', icon: 'Building2', color: 'text-brand-sky-400' },
             { href: '/sarrafat/create', title: 'Create Exchange', icon: 'Plus', color: 'text-green-400' },
             { href: '/sarraf-balances', title: 'Exchange Balance', icon: 'Wallet', color: 'text-amber-500' },
             { href: '/sarraf-balances/create', title: 'Create Exchange Balance', icon: 'Plus', color: 'text-green-400' },
@@ -529,9 +529,9 @@ const routeConfig: Record<string, {
     '/reports': {
         title: 'Reports',
         icon: 'BarChart3',
-        color: 'text-sky-400',
+        color: 'text-brand-sky-400',
         menuItems: [
-            { href: '/reports', title: 'All Reports', icon: 'BarChart3', color: 'text-sky-400' },
+            { href: '/reports', title: 'All Reports', icon: 'BarChart3', color: 'text-brand-sky-400' },
         ]
     },
     '/statistics': {
@@ -554,10 +554,10 @@ const routeConfig: Record<string, {
     '/ai/chat': {
         title: 'AI Chat',
         icon: 'MessageSquare',
-        color: 'text-sky-400',
+        color: 'text-brand-sky-400',
         backLink: { href: '/ai', title: 'Back to AI' },
         menuItems: [
-            { href: '/ai/chat', title: 'AI Chat', icon: 'MessageSquare', color: 'text-sky-400' },
+            { href: '/ai/chat', title: 'AI Chat', icon: 'MessageSquare', color: 'text-brand-sky-400' },
         ]
     },
     '/ai/financial': {
@@ -626,10 +626,10 @@ const routeConfig: Record<string, {
     '/ai/tenders': {
         title: 'Tender Evaluation',
         icon: 'FileSearch',
-        color: 'text-orange-400',
+        color: 'text-brand-sky-400',
         backLink: { href: '/ai', title: 'Back to AI' },
         menuItems: [
-            { href: '/ai/tenders', title: 'Tender Evaluation', icon: 'FileSearch', color: 'text-orange-400' },
+            { href: '/ai/tenders', title: 'Tender Evaluation', icon: 'FileSearch', color: 'text-brand-sky-400' },
         ]
     },
     '/ai/forecast': {
@@ -662,9 +662,9 @@ const routeConfig: Record<string, {
     '/help': {
         title: 'Help Center',
         icon: 'HelpCircle',
-        color: 'text-sky-400',
+        color: 'text-brand-sky-400',
         menuItems: [
-            { href: '/help', title: 'Help Center', icon: 'HelpCircle', color: 'text-sky-400' },
+            { href: '/help', title: 'Help Center', icon: 'HelpCircle', color: 'text-brand-sky-400' },
             { href: '/help/getting-started', title: 'Getting Started', icon: 'FileText', color: 'text-indigo-400' },
             { href: '/help/modules', title: 'System Modules', icon: 'Package', color: 'text-violet-400' },
             { href: '/help/navigation', title: 'Navigation Guide', icon: 'LayoutDashboard', color: 'text-cyan-400' },
@@ -865,12 +865,12 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                     {(!collapsed || mobileOpen) && (
                         <div className="flex items-center gap-3">
                             <Image
-                                src="/icon-192.png"
+                                src="/logo.png"
                                 alt="Shuaa Al-Ranou logo"
-                                width={36}
-                                height={36}
+                                width={140}
+                                height={40}
                                 priority
-                                className="shrink-0"
+                                className="h-9 w-auto max-w-[140px] shrink-0 object-contain object-left"
                                 style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' }}
                             />
 
@@ -967,7 +967,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                                     className={cn(
                                                         "group w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative",
                                                         isItemActive
-                                                            ? "bg-gradient-to-r from-sky-500 to-sky-600 dark:from-sky-500 dark:to-sky-600 text-white shadow-lg shadow-sky-500/25 dark:shadow-sky-500/25"
+                                                            ? "bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 dark:from-brand-sky-500 dark:to-brand-sky-600 text-white shadow-lg shadow-sky-500/25 dark:shadow-sky-500/25"
                                                             : "text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50 hover:shadow-lg"
                                                     )}
                                                     title={collapsed && !mobileOpen ? item.title : undefined}
@@ -1008,7 +1008,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                                         className={cn(
                                                             "group flex items-center gap-4 px-4 py-2.5 ml-6 rounded-lg text-sm font-medium transition-all duration-300 relative",
                                                             isActive(subItem.href)
-                                                                ? "bg-gradient-to-r from-sky-500/80 to-sky-600/80 dark:from-sky-500/80 dark:to-sky-600/80 text-white shadow-md shadow-sky-500/20 dark:shadow-sky-500/20 font-semibold"
+                                                                ? "bg-gradient-to-r from-brand-sky-500/80 to-brand-sky-600/80 dark:from-brand-sky-500/80 dark:to-brand-sky-600/80 text-white shadow-md shadow-sky-500/20 dark:shadow-sky-500/20 font-semibold"
                                                                 : "text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50"
                                                         )}
                                                         onClick={handleItemClick}
@@ -1043,7 +1043,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                                         className={cn(
                                             "group flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative",
                                             isActive(item.href)
-                                                ? "bg-gradient-to-r from-sky-500 to-sky-600 dark:from-sky-500 dark:to-sky-600 text-white shadow-lg shadow-sky-500/25 dark:shadow-sky-500/25"
+                                                ? "bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 dark:from-brand-sky-500 dark:to-brand-sky-600 text-white shadow-lg shadow-sky-500/25 dark:shadow-sky-500/25"
                                                 : "text-slate-300 dark:text-slate-300 hover:text-white dark:hover:text-white hover:bg-slate-700/50 dark:hover:bg-slate-700/50 hover:shadow-lg"
                                         )}
                                         title={collapsed && !mobileOpen ? item.title : undefined}
@@ -1089,7 +1089,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                     {(!collapsed || mobileOpen) && (
                         <div className="bg-gradient-to-r from-slate-800 to-slate-700 dark:from-slate-800 dark:to-slate-700 rounded-lg p-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-gradient-to-r from-sky-500 to-sky-600 dark:from-sky-500 dark:to-sky-600 rounded-full flex items-center justify-center">
+                                <div className="w-8 h-8 bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 dark:from-brand-sky-500 dark:to-brand-sky-600 rounded-full flex items-center justify-center">
                                     <span className="text-white text-sm font-bold">SA</span>
                                 </div>
                                 <div>

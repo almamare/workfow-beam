@@ -254,7 +254,7 @@ function ClientDetailsContent() {
             key: 'contract_value' as keyof ClientContract,
             header: 'Contract Value',
             render: (value: any, row: ClientContract) => (
-                <span className="font-semibold text-sky-600 dark:text-sky-400">
+                <span className="font-semibold text-brand-sky-600 dark:text-brand-sky-400">
                     {formatCurrency(value, row.currency) || ''}
                 </span>
             )
@@ -348,7 +348,7 @@ function ClientDetailsContent() {
     if (loading) {
         return (
             <Centered>
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                 <p className="text-slate-500 dark:text-slate-400">Loading client details...</p>
             </Centered>
         );
@@ -361,7 +361,7 @@ function ClientDetailsContent() {
                 <Button
                     variant="outline"
                     onClick={() => router.push('/clients')}
-                    className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                    className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" /> Back to Clients
                 </Button>
@@ -388,7 +388,7 @@ function ClientDetailsContent() {
                     <Button
                         variant="outline"
                         onClick={() => router.push('/clients')}
-                        className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                     >
                         Back to Clients
                     </Button>
@@ -454,7 +454,7 @@ function ClientDetailsContent() {
                         <Button
                             variant="outline"
                             onClick={handleDownloadPDF}
-                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                            className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                         >
                             <Download className="h-4 w-4 mr-2" />
                             Download PDF
@@ -462,7 +462,7 @@ function ClientDetailsContent() {
                         <Button
                             variant="outline"
                             onClick={() => router.push(`/clients/update?id=${client.id}`)}
-                            className="border-sky-200 dark:border-sky-800 hover:text-sky-700 hover:border-sky-300 dark:hover:border-sky-700 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                            className="border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                         >
                             <Edit className="h-4 w-4 mr-2" />
                             Edit Client
@@ -612,7 +612,7 @@ export default function ClientDetailsPage() {
         <Suspense
             fallback={
                 <Centered>
-                    <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
                     <p className="text-slate-500 dark:text-slate-400">Loading details…</p>
                 </Centered>
             }

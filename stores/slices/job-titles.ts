@@ -146,7 +146,15 @@ const jobTitlesSlice = createSlice({
             })
             .addCase(fetchJobTitles.fulfilled, (state, action: PayloadAction<JobTitlesResponse>) => {
                 state.loading = false;
-                state.jobTitles = action.payload.body?.job_titles ?? [];
+                const raw = action.payload.body?.job_titles ?? [];
+                // API may return numeric ids as strings; normalize so UI comparisons work on server builds.
+                state.jobTitles = raw.map((jt) => {
+                    const id = typeof jt.id === 'string' ? parseInt(jt.id, 10) : Number(jt.id);
+                    return {
+                        ...jt,
+                        id: Number.isFinite(id) ? id : (jt.id as number),
+                    };
+                });
                 state.total = action.payload.body?.total ?? 0;
                 state.pages = action.payload.body?.pages ?? 0;
             })

@@ -240,7 +240,7 @@ export const CreateAttachmentCard: React.FC<CreateAttachmentCardProps> = ({
                 <div className="flex-shrink-0">
                     <Button 
                         type="submit" 
-                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 h-[40px]"
+                        className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 h-[40px]"
                         disabled={loading || !file}
                     >
                         {loading ? (
@@ -260,7 +260,7 @@ export const CreateAttachmentCard: React.FC<CreateAttachmentCardProps> = ({
             {uploadProgress > 0 && uploadProgress < 100 && (
                 <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
                     <div 
-                        className="bg-sky-600 h-2 rounded-full transition-all duration-300"
+                        className="bg-brand-sky-600 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                     />
                 </div>

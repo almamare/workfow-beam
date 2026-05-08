@@ -113,7 +113,7 @@ function ContractorPaymentUpdateInner() {
     if (loading && !payment) {
         return (
             <div className="flex justify-center py-24">
-                <Loader2 className="h-10 w-10 animate-spin text-sky-500" />
+                <Loader2 className="h-10 w-10 animate-spin text-brand-sky-500" />
             </div>
         );
     }
@@ -321,7 +321,7 @@ function ContractorPaymentUpdateInner() {
                     <Button
                         type="submit"
                         disabled={submitting}
-                        className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white"
+                        className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white"
                     >
                         {submitting ? (
                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -338,7 +338,7 @@ function ContractorPaymentUpdateInner() {
 
 export default function ContractorPaymentUpdatePage() {
     return (
-        <Suspense fallback={<div className="flex justify-center py-24"><Loader2 className="h-10 w-10 animate-spin text-sky-500" /></div>}>
+        <Suspense fallback={<div className="flex justify-center py-24"><Loader2 className="h-10 w-10 animate-spin text-brand-sky-500" /></div>}>
             <ContractorPaymentUpdateInner />
         </Suspense>
     );

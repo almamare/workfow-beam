@@ -63,7 +63,7 @@ const mockUserSettings: UserSettings = {
     position: 'Project Manager',
     language: 'en',
     timezone: 'Asia/Riyadh',
-    avatar: 'https://cdn.shuarano.com/img/logo.png'
+    avatar: '/logo.png'
 };
 
 const mockNotificationSettings: NotificationSettings = {
@@ -87,7 +87,7 @@ const mockSecuritySettings: SecuritySettings = {
 
 const mockSystemSettings: SystemSettings = {
     companyName: 'Shuaa Al-Ranou Trade & General Contracting',
-    companyLogo: 'https://cdn.shuarano.com/img/logo.png',
+    companyLogo: '/logo.png',
     defaultCurrency: 'USD',
     dateFormat: 'DD/MM/YYYY',
     timeFormat: '24h',
@@ -213,28 +213,28 @@ export default function SettingsPage() {
                 <TabsList className="grid w-full grid-cols-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1">
                     <TabsTrigger 
                         value="user" 
-                        className="flex items-center gap-2 data-[state=active]:bg-sky-500 data-[state=active]:text-white text-slate-600 dark:text-slate-400"
+                        className="flex items-center gap-2 data-[state=active]:bg-brand-sky-500 data-[state=active]:text-white text-slate-600 dark:text-slate-400"
                     >
                         <User className="h-4 w-4" />
                         User
                     </TabsTrigger>
                     <TabsTrigger 
                         value="notifications" 
-                        className="flex items-center gap-2 data-[state=active]:bg-sky-500 data-[state=active]:text-white text-slate-600 dark:text-slate-400"
+                        className="flex items-center gap-2 data-[state=active]:bg-brand-sky-500 data-[state=active]:text-white text-slate-600 dark:text-slate-400"
                     >
                         <Bell className="h-4 w-4" />
                         Notifications
                     </TabsTrigger>
                     <TabsTrigger 
                         value="security" 
-                        className="flex items-center gap-2 data-[state=active]:bg-sky-500 data-[state=active]:text-white text-slate-600 dark:text-slate-400"
+                        className="flex items-center gap-2 data-[state=active]:bg-brand-sky-500 data-[state=active]:text-white text-slate-600 dark:text-slate-400"
                     >
                         <Shield className="h-4 w-4" />
                         Security
                     </TabsTrigger>
                     <TabsTrigger 
                         value="system" 
-                        className="flex items-center gap-2 data-[state=active]:bg-sky-500 data-[state=active]:text-white text-slate-600 dark:text-slate-400"
+                        className="flex items-center gap-2 data-[state=active]:bg-brand-sky-500 data-[state=active]:text-white text-slate-600 dark:text-slate-400"
                     >
                         <Settings className="h-4 w-4" />
                         System
@@ -257,7 +257,7 @@ export default function SettingsPage() {
                                         id="name"
                                         value={userSettings.name}
                                         onChange={(e) => setUserSettings(prev => ({ ...prev, name: e.target.value }))}
-                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -267,7 +267,7 @@ export default function SettingsPage() {
                                         type="email"
                                         value={userSettings.email}
                                         onChange={(e) => setUserSettings(prev => ({ ...prev, email: e.target.value }))}
-                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                                     />
                                 </div>
                             </div>
@@ -278,7 +278,7 @@ export default function SettingsPage() {
                                         id="phone"
                                         value={userSettings.phone}
                                         onChange={(e) => setUserSettings(prev => ({ ...prev, phone: e.target.value }))}
-                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -287,7 +287,7 @@ export default function SettingsPage() {
                                         id="department"
                                         value={userSettings.department}
                                         onChange={(e) => setUserSettings(prev => ({ ...prev, department: e.target.value }))}
-                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                                     />
                                 </div>
                             </div>
@@ -298,13 +298,13 @@ export default function SettingsPage() {
                                         id="position"
                                         value={userSettings.position}
                                         onChange={(e) => setUserSettings(prev => ({ ...prev, position: e.target.value }))}
-                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="language" className="text-slate-700 dark:text-slate-200">Language</Label>
                                     <Select value={userSettings.language} onValueChange={(value) => setUserSettings(prev => ({ ...prev, language: value }))}>
-                                        <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                        <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -318,7 +318,7 @@ export default function SettingsPage() {
                             <div className="space-y-2">
                                 <Label htmlFor="timezone" className="text-slate-700 dark:text-slate-200">Timezone</Label>
                                 <Select value={userSettings.timezone} onValueChange={(value) => setUserSettings(prev => ({ ...prev, timezone: value }))}>
-                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -332,7 +332,7 @@ export default function SettingsPage() {
                                 <Button 
                                     onClick={handleSaveUserSettings} 
                                     disabled={isLoading}
-                                    className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-700 dark:hover:to-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                                    className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 dark:from-brand-sky-600 dark:to-brand-sky-700 dark:hover:from-brand-sky-700 dark:hover:to-brand-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                                 >
                                     {isLoading ? (
                                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -461,7 +461,7 @@ export default function SettingsPage() {
                                 <Button 
                                     onClick={handleSaveNotificationSettings} 
                                     disabled={isLoading}
-                                    className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-700 dark:hover:to-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                                    className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 dark:from-brand-sky-600 dark:to-brand-sky-700 dark:hover:from-brand-sky-700 dark:hover:to-brand-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                                 >
                                     {isLoading ? (
                                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -510,7 +510,7 @@ export default function SettingsPage() {
                                             type="number"
                                             value={securitySettings.sessionTimeout}
                                             onChange={(e) => setSecuritySettings(prev => ({ ...prev, sessionTimeout: parseInt(e.target.value) }))}
-                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -520,7 +520,7 @@ export default function SettingsPage() {
                                             type="number"
                                             value={securitySettings.passwordExpiry}
                                             onChange={(e) => setSecuritySettings(prev => ({ ...prev, passwordExpiry: parseInt(e.target.value) }))}
-                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                                         />
                                     </div>
                                 </div>
@@ -531,7 +531,7 @@ export default function SettingsPage() {
                                         type="number"
                                         value={securitySettings.loginAttempts}
                                         onChange={(e) => setSecuritySettings(prev => ({ ...prev, loginAttempts: parseInt(e.target.value) }))}
-                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                                     />
                                 </div>
                             </div>
@@ -548,7 +548,7 @@ export default function SettingsPage() {
                                         onChange={(e) => setSecuritySettings(prev => ({ ...prev, ipWhitelist: e.target.value.split(',').map(ip => ip.trim()) }))}
                                         placeholder="192.168.1.0/24, 10.0.0.0/8"
                                         rows={3}
-                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                                     />
                                 </div>
                             </div>
@@ -557,7 +557,7 @@ export default function SettingsPage() {
                                 <Button 
                                     onClick={handleSaveSecuritySettings} 
                                     disabled={isLoading}
-                                    className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-700 dark:hover:to-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                                    className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 dark:from-brand-sky-600 dark:to-brand-sky-700 dark:hover:from-brand-sky-700 dark:hover:to-brand-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                                 >
                                     {isLoading ? (
                                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -589,7 +589,7 @@ export default function SettingsPage() {
                                             id="companyName"
                                             value={systemSettings.companyName}
                                             onChange={(e) => setSystemSettings(prev => ({ ...prev, companyName: e.target.value }))}
-                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -598,7 +598,7 @@ export default function SettingsPage() {
                                             id="companyLogo"
                                             value={systemSettings.companyLogo || ''}
                                             onChange={(e) => setSystemSettings(prev => ({ ...prev, companyLogo: e.target.value }))}
-                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100"
+                                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100"
                                         />
                                     </div>
                                 </div>
@@ -612,7 +612,7 @@ export default function SettingsPage() {
                                     <div className="space-y-2">
                                         <Label htmlFor="defaultCurrency" className="text-slate-700 dark:text-slate-200">Default Currency</Label>
                                         <Select value={systemSettings.defaultCurrency} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, defaultCurrency: value }))}>
-                                            <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                            <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -625,7 +625,7 @@ export default function SettingsPage() {
                                     <div className="space-y-2">
                                         <Label htmlFor="theme" className="text-slate-700 dark:text-slate-200">Theme</Label>
                                         <Select value={systemSettings.theme} onValueChange={(value: 'light' | 'dark' | 'auto') => setSystemSettings(prev => ({ ...prev, theme: value }))}>
-                                            <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                            <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -640,7 +640,7 @@ export default function SettingsPage() {
                                     <div className="space-y-2">
                                         <Label htmlFor="dateFormat" className="text-slate-700 dark:text-slate-200">Date Format</Label>
                                         <Select value={systemSettings.dateFormat} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, dateFormat: value }))}>
-                                            <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                            <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -653,7 +653,7 @@ export default function SettingsPage() {
                                     <div className="space-y-2">
                                         <Label htmlFor="timeFormat" className="text-slate-700 dark:text-slate-200">Time Format</Label>
                                         <Select value={systemSettings.timeFormat} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, timeFormat: value }))}>
-                                            <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                            <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -685,7 +685,7 @@ export default function SettingsPage() {
                                     <div className="space-y-2">
                                         <Label htmlFor="backupFrequency" className="text-slate-700 dark:text-slate-200">Backup Frequency</Label>
                                         <Select value={systemSettings.backupFrequency} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, backupFrequency: value }))}>
-                                            <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 focus:border-sky-300 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 text-slate-900 dark:text-slate-100">
+                                            <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -702,7 +702,7 @@ export default function SettingsPage() {
                                 <Button 
                                     onClick={handleSaveSystemSettings} 
                                     disabled={isLoading}
-                                    className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-700 dark:hover:to-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                                    className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 dark:from-brand-sky-600 dark:to-brand-sky-700 dark:hover:from-brand-sky-700 dark:hover:to-brand-sky-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                                 >
                                     {isLoading ? (
                                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />

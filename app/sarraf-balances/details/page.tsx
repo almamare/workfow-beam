@@ -34,7 +34,7 @@ function SarrafBalanceDetailsContent() {
     if (!balance || balance.balance_id !== balanceId) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
             </div>
         );
     }
@@ -47,7 +47,7 @@ function SarrafBalanceDetailsContent() {
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <Wallet className="h-8 w-8 text-sky-500" />
+                        <Wallet className="h-8 w-8 text-brand-sky-500" />
                         Balance: {balance.currency} – {balance.balance_id}
                     </h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-2">Balance details (read-only)</p>
@@ -59,7 +59,7 @@ function SarrafBalanceDetailsContent() {
                             <Building2 className="h-4 w-4 mr-2" />Exchange balances
                         </Button>
                     )}
-                    <Button onClick={() => router.push(`/sarraf-balances/update?id=${encodeURIComponent(balance.balance_id)}`)} className="bg-sky-600 hover:bg-sky-700 text-white"><Edit className="h-4 w-4 mr-2" />Edit</Button>
+                    <Button onClick={() => router.push(`/sarraf-balances/update?id=${encodeURIComponent(balance.balance_id)}`)} className="bg-brand-sky-600 hover:bg-brand-sky-700 text-white"><Edit className="h-4 w-4 mr-2" />Edit</Button>
                 </div>
             </div>
 

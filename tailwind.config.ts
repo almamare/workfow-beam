@@ -107,8 +107,8 @@ const config: Config = {
         '2xl': 'calc(var(--radius) + 8px)',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-open-sans)', '"Open Sans"', 'system-ui', 'sans-serif'],
+        display: ['var(--font-open-sans)', '"Open Sans"', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1rem' }],
@@ -131,10 +131,10 @@ const config: Config = {
         '128': '32rem',
       },
       boxShadow: {
-        'brand': '0 4px 6px -1px rgba(251, 146, 60, 0.1), 0 2px 4px -1px rgba(251, 146, 60, 0.06)',
-        'brand-lg': '0 10px 15px -3px rgba(251, 146, 60, 0.1), 0 4px 6px -2px rgba(251, 146, 60, 0.05)',
-        'brand-xl': '0 20px 25px -5px rgba(251, 146, 60, 0.1), 0 10px 10px -5px rgba(251, 146, 60, 0.04)',
-        'inner-brand': 'inset 0 2px 4px 0 rgba(251, 146, 60, 0.06)',
+        'brand': '0 4px 6px -1px rgba(0, 88, 222, 0.12), 0 2px 4px -1px rgba(0, 88, 222, 0.07)',
+        'brand-lg': '0 10px 15px -3px rgba(0, 88, 222, 0.12), 0 4px 6px -2px rgba(0, 88, 222, 0.06)',
+        'brand-xl': '0 20px 25px -5px rgba(0, 88, 222, 0.12), 0 10px 10px -5px rgba(0, 88, 222, 0.05)',
+        'inner-brand': 'inset 0 2px 4px 0 rgba(0, 88, 222, 0.07)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

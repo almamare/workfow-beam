@@ -107,7 +107,7 @@ export default function FinancialPage() {
                 <div className="flex items-center gap-3">
                     <span
                         className="w-[3px] h-5 rounded-full inline-block flex-shrink-0"
-                        style={{ background: 'linear-gradient(180deg,hsl(199,89%,42%),hsl(199,89%,64%))' }}
+                        style={{ background: 'linear-gradient(135deg,hsl(216,100%,36%) 0%,hsl(216,90%,48%) 100%)' }}
                     />
                     <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-widest">
                         Financial Sections &nbsp;·&nbsp; {financialMenuItems.length} sections
@@ -122,7 +122,7 @@ export default function FinancialPage() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-2xl"
+                            className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky-500 rounded-2xl"
                         >
                             <div className="relative flex flex-col items-center justify-center text-center gap-3
                                 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/60
@@ -152,7 +152,7 @@ export default function FinancialPage() {
                                     -
                                     <p className="text-slate-700 dark:text-slate-200 font-semibold text-[11.5px] sm:text-[12.5px]
                                         leading-tight line-clamp-2 transition-colors duration-200
-                                        group-hover:text-sky-700 dark:group-hover:text-sky-400">
+                                        group-hover:text-brand-sky-700 dark:group-hover:text-brand-sky-400">
                                         {item.title}
                                     </p>
                                 </div>

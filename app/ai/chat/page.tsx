@@ -76,7 +76,7 @@ export default function AiChatPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 shadow">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-sky-500 to-brand-sky-600 shadow">
                         <MessageSquare className="h-5 w-5 text-white" />
                     </div>
                     <div>

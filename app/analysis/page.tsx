@@ -31,7 +31,7 @@ const CATEGORY_COLORS: Record<string, string> = {
     Projects:    'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200',
     Clients:     'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200',
     Financial:   'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200',
-    Workforce:   'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200',
+    Workforce:   'bg-brand-sky-100 dark:bg-brand-sky-900/30 text-brand-sky-700 dark:text-brand-sky-300 border-brand-sky-200',
 };
 
 const PERF_COLORS: Record<string, string> = {
@@ -297,7 +297,7 @@ export default function AnalysisPage() {
 
                     <div className="flex flex-wrap gap-2">
                         <Button variant="outline" size="sm" onClick={refresh} disabled={isRefreshing}
-                            className="border-sky-200 text-sky-700 hover:bg-sky-50 dark:border-sky-700 dark:text-sky-300">
+                            className="border-brand-sky-200 text-brand-sky-700 hover:bg-brand-sky-50 dark:border-brand-sky-700 dark:text-brand-sky-300">
                             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                             {isRefreshing ? 'Refreshing...' : 'Refresh'}
                         </Button>
@@ -307,7 +307,7 @@ export default function AnalysisPage() {
                         <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
                             <span className="text-sm text-slate-500">Active filters:</span>
                             {activeFilters.map((f, i) => (
-                                <Badge key={i} variant="outline" className="bg-sky-50 dark:bg-sky-900/30 text-sky-700 border-sky-200">{f}</Badge>
+                                <Badge key={i} variant="outline" className="bg-brand-sky-50 dark:bg-brand-sky-900/30 text-brand-sky-700 border-brand-sky-200">{f}</Badge>
                             ))}
                             <Button variant="outline" size="sm"
                                 className="text-red-600 border-red-200 hover:bg-red-50 ml-auto"
@@ -364,7 +364,7 @@ export default function AnalysisPage() {
             >
                 {loading ? (
                     <div className="flex justify-center py-10">
-                        <RefreshCw className="h-8 w-8 animate-spin text-sky-400" />
+                        <RefreshCw className="h-8 w-8 animate-spin text-brand-sky-400" />
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -372,7 +372,7 @@ export default function AnalysisPage() {
                             const Icon = item.icon;
                             return (
                                 <div key={idx}
-                                    className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 transition-colors">
+                                    className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 transition-colors">
                                     <div className="flex items-start gap-3 mb-3">
                                         <div className={`p-2 rounded-lg ${CATEGORY_COLORS[item.category] || 'bg-slate-100'}`}>
                                             <Icon className="h-4 w-4" />
