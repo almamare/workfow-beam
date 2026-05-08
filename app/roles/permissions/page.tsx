@@ -163,7 +163,6 @@ function RolePermissionsPage() {
             const result = await dispatch(setRolePermissions({ id: roleId, permissions: payload }));
             if (setRolePermissions.fulfilled.match(result)) {
                 toast.success('Role permissions updated successfully');
-                dispatch(fetchRolePermissions(roleId));
             } else {
                 toast.error((result.payload as string) || 'Failed to save permissions');
             }

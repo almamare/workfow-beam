@@ -327,7 +327,6 @@ function UserPermissionsPage() {
             const result = await dispatch(setUserPermissions({ userId, permissions: payload }));
             if (setUserPermissions.fulfilled.match(result)) {
                 toast.success('User permissions updated successfully');
-                dispatch(fetchUserPermissions(userId));
             } else {
                 toast.error((result.payload as string) || 'Failed to save permissions');
             }
