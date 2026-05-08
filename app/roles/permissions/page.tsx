@@ -12,7 +12,7 @@ import {
     selectRolePermissions,
     selectRolesLoading,
 } from '@/stores/slices/roles';
-import { fetchPermissions, selectPermissions } from '@/stores/slices/permissions';
+import { fetchPermissions, selectPermissions, selectPermissionsLoading } from '@/stores/slices/permissions';
 import type { SetRolePermissionItem } from '@/stores/types/roles';
 import type { Permission } from '@/stores/types/permissions';
 import { Button } from '@/components/ui/button';
@@ -53,6 +53,7 @@ function RolePermissionsPage() {
     const rolePermissions = useSelector(selectRolePermissions);
     const rolesLoading = useSelector(selectRolesLoading);
     const allPermissions = useSelector(selectPermissions);
+    const permissionsLoading = useSelector(selectPermissionsLoading);
     const permissionsList = Array.isArray(allPermissions) ? allPermissions : [];
 
     const [rows, setRows] = useState<PermissionRow[]>([]);
@@ -133,6 +134,10 @@ function RolePermissionsPage() {
     const handleSave = async () => {
         if (isNaN(roleId)) {
             toast.error('Invalid role ID');
+            return;
+        }
+        if (permissionsLoading || rows.length === 0) {
+            toast.error('Permissions are not loaded yet. Please wait and try again.');
             return;
         }
         setSaving(true);
@@ -217,7 +222,7 @@ function RolePermissionsPage() {
                     <Button onClick={() => router.push(`/roles/details?id=${roleId}`)} variant="outline">
                         Role details
                     </Button>
-                    <Button onClick={handleSave} disabled={saving}>
+                    <Button onClick={handleSave} disabled={saving || permissionsLoading || rows.length === 0}>
                         {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                         Save permissions
                     </Button>
