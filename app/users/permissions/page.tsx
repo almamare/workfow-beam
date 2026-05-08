@@ -8,6 +8,7 @@ import {
     fetchUser,
     fetchUserPermissions,
     setUserPermissions,
+    clearUserPermissions,
     selectSelectedUser,
     selectUserPermissions,
 } from '@/stores/slices/users';
@@ -70,6 +71,7 @@ function UserPermissionsPage() {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
+        dispatch(clearUserPermissions());
         if (userId) {
             dispatch(fetchUser({ id: userId }));
             dispatch(fetchUserPermissions(userId));
@@ -97,6 +99,7 @@ function UserPermissionsPage() {
     }, [userPermissions]);
 
     useEffect(() => {
+        if (permissionsList.length === 0 || userPermissions === null) return;
         const list: PermissionRow[] = permissionsList.map((p: Permission) => {
             const current = userPermsMap.get(p.id) ?? {
                 can_view: 0 as 0 | 1,
@@ -118,7 +121,7 @@ function UserPermissionsPage() {
             };
         });
         setRows(list);
-    }, [permissionsList, userPermsMap]);
+    }, [permissionsList, userPermsMap, userPermissions]);
 
     const filteredRows = useMemo(() => {
         const moduleScoped =
@@ -311,14 +314,16 @@ function UserPermissionsPage() {
         }
         setSaving(true);
         try {
-            const payload: SetUserPermissionItem[] = rows.map((r) => ({
-                permission_id: r.permission_id,
-                can_view: r.can_view,
-                can_create: r.can_create,
-                can_edit: r.can_edit,
-                can_delete: r.can_delete,
-                can_approve: r.can_approve,
-            }));
+            const payload: SetUserPermissionItem[] = rows
+                .filter((r) => r.can_view || r.can_create || r.can_edit || r.can_delete || r.can_approve)
+                .map((r) => ({
+                    permission_id: r.permission_id,
+                    can_view: r.can_view,
+                    can_create: r.can_create,
+                    can_edit: r.can_edit,
+                    can_delete: r.can_delete,
+                    can_approve: r.can_approve,
+                }));
             const result = await dispatch(setUserPermissions({ userId, permissions: payload }));
             if (setUserPermissions.fulfilled.match(result)) {
                 toast.success('User permissions updated successfully');

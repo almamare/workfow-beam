@@ -8,6 +8,7 @@ import {
     fetchRole,
     fetchRolePermissions,
     setRolePermissions,
+    clearRolePermissions,
     selectSelectedRole,
     selectRolePermissions,
     selectRolesLoading,
@@ -61,6 +62,7 @@ function RolePermissionsPage() {
     const [moduleFilter, setModuleFilter] = useState<string>('');
 
     useEffect(() => {
+        dispatch(clearRolePermissions());
         if (!isNaN(roleId)) {
             dispatch(fetchRole(roleId));
             dispatch(fetchRolePermissions(roleId));
@@ -88,6 +90,7 @@ function RolePermissionsPage() {
     }, [rolePermissions]);
 
     useEffect(() => {
+        if (permissionsList.length === 0 || rolePermissions === null) return;
         const list: PermissionRow[] = permissionsList.map((p: Permission) => {
             const current = rolePermsMap.get(p.id) ?? {
                 can_view: 0 as 0 | 1,
@@ -109,7 +112,7 @@ function RolePermissionsPage() {
             };
         });
         setRows(list);
-    }, [permissionsList, rolePermsMap]);
+    }, [permissionsList, rolePermsMap, rolePermissions]);
 
     const toggleFlag = useCallback((permissionId: number, flag: keyof Pick<PermissionRow, 'can_view' | 'can_create' | 'can_edit' | 'can_delete' | 'can_approve'>) => {
         setRows((prev) =>
@@ -142,14 +145,21 @@ function RolePermissionsPage() {
         }
         setSaving(true);
         try {
-            const payload: SetRolePermissionItem[] = rows.map((r) => ({
-                permission_id: r.permission_id,
-                can_view: r.can_view,
-                can_create: r.can_create,
-                can_edit: r.can_edit,
-                can_delete: r.can_delete,
-                can_approve: r.can_approve,
-            }));
+            const payload: SetRolePermissionItem[] = rows
+                .filter((r) => r.can_view || r.can_create || r.can_edit || r.can_delete || r.can_approve)
+                .map((r) => ({
+                    permission_id: r.permission_id,
+                    can_view: r.can_view,
+                    can_create: r.can_create,
+                    can_edit: r.can_edit,
+                    can_delete: r.can_delete,
+                    can_approve: r.can_approve,
+                }));
+            if (payload.length === 0) {
+                toast.error('يجب تفعيل صلاحية واحدة على الأقل قبل الحفظ.');
+                setSaving(false);
+                return;
+            }
             const result = await dispatch(setRolePermissions({ id: roleId, permissions: payload }));
             if (setRolePermissions.fulfilled.match(result)) {
                 toast.success('Role permissions updated successfully');
