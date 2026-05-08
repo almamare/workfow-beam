@@ -4,7 +4,14 @@ import React, { Suspense, useEffect, useState, useMemo, useCallback } from 'reac
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/stores/store';
-import { fetchRole, fetchRolePermissions, setRolePermissions, selectSelectedRole, selectRolePermissions } from '@/stores/slices/roles';
+import {
+    fetchRole,
+    fetchRolePermissions,
+    setRolePermissions,
+    selectSelectedRole,
+    selectRolePermissions,
+    selectRolesLoading,
+} from '@/stores/slices/roles';
 import { fetchPermissions, selectPermissions } from '@/stores/slices/permissions';
 import type { SetRolePermissionItem } from '@/stores/types/roles';
 import type { Permission } from '@/stores/types/permissions';
@@ -44,6 +51,7 @@ function RolePermissionsPage() {
 
     const role = useSelector(selectSelectedRole);
     const rolePermissions = useSelector(selectRolePermissions);
+    const rolesLoading = useSelector(selectRolesLoading);
     const allPermissions = useSelector(selectPermissions);
     const permissionsList = Array.isArray(allPermissions) ? allPermissions : [];
 
@@ -165,10 +173,26 @@ function RolePermissionsPage() {
         );
     }
 
-    if (!role || role.id !== roleId) {
+    const selectedRoleId = role ? Number(role.id) : NaN;
+
+    if (rolesLoading) {
         return (
             <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
+            </div>
+        );
+    }
+
+    if (!role || Number.isNaN(selectedRoleId) || selectedRoleId !== roleId) {
+        return (
+            <div className="space-y-4">
+                <Breadcrumb />
+                <p className="text-slate-600 dark:text-slate-400">
+                    Unable to load this role or role not found.{' '}
+                    <Button variant="link" onClick={() => router.push('/roles')}>
+                        Back to roles
+                    </Button>
+                </p>
             </div>
         );
     }
