@@ -3,6 +3,8 @@ import Cookies from 'js-cookie';
 import api from '@/utils/axios';
 import { LoginResponse, User } from '@/stores/types/login';
 
+type CookieAttributes = Parameters<typeof Cookies.remove>[1];
+
 // Define the shape of the login state
 interface LoginState {
     loading: boolean;
@@ -31,6 +33,29 @@ const initialState: LoginState = {
 // Async thunk to perform login request
 const REMEMBER_ME_KEY       = 'beam_remember_me';
 const REMEMBER_USERNAME_KEY = 'beam_remember_username';
+
+function getTokenCookieOptions(rememberMe: boolean): CookieAttributes {
+    const options: CookieAttributes = {
+        expires: rememberMe ? 30 : undefined,
+        secure: typeof window !== 'undefined' ? window.location.protocol === 'https:' : true,
+        // Lax is safer for normal top-level navigation; Strict can break some real flows in production.
+        sameSite: 'Lax',
+        path: '/',
+    };
+
+    if (typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        const envDomain = (process.env.NEXT_PUBLIC_COOKIE_DOMAIN || '').trim();
+        if (envDomain) {
+            options.domain = envDomain;
+        } else if (host === 'shuarano.com' || host.endsWith('.shuarano.com')) {
+            // Share cookie across www/non-www and subdomains.
+            options.domain = '.shuarano.com';
+        }
+    }
+
+    return options;
+}
 
 export const authentication = createAsyncThunk<
     User & { token: string; mustChangePassword: boolean },
@@ -82,15 +107,7 @@ export const authentication = createAsyncThunk<
                 Boolean(body?.must_change_password);
 
             const rememberMe = credentials.rememberMe ?? false;
-            const useSecureCookie =
-                typeof window !== 'undefined' && window.location.protocol === 'https:';
-
-            Cookies.set('token', token, {
-                expires: rememberMe ? 30 : undefined,
-                secure: useSecureCookie,
-                sameSite: 'Strict',
-                path: '/',
-            });
+            Cookies.set('token', token, getTokenCookieOptions(rememberMe));
 
             if (rememberMe) {
                 localStorage.setItem(REMEMBER_ME_KEY, 'true');
@@ -153,7 +170,17 @@ const loginSlice = createSlice({
             state.user = null;
             state.token = null;
             state.mustChangePassword = false;
-            Cookies.remove('token');
+            const removeOptions: CookieAttributes = { path: '/' };
+            const envDomain = (process.env.NEXT_PUBLIC_COOKIE_DOMAIN || '').trim();
+            if (envDomain) {
+                removeOptions.domain = envDomain;
+            } else if (typeof window !== 'undefined') {
+                const host = window.location.hostname;
+                if (host === 'shuarano.com' || host.endsWith('.shuarano.com')) {
+                    removeOptions.domain = '.shuarano.com';
+                }
+            }
+            Cookies.remove('token', removeOptions);
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('user_data');
                 localStorage.removeItem('auth_must_change_password');

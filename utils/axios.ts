@@ -2,6 +2,8 @@ import axios, { InternalAxiosRequestConfig, AxiosHeaders, AxiosError } from 'axi
 import Cookies from 'js-cookie';
 import { toast } from 'sonner';
 
+type CookieAttributes = Parameters<typeof Cookies.remove>[1];
+
 const instance = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
     headers: {
@@ -49,7 +51,17 @@ function redirectToLoginClearingSession(): void {
     const path = window.location.pathname || '';
     if (path.startsWith('/login')) return;
     try {
-        Cookies.remove('token');
+        const removeOptions: CookieAttributes = { path: '/' };
+        const envDomain = (process.env.NEXT_PUBLIC_COOKIE_DOMAIN || '').trim();
+        if (envDomain) {
+            removeOptions.domain = envDomain;
+        } else {
+            const host = window.location.hostname;
+            if (host === 'shuarano.com' || host.endsWith('.shuarano.com')) {
+                removeOptions.domain = '.shuarano.com';
+            }
+        }
+        Cookies.remove('token', removeOptions);
     } catch {
         /* ignore */
     }
