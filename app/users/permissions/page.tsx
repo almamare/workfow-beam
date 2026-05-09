@@ -86,12 +86,12 @@ function UserPermissionsPage() {
         const map = new Map<number, { can_view: 0 | 1; can_create: 0 | 1; can_edit: 0 | 1; can_delete: 0 | 1; can_approve: 0 | 1 }>();
         if (Array.isArray(userPermissions)) {
             userPermissions.forEach((p) => {
-                map.set(p.permission_id, {
-                    can_view: p.can_view ?? 0,
-                    can_create: p.can_create ?? 0,
-                    can_edit: p.can_edit ?? 0,
-                    can_delete: p.can_delete ?? 0,
-                    can_approve: p.can_approve ?? 0,
+                map.set(Number(p.permission_id), {
+                    can_view: (Number(p.can_view) || 0) as 0 | 1,
+                    can_create: (Number(p.can_create) || 0) as 0 | 1,
+                    can_edit: (Number(p.can_edit) || 0) as 0 | 1,
+                    can_delete: (Number(p.can_delete) || 0) as 0 | 1,
+                    can_approve: (Number(p.can_approve) || 0) as 0 | 1,
                 });
             });
         }
@@ -101,7 +101,7 @@ function UserPermissionsPage() {
     useEffect(() => {
         if (permissionsList.length === 0 || userPermissions === null) return;
         const list: PermissionRow[] = permissionsList.map((p: Permission) => {
-            const current = userPermsMap.get(p.id) ?? {
+            const current = userPermsMap.get(Number(p.id)) ?? {
                 can_view: 0 as 0 | 1,
                 can_create: 0 as 0 | 1,
                 can_edit: 0 as 0 | 1,
@@ -109,7 +109,7 @@ function UserPermissionsPage() {
                 can_approve: 0 as 0 | 1,
             };
             return {
-                permission_id: p.id,
+                permission_id: Number(p.id),
                 permission_key: p.permission_key ?? '',
                 name_en: p.name_en ?? p.name_ar ?? p.permission_key ?? '',
                 module: p.module ?? '',

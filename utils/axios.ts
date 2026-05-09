@@ -11,9 +11,10 @@ const instance = axios.create({
     },
 });
 
-// Request interceptor to attach the JWT token (browser only) 
+// Request interceptor: set correct API base URL at runtime + attach JWT token
 instance.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
     if (typeof window !== 'undefined') {
+
         const token = Cookies.get('token');
         if (token) {
             try {
@@ -25,7 +26,6 @@ instance.interceptors.request.use(async (config: InternalAxiosRequestConfig) => 
                 console.warn('Failed to parse authentication token:', error);
             }
         }
-
     }
 
     return config;
