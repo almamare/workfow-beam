@@ -60,6 +60,7 @@ import {
     FileSearch,
     LayoutDashboard,
     HelpCircle,
+    GitBranch,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -84,7 +85,7 @@ const iconLibrary: Record<string, any> = {
     Plus, Eye, List, Edit, Trash2, FileArchive, Landmark, Receipt,
     ChevronDown, ChevronRight, CheckCircle, Clock, XCircle, KeyRound,
     Bot, Sparkles, MessageSquare, ShieldAlert, Brain, Search, LineChart,
-    FileSearch, LayoutDashboard, HelpCircle,
+    FileSearch, LayoutDashboard, HelpCircle, GitBranch,
 };
 
 // Flexible route configuration - completely flexible system
@@ -195,6 +196,14 @@ const routeMapping: Record<string, string> = {
     '/profile': '/settings',
     '/notifications': '/settings',
     '/history': '/settings',
+
+    // Workflow settings sub-pages
+    '/settings/workflow/clients': '/settings/workflow',
+    '/settings/workflow/projects': '/settings/workflow',
+    '/settings/workflow/project-contracts': '/settings/workflow',
+    '/settings/workflow/financial': '/settings/workflow',
+    '/settings/workflow/employment': '/settings/workflow',
+    '/settings/workflow/tasks': '/settings/workflow',
     
     // Forms related pages
     '/forms/create': '/forms',
@@ -521,9 +530,24 @@ const routeConfig: Record<string, {
         color: 'text-gray-400',
         menuItems: [
             { href: '/settings', title: 'General Settings', icon: 'Settings', color: 'text-gray-400' },
+            { href: '/settings/workflow', title: 'Approval Workflow', icon: 'GitBranch', color: 'text-brand-sky-400' },
             { href: '/profile', title: 'Profile', icon: 'UserCircle', color: 'text-pink-400' },
             { href: '/notifications', title: 'Notifications', icon: 'Megaphone', color: 'text-pink-400' },
             { href: '/history', title: 'History', icon: 'History', color: 'text-slate-400' }
+        ]
+    },
+    '/settings/workflow': {
+        title: 'Approval Workflow',
+        icon: 'GitBranch',
+        color: 'text-brand-sky-400',
+        backLink: { href: '/settings', title: 'Back to Settings' },
+        menuItems: [
+            { href: '/settings/workflow/clients', title: 'Clients', icon: 'Users', color: 'text-purple-400' },
+            { href: '/settings/workflow/projects', title: 'Projects', icon: 'FolderOpen', color: 'text-indigo-400' },
+            { href: '/settings/workflow/project-contracts', title: 'Project Contracts', icon: 'FileCheck', color: 'text-teal-400' },
+            { href: '/settings/workflow/financial', title: 'Financial', icon: 'CreditCard', color: 'text-emerald-400' },
+            { href: '/settings/workflow/employment', title: 'Employment', icon: 'UserCheck', color: 'text-brand-sky-400' },
+            { href: '/settings/workflow/tasks', title: 'Tasks', icon: 'ClipboardList', color: 'text-amber-400' },
         ]
     },
     '/reports': {
@@ -840,7 +864,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
     }, [mobileOpen, setMobileOpen]);
 
     // Hide sidebar entirely on dashboard and section overview pages
-    if (pathname === '/dashboard' || pathname === '/financial' || pathname === '/tasks' || pathname === '/ai') {
+    if (pathname === '/dashboard' || pathname === '/financial' || pathname === '/tasks' || pathname === '/ai' || pathname === '/settings') {
         return null;
     }
 

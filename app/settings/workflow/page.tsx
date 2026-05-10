@@ -2,102 +2,77 @@
 
 import React from 'react';
 import {
-    LayoutDashboard,
-    GitBranch,
-    UserCircle,
-    Megaphone,
-    History,
-    Shield,
     Users,
-    Building,
-    KeyRound,
+    FolderOpen,
+    FileCheck,
+    CreditCard,
+    UserCheck,
+    ClipboardList,
+    GitBranch,
 } from 'lucide-react';
 import Link from 'next/link';
 
-const settingsSections = [
+const workflowSections = [
     {
-        title: 'Dashboard',
-        icon: LayoutDashboard,
-        href: '/dashboard',
-        color: '#0369a1',
-        bg: '#e0f2fe',
-        description: 'Go back to the main dashboard',
-    },
-    {
-        title: 'Approval Workflow',
-        icon: GitBranch,
-        href: '/settings/workflow/clients',
-        color: '#0284c7',
-        bg: '#f0f9ff',
-        description: 'Configure approval steps for requests',
-    },
-    {
-        title: 'Profile',
-        icon: UserCircle,
-        href: '/profile',
-        color: '#db2777',
-        bg: '#fdf2f8',
-        description: 'Manage your personal profile',
-    },
-    {
-        title: 'Notifications',
-        icon: Megaphone,
-        href: '/notifications',
-        color: '#d97706',
-        bg: '#fffbeb',
-        description: 'Notification preferences',
-    },
-    {
-        title: 'History',
-        icon: History,
-        href: '/history',
-        color: '#64748b',
-        bg: '#f8fafc',
-        description: 'View system activity history',
-    },
-    {
-        title: 'Roles',
-        icon: Shield,
-        href: '/roles',
-        color: '#b45309',
-        bg: '#fffbeb',
-        description: 'Manage roles and permissions',
-    },
-    {
-        title: 'Users',
+        title: 'Clients',
         icon: Users,
-        href: '/users',
-        color: '#4f46e5',
-        bg: '#eef2ff',
-        description: 'Manage system users',
-    },
-    {
-        title: 'Departments',
-        icon: Building,
-        href: '/departments',
-        color: '#0f766e',
-        bg: '#f0fdfa',
-        description: 'Manage departments',
-    },
-    {
-        title: 'Permissions',
-        icon: KeyRound,
-        href: '/permissions',
+        href: '/settings/workflow/clients',
         color: '#7c3aed',
         bg: '#f5f3ff',
-        description: 'Manage system permissions',
+        description: 'Client creation approval chain',
+    },
+    {
+        title: 'Projects',
+        icon: FolderOpen,
+        href: '/settings/workflow/projects',
+        color: '#4f46e5',
+        bg: '#eef2ff',
+        description: 'Project approval workflow',
+    },
+    {
+        title: 'Project Contracts',
+        icon: FileCheck,
+        href: '/settings/workflow/project-contracts',
+        color: '#0f766e',
+        bg: '#f0fdfa',
+        description: 'Contract approval steps',
+    },
+    {
+        title: 'Financial',
+        icon: CreditCard,
+        href: '/settings/workflow/financial',
+        color: '#059669',
+        bg: '#ecfdf5',
+        description: 'Financial request approval',
+    },
+    {
+        title: 'Employment',
+        icon: UserCheck,
+        href: '/settings/workflow/employment',
+        color: '#0284c7',
+        bg: '#f0f9ff',
+        description: 'HR and employment approvals',
+    },
+    {
+        title: 'Tasks',
+        icon: ClipboardList,
+        href: '/settings/workflow/tasks',
+        color: '#d97706',
+        bg: '#fffbeb',
+        description: 'Task request workflow',
     },
 ];
 
-export default function SettingsPage() {
+export default function WorkflowHubPage() {
     return (
         <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
             <div className="px-3 sm:px-6 lg:px-8 pt-3 pb-2">
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
-                    Settings
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200 flex items-center gap-3">
+                    <GitBranch className="h-9 w-9 text-brand-sky-500" />
+                    Approval Workflow
                 </h1>
                 <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
-                    Manage system configuration and preferences
+                    Configure approval steps for each request type
                 </p>
             </div>
 
@@ -108,14 +83,14 @@ export default function SettingsPage() {
                         style={{ background: 'linear-gradient(135deg,hsl(216,100%,36%) 0%,hsl(216,90%,48%) 100%)' }}
                     />
                     <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-widest">
-                        Settings Sections &nbsp;·&nbsp; {settingsSections.length} total &nbsp;·&nbsp; 8 settings
+                        Workflow Types &nbsp;·&nbsp; {workflowSections.length} types
                     </p>
                 </div>
             </div>
 
             <div className="flex-1 px-3 sm:px-6 lg:px-8 pb-6">
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3 sm:gap-4">
-                    {settingsSections.map((item, i) => (
+                    {workflowSections.map((item, i) => (
                         <Link
                             key={item.href}
                             href={item.href}
@@ -127,14 +102,13 @@ export default function SettingsPage() {
                                 transition-all duration-200
                                 hover:border-transparent hover:shadow-[0_8px_30px_rgba(0,0,0,0.10)] hover:-translate-y-1
                                 active:scale-[0.97] active:translate-y-0 cursor-pointer min-h-[110px] sm:min-h-[130px]">
+                                <div className="absolute top-0 left-4 right-4 h-[2px] rounded-full scale-x-0 group-hover:scale-x-100
+                                    transition-transform duration-300 origin-center"
+                                    style={{ background: item.color }} />
 
                                 <div
-                                    className="absolute top-0 left-4 right-4 h-[2px] rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-center"
-                                    style={{ background: item.color }}
-                                />
-
-                                <div
-                                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+                                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0
+                                        transition-transform duration-200 group-hover:scale-110"
                                     style={{ background: item.bg }}
                                 >
                                     <item.icon
@@ -145,7 +119,7 @@ export default function SettingsPage() {
 
                                 <div className="flex items-baseline justify-center gap-1.5 px-1 w-full">
                                     <span className="font-black text-[13px] sm:text-[14px] leading-none tabular-nums flex-shrink-0">
-                                        {`8.${i + 1}`}
+                                        {`W.${i + 1}`}
                                     </span>
                                     -
                                     <p className="text-slate-700 dark:text-slate-200 font-semibold text-[11.5px] sm:text-[12.5px]
@@ -154,11 +128,6 @@ export default function SettingsPage() {
                                         {item.title}
                                     </p>
                                 </div>
-
-                                <div
-                                    className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-200 pointer-events-none rounded-2xl"
-                                    style={{ background: item.color }}
-                                />
                             </div>
                         </Link>
                     ))}

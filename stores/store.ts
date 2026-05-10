@@ -35,6 +35,7 @@ import financialLedgerApi from '@/stores/slices/financial-ledger-api';
 import loans from '@/stores/slices/loans';
 import ai from '@/stores/slices/ai';
 import changeOrders from '@/stores/slices/change-orders';
+import workflow from '@/stores/slices/workflow';
 
 // This is the Redux store configuration for the login functionality
 // It uses the Redux Toolkit to create a store with a single slice for login.
@@ -76,6 +77,7 @@ const store = configureStore({
         loans,
         ai,
         changeOrders,
+        workflow,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
