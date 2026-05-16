@@ -35,7 +35,6 @@ import axios from '@/utils/axios';
 
 interface ProjectRequestWithData extends TaskRequest {
     project?: Project;
-    current_step_level?: string | number;
 }
 
 function ProjectsPendingPageContent() {

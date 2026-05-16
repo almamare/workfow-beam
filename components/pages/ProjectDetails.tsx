@@ -357,7 +357,17 @@ function ProjectDetailsPageContent() {
             {/* â”€â”€â”€ Client Information â”€â”€â”€ */}
             <EnhancedCard title="Client Information" description="Linked client details" variant="default" size="sm">
                 <EnhancedDataTable
-                    data={clientData ? [clientData] : (project.client_name ? [{ id: project.client_id ?? "", name: project.client_name, client_no: "â€”", client_type: "â€”", status: "â€”", state: "â€”", city: "â€”", budget: "â€”" } as Client] : [])}
+                    data={clientData ? [clientData] : (project.client_name ? [{
+                        id: project.client_id ?? "",
+                        name: project.client_name,
+                        client_no: "\u2014",
+                        sequence: 0,
+                        state: "\u2014",
+                        city: "\u2014",
+                        budget: "\u2014",
+                        created_at: "",
+                        updated_at: "",
+                    }] : [])}
                     columns={[
                         { key: "name",        header: "Client Name", render: (v: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{v || "â€”"}</span> },
                         { key: "client_no",   header: "Client No.",  render: (v: any) => <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{v || "â€”"}</span> },
