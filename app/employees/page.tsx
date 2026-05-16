@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { AppDispatch } from '@/stores/store';
@@ -10,6 +10,7 @@ import {
     selectTotalPages,
     selectTotalItems
 } from '@/stores/slices/employees';
+import { fetchJobTitles, selectJobTitles } from '@/stores/slices/job-titles';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -23,170 +24,144 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { toast } from 'sonner';
 import axios from '@/utils/axios';
 
+// level â†’ label + badge colour
+const LEVEL_META: Record<number, { label: string; color: string; badgeColor: 'default' | 'info' | 'success' | 'warning' | 'error' }> = {
+    1: { label: 'C-Level',  color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',    badgeColor: 'error' },
+    2: { label: 'Director', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',                badgeColor: 'info' },
+    3: { label: 'Manager',  color: 'bg-brand-sky-100 dark:bg-brand-sky-900/30 text-brand-sky-700 dark:text-brand-sky-300 border-brand-sky-200 dark:border-brand-sky-800', badgeColor: 'info' },
+    4: { label: 'Senior',   color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',          badgeColor: 'warning' },
+    5: { label: 'Staff',    color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',          badgeColor: 'success' },
+};
+
 export default function EmployeesPage() {
-    const employees = useSelector(selectEmployees);
-    const loading = useSelector(selectLoading);
+    const employees  = useSelector(selectEmployees);
+    const loading    = useSelector(selectLoading);
     const totalPages = useSelector(selectTotalPages);
     const totalItems = useSelector(selectTotalItems);
+    const jobTitlesList = useSelector(selectJobTitles);
 
-    const router = useRouter();
+    const router   = useRouter();
     const dispatch = useReduxDispatch<AppDispatch>();
 
-    const [search, setSearch] = useState('');
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(10);
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [search,      setSearch]      = useState('');
+    const [page,        setPage]        = useState(1);
+    const [limit,       setLimit]       = useState(10);
+    const [isRefreshing,setIsRefreshing]= useState(false);
     const [isExporting, setIsExporting] = useState(false);
-    const [role, setRole] = useState<'All' | 'Admin' | 'Manager' | 'Employee' | 'Contractor'>('All');
-    const [jobTitle, setJobTitle] = useState<string>('All');
-    const [status, setStatus] = useState<string>('All');
+    const [level,       setLevel]       = useState<string>('All');
+    const [jobTitle,    setJobTitle]    = useState<string>('All');
+    const [status,      setStatus]      = useState<string>('All');
 
     useEffect(() => {
-        dispatch(fetchEmployees({ 
-            page, 
-            limit, 
-            search, 
-            job_title: jobTitle !== 'All' ? jobTitle : undefined,
-            role: role !== 'All' ? role : undefined,
-            status: status !== 'All' ? status : undefined
+        dispatch(fetchJobTitles({ page: 1, limit: 500 }));
+    }, [dispatch]);
+
+    useEffect(() => {
+        dispatch(fetchEmployees({
+            page,
+            limit,
+            search,
+            job_title : jobTitle !== 'All' ? Number(jobTitle) : undefined,
+            level     : level !== 'All' ? Number(level) : undefined,
+            status    : status !== 'All' ? status : undefined,
         } as any));
-    }, [dispatch, page, limit, search, jobTitle, role, status]);
+    }, [dispatch, page, limit, search, jobTitle, level, status]);
 
     const jobTitleOptions = useMemo(() => {
-        const titles = Array.from(new Set(employees.map(emp => emp.job_title).filter(Boolean)));
-        return titles;
-    }, [employees]);
+        return jobTitlesList.map((jt) => ({
+            key: String(jt.id),
+            value: String(jt.id),
+            label: (jt.title_en ?? jt.title_ar ?? String(jt.id)) as string,
+        }));
+    }, [jobTitlesList]);
 
-    const roleCounts = useMemo(() => {
-        return employees.reduce<Record<string, number>>((acc, emp) => {
-            const roleKey = emp.role || 'Other';
-            acc[roleKey] = (acc[roleKey] || 0) + 1;
+    // Count by level for stats cards
+    const levelCounts = useMemo(() => {
+        return employees.reduce<Record<number, number>>((acc, emp) => {
+            if (emp.level) acc[emp.level] = (acc[emp.level] || 0) + 1;
             return acc;
         }, {});
     }, [employees]);
 
-    const roleCardConfigs: Record<string, { title: string; description: string; badgeColor: 'default' | 'info' | 'success' | 'warning' | 'error' }> = {
-        Admin: {
-            title: 'Admins',
-            description: 'Administrative employees',
-            badgeColor: 'warning',
-        },
-        Manager: {
-            title: 'Managers',
-            description: 'Management level employees',
-            badgeColor: 'info',
-        },
-        Employee: {
-            title: 'Employees',
-            description: 'General staff members',
-            badgeColor: 'success',
-        },
-        Contractor: {
-            title: 'Contractors',
-            description: 'External contractors',
-            badgeColor: 'default',
-        },
-    };
-
     const columns: Column<Employee>[] = [
-        { 
-            key: 'employee_code', 
-            header: 'EMP NO.', 
+        {
+            key: 'employee_code',
+            header: 'EMP NO.',
             render: (value: any) => <span className="text-slate-500 dark:text-slate-400 font-mono text-sm">{value}</span>,
             sortable: true
         },
-        { 
-            key: 'job_title', 
-            header: 'Job Title', 
-            render: (value: any) => (
-                <span className="font-semibold text-slate-800 dark:text-slate-200">{value}</span>
-            ),
-            sortable: true 
+        {
+            key: 'job_title',
+            header: 'Job Title',
+            render: (value: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{value}</span>,
+            sortable: true
         },
-        { 
-            key: 'name', 
-            header: 'First Name', 
+        {
+            key: 'name',
+            header: 'First Name',
             render: (value: any) => <span className="text-slate-700 dark:text-slate-300">{value}</span>,
-            sortable: true 
+            sortable: true
         },
-        { 
-            key: 'surname', 
-            header: 'Last Name', 
+        {
+            key: 'surname',
+            header: 'Last Name',
             render: (value: any) => <span className="text-slate-700 dark:text-slate-300">{value}</span>,
-            sortable: true 
+            sortable: true
         },
-        { 
-            key: 'role', 
-            header: 'Role', 
-            render: (value: any) => {
-                const roleColors: Record<string, string> = {
-                    'Admin': 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-                    'Manager': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-                    'Employee': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
-                    'Contractor': 'bg-brand-sky-100 dark:bg-brand-sky-900/30 text-brand-sky-700 dark:text-brand-sky-300 border-brand-sky-200 dark:border-brand-sky-800'
-                };
-                
+        {
+            key: 'role_key',
+            header: 'Role',
+            render: (value: any, row: Employee) => {
+                const meta  = row.level ? LEVEL_META[row.level] : null;
+                const color = meta?.color ?? 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700';
                 return (
-                    <Badge 
-                        variant="outline" 
-                        className={`${roleColors[value as keyof typeof roleColors] || roleColors.Employee} font-medium`}
-                    >
-                        {value}
+                    <Badge variant="outline" className={`${color} font-mono text-xs font-semibold tracking-wide`}>
+                        {value ?? 'â€”'}
                     </Badge>
                 );
             },
-            sortable: true 
+            sortable: true
         },
-        { 
-            key: 'hire_date', 
-            header: 'Hire Date', 
-            render: (value: any) => (
-                <span className="text-slate-600 dark:text-slate-400">
-                    {value ? value : '-'}
-                </span>
-            ),
-            sortable: true 
+        {
+            key: 'hire_date',
+            header: 'Hire Date',
+            render: (value: any) => <span className="text-slate-600 dark:text-slate-400">{value ?? 'â€”'}</span>,
+            sortable: true
         },
-        { 
-            key: 'salary_grade', 
-            header: 'Salary Grade', 
-            render: (value: any) => (
-                <span className="font-semibold text-green-600 dark:text-green-400">{value}</span>
-            ),
-            sortable: true 
+        {
+            key: 'salary_grade',
+            header: 'Salary Grade',
+            render: (value: any) => <span className="font-semibold text-green-600 dark:text-green-400">{value}</span>,
+            sortable: true
         },
         {
             key: 'created_at',
             header: 'Created At',
-            render: (value: any) => (
-                <span className="text-slate-600 dark:text-slate-400 text-sm">
-                    {value ? value : '-'}
-                </span>
-            ),
+            render: (value: any) => <span className="text-slate-600 dark:text-slate-400 text-sm">{value ?? 'â€”'}</span>,
             sortable: true
         }
     ];
 
-
     const activeFilters = useMemo(() => {
         const arr: string[] = [];
-        if (search) arr.push(`Search: ${search}`);
-        if (role !== 'All') arr.push(`Role: ${role}`);
-        if (jobTitle !== 'All') arr.push(`Job Title: ${jobTitle}`);
-        if (status !== 'All') arr.push(`Status: ${status}`);
+        if (search)             arr.push(`Search: ${search}`);
+        if (level !== 'All')    arr.push(`Level: ${LEVEL_META[Number(level)]?.label ?? level}`);
+        if (jobTitle !== 'All') {
+            const jt = jobTitlesList.find((j) => String(j.id) === jobTitle);
+            arr.push(`Job Title: ${jt ? (jt.title_en ?? jt.title_ar ?? jobTitle) : jobTitle}`);
+        }
+        if (status !== 'All')   arr.push(`Status: ${status}`);
         return arr;
-    }, [search, role, jobTitle, status]);
+    }, [search, level, jobTitle, status, jobTitlesList]);
 
     const refreshTable = async () => {
         setIsRefreshing(true);
         try {
-            await dispatch(fetchEmployees({ 
-                page, 
-                limit, 
-                search, 
-                job_title: jobTitle !== 'All' ? jobTitle : undefined,
-                role: role !== 'All' ? role : undefined,
-                status: status !== 'All' ? status : undefined
+            await dispatch(fetchEmployees({
+                page, limit, search,
+                job_title : jobTitle !== 'All' ? Number(jobTitle) : undefined,
+                level     : level !== 'All' ? Number(level) : undefined,
+                status    : status !== 'All' ? status : undefined,
             } as any));
             toast.success('Table refreshed successfully');
         } catch {
@@ -202,33 +177,31 @@ export default function EmployeesPage() {
             const { data } = await axios.get('/employees/fetch', {
                 params: {
                     search,
-                    job_title: jobTitle !== 'All' ? jobTitle : undefined,
-                    role: role !== 'All' ? role : undefined,
-                    limit: 10000,
-                    page: 1
+                    job_title : jobTitle !== 'All' ? Number(jobTitle) : undefined,
+                    level     : level !== 'All' ? Number(level) : undefined,
+                    limit: 10000, page: 1
                 }
             });
 
-            const headers = ['Employee Code', 'Job Title', 'First Name', 'Last Name', 'Role', 'Hire Date', 'Salary Grade', 'Created At'];
-            const csvHeaders = headers.join(',');
-            const csvRows = (data?.body?.employees?.items || data?.body?.items || []).map((emp: any) => {
-                return [
-                    emp.employee_code,
-                    escapeCsv(emp.job_title),
-                    escapeCsv(emp.name),
-                    escapeCsv(emp.surname),
-                    emp.role,
-                    emp.hire_date ? new Date(emp.hire_date).toLocaleDateString('en-US') : '',
-                    emp.salary_grade,
-                    emp.created_at ? new Date(emp.created_at).toLocaleDateString('en-US') : ''
-                ].join(',');
-            });
-            const csvContent = [csvHeaders, ...csvRows].join('\n');
+            const headers = ['Employee Code', 'Job Title', 'First Name', 'Last Name', 'Role Key', 'Level', 'Hire Date', 'Salary Grade', 'Created At'];
+            const csvRows = (data?.body?.employees?.items || []).map((emp: any) => [
+                emp.employee_code,
+                escapeCsv(emp.job_title),
+                escapeCsv(emp.name),
+                escapeCsv(emp.surname),
+                emp.role_key ?? '',
+                emp.level ? (LEVEL_META[emp.level]?.label ?? emp.level) : '',
+                emp.hire_date ? new Date(emp.hire_date).toLocaleDateString('en-US') : '',
+                emp.salary_grade,
+                emp.created_at ? new Date(emp.created_at).toLocaleDateString('en-US') : ''
+            ].join(','));
+
+            const csvContent = [headers.join(','), ...csvRows].join('\n');
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `employees_${new Date().toISOString().slice(0,10)}.csv`;
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = `employees_${new Date().toISOString().slice(0, 10)}.csv`;
             a.click();
             URL.revokeObjectURL(url);
             toast.success('Data exported successfully');
@@ -256,14 +229,13 @@ export default function EmployeesPage() {
 
     return (
         <div className="space-y-4">
-            {/* Header */}
             <Breadcrumb />
             <div className="flex flex-col md:flex-row md:items-end gap-4 justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Employees</h1>
                     <p className="text-slate-600 dark:text-slate-400 mt-2">Manage your workforce with comprehensive employee information</p>
                 </div>
-                <Button 
+                <Button
                     onClick={() => router.push('/employees/create')}
                     className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 >
@@ -272,32 +244,19 @@ export default function EmployeesPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <EnhancedCard
-                    title="Total Employees"
-                    description="All employees in the system"
-                    variant="default"
-                    size="sm"
-                    stats={{
-                        total: totalItems,
-                        badge: 'Total',
-                        badgeColor: 'default'
-                    }}
-                >
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                <EnhancedCard title="Total" description="All employees" variant="default" size="sm"
+                    stats={{ total: totalItems, badge: 'Total', badgeColor: 'default' }}>
                     <></>
                 </EnhancedCard>
-                {Object.keys(roleCardConfigs).map((roleKey) => (
+                {([1, 2, 3, 4, 5] as const).map((lvl) => (
                     <EnhancedCard
-                        key={roleKey}
-                        title={roleCardConfigs[roleKey].title}
-                        description={roleCardConfigs[roleKey].description}
+                        key={lvl}
+                        title={LEVEL_META[lvl].label}
+                        description={`Level ${lvl} employees`}
                         variant="default"
                         size="sm"
-                        stats={{
-                            total: roleCounts[roleKey] || 0,
-                            badge: roleCardConfigs[roleKey].title,
-                            badgeColor: roleCardConfigs[roleKey].badgeColor
-                        }}
+                        stats={{ total: levelCounts[lvl] || 0, badge: LEVEL_META[lvl].label, badgeColor: LEVEL_META[lvl].badgeColor }}
                     >
                         <></>
                     </EnhancedCard>
@@ -308,26 +267,21 @@ export default function EmployeesPage() {
             <FilterBar
                 searchPlaceholder="Search by EMP NO., name, or job title..."
                 searchValue={search}
-                onSearchChange={(value) => {
-                    setSearch(value);
-                    setPage(1);
-                }}
+                onSearchChange={(value) => { setSearch(value); setPage(1); }}
                 filters={[
                     {
-                        key: 'role',
-                        label: 'Role',
-                        value: role,
+                        key: 'level',
+                        label: 'Level',
+                        value: level,
                         options: [
-                            { key: 'All', value: 'All', label: 'All Roles' },
-                            { key: 'Admin', value: 'Admin', label: 'Admin' },
-                            { key: 'Manager', value: 'Manager', label: 'Manager' },
-                            { key: 'Employee', value: 'Employee', label: 'Employee' },
-                            { key: 'Contractor', value: 'Contractor', label: 'Contractor' }
+                            { key: 'All', value: 'All', label: 'All Levels' },
+                            { key: '1', value: '1', label: 'C-Level' },
+                            { key: '2', value: '2', label: 'Director' },
+                            { key: '3', value: '3', label: 'Manager' },
+                            { key: '4', value: '4', label: 'Senior' },
+                            { key: '5', value: '5', label: 'Staff' },
                         ],
-                        onValueChange: (value) => {
-                            setRole(value as typeof role);
-                            setPage(1);
-                        }
+                        onValueChange: (value) => { setLevel(value); setPage(1); }
                     },
                     {
                         key: 'job_title',
@@ -335,16 +289,9 @@ export default function EmployeesPage() {
                         value: jobTitle,
                         options: [
                             { key: 'All', value: 'All', label: 'All Job Titles' },
-                            ...jobTitleOptions.map((title) => ({
-                                key: title,
-                                value: title,
-                                label: title
-                            }))
+                            ...jobTitleOptions,
                         ],
-                        onValueChange: (value) => {
-                            setJobTitle(value);
-                            setPage(1);
-                        }
+                        onValueChange: (value) => { setJobTitle(value); setPage(1); }
                     },
                     {
                         key: 'status',
@@ -352,24 +299,17 @@ export default function EmployeesPage() {
                         value: status,
                         options: [
                             { key: 'All', value: 'All', label: 'All Statuses' },
-                            { key: 'Active', value: 'Active', label: 'Active' },
-                            { key: 'Inactive', value: 'Inactive', label: 'Inactive' },
+                            { key: 'Active',    value: 'Active',    label: 'Active' },
+                            { key: 'Inactive',  value: 'Inactive',  label: 'Inactive' },
                             { key: 'Suspended', value: 'Suspended', label: 'Suspended' },
-                            { key: 'Resigned', value: 'Resigned', label: 'Resigned' }
+                            { key: 'Resigned',  value: 'Resigned',  label: 'Resigned' },
                         ],
-                        onValueChange: (value) => {
-                            setStatus(value);
-                            setPage(1);
-                        }
+                        onValueChange: (value) => { setStatus(value); setPage(1); }
                     }
                 ]}
                 activeFilters={activeFilters}
                 onClearFilters={() => {
-                    setSearch('');
-                    setRole('All');
-                    setJobTitle('All');
-                    setStatus('All');
-                    setPage(1);
+                    setSearch(''); setLevel('All'); setJobTitle('All'); setStatus('All'); setPage(1);
                 }}
                 actions={
                     <>
@@ -430,7 +370,7 @@ export default function EmployeesPage() {
                     }}
                     noDataMessage="No employees found matching your search criteria"
                     searchPlaceholder="Search employees..."
-                    hideEmptyMessage={true}
+                    
                 />
             </EnhancedCard>
         </div>

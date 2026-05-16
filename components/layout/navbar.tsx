@@ -188,7 +188,7 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                                             </p>
                                             <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors">
                                                 <ClientOnly fallback="Loading...">
-                                                    {user?.role ?? 'Role'}
+                                                    {(user as any)?.role_name ?? user?.role ?? 'Role'}
                                                 </ClientOnly>
                                             </p>
                                         </div>
@@ -217,7 +217,7 @@ export function Navbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                                         </p>
                                         <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
                                             <ClientOnly fallback="Loading...">
-                                                {`${user?.role ?? 'Role'} - ${user?.number ?? 'N/A'}`}
+                                                {`${(user as any)?.role_name ?? user?.role ?? 'Role'} - ${user?.number ?? 'N/A'}`}
                                             </ClientOnly>
                                         </p>
                                         <div className="flex items-center gap-1.5">

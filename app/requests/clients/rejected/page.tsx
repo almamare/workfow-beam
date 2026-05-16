@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState, useMemo, useCallback, useRef, Suspense } from 'react';
 import { AppDispatch } from '@/stores/store';
@@ -168,7 +168,7 @@ function ClientsRejectedPageContent() {
                 }
             });
 
-            const headers = ['Request Code', 'Request Type', 'Client', 'Client Number', 'Client Type', 'Status', 'State', 'City', 'Budget', 'Notes', 'Created By', 'Created At'];
+            const headers = ['Request Code', 'Request Type', 'Client', 'Client Number', 'Client Type', 'Status', 'Governorate', 'City', 'Budget', 'Notes', 'Created By', 'Created At'];
             const csvHeaders = headers.join(',');
             const items = data?.body?.tasks_requests?.items || data?.data?.tasks_requests?.items || [];
 
@@ -293,7 +293,7 @@ function ClientsRejectedPageContent() {
         },
         {
             key: 'client_state' as any,
-            header: 'State',
+            header: 'Governorate',
             render: (value: any, row: ClientRequestWithData) => {
                 const client = row.client;
                 return <span className="text-slate-600 dark:text-slate-400">{client?.state || 'N/A'}</span>;
@@ -447,7 +447,7 @@ function ClientsRejectedPageContent() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* From Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 From Date
                             </Label>
                             <DatePicker
@@ -461,7 +461,7 @@ function ClientsRejectedPageContent() {
 
                         {/* To Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 To Date
                             </Label>
                             <DatePicker
@@ -551,7 +551,7 @@ function ClientsRejectedPageContent() {
                     }}
                     noDataMessage="No rejected client requests found matching your criteria"
                     searchPlaceholder="Search requests..."
-                    hideEmptyMessage={true}
+                    
                 />
             </EnhancedCard>
         </div>
@@ -569,4 +569,3 @@ export default function ClientsRejectedPage() {
         </Suspense>
     );
 }
-

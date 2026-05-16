@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -176,7 +176,7 @@ export default function CreateContractPage() {
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {/* Client */}
                             <div className="space-y-2 md:col-span-2 lg:col-span-3">
-                                <Label htmlFor="client_id" className="text-slate-700 dark:text-slate-200">
+                                <Label className="text-slate-700 dark:text-slate-200">
                                     Client *
                                 </Label>
                                 <Select
@@ -225,7 +225,7 @@ export default function CreateContractPage() {
 
                             {/* Contract Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="contract_date" className="text-slate-700 dark:text-slate-200">
+                                <Label className="text-slate-700 dark:text-slate-200">
                                     Contract Date *
                                 </Label>
                                 <DatePicker
@@ -239,7 +239,7 @@ export default function CreateContractPage() {
 
                             {/* Start Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="start_date" className="text-slate-700 dark:text-slate-200">
+                                <Label className="text-slate-700 dark:text-slate-200">
                                     Start Date
                                 </Label>
                                 <DatePicker
@@ -253,7 +253,7 @@ export default function CreateContractPage() {
 
                             {/* End Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="end_date" className="text-slate-700 dark:text-slate-200">
+                                <Label className="text-slate-700 dark:text-slate-200">
                                     End Date
                                 </Label>
                                 <DatePicker
@@ -288,7 +288,7 @@ export default function CreateContractPage() {
 
                             {/* Currency */}
                             <div className="space-y-2">
-                                <Label htmlFor="currency" className="text-slate-700 dark:text-slate-200">
+                                <Label className="text-slate-700 dark:text-slate-200">
                                     Currency
                                 </Label>
                                 <Select
@@ -350,7 +350,7 @@ export default function CreateContractPage() {
 
                             {/* Status */}
                             <div className="space-y-2">
-                                <Label htmlFor="status" className="text-slate-700 dark:text-slate-200">
+                                <Label className="text-slate-700 dark:text-slate-200">
                                     Status
                                 </Label>
                                 <Select
@@ -426,4 +426,3 @@ export default function CreateContractPage() {
         </div>
     );
 }
-

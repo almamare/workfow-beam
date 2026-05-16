@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import { AppDispatch } from '@/stores/store';
@@ -465,7 +465,7 @@ function TaskRequestsPageContent() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Status Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 Status
                             </Label>
                             <Select
@@ -491,7 +491,7 @@ function TaskRequestsPageContent() {
 
                         {/* From Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 From Date
                             </Label>
                             <DatePicker
@@ -505,7 +505,7 @@ function TaskRequestsPageContent() {
 
                         {/* To Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 To Date
                             </Label>
                             <DatePicker
@@ -596,7 +596,7 @@ function TaskRequestsPageContent() {
                     }}
                     noDataMessage="No task requests found matching your criteria"
                     searchPlaceholder="Search requests..."
-                    hideEmptyMessage={true}
+                    
                 />
             </EnhancedCard>
 
@@ -611,7 +611,7 @@ function TaskRequestsPageContent() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="request_type" className="text-slate-700 dark:text-slate-300 font-medium">Request Type</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Request Type</Label>
                             <Select value={formData.request_type} onValueChange={(value) => setFormData(prev => ({ ...prev, request_type: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue placeholder="Select Request Type" />
@@ -626,7 +626,7 @@ function TaskRequestsPageContent() {
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="contractor_name" className="text-slate-700 dark:text-slate-300 font-medium">Contractor</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Contractor</Label>
                             <Select value={formData.contractor_name} onValueChange={(value) => setFormData(prev => ({ ...prev, contractor_name: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue placeholder="Select Contractor" />
@@ -641,7 +641,7 @@ function TaskRequestsPageContent() {
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="project_name" className="text-slate-700 dark:text-slate-300 font-medium">Project</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Project</Label>
                             <Select value={formData.project_name} onValueChange={(value) => setFormData(prev => ({ ...prev, project_name: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue placeholder="Select Project" />
@@ -656,7 +656,7 @@ function TaskRequestsPageContent() {
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="priority" className="text-slate-700 dark:text-slate-300 font-medium">Priority</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Priority</Label>
                             <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue />
@@ -716,7 +716,7 @@ function TaskRequestsPageContent() {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="assigned_to" className="text-slate-700 dark:text-slate-300 font-medium">Assigned To</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Assigned To</Label>
                             <Select value={formData.assigned_to} onValueChange={(value) => setFormData(prev => ({ ...prev, assigned_to: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue placeholder="Select Assignee" />
@@ -761,7 +761,7 @@ function TaskRequestsPageContent() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="edit-request_type" className="text-slate-700 dark:text-slate-300 font-medium">Request Type</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Request Type</Label>
                             <Select value={formData.request_type} onValueChange={(value) => setFormData(prev => ({ ...prev, request_type: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue />
@@ -776,7 +776,7 @@ function TaskRequestsPageContent() {
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="edit-contractor_name" className="text-slate-700 dark:text-slate-300 font-medium">Contractor</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Contractor</Label>
                             <Select value={formData.contractor_name} onValueChange={(value) => setFormData(prev => ({ ...prev, contractor_name: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue />
@@ -791,7 +791,7 @@ function TaskRequestsPageContent() {
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="edit-project_name" className="text-slate-700 dark:text-slate-300 font-medium">Project</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Project</Label>
                             <Select value={formData.project_name} onValueChange={(value) => setFormData(prev => ({ ...prev, project_name: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue />
@@ -806,7 +806,7 @@ function TaskRequestsPageContent() {
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="edit-priority" className="text-slate-700 dark:text-slate-300 font-medium">Priority</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Priority</Label>
                             <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue />
@@ -863,7 +863,7 @@ function TaskRequestsPageContent() {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="edit-assigned_to" className="text-slate-700 dark:text-slate-300 font-medium">Assigned To</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Assigned To</Label>
                             <Select value={formData.assigned_to} onValueChange={(value) => setFormData(prev => ({ ...prev, assigned_to: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue />

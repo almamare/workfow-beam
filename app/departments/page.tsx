@@ -12,6 +12,7 @@ import {
     selectDepartmentsTotal,
 } from '@/stores/slices/departments';
 import type { Department } from '@/stores/types/departments';
+import api from '@/utils/axios';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -41,6 +42,16 @@ export default function DepartmentsPage() {
     const [limit, setLimit] = useState(10);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [allDepts, setAllDepts] = useState<Array<{ department_id: string; name_en: string | null; name_ar: string | null }>>([]);
+
+    useEffect(() => {
+        api.get('/departments/fetch', { params: { limit: 500 } })
+            .then((res) => {
+                const items = res.data?.body?.departments?.items;
+                if (Array.isArray(items)) setAllDepts(items);
+            })
+            .catch(() => {});
+    }, []);
 
     useEffect(() => {
         dispatch(
@@ -57,9 +68,11 @@ export default function DepartmentsPage() {
     const departmentsList = Array.isArray(departments) ? departments : [];
 
     const parentOptions = useMemo(() => {
-        const list = departmentsList.map((d) => ({ id: d.department_id, name: d.name_en ?? d.name_ar ?? d.department_id }));
-        return Array.from(new Map(list.map((x) => [x.id, x])).values());
-    }, [departmentsList]);
+        return allDepts.map((d) => ({
+            id: d.department_id,
+            name: d.name_en ?? d.name_ar ?? d.department_id,
+        }));
+    }, [allDepts]);
 
     const columns: Column<Department>[] = [
         {
@@ -190,9 +203,13 @@ export default function DepartmentsPage() {
         const arr: string[] = [];
         if (search) arr.push(`Search: ${search}`);
         if (status !== 'All') arr.push(`Status: ${status}`);
-        if (parentId !== 'All') arr.push(`Parent: ${parentId}`);
+        if (parentId !== 'All') {
+            const found = allDepts.find((d) => d.department_id === parentId);
+            const label = found ? (found.name_en ?? found.name_ar ?? parentId) : parentId;
+            arr.push(`Parent: ${label}`);
+        }
         return arr;
-    }, [search, status, parentId]);
+    }, [search, status, parentId, allDepts]);
 
     const refreshTable = () => {
         setIsRefreshing(true);

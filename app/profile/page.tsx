@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
@@ -442,7 +442,7 @@ export default function ProfilePage() {
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="language" className="text-slate-700 dark:text-slate-200">Language</Label>
+                            <Label className="text-slate-700 dark:text-slate-200">Language</Label>
                             <Select
                                 value={profileData.language}
                                 onValueChange={(value) => setProfileData(prev => ({ ...prev, language: value }))}
@@ -458,7 +458,7 @@ export default function ProfilePage() {
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="timezone" className="text-slate-700 dark:text-slate-200">Timezone</Label>
+                            <Label className="text-slate-700 dark:text-slate-200">Timezone</Label>
                             <Select
                                 value={profileData.timezone}
                                 onValueChange={(value) => setProfileData(prev => ({ ...prev, timezone: value }))}
@@ -571,4 +571,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-

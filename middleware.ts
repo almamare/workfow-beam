@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /** Paths that never require a session cookie */
-const PUBLIC_PATHS = new Set<string>(['/', '/login']);
+const PUBLIC_PATHS = new Set<string>(['/', '/login', '/forgot-password']);
 
 function isPublicPath(pathname: string): boolean {
     if (PUBLIC_PATHS.has(pathname)) {

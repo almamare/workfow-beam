@@ -62,6 +62,8 @@ export interface User {
     timezone?: string;
     /** Role key e.g. CFO, COM_DIR — use for menus and feature flags */
     role_key?: string | null;
+    /** Role display name e.g. مدير المالية, مدير العقود */
+    role_name?: string | null;
     /** Department code */
     department_id?: string | null;
     /** Last successful login ISO datetime */

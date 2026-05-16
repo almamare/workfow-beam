@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState, useMemo, useCallback, useRef, Suspense } from 'react';
 import { AppDispatch } from '@/stores/store';
@@ -560,7 +560,7 @@ function ProjectRequestsPageContent() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Status Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 Status
                             </Label>
                             <Select
@@ -586,7 +586,7 @@ function ProjectRequestsPageContent() {
 
                         {/* From Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 From Date
                             </Label>
                             <DatePicker
@@ -600,7 +600,7 @@ function ProjectRequestsPageContent() {
 
                         {/* To Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 To Date
                             </Label>
                             <DatePicker
@@ -691,7 +691,7 @@ function ProjectRequestsPageContent() {
                     }}
                     noDataMessage="No project requests found matching your criteria"
                     searchPlaceholder="Search requests..."
-                    hideEmptyMessage={true}
+                    
                 />
             </EnhancedCard>
         </div>
@@ -709,4 +709,3 @@ export default function ProjectRequestsPage() {
         </Suspense>
     );
 }
-

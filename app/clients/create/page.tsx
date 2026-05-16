@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useCallback, useMemo, useRef } from 'react';      
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,12 @@ import { useRouter } from 'next/navigation';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { validateFile, formatFileSize, fileToBase64WithProgress } from '@/utils/fileUtils';
+
+const IRAQ_GOVERNORATES = [
+    'Al-Anbar', 'Babil', 'Baghdad', 'Basra', 'Dhi Qar', 'Diyala',
+    'Duhok', 'Erbil', 'Karbala', 'Kirkuk', 'Maysan', 'Muthanna',
+    'Najaf', 'Nineveh', 'Salah Al-Din', 'Sulaymaniyah', 'Wasit', 'Al-Qadisiyyah',
+];
 
 type ClientPayload = {
     name: string;
@@ -334,14 +340,17 @@ const CreateClientPage: React.FC = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="state" className="text-slate-700 dark:text-slate-200">State *</Label>
-                                <Input
-                                    id="state"
-                                    value={form.state}
-                                    onChange={e => updateField('state', e.target.value)}
-                                    placeholder="e.g., Nineveh"
-                                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                                />
+                                <Label htmlFor="state" className="text-slate-700 dark:text-slate-200">Governorate *</Label>
+                                <Select value={form.state} onValueChange={v => updateField('state', v)}>
+                                    <SelectTrigger id="state" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100">
+                                        <SelectValue placeholder="Select governorate..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {IRAQ_GOVERNORATES.map(g => (
+                                            <SelectItem key={g} value={g}>{g}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                                 {fieldErrors.state && (
                                     <p className="text-xs text-red-500 dark:text-red-400">{fieldErrors.state}</p>
                                 )}
@@ -377,7 +386,7 @@ const CreateClientPage: React.FC = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="client_type" className="text-slate-700 dark:text-slate-200">Client Type</Label>
+                                <Label className="text-slate-700 dark:text-slate-200">Client Type</Label>
                                 <Select
                                     value={form.client_type || ''}
                                     onValueChange={(value) => updateSelectField('client_type', value)}

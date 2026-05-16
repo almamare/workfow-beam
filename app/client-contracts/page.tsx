@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -398,7 +398,7 @@ export default function ClientContractsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Status Filter */}
                             <div className="space-y-2">
-                                <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Status
                                 </Label>
                                 <Select
@@ -424,7 +424,7 @@ export default function ClientContractsPage() {
 
                             {/* Client Filter */}
                             <div className="space-y-2">
-                                <Label htmlFor="client" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Client
                                 </Label>
                                 <Select
@@ -450,7 +450,7 @@ export default function ClientContractsPage() {
 
                             {/* From Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     From Date
                                 </Label>
                                 <DatePicker
@@ -464,7 +464,7 @@ export default function ClientContractsPage() {
 
                             {/* To Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     To Date
                                 </Label>
                                 <DatePicker

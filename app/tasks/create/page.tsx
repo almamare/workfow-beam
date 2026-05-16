@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+﻿/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
@@ -581,7 +581,7 @@ const CreateTaskOrderPage: React.FC = () => {
 
                                 {/* Issue Date */}
                                 <div className="flex flex-col">
-                                    <Label htmlFor="issue_date" className="mb-3 mt-[6px] text-slate-700 dark:text-slate-200" >
+                                    <Label className="mb-3 mt-[6px] text-slate-700 dark:text-slate-200" >
                                         Issue Date *
                                     </Label>
 

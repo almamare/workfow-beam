@@ -1,3 +1,11 @@
+export interface ClientBudgetSummary {
+    client_budget:         number;
+    allocated_to_projects: number;
+    remaining_budget:      number;
+    actual_cost:           number;
+    budget_after_actual:   number;
+}
+
 export interface Client {
     id: string;
     name: string;
@@ -26,6 +34,7 @@ export interface ClientProject {
     description?: string;
     status: string;
     type: string;
+    original_budget?: string | number | null;
     created_at: string;
     updated_at: string;
 }

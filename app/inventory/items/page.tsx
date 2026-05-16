@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -618,7 +618,7 @@ export default function InventoryItemsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         {/* Category Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="category" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 Category
                             </Label>
                             <Select
@@ -642,7 +642,7 @@ export default function InventoryItemsPage() {
 
                         {/* Status Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 Status
                             </Label>
                             <Select
@@ -666,7 +666,7 @@ export default function InventoryItemsPage() {
 
                         {/* Stock Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="stock" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 Stock Level
                             </Label>
                             <Select
@@ -690,7 +690,7 @@ export default function InventoryItemsPage() {
 
                         {/* From Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 From Date
                             </Label>
                             <DatePicker
@@ -704,7 +704,7 @@ export default function InventoryItemsPage() {
 
                         {/* To Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 To Date
                             </Label>
                             <DatePicker
@@ -830,7 +830,7 @@ export default function InventoryItemsPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="category" className="text-slate-700 dark:text-slate-200">Category *</Label>
+                                <Label className="text-slate-700 dark:text-slate-200">Category *</Label>
                                 <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
                                     <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                                         <SelectValue placeholder="Select Category" />
@@ -843,7 +843,7 @@ export default function InventoryItemsPage() {
                                 </Select>
                             </div>
                             <div>
-                                <Label htmlFor="unit" className="text-slate-700 dark:text-slate-200">Unit *</Label>
+                                <Label className="text-slate-700 dark:text-slate-200">Unit *</Label>
                                 <Select value={formData.unit} onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}>
                                     <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                                         <SelectValue placeholder="Select Unit" />
@@ -905,7 +905,7 @@ export default function InventoryItemsPage() {
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="currency" className="text-slate-700 dark:text-slate-200">Currency</Label>
+                                <Label className="text-slate-700 dark:text-slate-200">Currency</Label>
                                 <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
                                     <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                                         <SelectValue />
@@ -920,7 +920,7 @@ export default function InventoryItemsPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="supplier" className="text-slate-700 dark:text-slate-200">Supplier</Label>
+                                <Label className="text-slate-700 dark:text-slate-200">Supplier</Label>
                                 <Select value={formData.supplier} onValueChange={(value) => setFormData(prev => ({ ...prev, supplier: value }))}>
                                     <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                                         <SelectValue placeholder="Select Supplier" />
@@ -933,7 +933,7 @@ export default function InventoryItemsPage() {
                                 </Select>
                             </div>
                             <div>
-                                <Label htmlFor="location" className="text-slate-700 dark:text-slate-200">Location</Label>
+                                <Label className="text-slate-700 dark:text-slate-200">Location</Label>
                                 <Select value={formData.location} onValueChange={(value) => setFormData(prev => ({ ...prev, location: value }))}>
                                     <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                                         <SelectValue placeholder="Select Location" />
@@ -990,7 +990,7 @@ export default function InventoryItemsPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="edit-category" className="text-slate-700 dark:text-slate-200">Category *</Label>
+                                <Label className="text-slate-700 dark:text-slate-200">Category *</Label>
                                 <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
                                     <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                                         <SelectValue />
@@ -1003,7 +1003,7 @@ export default function InventoryItemsPage() {
                                 </Select>
                             </div>
                             <div>
-                                <Label htmlFor="edit-unit" className="text-slate-700 dark:text-slate-200">Unit *</Label>
+                                <Label className="text-slate-700 dark:text-slate-200">Unit *</Label>
                                 <Select value={formData.unit} onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}>
                                     <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                                         <SelectValue />
@@ -1061,7 +1061,7 @@ export default function InventoryItemsPage() {
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="edit-currency" className="text-slate-700 dark:text-slate-200">Currency</Label>
+                                <Label className="text-slate-700 dark:text-slate-200">Currency</Label>
                                 <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
                                     <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                                         <SelectValue />
@@ -1076,7 +1076,7 @@ export default function InventoryItemsPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="edit-supplier" className="text-slate-700 dark:text-slate-200">Supplier</Label>
+                                <Label className="text-slate-700 dark:text-slate-200">Supplier</Label>
                                 <Select value={formData.supplier} onValueChange={(value) => setFormData(prev => ({ ...prev, supplier: value }))}>
                                     <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                                         <SelectValue />
@@ -1089,7 +1089,7 @@ export default function InventoryItemsPage() {
                                 </Select>
                             </div>
                             <div>
-                                <Label htmlFor="edit-location" className="text-slate-700 dark:text-slate-200">Location</Label>
+                                <Label className="text-slate-700 dark:text-slate-200">Location</Label>
                                 <Select value={formData.location} onValueChange={(value) => setFormData(prev => ({ ...prev, location: value }))}>
                                     <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                                         <SelectValue />

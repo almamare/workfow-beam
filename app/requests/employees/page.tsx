@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -724,7 +724,7 @@ export default function EmployeeRequestsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {/* Request Type Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="type" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 Request Type
                             </Label>
                             <Select
@@ -747,7 +747,7 @@ export default function EmployeeRequestsPage() {
 
                         {/* Status Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 Status
                             </Label>
                             <Select
@@ -771,7 +771,7 @@ export default function EmployeeRequestsPage() {
 
                         {/* Priority Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="priority" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 Priority
                             </Label>
                             <Select
@@ -860,7 +860,7 @@ export default function EmployeeRequestsPage() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="employeeName">Employee Name</Label>
+                            <Label>Employee Name</Label>
                             <Select value={formData.employeeName} onValueChange={(value) => setFormData(prev => ({ ...prev, employeeName: value }))}>
                                 <SelectTrigger className="mt-1">
                                     <SelectValue placeholder="Select Employee" />
@@ -883,7 +883,7 @@ export default function EmployeeRequestsPage() {
                             />
                         </div>
                         <div>
-                            <Label htmlFor="requestType">Request Type</Label>
+                            <Label>Request Type</Label>
                             <Select value={formData.requestType} onValueChange={(value) => setFormData(prev => ({ ...prev, requestType: value }))}>
                                 <SelectTrigger className="mt-1">
                                     <SelectValue />
@@ -953,7 +953,7 @@ export default function EmployeeRequestsPage() {
                                     />
                                 </div>
                                 <div>
-                                    <Label htmlFor="currency">Currency</Label>
+                                    <Label>Currency</Label>
                                     <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
                                         <SelectTrigger className="mt-1">
                                             <SelectValue />
@@ -968,7 +968,7 @@ export default function EmployeeRequestsPage() {
                         )}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="priority">Priority</Label>
+                                <Label>Priority</Label>
                                 <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue />
@@ -981,7 +981,7 @@ export default function EmployeeRequestsPage() {
                                 </Select>
                             </div>
                             <div>
-                                <Label htmlFor="department">Department</Label>
+                                <Label>Department</Label>
                                 <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="Select Department" />
@@ -1006,7 +1006,7 @@ export default function EmployeeRequestsPage() {
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="supervisor">Supervisor</Label>
+                                <Label>Supervisor</Label>
                                 <Select value={formData.supervisor} onValueChange={(value) => setFormData(prev => ({ ...prev, supervisor: value }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="Select Supervisor" />
@@ -1054,7 +1054,7 @@ export default function EmployeeRequestsPage() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="edit-employeeName">Employee Name</Label>
+                            <Label>Employee Name</Label>
                             <Select value={formData.employeeName} onValueChange={(value) => setFormData(prev => ({ ...prev, employeeName: value }))}>
                                 <SelectTrigger className="mt-1">
                                     <SelectValue />
@@ -1076,7 +1076,7 @@ export default function EmployeeRequestsPage() {
                             />
                         </div>
                         <div>
-                            <Label htmlFor="edit-requestType">Request Type</Label>
+                            <Label>Request Type</Label>
                             <Select value={formData.requestType} onValueChange={(value) => setFormData(prev => ({ ...prev, requestType: value }))}>
                                 <SelectTrigger className="mt-1">
                                     <SelectValue />
@@ -1143,7 +1143,7 @@ export default function EmployeeRequestsPage() {
                                     />
                                 </div>
                                 <div>
-                                    <Label htmlFor="edit-currency">Currency</Label>
+                                    <Label>Currency</Label>
                                     <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
                                         <SelectTrigger className="mt-1">
                                             <SelectValue />
@@ -1158,7 +1158,7 @@ export default function EmployeeRequestsPage() {
                         )}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="edit-priority">Priority</Label>
+                                <Label>Priority</Label>
                                 <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue />
@@ -1171,7 +1171,7 @@ export default function EmployeeRequestsPage() {
                                 </Select>
                             </div>
                             <div>
-                                <Label htmlFor="edit-department">Department</Label>
+                                <Label>Department</Label>
                                 <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue />
@@ -1195,7 +1195,7 @@ export default function EmployeeRequestsPage() {
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="edit-supervisor">Supervisor</Label>
+                                <Label>Supervisor</Label>
                                 <Select value={formData.supervisor} onValueChange={(value) => setFormData(prev => ({ ...prev, supervisor: value }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue />

@@ -5,6 +5,7 @@ export interface Project {
     number: string;
     sequence: number;
     name: string;
+    client_id?: string;
     client_name: string;
     description: string;
     start_date: string;

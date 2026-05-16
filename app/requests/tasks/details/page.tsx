@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, Suspense, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -51,9 +51,11 @@ import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { EnhancedDataTable, Column, Action } from '@/components/ui/enhanced-data-table';
 import { AttachmentsList } from '@/components/attachments/AttachmentsList';
+import { CreateAttachmentCard } from '@/components/attachments/CreateAttachmentCard';
 import { CreateAttachmentForm } from '@/components/attachments/CreateAttachmentForm';
 import { UpdateAttachmentForm } from '@/components/attachments/UpdateAttachmentForm';
 import ApprovalModel from '@/components/ApprovalModel';
+import { CreateReviewForm } from '@/components/reviews/CreateReviewForm';
 import type { Attachment as AttachmentType } from '@/stores/types/attachments';
 
 /* =========================================================
@@ -76,7 +78,11 @@ const getStatusColor = (status: string) => {
         'Active': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
         'Draft': 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800',
         'Suspended': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
-        'Submitted': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+        'Submitted': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        'Pre-Approved': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800',
+        'Skipped': 'bg-slate-100 dark:bg-slate-900/30 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700',
+        'Revision': 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+        'Resubmission': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800',
     };
     return colors[status] || 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
 };
@@ -93,10 +99,16 @@ interface Approval {
     remarks: string;
     status: string;
     created_name: string;
-    created_at: string;
     approver_name?: string;
     approver_role?: string;
+    approver_role_name?: string;
+    step_name_display?: string;
     step_level?: string | number;
+    created_at: string;
+    updated_at?: string;
+    step_process?: string;
+    processed_at?: string;
+    _sequenceIndex?: number;
 }
 
 
@@ -130,6 +142,8 @@ function TaskRequestDetails() {
     const request = useAppSelector(selectSelectedTaskRequest);
     const requestLoading = useAppSelector(selectRequestLoading);
     const requestError = useAppSelector(selectRequestError);
+
+    const currentUser = useAppSelector((state: RootState) => state.login.user);
 
     const taskOrder = useAppSelector(selectSelectedTaskOrder);
     const contractor = useAppSelector(selectSelectedContractor);
@@ -232,7 +246,7 @@ function TaskRequestDetails() {
         if (!id) return;
         try {
             const res = await axios.get(`/approvals/fetch/${id}`);
-            setApprovals(res.data.body?.approvals?.items || []);
+            setApprovals((res.data.body?.approvals?.items || []).map((item: any, index: number) => ({ ...item, _sequenceIndex: index + 1 })));
         } catch (error) {
             toast.error("Failed to load approvals");
         }
@@ -324,28 +338,32 @@ function TaskRequestDetails() {
 
     const approvalColumns: Column<Approval>[] = [
         {
+            key: 'sequence',
+            header: 'Sequence',
+            render: (value: any, row: Approval) => (
+                <span className="text-slate-700 dark:text-slate-300 font-mono text-sm font-semibold">
+                    {row._sequenceIndex || 'N/A'}
+                </span>
+            )
+        },
+        {
             key: 'approver_name',
-            header: 'Approver',
+            header: 'Performer',
             render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value ? value : 'N/A'}</span>
         },
         {
             key: 'approver_role',
             header: 'Role',
-            render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value ? value : 'N/A'}</span>
-        },
-        {
-            key: 'step_level',
-            header: 'Step Level',
-            render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value ?'Step '+ value : 'N/A'}</span>
+            render: (value: any, row: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{row?.approver_role_name || value || 'N/A'}</span>
         },
         {
             key: 'step_name',
-            header: 'Step Name',
-            render: (value: any) => <span className="text-slate-700 dark:text-slate-300">{value ? value : 'N/A'}</span>
+            header: 'Activity',
+            render: (value: any, row: any) => <span className="text-slate-700 dark:text-slate-300">{row?.step_name_display || value || 'N/A'}</span>
         },
         {
             key: 'status',
-            header: 'Status',
+            header: 'Actions',
             render: (value: any) => (
                 <Badge variant="outline" className={`${getStatusColor(value)} font-medium`}>
                     {value}
@@ -363,9 +381,18 @@ function TaskRequestDetails() {
         },
         {
             key: 'created_at',
-            header: 'Date',
+            header: 'Created Date',
             render: (value: any) => (
-                <span className="text-slate-600 dark:text-slate-400">{value ? value : 'N/A'}</span>
+                <span className="text-slate-600 dark:text-slate-400 text-sm">{value ? value : 'N/A'}</span>
+            )
+        },
+        {
+            key: 'updated_at',
+            header: 'Process Date',
+            render: (value: any, row: any) => (
+                <span className="text-slate-600 dark:text-slate-400 text-sm">
+                    {value || row?.step_process || row?.processed_at || 'N/A'}
+                </span>
             )
         }
     ];
@@ -409,9 +436,9 @@ function TaskRequestDetails() {
         {
             key: 'role' as any,
             header: 'Role',
-            render: (value: any) => (
+            render: (value: any, row: any) => (
                 <Badge variant="outline" className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">
-                    {value || 'N/A'}
+                    {row?.role_name || value || 'N/A'}
                 </Badge>
             )
         },
@@ -644,30 +671,57 @@ function TaskRequestDetails() {
                 </EnhancedCard>
             </div>
 
+            {/* Add New Document Card */}
+            {request.status === 'Pending' && (
+                <EnhancedCard
+                    title="Add New Document"
+                    description="Upload a file attachment for this request"
+                    variant="default"
+                    size="sm"
+                >
+                    <CreateAttachmentCard
+                        requestId={request?.id}
+                        requestType={request?.request_type || 'Tasks'}
+                        onCreated={handleAttachmentCreated}
+                    />
+                </EnhancedCard>
+            )}
+
             {/* Attachments Section */}
             <EnhancedCard
-                title="Attachments"
+                title="Documents History"
                 description={`${attachments.length} file(s) attached to this request`}
                 variant="default"
                 size="sm"
-                headerActions={
-                    <Button
-                        onClick={() => setAttachmentModelOpen(true)}
-                        className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Attachment
-                    </Button>
-                }
             >
                 <AttachmentsList
                     attachments={attachments}
                     loading={attachmentsLoading}
-                    onDelete={handleAttachmentDelete}
-                    onEdit={handleEditAttachment}
                     requestId={id || undefined}
                 />
             </EnhancedCard>
+
+            {/* Add New Review Card (only shown to current assigned approver or SYSADMIN) */}
+            {request.status === 'Pending' && (() => {
+                const currentUserId = (currentUser as any)?.user_id || (currentUser as any)?.id;
+                const isCurrentApprover = !currentUserId || !request.current_approver_id || String(currentUserId) === String(request.current_approver_id);
+                const isSysAdmin = (currentUser as any)?.role_key === 'SYSADMIN';
+                return (isCurrentApprover || isSysAdmin) ? (
+                    <EnhancedCard
+                        title="Add New Review"
+                        description="Create a new review step for this request"
+                        variant="default"
+                        size="sm"
+                    >
+                        <CreateReviewForm
+                            requestId={request?.id}
+                            requestType={request?.request_type || 'Tasks'}
+                            lastApprovalId={approvals.find(a => a.status === 'Pending')?.id || (approvals.length > 0 ? approvals[approvals.length - 1]?.id : undefined)}
+                            onCreated={approvalCreated}
+                        />
+                    </EnhancedCard>
+                ) : null;
+            })()}
 
             {/* Approvals Section */}
             <EnhancedCard
@@ -675,24 +729,13 @@ function TaskRequestDetails() {
                 description={`${approvals.length} approval step(s) for this request`}
                 variant="default"
                 size="sm"
-                headerActions={
-                    request.status === 'Pending' ? (
-                        <Button
-                            onClick={() => setApprovalModelOpen(true)}
-                            className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                        >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Review
-                        </Button>
-                    ) : undefined
-                }
             >
                 <EnhancedDataTable
                     data={approvals}
                     columns={approvalColumns}
                     loading={false}
                     noDataMessage="No approvals for this request"
-                    hideEmptyMessage={true}
+                    
                 />
             </EnhancedCard>
 
@@ -702,7 +745,7 @@ function TaskRequestDetails() {
                 onClose={() => setApprovalModelOpen(false)}
                 onCreated={approvalCreated}
                 requestId={request?.id}
-                lastApprovalId={approvals.length > 0 ? approvals[approvals.length - 1].id : undefined}
+                lastApprovalId={approvals.find(a => a.status === 'Pending')?.id || (approvals.length > 0 ? approvals[approvals.length - 1]?.id : undefined)}
             />
             <CreateAttachmentForm
                 open={attachmentModelOpen}

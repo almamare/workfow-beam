@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState, useMemo, useCallback, useRef, Suspense } from 'react';
 import { AppDispatch } from '@/stores/store';
@@ -181,7 +181,7 @@ function ClientsApprovedPageContent() {
                 }
             });
 
-            const headers = ['Request Code', 'Request Type', 'Client', 'Client Number', 'Client Type', 'Status', 'State', 'City', 'Budget', 'Notes', 'Created By', 'Created At'];
+            const headers = ['Request Code', 'Request Type', 'Client', 'Client Number', 'Client Type', 'Status', 'Governorate', 'City', 'Budget', 'Notes', 'Created By', 'Created At'];
             const csvHeaders = headers.join(',');
             const items = data?.body?.tasks_requests?.items || data?.data?.tasks_requests?.items || [];
 
@@ -308,7 +308,7 @@ function ClientsApprovedPageContent() {
         },
         {
             key: 'client_state' as any,
-            header: 'State',
+            header: 'Governorate',
             render: (value: any, row: ClientRequestWithData) => {
                 const client = row.client;
                 return <span className="text-slate-600 dark:text-slate-400">{client?.state || 'N/A'}</span>;
@@ -337,54 +337,6 @@ function ClientsApprovedPageContent() {
                 );
             },
             sortable: true
-        },
-        {
-            key: 'client_data_check' as any,
-            header: 'Client data',
-            render: (_: unknown, row: ClientRequestWithData) => {
-                const linkId = getLinkedClientId(row);
-                if (!linkId) {
-                    return (
-                        <Badge variant="outline" className="border-amber-300 text-amber-800 dark:text-amber-200">
-                            <AlertCircle className="h-3 w-3 mr-1" />
-                            No link ID
-                        </Badge>
-                    );
-                }
-                if (loadingClientsRef.current.has(linkId)) {
-                    return <span className="text-sm text-muted-foreground">Loading…</span>;
-                }
-                if (failedClientIds.has(linkId)) {
-                    return (
-                        <Badge variant="outline" className="border-red-300 text-red-700 dark:text-red-300">
-                            <AlertCircle className="h-3 w-3 mr-1" />
-                            Load failed
-                        </Badge>
-                    );
-                }
-                if (!row.client) {
-                    return (
-                        <Badge variant="outline" className="text-muted-foreground">
-                            Not loaded
-                        </Badge>
-                    );
-                }
-                if (!isClientProfileComplete(row.client)) {
-                    return (
-                        <Badge variant="outline" className="border-amber-300 text-amber-900 dark:text-amber-200">
-                            <AlertCircle className="h-3 w-3 mr-1" />
-                            Incomplete
-                        </Badge>
-                    );
-                }
-                return (
-                    <Badge variant="outline" className="border-emerald-300 text-emerald-800 dark:text-emerald-200">
-                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                        Complete
-                    </Badge>
-                );
-            },
-            sortable: false
         },
         {
             key: 'status' as keyof ClientRequestWithData,
@@ -511,7 +463,7 @@ function ClientsApprovedPageContent() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* From Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 From Date
                             </Label>
                             <DatePicker
@@ -525,7 +477,7 @@ function ClientsApprovedPageContent() {
 
                         {/* To Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 To Date
                             </Label>
                             <DatePicker
@@ -615,7 +567,7 @@ function ClientsApprovedPageContent() {
                     }}
                     noDataMessage="No approved client requests found matching your criteria"
                     searchPlaceholder="Search requests..."
-                    hideEmptyMessage={true}
+                    
                 />
             </EnhancedCard>
         </div>
@@ -633,4 +585,3 @@ export default function ClientsApprovedPage() {
         </Suspense>
     );
 }
-

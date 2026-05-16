@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useCallback } from 'react';
 import { Label } from '@/components/ui/label';
@@ -152,7 +152,7 @@ const CreateFormPage: React.FC = () => {
 
                             {/* Date Issue */}
                             <div className="space-y-2">
-                                <Label htmlFor="date_issue" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Date Issue
                                 </Label>
                                 <DatePicker
@@ -163,7 +163,7 @@ const CreateFormPage: React.FC = () => {
 
                             {/* Status */}
                             <div className="space-y-2">
-                                <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Status
                                 </Label>
                                 <Select
@@ -214,4 +214,3 @@ const CreateFormPage: React.FC = () => {
 };
 
 export default CreateFormPage;
-

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
@@ -196,7 +196,7 @@ const CreateUserPage: React.FC = () => {
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {/* Employee Dropdown */}
                             <div className="space-y-2">
-                                <Label htmlFor="employee_id" className="text-slate-700 dark:text-slate-300 font-medium">Employee *</Label>
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Employee *</Label>
                                 <Select
                                     value={form.employee_id}
                                     onValueChange={(val) => updateField('employee_id', val)}
@@ -314,7 +314,7 @@ const CreateUserPage: React.FC = () => {
 
                             {/* Type */}
                             <div className="space-y-2">
-                                <Label htmlFor="type" className="text-slate-700 dark:text-slate-300 font-medium">Type *</Label>
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Type *</Label>
                                 <Select
                                     value={form.type}
                                     onValueChange={(val) => updateField('type', val)}
@@ -335,7 +335,7 @@ const CreateUserPage: React.FC = () => {
 
                             {/* Status */}
                             <div className="space-y-2">
-                                <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">Status *</Label>
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">Status *</Label>
                                 <Select
                                     value={form.status}
                                     onValueChange={(val) => updateField('status', val)}

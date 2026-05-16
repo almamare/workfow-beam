@@ -36,6 +36,7 @@ import loans from '@/stores/slices/loans';
 import ai from '@/stores/slices/ai';
 import changeOrders from '@/stores/slices/change-orders';
 import workflow from '@/stores/slices/workflow';
+import pendingCounts from '@/stores/slices/pending_counts';
 
 // This is the Redux store configuration for the login functionality
 // It uses the Redux Toolkit to create a store with a single slice for login.
@@ -78,6 +79,7 @@ const store = configureStore({
         ai,
         changeOrders,
         workflow,
+        pendingCounts,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

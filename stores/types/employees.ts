@@ -8,7 +8,10 @@ export interface Employee {
     employee_code: string;
     hire_date: string;
     salary_grade: string;
-    role?: string;
+    /** role_key from job_titles (e.g. CFO, HR_DIR, OPS_STAFF) */
+    role_key?: string | null;
+    /** 1=C-Level 2=Director 3=Manager 4=Senior 5=Staff */
+    level?: number | null;
     notes?: string;
     avatar?: string;
     created_at: string;

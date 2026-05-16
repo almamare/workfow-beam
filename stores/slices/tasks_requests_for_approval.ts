@@ -7,6 +7,7 @@ import { extractErrorMessage, isSuccessResponse, normalizeApiResponse } from '@/
 import type { TaskRequest } from '@/stores/types/tasks_requests';
 
 // Response interface for the for-approval endpoint
+// Backend wraps payload under "body" (see Controller::response())
 interface TasksRequestsForApprovalResponse {
     header: {
         requestId: string;
@@ -19,7 +20,15 @@ interface TasksRequestsForApprovalResponse {
             message: string;
         }[];
     };
-    data: {
+    body?: {
+        tasks_requests: {
+            total: number;
+            pages: number;
+            items: TaskRequest[];
+        };
+    };
+    // legacy fallback — some slices returned `data` instead of `body`
+    data?: {
         tasks_requests: {
             total: number;
             pages: number;
@@ -122,8 +131,8 @@ const tasksRequestsForApprovalSlice = createSlice({
             })
             .addCase(fetchTasksRequestsForApproval.fulfilled, (state, action) => {
                 state.loading = false;
-                // Handle response structure - API returns data.tasks_requests
-                const tasksRequests = action.payload.data?.tasks_requests;
+                // Backend wraps under "body"; fallback to "data" for safety
+                const tasksRequests = action.payload.body?.tasks_requests ?? action.payload.data?.tasks_requests;
                 if (tasksRequests) {
                     state.items = tasksRequests.items || [];
                     state.total = tasksRequests.total || 0;

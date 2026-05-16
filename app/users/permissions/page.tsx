@@ -67,7 +67,7 @@ function UserPermissionsPage() {
     const [moduleFilter, setModuleFilter] = useState<string>('All');
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
-    const [perPage, setPerPage] = useState(15);
+    const [perPage, setPerPage] = useState(10);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
@@ -382,7 +382,7 @@ function UserPermissionsPage() {
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to users
                     </Button>
-                    <Button onClick={() => router.push(`/users/update?id=${userId}`)} variant="outline">
+                    <Button onClick={() => router.push(`/users/details?id=${userId}`)} variant="outline">
                         User details
                     </Button>
                     <Button onClick={handleSave} disabled={saving}>

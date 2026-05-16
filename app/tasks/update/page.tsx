@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+﻿/* eslint-disable @next/next/no-img-element */
 /* =========================================================================
    Task Orders - Update Page
    - Uses `useSearchParams` to read taskId from URL: /tasks/update?taskId=123
@@ -524,7 +524,7 @@ const UpdateTaskOrderPageContent: React.FC = () => {
    
                                        {/* Issue Date */}
                                        <div className="flex flex-col">
-                                           <Label htmlFor="issue_date" className="mb-3 mt-[6px] text-slate-700 dark:text-slate-200">Issue Date *</Label>
+                                           <Label className="mb-3 mt-[6px] text-slate-700 dark:text-slate-200">Issue Date *</Label>
                                            <DatePicker value={form.issue_date} onChange={(val: any) => updateField('issue_date', String(val))} />
                                            {fieldErrors.issue_date && <p className="mt-1 text-xs text-red-500 dark:text-red-400">{fieldErrors.issue_date}</p>}
                                        </div>

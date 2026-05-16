@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useCallback, Suspense } from 'react';
+import React, { useEffect, useCallback, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/stores/store';
@@ -12,11 +12,20 @@ import {
     clearSelectedUser,
 } from '@/stores/slices/users';
 import { Button } from '@/components/ui/button';
-import { Loader2, Edit, KeyRound, ArrowLeft } from 'lucide-react';
+import { Loader2, Edit, KeyRound, ArrowLeft, Save, Lock } from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { Badge } from '@/components/ui/badge';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import axios from '@/utils/axios';
 
 const Centered: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-3">{children}</div>
@@ -68,6 +77,55 @@ function UserDetailsContent() {
     const user = useSelector(selectSelectedUser);
     const loading = useSelector(selectLoading);
     const loadError = useSelector(selectError);
+
+    const [statusValue, setStatusValue] = useState('');
+    const [statusBusy, setStatusBusy] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
+    const [passwordBusy, setPasswordBusy] = useState(false);
+
+    useEffect(() => {
+        if (user?.status) setStatusValue(user.status);
+    }, [user?.status]);
+
+    const handleUpdateStatus = async () => {
+        if (!userId || !statusValue) return;
+        setStatusBusy(true);
+        try {
+            const res = await axios.put(`/users/update/${userId}`, { params: { status: statusValue } });
+            if (res?.data?.header?.success) {
+                toast.success('Status updated successfully');
+                await dispatch(fetchUser({ id: userId })).unwrap();
+            } else {
+                toast.error(res?.data?.header?.messages?.[0]?.message || 'Failed to update status');
+            }
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || err?.message || 'Network error');
+        } finally {
+            setStatusBusy(false);
+        }
+    };
+
+    const handleChangePassword = async () => {
+        if (!userId || !newPassword.trim()) return;
+        if (newPassword.length < 6) {
+            toast.error('Password must be at least 6 characters');
+            return;
+        }
+        setPasswordBusy(true);
+        try {
+            const res = await axios.put(`/users/update/${userId}`, { params: { password: newPassword } });
+            if (res?.data?.header?.success) {
+                toast.success('Password changed successfully');
+                setNewPassword('');
+            } else {
+                toast.error(res?.data?.header?.messages?.[0]?.message || 'Failed to change password');
+            }
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || err?.message || 'Network error');
+        } finally {
+            setPasswordBusy(false);
+        }
+    };
 
     const loadUser = useCallback(async () => {
         if (!userId) return;
@@ -145,7 +203,7 @@ function UserDetailsContent() {
     const displayName =
         [user.name, user.surname].filter(Boolean).join(' ').trim() || user.email || user.username || 'Unknown user';
 
-    const roleLabel = user.role_key || user.role || '—';
+    const roleLabel = user.role_name || user.role_key || user.role || '—';
     const mustChange = user.must_change_password === 1;
 
     return (
@@ -172,7 +230,12 @@ function UserDetailsContent() {
             </div>
 
             {/* Stat cards — same rhythm as Client Details */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                <EnhancedCard title="Account number" description="User account code" variant="default" size="sm">
+                    <div className="text-base md:text-lg font-bold font-mono text-brand-sky-600 dark:text-brand-sky-400">
+                        {user.number || '—'}
+                    </div>
+                </EnhancedCard>
                 <EnhancedCard title="Display name" description="Public profile name" variant="default" size="sm">
                     <div className="text-base md:text-lg font-bold text-slate-900 dark:text-slate-100 truncate" title={displayName}>
                         {displayName}
@@ -201,7 +264,7 @@ function UserDetailsContent() {
                 </EnhancedCard>
             </div>
 
-            {/* Actions — Project-style action strip */}
+            {/* Actions */}
             <EnhancedCard title="User actions" description="Navigate to related screens" variant="default" size="sm">
                 <div className="flex flex-wrap gap-3 items-center">
                     <Button
@@ -226,7 +289,59 @@ function UserDetailsContent() {
                         <Edit className="h-4 w-4 mr-2" />
                         Edit user
                     </Button>
+
+                    <div className="flex flex-wrap items-center gap-2 ml-auto">
+                        {/* Status */}
+                        <Select value={statusValue} onValueChange={setStatusValue}>
+                            <SelectTrigger className="w-36 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100">
+                                <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                <SelectItem value="Active">Active</SelectItem>
+                                <SelectItem value="Disabled">Disabled</SelectItem>
+                                <SelectItem value="Locked">Locked</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Button
+                            size="sm"
+                            onClick={handleUpdateStatus}
+                            disabled={statusBusy || !statusValue || statusValue === user.status}
+                            className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shrink-0"
+                        >
+                            {statusBusy
+                                ? <Loader2 className="h-4 w-4 animate-spin" />
+                                : <><Save className="h-4 w-4 mr-1" />Save</>}
+                        </Button>
+
+                        {/* Divider */}
+                        <span className="w-px h-7 bg-slate-200 dark:bg-slate-700 shrink-0" />
+
+                        {/* Password */}
+                        <Input
+                            type="password"
+                            placeholder="New password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleChangePassword()}
+                            className="w-44 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                        />
+                        <Button
+                            size="sm"
+                            onClick={handleChangePassword}
+                            disabled={passwordBusy || !newPassword.trim()}
+                            className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shrink-0"
+                        >
+                            {passwordBusy
+                                ? <Loader2 className="h-4 w-4 animate-spin" />
+                                : <><Lock className="h-4 w-4 mr-1" />Change</>}
+                        </Button>
+                    </div>
                 </div>
+                {statusValue && statusValue !== user.status && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                        Changing from <span className="font-semibold">{user.status}</span> → <span className="font-semibold">{statusValue}</span>
+                    </p>
+                )}
             </EnhancedCard>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

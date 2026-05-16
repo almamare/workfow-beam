@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useCallback, useEffect, Suspense } from 'react';
 import { Label } from '@/components/ui/label';
@@ -330,7 +330,7 @@ const UpdateInvoicePageContent: React.FC = () => {
                         <div className="grid gap-4 md:grid-cols-2">
                             {/* Invoice Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="invoice_date" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Invoice Date *
                                 </Label>
                                 <DatePicker
@@ -344,7 +344,7 @@ const UpdateInvoicePageContent: React.FC = () => {
 
                             {/* Due Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="due_date" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Due Date
                                 </Label>
                                 <DatePicker
@@ -358,7 +358,7 @@ const UpdateInvoicePageContent: React.FC = () => {
 
                             {/* Client */}
                             <div className="space-y-2">
-                                <Label htmlFor="client_id" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Client
                                 </Label>
                                 <Select
@@ -381,7 +381,7 @@ const UpdateInvoicePageContent: React.FC = () => {
 
                             {/* Bank */}
                             <div className="space-y-2">
-                                <Label htmlFor="bank_id" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Bank
                                 </Label>
                                 <Select
@@ -404,7 +404,7 @@ const UpdateInvoicePageContent: React.FC = () => {
 
                             {/* Status */}
                             <div className="space-y-2">
-                                <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Status
                                 </Label>
                                 <Select
@@ -643,4 +643,3 @@ export default function Page() {
         </Suspense>
     );
 }
-

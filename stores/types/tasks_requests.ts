@@ -1,20 +1,23 @@
 // Represents a single Task Request
 export interface TaskRequest {
     priority: string;
-    id: string;                // Unique request ID
-    created_id: string;        // ID of the user who created it
-    created_by_name: string;   // Name of the user who created it
-    task_order_id: string;     // Related task order ID; for request_type "Clients" stores linked client_id
+    id: string;                        // Unique request ID
+    created_id: string;                // ID of the user who created it
+    created_by_name: string;           // Name of the user who created it
+    task_order_id: string;             // Related task order ID; for request_type "Clients" stores linked client_id
     /** When set, preferred over task_order_id for linking to clients row */
     client_id?: string;
-    request_code: string;      // Unique request code
-    request_type: string;      // Type of request (e.g., Extension, Material Change)
-    status: string;            // Current status (Pending, Approved, Rejected)
-    notes: string;             // Optional notes or description
-    created_at: string;        // Creation timestamp
-    updated_at: string;        // Last update timestamp
-    contractor_name: string;   // Related contractor name
-    project_name: string;      // Related project name
+    request_code: string;              // Unique request code
+    request_type: string;              // Type of request (e.g., Extension, Material Change)
+    status: string;                    // Current status (Pending, Approved, Rejected)
+    notes: string;                     // Optional notes or description
+    current_approver_id: string | null; // ID of the user currently assigned to approve
+    current_step_level: number | null;  // Current workflow step level
+    step_name?: string | null;          // Name of the current workflow step
+    created_at: string;                // Creation timestamp
+    updated_at: string;                // Last update timestamp
+    contractor_name: string;           // Related contractor name
+    project_name: string;              // Related project name
 }
 
 // Represents the full API response for Task Requests

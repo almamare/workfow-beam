@@ -17,6 +17,8 @@ export interface User {
     department_id?: string | null;
     /** BEAM: role key e.g. CFO, COM_DIR */
     role_key?: string | null;
+    /** BEAM: role display name e.g. مدير المالية */
+    role_name?: string | null;
     /** BEAM: last login ISO datetime */
     last_login?: string | null;
     /** 0 = normal, 1 = must change password before proceeding */

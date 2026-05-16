@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -299,7 +299,7 @@ function UpdateContractFormContent() {
 
                             {/* Contract Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="contract_date" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Contract Date *
                                 </Label>
                                 <DatePicker
@@ -313,7 +313,7 @@ function UpdateContractFormContent() {
 
                             {/* Start Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="start_date" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Start Date
                                 </Label>
                                 <DatePicker
@@ -327,7 +327,7 @@ function UpdateContractFormContent() {
 
                             {/* End Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="end_date" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     End Date
                                 </Label>
                                 <DatePicker
@@ -363,7 +363,7 @@ function UpdateContractFormContent() {
 
                             {/* Currency */}
                             <div className="space-y-2">
-                                <Label htmlFor="currency" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Currency
                                 </Label>
                                 <Select
@@ -429,7 +429,7 @@ function UpdateContractFormContent() {
 
                             {/* Status */}
                             <div className="space-y-2">
-                                <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Status
                                 </Label>
                                 <Select
@@ -523,4 +523,3 @@ export default function UpdateContractPage() {
         </Suspense>
     );
 }
-

@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/stores/store';
 import { fetchRole, selectSelectedRole } from '@/stores/slices/roles';
 import { Button } from '@/components/ui/button';
-import { Loader2, Edit, Shield, KeyRound } from 'lucide-react';
+import { Loader2, Edit, Shield, KeyRound, AlertCircle } from 'lucide-react';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 
@@ -17,10 +17,20 @@ function RoleDetailsContent() {
     const roleId = idParam ? parseInt(idParam, 10) : NaN;
     const dispatch = useReduxDispatch<AppDispatch>();
     const role = useSelector(selectSelectedRole);
+    const [fetched, setFetched] = useState(false);
+    const [fetchError, setFetchError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!isNaN(roleId)) {
-            dispatch(fetchRole(roleId));
+            setFetched(false);
+            setFetchError(null);
+            dispatch(fetchRole(roleId))
+                .unwrap()
+                .then(() => setFetched(true))
+                .catch((err: unknown) => {
+                    setFetchError(typeof err === 'string' ? err : 'Failed to load role');
+                    setFetched(true);
+                });
         }
     }, [dispatch, roleId]);
 
@@ -38,10 +48,27 @@ function RoleDetailsContent() {
         );
     }
 
-    if (!role || role.id !== roleId) {
+    if (!fetched) {
         return (
             <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
+            </div>
+        );
+    }
+
+    if (fetchError || !role || role.id !== roleId) {
+        return (
+            <div className="space-y-4">
+                <Breadcrumb />
+                <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+                    <AlertCircle className="h-10 w-10 text-red-400" />
+                    <p className="text-slate-700 dark:text-slate-300 font-medium">
+                        {fetchError ?? 'Role not found'}
+                    </p>
+                    <Button variant="outline" onClick={() => router.push('/roles')}>
+                        Back to list
+                    </Button>
+                </div>
             </div>
         );
     }

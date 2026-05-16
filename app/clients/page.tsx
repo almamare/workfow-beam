@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -117,7 +117,7 @@ export default function ClientsPage() {
                 params: exportParams
             });
 
-            const headers = ['ID', 'Client Name', 'Client Number', 'Client Type', 'Status', 'State', 'City', 'Budget', 'Created At'];
+            const headers = ['ID', 'Client Name', 'Client Number', 'Client Type', 'Status', 'Governorate', 'City', 'Budget', 'Created At'];
             const csvHeaders = headers.join(',');
             
             const csvRows = data.body?.clients?.items?.map((client: Client) => {
@@ -180,7 +180,7 @@ export default function ClientsPage() {
         },
         { 
             key: 'state' as keyof Client, 
-            header: 'State', 
+            header: 'Governorate',
             render: (value: any) => (
                 <Badge variant="outline" className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">
                     {value}
@@ -386,7 +386,7 @@ export default function ClientsPage() {
                             <div className="relative flex-1">
                                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                                 <Input
-                                    placeholder="Search by client number, name, state, city, budget, or sequence..."
+                                    placeholder="Search by client number, name, governorate, city, budget, or sequence..."
                                     value={search}
                                     onChange={(e) => {
                                         setSearch(e.target.value);
@@ -423,7 +423,7 @@ export default function ClientsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Client Type Filter */}
                             <div className="space-y-2">
-                                <Label htmlFor="client_type" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Client Type
                                 </Label>
                                 <Select
@@ -446,7 +446,7 @@ export default function ClientsPage() {
 
                             {/* Status Filter */}
                             <div className="space-y-2">
-                                <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Status
                                 </Label>
                                 <Select
@@ -470,7 +470,7 @@ export default function ClientsPage() {
 
                             {/* From Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     From Date
                                 </Label>
                                 <DatePicker
@@ -484,7 +484,7 @@ export default function ClientsPage() {
 
                             {/* To Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     To Date
                                 </Label>
                                 <DatePicker

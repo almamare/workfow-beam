@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+﻿/* eslint-disable @next/next/no-img-element */
 /* =========================================================
    src/app/employees/update/[id]/page.tsx
    Update employee data with base64 avatar + validation
@@ -40,7 +40,6 @@ type EmployeePayload = {
     job_title_id?: number | null;
     hire_date: string;
     salary_grade: number | string;
-    role: string;
     notes?: string;
     avatar?: string;
     department_id?: string | null;
@@ -57,7 +56,6 @@ const EMPTY: EmployeePayload = {
     job_title: '',
     hire_date: '',
     salary_grade: '',
-    role: '',
     notes: '',
     avatar: '',
 };
@@ -120,7 +118,6 @@ const UpdateEmployeePageContent: React.FC = () => {
                         job_title_id: emp.job_title_id != null ? Number(emp.job_title_id) : undefined,
                         hire_date: String(emp.hire_date ?? ''),
                         salary_grade: (emp.salary_grade as number | string) ?? '',
-                        role: String(emp.role ?? ''),
                         notes: emp.notes != null ? String(emp.notes) : undefined,
                         avatar: emp.avatar != null ? String(emp.avatar) : undefined,
                         department_id: emp.department_id != null ? String(emp.department_id) : undefined,
@@ -157,7 +154,6 @@ const UpdateEmployeePageContent: React.FC = () => {
             'surname',
             'hire_date',
             'salary_grade',
-            'role',
         ];
 
         required.forEach((f) => {
@@ -291,7 +287,7 @@ const UpdateEmployeePageContent: React.FC = () => {
                                 {errors.surname && <ErrorText>{errors.surname}</ErrorText>}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="job_title" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Job Title *
                                 </Label>
                                 <Select
@@ -368,7 +364,7 @@ const UpdateEmployeePageContent: React.FC = () => {
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="hire_date" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Hire Date *
                                 </Label>
                                 <DatePicker
@@ -390,34 +386,6 @@ const UpdateEmployeePageContent: React.FC = () => {
                                     className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 />
                                 {errors.salary_grade && <ErrorText>{errors.salary_grade}</ErrorText>}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="role" className="text-slate-700 dark:text-slate-300 font-medium">
-                                    Role *
-                                </Label>
-                                <Select
-                                    value={form.role}
-                                    onValueChange={(v) => updateField('role', v)}
-                                >
-                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
-                                        <SelectValue placeholder="Select role" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
-                                        <SelectItem value="Manager" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200">
-                                            Manager
-                                        </SelectItem>
-                                        <SelectItem value="Supervisor" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200">
-                                            Supervisor
-                                        </SelectItem>
-                                        <SelectItem value="Employee" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200">
-                                            Employee
-                                        </SelectItem>
-                                        <SelectItem value="Admin" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200">
-                                            Admin
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                {errors.role && <ErrorText>{errors.role}</ErrorText>}
                             </div>
                         </div>
 

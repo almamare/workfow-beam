@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 // Client requests pending approval page - similar to client requests page
 // Endpoint: GET /requests/tasks/fetch/for-approval with request_type: 'Clients'
@@ -178,7 +178,7 @@ function ClientsPendingPageContent() {
                 }
             });
 
-            const headers = ['Request Code', 'Request Type', 'Client', 'Client Number', 'Client Type', 'Status', 'State', 'City', 'Budget', 'Notes', 'Created By', 'Created At'];
+            const headers = ['Request Code', 'Request Type', 'Client', 'Client Number', 'Client Type', 'Status', 'Governorate', 'City', 'Budget', 'Notes', 'Created By', 'Created At'];
             const csvHeaders = headers.join(',');
             const items = data?.data?.tasks_requests?.items || [];
             
@@ -319,7 +319,7 @@ function ClientsPendingPageContent() {
         },
         {
             key: 'client_state' as any,
-            header: 'State',
+            header: 'Governorate',
             render: (value: any, row: ClientRequestWithData) => {
                 const client = row.client;
                 return <span className="text-slate-600 dark:text-slate-400">{client?.state || 'N/A'}</span>;
@@ -515,7 +515,7 @@ function ClientsPendingPageContent() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* From Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 From Date
                             </Label>
                             <DatePicker
@@ -529,7 +529,7 @@ function ClientsPendingPageContent() {
 
                         {/* To Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 To Date
                             </Label>
                             <DatePicker
@@ -639,7 +639,7 @@ function ClientsPendingPageContent() {
                         }}
                         noDataMessage="No pending client requests found matching your criteria"
                         searchPlaceholder="Search requests..."
-                        hideEmptyMessage={true}
+                        
                     />
                 )}
             </EnhancedCard>

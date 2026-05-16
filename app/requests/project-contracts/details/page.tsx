@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, Suspense, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -78,7 +78,11 @@ const getStatusColor = (status: string) => {
         'Active': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
         'Draft': 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800',
         'Suspended': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
-        'Submitted': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+        'Submitted': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        'Pre-Approved': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800',
+        'Skipped': 'bg-slate-100 dark:bg-slate-900/30 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700',
+        'Revision': 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+        'Resubmission': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800',
     };
     return colors[status] || 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
 };
@@ -388,22 +392,22 @@ function ProjectContractRequestDetails() {
         },
         {
             key: 'approver_name',
-            header: 'Approver',
+            header: 'Performer',
             render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value ? value : 'N/A'}</span>
         },
         {
             key: 'approver_role',
             header: 'Role',
-            render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value ? value : 'N/A'}</span>
+            render: (value: any, row: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{row?.approver_role_name || value || 'N/A'}</span>
         },
         {
             key: 'step_name',
-            header: 'Step Name',
-            render: (value: any) => <span className="text-slate-700 dark:text-slate-300">{value ? value : 'N/A'}</span>
+            header: 'Activity',
+            render: (value: any, row: any) => <span className="text-slate-700 dark:text-slate-300">{row?.step_name_display || value || 'N/A'}</span>
         },
         {
             key: 'status',
-            header: 'Status',
+            header: 'Actions',
             render: (value: any) => (
                 <Badge variant="outline" className={`${getStatusColor(value)} font-medium`}>
                     {value}
@@ -476,9 +480,9 @@ function ProjectContractRequestDetails() {
         {
             key: 'role' as any,
             header: 'Role',
-            render: (value: any) => (
+            render: (value: any, row: any) => (
                 <Badge variant="outline" className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">
-                    {value || 'N/A'}
+                    {row?.role_name || value || 'N/A'}
                 </Badge>
             )
         },
@@ -741,28 +745,31 @@ function ProjectContractRequestDetails() {
                 <AttachmentsList
                     attachments={attachments}
                     loading={attachmentsLoading}
-                    onDelete={handleAttachmentDelete}
-                    onEdit={handleEditAttachment}
                     requestId={id || undefined}
                 />
             </EnhancedCard>
 
-            {/* Add Review Card - Fixed Card (only shown when status is Pending) */}
-            {request.status === 'Pending' && (
-                <EnhancedCard
-                    title="Add New Review"
-                    description="Create a new review step for this request"
-                    variant="default"
-                    size="sm"
-                >
-                    <CreateReviewForm
-                        requestId={request?.id}
-                        requestType={request?.request_type || 'ProjectContracts'}
-                        lastApprovalId={approvals.length > 0 ? approvals[approvals.length - 1]?.id : undefined}
-                        onCreated={approvalCreated}
-                    />
-                </EnhancedCard>
-            )}
+            {/* Add Review Card (only shown to current assigned approver or SYSADMIN) */}
+            {request.status === 'Pending' && (() => {
+                const currentUserId = (currentUser as any)?.user_id || (currentUser as any)?.id;
+                const isCurrentApprover = !currentUserId || !request.current_approver_id || String(currentUserId) === String(request.current_approver_id);
+                const isSysAdmin = (currentUser as any)?.role_key === 'SYSADMIN';
+                return (isCurrentApprover || isSysAdmin) ? (
+                    <EnhancedCard
+                        title="Add New Review"
+                        description="Create a new review step for this request"
+                        variant="default"
+                        size="sm"
+                    >
+                        <CreateReviewForm
+                            requestId={request?.id}
+                            requestType={request?.request_type || 'ProjectContracts'}
+                            lastApprovalId={approvals.find(a => a.status === 'Pending')?.id || (approvals.length > 0 ? approvals[approvals.length - 1]?.id : undefined)}
+                            onCreated={approvalCreated}
+                        />
+                    </EnhancedCard>
+                ) : null;
+            })()}
 
             {/* Approvals Section */}
             <EnhancedCard
@@ -776,7 +783,7 @@ function ProjectContractRequestDetails() {
                     columns={approvalColumns}
                     loading={false}
                     noDataMessage="No approvals for this request"
-                    hideEmptyMessage={true}
+                    
                 />
             </EnhancedCard>
 

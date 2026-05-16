@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch as useReduxDispatch, useSelector } from 'react-redux';
@@ -224,7 +224,7 @@ export default function TimelinePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Status Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 Status
                             </Label>
                             <Select
@@ -246,7 +246,7 @@ export default function TimelinePage() {
 
                         {/* Type Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="type" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 Type
                             </Label>
                             <Select
@@ -468,5 +468,4 @@ export default function TimelinePage() {
         </div>
     );
 }
-
 

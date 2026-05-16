@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -680,7 +680,7 @@ export default function InventoryTransactionsPage() {
                             />
                         </div>
                         <div>
-                            <Label htmlFor="itemName">Item Name</Label>
+                            <Label>Item Name</Label>
                             <Select value={formData.itemName} onValueChange={(value) => setFormData(prev => ({ ...prev, itemName: value }))}>
                                 <SelectTrigger className="mt-1">
                                     <SelectValue placeholder="Select Item" />
@@ -704,7 +704,7 @@ export default function InventoryTransactionsPage() {
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="transactionType">Transaction Type</Label>
+                                <Label>Transaction Type</Label>
                                 <Select value={formData.transactionType} onValueChange={(value) => setFormData(prev => ({ ...prev, transactionType: value }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue />
@@ -754,7 +754,7 @@ export default function InventoryTransactionsPage() {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="currency">Currency</Label>
+                            <Label>Currency</Label>
                             <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
                                 <SelectTrigger className="mt-1">
                                     <SelectValue />
@@ -767,7 +767,7 @@ export default function InventoryTransactionsPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="fromLocation">From Location</Label>
+                                <Label>From Location</Label>
                                 <Select value={formData.fromLocation} onValueChange={(value) => setFormData(prev => ({ ...prev, fromLocation: value }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="Select Location" />
@@ -780,7 +780,7 @@ export default function InventoryTransactionsPage() {
                                 </Select>
                             </div>
                             <div>
-                                <Label htmlFor="toLocation">To Location</Label>
+                                <Label>To Location</Label>
                                 <Select value={formData.toLocation} onValueChange={(value) => setFormData(prev => ({ ...prev, toLocation: value }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="Select Location" />
@@ -794,7 +794,7 @@ export default function InventoryTransactionsPage() {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="projectId">Project</Label>
+                            <Label>Project</Label>
                             <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
                                 <SelectTrigger className="mt-1">
                                     <SelectValue placeholder="Select Project" />
@@ -861,7 +861,7 @@ export default function InventoryTransactionsPage() {
                             />
                         </div>
                         <div>
-                            <Label htmlFor="edit-itemName">Item Name</Label>
+                            <Label>Item Name</Label>
                             <Select value={formData.itemName} onValueChange={(value) => setFormData(prev => ({ ...prev, itemName: value }))}>
                                 <SelectTrigger className="mt-1">
                                     <SelectValue />
@@ -884,7 +884,7 @@ export default function InventoryTransactionsPage() {
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="edit-transactionType">Transaction Type</Label>
+                                <Label>Transaction Type</Label>
                                 <Select value={formData.transactionType} onValueChange={(value) => setFormData(prev => ({ ...prev, transactionType: value }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue />
@@ -931,7 +931,7 @@ export default function InventoryTransactionsPage() {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="edit-currency">Currency</Label>
+                            <Label>Currency</Label>
                             <Select value={formData.currency} onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}>
                                 <SelectTrigger className="mt-1">
                                     <SelectValue />
@@ -944,7 +944,7 @@ export default function InventoryTransactionsPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="edit-fromLocation">From Location</Label>
+                                <Label>From Location</Label>
                                 <Select value={formData.fromLocation} onValueChange={(value) => setFormData(prev => ({ ...prev, fromLocation: value }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue />
@@ -957,7 +957,7 @@ export default function InventoryTransactionsPage() {
                                 </Select>
                             </div>
                             <div>
-                                <Label htmlFor="edit-toLocation">To Location</Label>
+                                <Label>To Location</Label>
                                 <Select value={formData.toLocation} onValueChange={(value) => setFormData(prev => ({ ...prev, toLocation: value }))}>
                                     <SelectTrigger className="mt-1">
                                         <SelectValue />
@@ -971,7 +971,7 @@ export default function InventoryTransactionsPage() {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="edit-projectId">Project</Label>
+                            <Label>Project</Label>
                             <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
                                 <SelectTrigger className="mt-1">
                                     <SelectValue />

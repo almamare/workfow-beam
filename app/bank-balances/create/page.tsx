@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useCallback, useEffect, Suspense } from 'react';
 import { Label } from '@/components/ui/label';
@@ -207,7 +207,7 @@ const CreateBankBalancePageContent: React.FC = () => {
                         <div className="grid gap-4 md:grid-cols-2">
                             {/* Bank */}
                             <div className="space-y-2">
-                                <Label htmlFor="bank_id" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Bank *
                                 </Label>
                                 <Select
@@ -233,7 +233,7 @@ const CreateBankBalancePageContent: React.FC = () => {
 
                             {/* Currency */}
                             <div className="space-y-2">
-                                <Label htmlFor="currency" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Currency *
                                 </Label>
                                 <Select
@@ -334,4 +334,3 @@ export default function CreateBankBalancePage() {
         </Suspense>
     );
 }
-

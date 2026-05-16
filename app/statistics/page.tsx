@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -401,7 +401,7 @@ export default function StatisticsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {/* Category Filter */}
                             <div className="space-y-2">
-                                <Label htmlFor="category" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Category
                                 </Label>
                                 <Select
@@ -426,7 +426,7 @@ export default function StatisticsPage() {
 
                             {/* From Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     From Date
                                 </Label>
                                 <DatePicker
@@ -439,7 +439,7 @@ export default function StatisticsPage() {
 
                             {/* To Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     To Date
                                 </Label>
                                 <DatePicker
@@ -626,4 +626,3 @@ export default function StatisticsPage() {
         </>
     );
 }
-

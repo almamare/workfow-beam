@@ -36,7 +36,10 @@ interface FetchEmployeesParams {
     search?: string;
     /** BEAM: filter by job_title_id (numeric) */
     job_title?: string | number;
-    role?: string;
+    /** BEAM: filter by level (1=C-Level 2=Director 3=Manager 4=Senior 5=Staff) */
+    level?: number;
+    /** BEAM: filter by role_key (e.g. CFO, HR_DIR) */
+    role_key?: string;
     /** BEAM: filter by employee status (Active, Inactive, Suspended, Resigned) */
     status?: string;
 }

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -70,7 +70,7 @@ export default function ProjectsPage() {
     const downloadProject = async (projectId: string, fileName = 'Project_merged') => {
         setProjectIsDownload(true);
         try {
-            const { data } = await axios.get(`/projects/download/merged/${projectId}`, { responseType: 'blob' });
+            const { data } = await axios.get(`/projects/download/project/${projectId}`, { responseType: 'blob' });
 
             const blob = new Blob([data], { type: 'application/pdf' });
             const url = window.URL.createObjectURL(blob);
@@ -267,13 +267,15 @@ export default function ProjectsPage() {
             label: 'Edit Project',
             icon: <SquarePen className="h-4 w-4" />,
             onClick: (project: Project) => router.push(`/projects/update?id=${project.id}`),
-            variant: 'warning' as const
+            variant: 'warning' as const,
+            hidden: (project: Project) => project.status === 'Active',
         },
         {
             label: 'Download PDF',
             icon: <HardDriveDownload className="h-4 w-4" />,
             onClick: (project: Project) => downloadProject(project.id),
-            variant: 'success' as const
+            variant: 'success' as const,
+            hidden: (project: Project) => project.status !== 'Active',
         },
     ];
 
@@ -350,7 +352,7 @@ export default function ProjectsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Project Type Filter */}
                             <div className="space-y-2">
-                                <Label htmlFor="type" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Project Type
                                 </Label>
                                 <Select
@@ -375,7 +377,7 @@ export default function ProjectsPage() {
 
                             {/* Status Filter */}
                             <div className="space-y-2">
-                                <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Status
                                 </Label>
                                 <Select
@@ -401,7 +403,7 @@ export default function ProjectsPage() {
 
                             {/* From Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     From Date
                                 </Label>
                                 <DatePicker
@@ -415,7 +417,7 @@ export default function ProjectsPage() {
 
                             {/* To Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     To Date
                                 </Label>
                                 <DatePicker

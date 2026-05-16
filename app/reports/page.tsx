@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -469,7 +469,7 @@ export default function ReportsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Report Type Filter */}
                             <div className="space-y-2">
-                                <Label htmlFor="reportType" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Report Type
                                 </Label>
                                 <Select
@@ -495,7 +495,7 @@ export default function ReportsPage() {
 
                             {/* Status Filter */}
                             <div className="space-y-2">
-                                <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Status
                                 </Label>
                                 <Select
@@ -519,7 +519,7 @@ export default function ReportsPage() {
 
                             {/* From Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     From Date
                                 </Label>
                                 <DatePicker
@@ -533,7 +533,7 @@ export default function ReportsPage() {
 
                             {/* To Date */}
                             <div className="space-y-2">
-                                <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     To Date
                                 </Label>
                                 <DatePicker
@@ -638,4 +638,3 @@ export default function ReportsPage() {
         </>
     );
 }
-

@@ -135,6 +135,7 @@ export const authentication = createAsyncThunk<
                 phone: rawUser.phone,
                 number: rawUser.number,
                 role_key: rawUser.role_key,
+                role_name: rawUser.role_name,
                 employee_id: employee?.employee_id,
                 hire_date: employee?.hire_date,
                 must_change_password: rawUser.must_change_password,

@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+﻿/* eslint-disable @next/next/no-img-element */
 /* =========================================================
    src/app/employees/create/page.tsx
    Create a new employee
@@ -40,7 +40,6 @@ type EmployeePayload = {
     job_title_id?: number | null;
     hire_date: string;
     salary_grade: string;
-    role: string;
     notes?: string;
     avatar?: string;
     department_id?: string | null;
@@ -57,7 +56,6 @@ const EMPTY: EmployeePayload = {
     job_title: '',
     hire_date: '',
     salary_grade: '',
-    role: '',
     notes: '',
     avatar: '',
     department_id: undefined,
@@ -118,7 +116,6 @@ const CreateEmployeePage: React.FC = () => {
             'surname',
             'hire_date',
             'salary_grade',
-            'role',
         ];
 
         required.forEach((f) => {
@@ -239,7 +236,7 @@ const CreateEmployeePage: React.FC = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="job_title" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Job Title
                                 </Label>
                                 <Select
@@ -277,7 +274,7 @@ const CreateEmployeePage: React.FC = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="hire_date" className="text-slate-700 dark:text-slate-300 font-medium">
+                                <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                     Hire Date *
                                 </Label>
                                 <DatePicker
@@ -358,34 +355,6 @@ const CreateEmployeePage: React.FC = () => {
                                 </Select>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="role" className="text-slate-700 dark:text-slate-300 font-medium">
-                                    Role *
-                                </Label>
-                                <Select
-                                    value={form.role}
-                                    onValueChange={(v) => updateField('role', v)}
-                                >
-                                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
-                                        <SelectValue placeholder="Select role" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
-                                        <SelectItem value="Manager" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200">
-                                            Manager
-                                        </SelectItem>
-                                        <SelectItem value="Supervisor" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200">
-                                            Supervisor
-                                        </SelectItem>
-                                        <SelectItem value="Employee" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200">
-                                            Employee
-                                        </SelectItem>
-                                        <SelectItem value="Admin" className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200">
-                                            Admin
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                {errors.role && <ErrorText>{errors.role}</ErrorText>}
-                            </div>
                         </div>
 
                         <div className="space-y-2">

@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+﻿/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
@@ -35,10 +35,18 @@ import {
     Printer,
     RefreshCw,
     Replace,
+    Save,
     ShieldOff,
 } from 'lucide-react';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
-/* ───────────── Types ───────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 type Employee = {
     id: string;
     name?: string;
@@ -46,7 +54,8 @@ type Employee = {
     job_title?: string | null;
     job_title_id?: number | string | null;
     employee_code?: string;
-    role?: string;
+    role_key?: string | null;
+    level?: number | null;
     hire_date?: string;
     salary_grade?: string | number;
     status?: string;
@@ -101,7 +110,7 @@ type PrintRow = {
     printer_username?: string | null;
 };
 
-/* ───────────── Helpers ───────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const STATUS_STYLES: Record<string, { bg: string; text: string; ring: string; label: string }> = {
     Active:   { bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-700 dark:text-emerald-300', ring: 'ring-emerald-200 dark:ring-emerald-800', label: 'Active' },
     Expired:  { bg: 'bg-amber-50   dark:bg-amber-900/20',   text: 'text-amber-700   dark:text-amber-300',   ring: 'ring-amber-200   dark:ring-amber-800',   label: 'Expired' },
@@ -111,20 +120,20 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; ring: string; la
 };
 
 const formatDate = (s?: string | null) => {
-    if (!s) return '—';
+    if (!s) return 'â€”';
     const d = new Date(s);
     if (isNaN(d.getTime())) return s;
     return d.toLocaleDateString('en-CA');
 };
 
 const formatDateTime = (s?: string | null) => {
-    if (!s) return '—';
+    if (!s) return 'â€”';
     const d = new Date(s);
     if (isNaN(d.getTime())) return s;
     return d.toLocaleString('en-CA', { hour12: false }).replace(',', '');
 };
 
-/* ───────────── UI atoms (aligned with client request details page) ───────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ UI atoms (aligned with client request details page) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const SKY_OUTLINE_BTN =
     'border-brand-sky-200 dark:border-brand-sky-800 hover:text-brand-sky-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20';
 
@@ -170,7 +179,7 @@ const StatusBadge: React.FC<{ status?: string }> = ({ status }) => {
     );
 };
 
-/* ─────────────────────────── Page ─────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const EmployeeDetailsContent: React.FC = () => {
     const router = useRouter();
     const params = useSearchParams();
@@ -189,6 +198,8 @@ const EmployeeDetailsContent: React.FC = () => {
     const [replaceOpen, setReplaceOpen] = useState(false);
     const [revokeReason, setRevokeReason] = useState('');
     const [actionBusy, setActionBusy] = useState(false);
+    const [statusValue, setStatusValue] = useState('');
+    const [statusBusy, setStatusBusy] = useState(false);
 
     const verifyUrl = useMemo(() => {
         const base = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/api\/v1\/?$/, '');
@@ -196,7 +207,7 @@ const EmployeeDetailsContent: React.FC = () => {
         return `${base}/verify/employee/${encodeURIComponent(employeeId)}`;
     }, [employeeId]);
 
-    /* ───────── Data fetchers ───────── */
+    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ Data fetchers â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     const loadAll = useCallback(async (showSpinner = true) => {
         if (!employeeId) return;
         if (showSpinner) setLoading(true);
@@ -240,7 +251,7 @@ const EmployeeDetailsContent: React.FC = () => {
         loadAll(true);
     }, [employeeId, loadAll, router]);
 
-    /* ───────── Actions ───────── */
+    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     const handleRefresh = async () => {
         setRefreshing(true);
         await loadAll(false);
@@ -275,7 +286,7 @@ const EmployeeDetailsContent: React.FC = () => {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(url);
-            toast.success('Card PDF downloaded — print logged');
+            toast.success('Card PDF downloaded â€” print logged');
             void loadAll(false);
         } catch {
             toast.error('Failed to download card PDF');
@@ -293,7 +304,7 @@ const EmployeeDetailsContent: React.FC = () => {
             const url = window.URL.createObjectURL(blob);
             const win = window.open(url, '_blank', 'noopener');
             if (!win) {
-                // Pop-up blocked — fall back to anchor click
+                // Pop-up blocked â€” fall back to anchor click
                 const a = document.createElement('a');
                 a.href = url;
                 a.target = '_blank';
@@ -304,7 +315,7 @@ const EmployeeDetailsContent: React.FC = () => {
             }
             // revoke URL after the new tab has had time to load it
             setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
-            toast.success('Preview opened — not logged as a print');
+            toast.success('Preview opened â€” not logged as a print');
         } catch {
             toast.error('Failed to open preview');
         } finally {
@@ -342,7 +353,7 @@ const EmployeeDetailsContent: React.FC = () => {
                 try { frame.remove(); } catch { /* noop */ }
                 window.URL.revokeObjectURL(url);
             }, 60_000);
-            toast.success('Print dialog opened — print logged');
+            toast.success('Print dialog opened â€” print logged');
             void loadAll(false);
         } catch {
             toast.error('Failed to open print dialog');
@@ -382,6 +393,28 @@ const EmployeeDetailsContent: React.FC = () => {
         }
     };
 
+    useEffect(() => {
+        if (employee?.status) setStatusValue(employee.status);
+    }, [employee]);
+
+    const handleUpdateStatus = async () => {
+        if (!employeeId || !statusValue) return;
+        setStatusBusy(true);
+        try {
+            const res = await axios.put(`/employees/update/${employeeId}`, { status: statusValue });
+            if (res?.data?.header?.success) {
+                toast.success('Status updated successfully');
+                await loadAll(false);
+            } else {
+                toast.error(res?.data?.header?.messages?.[0]?.message || 'Failed to update status');
+            }
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || err?.message || 'Network error');
+        } finally {
+            setStatusBusy(false);
+        }
+    };
+
     const copyVerifyUrl = async () => {
         if (!verifyUrl) return;
         try {
@@ -392,7 +425,7 @@ const EmployeeDetailsContent: React.FC = () => {
         }
     };
 
-    /* ───────── Loading / 404 ───────── */
+    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ Loading / 404 â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     if (loading) {
         return (
             <Centered>
@@ -415,18 +448,19 @@ const EmployeeDetailsContent: React.FC = () => {
     }
 
     const fullName = `${employee.name ?? ''} ${employee.surname ?? ''}`.trim() || 'Unnamed Employee';
-    const role = employee.role ?? 'Employee';
+
+    const LEVEL_LABELS: Record<number, string> = { 1: 'C-Level', 2: 'Director', 3: 'Manager', 4: 'Senior', 5: 'Staff' };
 
     const departmentLine =
         employee.department_name && employee.department_id
             ? `${employee.department_name} (${employee.department_id})`
-            : employee.department_name || employee.department_id || '—';
+            : employee.department_name || employee.department_id || 'â€”';
 
     const managerLine = employee.manager_name
-        ? `${employee.manager_name}${employee.manager_id ? ` · ${employee.manager_id}` : ''}`
+        ? `${employee.manager_name}${employee.manager_id ? ` Â· ${employee.manager_id}` : ''}`
         : employee.manager_id
             ? String(employee.manager_id)
-            : '—';
+            : 'â€”';
 
     const userColumns: Column<any>[] = [
         {
@@ -514,13 +548,13 @@ const EmployeeDetailsContent: React.FC = () => {
             render: (_v: string | null | undefined, row: PrintRow) =>
                 row.printer_name
                     ? `${row.printer_name} ${row.printer_surname ?? ''}`.trim()
-                    : row.printer_username || '—',
+                    : row.printer_username || 'â€”',
         },
         {
             key: 'printed_ip',
             header: 'IP Address',
             render: (value: string | null | undefined) => (
-                <span className="font-mono text-xs text-slate-600 dark:text-slate-400">{value || '—'}</span>
+                <span className="font-mono text-xs text-slate-600 dark:text-slate-400">{value || 'â€”'}</span>
             ),
         },
         {
@@ -637,7 +671,17 @@ const EmployeeDetailsContent: React.FC = () => {
                                 )
                             }
                         />
-                        <Detail label="Work Role" value={role} />
+                        <Detail
+                            label="Role Key"
+                            value={
+                                employee.role_key ? (
+                                    <span className="font-mono text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded">
+                                        {employee.role_key}
+                                        {employee.level ? ` Â· ${LEVEL_LABELS[employee.level] ?? `L${employee.level}`}` : ''}
+                                    </span>
+                                ) : 'â€”'
+                            }
+                        />
                         <Detail label="Hire Date" value={formatDate(employee.hire_date)} />
                         <Detail label="Department" value={departmentLine} />
                         <Detail label="Manager" value={managerLine} />
@@ -675,6 +719,38 @@ const EmployeeDetailsContent: React.FC = () => {
                         />
                         <Detail label="Record Created" value={formatDateTime(employee.created_at)} />
                         <Detail label="Record Updated" value={formatDateTime(employee.updated_at)} />
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
+                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Change Employment Status</p>
+                        <div className="flex items-center gap-2">
+                            <Select value={statusValue} onValueChange={setStatusValue}>
+                                <SelectTrigger className="flex-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100">
+                                    <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+                                    <SelectItem value="Active">Active</SelectItem>
+                                    <SelectItem value="Inactive">Inactive</SelectItem>
+                                    <SelectItem value="Suspended">Suspended</SelectItem>
+                                    <SelectItem value="Resigned">Resigned</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Button
+                                size="sm"
+                                onClick={handleUpdateStatus}
+                                disabled={statusBusy || !statusValue || statusValue === employee.status}
+                                className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shrink-0"
+                            >
+                                {statusBusy
+                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                    : <><Save className="h-4 w-4 mr-1" />Save</>}
+                            </Button>
+                        </div>
+                        {statusValue && statusValue !== employee.status && (
+                            <p className="text-xs text-amber-600 dark:text-amber-400">
+                                Changing from <span className="font-semibold">{employee.status}</span> â†’ <span className="font-semibold">{statusValue}</span>
+                            </p>
+                        )}
                     </div>
                 </EnhancedCard>
             </div>
@@ -749,7 +825,7 @@ const EmployeeDetailsContent: React.FC = () => {
                         <div className="py-3 space-y-2">
                             <span className="font-medium text-slate-700 dark:text-slate-200">Verification URL</span>
                             <p className="text-xs font-mono text-slate-600 dark:text-slate-400 break-all bg-slate-50 dark:bg-slate-900/50 p-2 rounded border border-slate-200 dark:border-slate-700">
-                                {verifyUrl || '—'}
+                                {verifyUrl || 'â€”'}
                             </p>
                             <div className="flex flex-wrap gap-2">
                                 <Button size="sm" variant="outline" onClick={copyVerifyUrl} disabled={!verifyUrl} className={SKY_OUTLINE_BTN}>
@@ -809,12 +885,12 @@ const EmployeeDetailsContent: React.FC = () => {
                     actions={[]}
                     loading={false}
                     noDataMessage="No print events yet. Download or Print logs an entry."
-                    hideEmptyMessage={true}
+                    
                     showActions={false}
                 />
             </EnhancedCard>
 
-            {/* ───────── Revoke dialog ───────── */}
+            {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€ Revoke dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <AlertDialog open={revokeOpen} onOpenChange={setRevokeOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -830,7 +906,7 @@ const EmployeeDetailsContent: React.FC = () => {
                             value={revokeReason}
                             onChange={(e) => setRevokeReason(e.target.value)}
                             rows={3}
-                            placeholder="e.g. Reported lost, employee resigned, security incident…"
+                            placeholder="e.g. Reported lost, employee resigned, security incidentâ€¦"
                             className="w-full px-3 py-2 text-sm border rounded-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
                         />
                     </div>
@@ -851,7 +927,7 @@ const EmployeeDetailsContent: React.FC = () => {
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* ───────── Replace dialog ───────── */}
+            {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€ Replace dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <AlertDialog open={replaceOpen} onOpenChange={setReplaceOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>

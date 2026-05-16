@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
@@ -10,513 +10,428 @@ import {
     selectLoading,
     selectError,
 } from "@/stores/slices/projects";
-import {
-    fetchTenders,
-    selectTenders,
-    selectTendersTotal,
-    selectTendersPages,
-    selectTendersLoading,
-    selectTendersError,
-} from "@/stores/slices/tenders";
 import { AppDispatch } from "@/stores/store";
 import { Badge } from "@/components/ui/badge";
 import {
-    Loader2,
-    Building,
-    Briefcase,
-    BadgeCheck,
-    Edit,
-    Trash2,
-    CheckCircle2,
-    ArrowDownToLine,
+    Loader2, ArrowDownToLine, Edit, Eye, ArrowLeft, AlertCircle,
+    FileText, Briefcase, GitMerge,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnhancedDataTable, Column, Action } from "@/components/ui/enhanced-data-table";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
-import { Tender } from "@/stores/types/tenders";
-import { DeleteDialog } from '@/components/delete-dialog';
-import {
-    Select,
-    SelectTrigger,
-    SelectValue,
-    SelectContent,
-    SelectItem,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import axios from "@/utils/axios";
-import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import type { ProjectContract } from "@/stores/types/project-contracts";
+import type { TaskOrder } from "@/stores/types/task-orders";
+import type { ChangeOrder } from "@/stores/types/change-orders";
+import type { Client } from "@/stores/types/clients";
 
+// â”€â”€â”€ Shared helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-//————————————————————————————————————————
-// Types
-//————————————————————————————————————————
-type ProjectStatus = "Active" | "Inactive" | "Complete" | "Stopped" | "Onhold";
+const Centered: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-3">{children}</div>
+);
 
-//————————————————————————————————————————
-// Component
-//————————————————————————————————————————
+const DetailRow: React.FC<{ icon?: React.ReactNode; label: string; value: React.ReactNode }> = ({ icon, label, value }) => (
+    <div className="flex items-start gap-3 py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-0">
+        {icon && <span className="mt-0.5 text-brand-sky-500 shrink-0">{icon}</span>}
+        <span className="text-sm font-medium text-slate-500 dark:text-slate-400 w-32 shrink-0">{label}</span>
+        <span className="text-sm text-slate-800 dark:text-slate-200 font-medium flex-1">{value ?? "N/A"}</span>
+    </div>
+);
+
+// â”€â”€â”€ Status helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const getStatusColor = (status?: string) => {
+    const colors: Record<string, string> = {
+        Active:    "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800",
+        Inactive:  "bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800",
+        Complete:  "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+        Stopped:   "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800",
+        Onhold:    "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+        Draft:     "bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800",
+        Pending:   "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+        Approved:  "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800",
+        Rejected:  "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+        Suspended: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800",
+    };
+    return colors[status ?? ""] ?? "bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800";
+};
+
+const formatDate = (d?: string | null) => {
+    if (!d) return "N/A";
+    try { return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }); }
+    catch { return "Invalid date"; }
+};
+
+const formatDateTime = (d?: string | null) => {
+    if (!d) return "N/A";
+    try { return new Date(d).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }); }
+    catch { return "Invalid date"; }
+};
+
+const formatCurrency = (value?: string | number) => {
+    if (value === undefined || value === null || value === "") return "â€”";
+    const raw = typeof value === "string" ? value.replace(/,/g, "") : value;
+    const n = typeof raw === "string" ? parseFloat(raw) : raw;
+    if (isNaN(n)) return "â€”";
+    return new Intl.NumberFormat("en-US").format(n);
+};
+
+// â”€â”€â”€ Main Content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
 function ProjectDetailsPageContent() {
     const dispatch = useDispatch<AppDispatch>();
     const params = useSearchParams();
     const router = useRouter();
     const projectId = params.get("id");
 
-    // Pagination & search state for tenders
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(10);
-    const [search, setSearch] = useState("");
-
-    // Dialog helpers
-    const [open, setOpen] = useState(false);
-    const [tenderToDelete, setTenderToDelete] = useState<string | null>(null);
-
-    // Project state
     const project = useSelector(selectSelectedProject);
     const budget = useSelector(selectSelectedProjectBudget);
     const loading = useSelector(selectLoading);
     const error = useSelector(selectError);
 
-    // Tenders state
-    const tenders = useSelector(selectTenders);
-    const totalItems = useSelector(selectTendersTotal);
-    const totalPages = useSelector(selectTendersPages);
-    const tendersLoading = useSelector(selectTendersLoading);
-    const tendersError = useSelector(selectTendersError);
-    const [tenderIsDownload, setTenderIsDownload] = useState(false);
-    const [projectIsDownload, setProjectIsDownload] = useState(false);
+    const [projectIsDownloading, setProjectIsDownloading] = useState(false);
+    const [clientData, setClientData] = useState<Client | null>(null);
 
-
-    const [status, setStatus] = useState<ProjectStatus>(
-        (project?.status as ProjectStatus) || "Active",
-    );
+    const [contracts, setContracts] = useState<ProjectContract[]>([]);
+    const [contractsLoading, setContractsLoading] = useState(false);
+    const [taskOrders, setTaskOrders] = useState<TaskOrder[]>([]);
+    const [taskOrdersLoading, setTaskOrdersLoading] = useState(false);
+    const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
+    const [changeOrdersLoading, setChangeOrdersLoading] = useState(false);
 
     useEffect(() => {
         if (projectId) dispatch(fetchProject({ id: projectId }));
     }, [projectId, dispatch]);
 
+    // Fetch client details once project loads
     useEffect(() => {
-        if (projectId)
-            dispatch(
-                fetchTenders({
-                    projectId,
-                    page,
-                    limit,
-                    search,
-                }),
-            );
-    }, [projectId, page, limit, search, dispatch]);
+        if (!project?.client_id) return;
+        axios.get(`/clients/fetch/client/${project.client_id}`)
+            .then((res) => {
+                const c = res.data?.body?.client ?? res.data?.data?.client ?? res.data?.client;
+                if (c) setClientData(c);
+            })
+            .catch(() => {});
+    }, [project?.client_id]);
+
+    const loadRelatedData = useCallback(async (id: string) => {
+        setContractsLoading(true);
+        try {
+            const res = await axios.get("/project-contracts/fetch", { params: { project_id: id, limit: 100 } });
+            const block = res.data?.body?.contracts ?? res.data?.data?.contracts;
+            setContracts(block?.items ?? []);
+        } catch { /* ignore */ } finally { setContractsLoading(false); }
+
+        setTaskOrdersLoading(true);
+        try {
+            const res = await axios.get("/task-orders/fetch", { params: { project_id: id, limit: 100 } });
+            setTaskOrders(res.data?.body?.task_orders?.items ?? []);
+        } catch { /* ignore */ } finally { setTaskOrdersLoading(false); }
+
+        setChangeOrdersLoading(true);
+        try {
+            const res = await axios.get("/change-orders/fetch", { params: { project_id: id, limit: 100 } });
+            setChangeOrders(res.data?.body?.change_orders?.items ?? []);
+        } catch { /* ignore */ } finally { setChangeOrdersLoading(false); }
+    }, []);
 
     useEffect(() => {
-        if (project?.status) setStatus(project.status as ProjectStatus);
-    }, [project?.status]);
+        if (projectId) loadRelatedData(projectId);
+    }, [projectId, loadRelatedData]);
 
-    const handleStatusUpdate = async () => {
-        
+    const downloadProject = async () => {
         if (!projectId) return;
+        setProjectIsDownloading(true);
         try {
-            await axios.put(`/projects/update/status/${projectId}`, { params: { status } });
-            
-            toast.success("Project status updated successfully");
-            dispatch(fetchProject({ id: projectId })); // Refresh project data
-        } catch (error) {
-            toast.error("Failed to update project status");
-        }
-    };
-
-    const handleDeleteTender = async (tenderId: string) => {
-        if (!tenderId) return;
-        try {
-            await axios.delete(`/projects/tenders/delete/${tenderId}`);
-            toast.success("Tender deleted successfully");
-            if (projectId) {
-                dispatch(fetchTenders({
-                    projectId,
-                    page,
-                    limit,
-                    search,
-                }));
-            }
-        } catch (error) {
-            toast.error("Failed to delete tender");
-        } finally {
-            setOpen(false);
-        }
-    };
-
-
-    const downloadTender = async (projectId: string, fileName = 'Tender') => {
-        setTenderIsDownload(true);
-        try {
-            const { data } = await axios.get(
-                `/projects/download/tender/${projectId}`,
-                { responseType: 'blob' },
-            );
-
-            const blob = new Blob([data], { type: 'application/pdf' });
-            const url = window.URL.createObjectURL(blob);
-
-            const link = document.createElement('a');
+            const { data } = await axios.get(`/projects/download/project/${projectId}`, { responseType: "blob" });
+            const url = window.URL.createObjectURL(new Blob([data], { type: "application/pdf" }));
+            const link = document.createElement("a");
             link.href = url;
-            link.download = `${fileName}.pdf`;
-            link.style.display = 'none';
+            link.download = `${project?.name || "project"}.pdf`;
+            link.style.display = "none";
             document.body.appendChild(link);
             link.click();
             window.URL.revokeObjectURL(url);
             link.remove();
-        } catch (err) {
-            toast.error('تعذّر تحميل الفاتورة');
+            toast.success("Project document downloaded successfully");
+        } catch {
+            toast.error("Failed to download project document");
         } finally {
-            setTenderIsDownload(false);
+            setProjectIsDownloading(false);
         }
     };
 
-    const downloadProject = async (projectId: string, fileName = 'Project') => {
-        setProjectIsDownload(true);
-        try {
-            const { data } = await axios.get(
-                `/projects/download/project/${projectId}`,
-                { responseType: 'blob' },
-            );
+    // â”€â”€â”€ Table columns â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-            const blob = new Blob([data], { type: 'application/pdf' });
-            const url = window.URL.createObjectURL(blob);
-
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${fileName}.pdf`;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            window.URL.revokeObjectURL(url);
-            link.remove();
-        } catch (err) {
-            toast.error('تعذّر تحميل المشروع');
-        } finally {
-            setProjectIsDownload(false);
-        }
-    }
-
-    const handleDeleteProject = async () => {
-        if (!projectId) return;
-        try {
-            await axios.delete(`/projects/delete/project/${projectId}`);
-            toast.success("Project deleted successfully");
-            router.push("/projects");
-        } catch (error) {
-            toast.error("Failed to delete project");
-        } finally {
-            setOpen(false);
-        }
-    };
-
-    //———————————————————————————————————————
-    // Table configs
-    //———————————————————————————————————————
-    interface TenderColumn extends Column<Tender> {}
-
-    interface TenderAction extends Action<Tender> {}
-
-    const tenderColumns: TenderColumn[] = [
-        { key: "sequence", header: "ID", sortable: true },
-        { key: "name", header: "Name", sortable: true },
-        { key: "price", header: "Price", sortable: true },
-        { key: "quantity", header: "Quantity", sortable: true },
-        { key: "amount", header: "Amount", sortable: true },
+    const contractColumns: Column<ProjectContract>[] = [
+        { key: "contract_no",    header: "No.",      render: (v: any) => <span className="font-mono text-xs text-slate-500">{v || "â€”"}</span> },
+        { key: "title",          header: "Title",    render: (v: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{v || "â€”"}</span> },
+        { key: "contract_type",  header: "Type",     render: (v: any) => <Badge variant="outline" className={`${getStatusColor(v)} w-fit`}>{v || "â€”"}</Badge> },
+        { key: "contract_value", header: "Value",    render: (v: any) => <span className="font-semibold text-brand-sky-600 dark:text-brand-sky-400">{formatCurrency(v)}</span> },
+        { key: "status",         header: "Status",   render: (v: any) => v ? <Badge variant="outline" className={`${getStatusColor(v)} w-fit`}>{v}</Badge> : <span className="text-slate-400">â€”</span> },
+        { key: "approval_status",header: "Approval", render: (v: any) => v ? <Badge variant="outline" className={`${getStatusColor(v)} w-fit`}>{v}</Badge> : <span className="text-slate-400">â€”</span> },
     ];
 
-    const tenderActions: TenderAction[] = [
+    const contractActions: Action<ProjectContract>[] = [
         {
-            label: "Edit",
-            onClick: (t: Tender) => router.push(`/projects/tender/update?id=${t.id}`),
-            icon: <Edit className="w-4 h-4" />,
-            variant: 'warning'
-        },
-        {
-            label: "Delete",
-            onClick: (t: Tender) => {
-                handleDeleteTender(t.id);
-            },
-            icon: <Trash2 className="w-4 h-4" />,
-            variant: 'destructive'
+            label: "View Contract",
+            onClick: (r) => router.push(`/requests/project-contracts/details?id=${r.id}`),
+            icon: <Eye className="h-4 w-4" />,
+            variant: "info" as const,
         },
     ];
 
-    //———————————————————————————————————————
-    // Helpers
-    //———————————————————————————————————————
-    const statusVariants: Record<
-        ProjectStatus,
-        | "completed"
-        | "approved"
-        | "default"
-        | "outline"
-        | "draft"
-        | "pending"
-        | "rejected"
-        | "inprogress"
-        | "onhold"
-        | "cancelled"
-        | null
-        | undefined
-    > = {
-        Active: "completed",
-        Inactive: "cancelled",
-        Complete: "approved",
-        Stopped: "cancelled",
-        Onhold: "onhold",
-    };
+    const taskOrderColumns: Column<TaskOrder>[] = [
+        { key: "task_order_no",   header: "No.",        render: (v: any) => <span className="font-mono text-xs text-slate-500">{v || "â€”"}</span> },
+        { key: "title",           header: "Title",      render: (v: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{v || "â€”"}</span> },
+        { key: "contractor_name", header: "Contractor", render: (v: any) => <span className="text-slate-600 dark:text-slate-400">{v || "â€”"}</span> },
+        { key: "est_cost",        header: "Est. Cost",  render: (v: any) => <span className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(v)}</span> },
+        { key: "status",          header: "Status",     render: (v: any) => v ? <Badge variant="outline" className={`${getStatusColor(v)} w-fit`}>{v}</Badge> : <span className="text-slate-400">â€”</span> },
+        { key: "issue_date",      header: "Issue Date", render: (v: any) => <span className="text-slate-500 text-sm">{formatDate(v)}</span> },
+    ];
+
+    const changeOrderColumns: Column<ChangeOrder>[] = [
+        { key: "change_order_no", header: "No.",        render: (v: any) => <span className="font-mono text-xs text-slate-500">{v || "â€”"}</span> },
+        { key: "title",           header: "Title",      render: (v: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{v || "â€”"}</span> },
+        { key: "contractor_name", header: "Contractor", render: (v: any) => <span className="text-slate-600 dark:text-slate-400">{v || "â€”"}</span> },
+        { key: "est_cost",        header: "Est. Cost",  render: (v: any) => <span className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(v)}</span> },
+        { key: "status",          header: "Status",     render: (v: any) => v ? <Badge variant="outline" className={`${getStatusColor(v)} w-fit`}>{v}</Badge> : <span className="text-slate-400">â€”</span> },
+        { key: "issue_date",      header: "Issue Date", render: (v: any) => <span className="text-slate-500 text-sm">{formatDate(v)}</span> },
+    ];
+
+    // â”€â”€â”€ Loading / Error states â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     if (loading || !project)
         return (
             <Centered>
-                <Loader2 className="animate-spin w-8 h-8 text-primary" />
-                <span className="ml-3 text-xl text-muted-foreground">Loading project …</span>
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
+                <p className="text-slate-500 dark:text-slate-400">Loading project details...</p>
             </Centered>
         );
 
     if (error)
         return (
             <Centered>
-                <ErrorBox message={error} onRetry={() => projectId && dispatch(fetchProject({ id: projectId }))} />
+                <AlertCircle className="h-10 w-10 text-rose-400" />
+                <p className="text-rose-600 dark:text-rose-400">{error}</p>
+                <Button variant="outline" onClick={() => projectId && dispatch(fetchProject({ id: projectId }))}
+                    className="border-brand-sky-200 dark:border-brand-sky-800 text-brand-sky-700 dark:text-brand-sky-300">
+                    Retry
+                </Button>
             </Centered>
         );
 
+    const isActive = project.status === "Active";
+
     return (
-        <div className="space-y-4 pb-10">
-            {/* Header */}
+        <div className="space-y-4 pb-8">
             <Breadcrumb />
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="text-left">
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">Project Details</h1>
-                    <p className="mt-2 text-sm md:text-base text-slate-600 dark:text-slate-400 text-left">
-                        Manage details for <span className="font-semibold">{project.name}</span>
+
+            {/* â”€â”€â”€ Header â”€â”€â”€ */}
+            <div className="flex items-end justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
+                        Project Details
+                    </h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
+                        A brief overview of the project with available actions.
                     </p>
                 </div>
-                <Button onClick={() => router.push(`/projects/tender/create?id=${projectId}`)} className="flex items-center gap-2 bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-                    + Create Tender
+                <Button variant="outline" onClick={() => router.push("/projects")}
+                    className="border-brand-sky-200 dark:border-brand-sky-800 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20 shrink-0">
+                    <ArrowLeft className="h-4 w-4 mr-2" /> Back to Projects
                 </Button>
             </div>
 
-            {/* Actions */}
-            <EnhancedCard
-                title="Project Actions"
-                variant="default"
-                size="sm"
-            >
-                <div className="flex flex-wrap gap-3 items-center justify-start">
-                    <Select value={status} onValueChange={(v) => setStatus(v as ProjectStatus)}>
-                        <SelectTrigger className="w-48 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
-                            <SelectValue placeholder="Change Status" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
-                            {["Active", "Inactive", "Complete", "Stopped", "Onhold"].map((s) => (
-                                <SelectItem 
-                                    key={s} 
-                                    value={s as ProjectStatus}
-                                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200"
-                                >
-                                    {s}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+            {/* â”€â”€â”€ Stat Cards â”€â”€â”€ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+                <EnhancedCard title="Project Name" description="Full name" variant="default" size="sm">
+                    <div className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-snug">
+                        {project.name || "N/A"}
+                    </div>
+                </EnhancedCard>
 
-                    {/* 1) Update first (primary) */}
-                    <Button onClick={handleStatusUpdate} className="flex items-center gap-2 bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-                        <CheckCircle2 className="w-4 h-4" /> Update Status
-                    </Button>
+                <EnhancedCard title="Project Code" description="Unique identifier" variant="default" size="sm">
+                    <div className="text-lg font-bold font-mono text-brand-sky-600 dark:text-brand-sky-400">
+                        {project.project_code || "N/A"}
+                    </div>
+                </EnhancedCard>
 
-                    {/* 2) Download Project (outline orange) */}
-                    <Button
-                        variant="outline"
-                        onClick={() => projectId && downloadProject(projectId, 'project')}
-                        disabled={projectIsDownload}
-                        className="border-brand-sky-200 hover:border-brand-sky-300 hover:text-brand-sky-700 text-brand-sky-700 hover:bg-brand-sky-50"
-                    >
-                        {projectIsDownload ? (
-                            <>
-                                <Loader2 className="animate-spin w-4 h-4" /> Loading...
-                            </>
-                        ) : (
-                            <>
-                                <ArrowDownToLine className="w-4 h-4" /> Download Project
-                            </>
-                        )}
-                    </Button>
+                <EnhancedCard title="Project Type" description="Category" variant="default" size="sm">
+                    <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 w-fit font-semibold">
+                        {project.type || "N/A"}
+                    </Badge>
+                </EnhancedCard>
 
-                    {/* 3) Download Tender (outline orange) */}
-                    <Button
-                        variant="outline"
-                        onClick={() => projectId && downloadTender(projectId, 'tender')}
-                        disabled={tenderIsDownload}
-                        className="border-brand-sky-200 hover:border-brand-sky-300 hover:text-brand-sky-700 text-brand-sky-700 hover:bg-brand-sky-50"
-                    >
-                        {tenderIsDownload ? (
-                            <>
-                                <Loader2 className="animate-spin w-4 h-4" /> Loading...
-                            </>
-                        ) : (
-                            <>
-                                <ArrowDownToLine className="w-4 h-4" /> Download Tender
-                            </>
-                        )}
-                    </Button>
+                <EnhancedCard title="Status" description="Current project state" variant="default" size="sm">
+                    <Badge variant="outline" className={`${getStatusColor(project.status)} font-semibold w-fit`}>
+                        {project.status || "N/A"}
+                    </Badge>
+                </EnhancedCard>
 
-                    {/* 4) Delete (outline red) */}
-                    <Button variant="outline" className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 hover:bg-red-50" onClick={() => { setOpen(true); }}>
-                        <Trash2 className="w-4 h-4" /> Delete Project
-                    </Button>
-                </div>
-            </EnhancedCard>
-
-            {/* Main grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Info */}
-                <div className="space-y-4">
-                    <EnhancedCard title="Project Information" variant="default" size="sm">
-                        <DetailItem label="Project Name" value={project.name} />
-                        <DetailItem label="Project Type" value={project.type} />
-                        <DetailItem label="Project Status" value={<Badge variant={statusVariants[status as ProjectStatus]}>{status}</Badge>} />
-                        <DetailItem label="Project Code" value={project.project_code} />
-                        <DetailItem label="Project Number" value={project.number} />
-                        <DetailItem label="Created At" value={formatDate(project.created_at)} />
-                        <DetailItem label="Updated At" value={formatDate(project.updated_at)} />
-                    </EnhancedCard>
-
-                    <EnhancedCard title="Budget Information" variant="default" size="sm">
-                        {budget ? (
-                            <>
-                                <BudgetItem label="Fiscal Year" value={budget.fiscal_year} />
-                                <BudgetItem label="Original Budget" value={budget.original_budget} />
-                                <BudgetItem label="Revised Budget" value={budget.revised_budget} />
-                                <BudgetItem label="Committed Cost" value={budget.committed_cost} className="text-blue-600" />
-                                <BudgetItem label="Actual Cost" value={budget.actual_cost} className="text-green-600" />
-                            </>
-                        ) : (
-                            <p className="text-muted-foreground">No budget information available</p>
-                        )}
-                    </EnhancedCard>
-                </div>
-
-                {/* Tenders */}
-                <EnhancedCard
-                    title="Tenders List"
-                    description={`Total ${totalItems} tenders found`}
-                    variant="default"
-                    size="sm"
-                >
-                    <EnhancedDataTable
-                        data={tenders}
-                        columns={tenderColumns}
-                        actions={tenderActions}
-                        loading={tendersLoading}
-                        pagination={{
-                            currentPage: page,
-                            totalPages,
-                            pageSize: limit,
-                            totalItems,
-                            onPageChange: setPage,
-                        }}
-                        noDataMessage="No tenders found"
-                        onSearch={(term) => { setSearch(term); setPage(1); }}
-                        searchPlaceholder="Search tenders..."
-                    />
+                <EnhancedCard title="Created" description="Registration date" variant="default" size="sm">
+                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                        {formatDateTime(project.created_at)}
+                    </div>
                 </EnhancedCard>
             </div>
 
-            {/* Description */}
-            <EnhancedCard title="Project Description" variant="default" size="sm">
-                <p className="prose max-w-none text-sm md:text-base text-slate-700 dark:text-slate-300">
-                    {project.description || "No description available"}
-                </p>
+            {/* â”€â”€â”€ Actions Card â”€â”€â”€ */}
+            <EnhancedCard title="Actions" description="Available operations for this project" variant="default" size="sm">
+                <div className="flex flex-wrap items-center gap-3">
+                    {isActive && (
+                        <Button
+                            onClick={downloadProject}
+                            disabled={projectIsDownloading}
+                            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-sm"
+                        >
+                            {projectIsDownloading
+                                ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                : <ArrowDownToLine className="h-4 w-4 mr-2" />}
+                            {projectIsDownloading ? "Generating..." : "Download Document"}
+                        </Button>
+                    )}
+                    {!isActive && (
+                        <Button
+                            onClick={() => router.push(`/projects/update?id=${projectId}`)}
+                            className="bg-gradient-to-r from-brand-sky-500 to-brand-sky-600 hover:from-brand-sky-600 hover:to-brand-sky-700 text-white shadow-sm"
+                        >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Data
+                        </Button>
+                    )}
+                </div>
             </EnhancedCard>
 
-            <DeleteDialog open={open} onClose={() => setOpen(false)} onConfirm={handleDeleteProject} />
+            {/* â”€â”€â”€ Info Cards â€” 2-column grid â”€â”€â”€ */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Project Basic Info */}
+                <EnhancedCard title="Project Information" description="Core project details" variant="default" size="sm">
+                    <DetailRow label="Project No."  value={<span className="font-mono">{project.number}</span>} />
+                    <DetailRow label="Code"         value={<span className="font-mono">{project.project_code}</span>} />
+                    <DetailRow label="Type"         value={project.type} />
+                    <DetailRow label="Status"       value={
+                        project.status
+                            ? <Badge variant="outline" className={`${getStatusColor(project.status)} w-fit`}>{project.status}</Badge>
+                            : "N/A"
+                    } />
+                    <DetailRow label="Created"      value={formatDateTime(project.created_at)} />
+                    <DetailRow label="Updated"      value={formatDateTime(project.updated_at)} />
+                </EnhancedCard>
+
+                {/* Budget Summary */}
+                <EnhancedCard title="Budget Summary" description="Financial overview" variant="default" size="sm">
+                    {budget ? (
+                        <div className="space-y-0">
+                            {[
+                                { label: "Fiscal Year",     value: budget.fiscal_year,      mono: true },
+                                { label: "Original Budget", value: budget.original_budget,  mono: false },
+                                { label: "Revised Budget",  value: budget.revised_budget,   mono: false },
+                                { label: "Committed Cost",  value: budget.committed_cost,   mono: false },
+                                { label: "Actual Cost",     value: budget.actual_cost,      mono: false },
+                            ].map((row, i, arr) => (
+                                <div key={row.label} className={`flex justify-between items-center py-2.5 ${i < arr.length - 1 ? "border-b border-slate-100 dark:border-slate-800" : ""}`}>
+                                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{row.label}</span>
+                                    <span className="text-sm font-bold font-mono text-brand-sky-600 dark:text-brand-sky-400">
+                                        {row.mono ? row.value : formatCurrency(row.value)}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-slate-400 dark:text-slate-500 py-4 text-center">No budget data</p>
+                    )}
+                </EnhancedCard>
+            </div>
+
+            {/* â”€â”€â”€ Description â”€â”€â”€ */}
+            {project.description && (
+                <EnhancedCard title="Description" description="Additional remarks" variant="default" size="sm">
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{project.description}</p>
+                </EnhancedCard>
+            )}
+
+            {/* â”€â”€â”€ Client Information â”€â”€â”€ */}
+            <EnhancedCard title="Client Information" description="Linked client details" variant="default" size="sm">
+                <EnhancedDataTable
+                    data={clientData ? [clientData] : (project.client_name ? [{ id: project.client_id ?? "", name: project.client_name, client_no: "â€”", client_type: "â€”", status: "â€”", state: "â€”", city: "â€”", budget: "â€”" } as Client] : [])}
+                    columns={[
+                        { key: "name",        header: "Client Name", render: (v: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{v || "â€”"}</span> },
+                        { key: "client_no",   header: "Client No.",  render: (v: any) => <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{v || "â€”"}</span> },
+                        { key: "client_type", header: "Type",        render: (v: any) => v && v !== "â€”" ? <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 w-fit">{v}</Badge> : <span className="text-slate-400">â€”</span> },
+                        { key: "status",      header: "Status",      render: (v: any) => v && v !== "â€”" ? <Badge variant="outline" className={`${getStatusColor(v)} w-fit`}>{v}</Badge> : <span className="text-slate-400">â€”</span> },
+                        { key: "state",       header: "State",       render: (v: any) => <span className="text-slate-600 dark:text-slate-400">{v || "â€”"}</span> },
+                        { key: "city",        header: "City",        render: (v: any) => <span className="text-slate-600 dark:text-slate-400">{v || "â€”"}</span> },
+                        { key: "budget",      header: "Budget",      render: (v: any) => v && v !== "â€”" ? <span className="font-semibold text-brand-sky-600 dark:text-brand-sky-400">{formatCurrency(v)}</span> : <span className="text-slate-400">â€”</span> },
+                    ] as Column<Client>[]}
+                    actions={clientData?.id ? [
+                        {
+                            label: "View Client Details",
+                            onClick: () => router.push(`/clients/details?id=${clientData.id}`),
+                            icon: <Eye className="h-4 w-4" />,
+                            variant: "info" as const,
+                        },
+                    ] : []}
+                    loading={false}
+                    noDataMessage="No client linked to this project"
+                    
+                />
+            </EnhancedCard>
+
+            {/* â”€â”€â”€ Related Tables â”€â”€â”€ */}
+            {contractsLoading || contracts.length > 0 ? (
+                <EnhancedCard title="Project Contracts" description={`${contracts.length} contract(s) linked to this project`} variant="default" size="sm">
+                    <EnhancedDataTable
+                        data={contracts}
+                        columns={contractColumns}
+                        actions={contractActions}
+                        loading={contractsLoading}
+                        noDataMessage="No contracts found"
+                        
+                    />
+                </EnhancedCard>
+            ) : null}
+
+            {taskOrdersLoading || taskOrders.length > 0 ? (
+                <EnhancedCard title="Task Orders" description={`${taskOrders.length} task order(s) linked to this project`} variant="default" size="sm">
+                    <EnhancedDataTable
+                        data={taskOrders}
+                        columns={taskOrderColumns}
+                        actions={[]}
+                        loading={taskOrdersLoading}
+                        noDataMessage="No task orders found"
+                        
+                    />
+                </EnhancedCard>
+            ) : null}
+
+            {changeOrdersLoading || changeOrders.length > 0 ? (
+                <EnhancedCard title="Change Orders" description={`${changeOrders.length} change order(s) linked to this project`} variant="default" size="sm">
+                    <EnhancedDataTable
+                        data={changeOrders}
+                        columns={changeOrderColumns}
+                        actions={[]}
+                        loading={changeOrdersLoading}
+                        noDataMessage="No change orders found"
+                        
+                    />
+                </EnhancedCard>
+            ) : null}
         </div>
     );
 }
 
-//————————————————————————————————————————
-// Reusable UI
-//————————————————————————————————————————
-const Centered: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="flex flex-col items-center justify-center min-h-[50vh]">{children}</div>
-);
-
-const ErrorBox: React.FC<{ message: string; onRetry: () => void }> = ({ message, onRetry }) => (
-    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg max-w-md text-center">
-        <h3 className="font-bold text-lg">Failed to load data</h3>
-        <p className="text-sm mt-1">{message}</p>
-        <Button className="mt-3" variant="outline" onClick={onRetry}>
-            Retry
-        </Button>
-    </div>
-);
-
-interface StatCardProps {
-    title: string;
-    icon: React.ComponentType<{ className?: string }>;
-    value: React.ReactNode;
-    sub?: string;
-}
-const StatCard: React.FC<StatCardProps> = ({ title, icon: Icon, value, sub }) => (
-    <EnhancedCard title={title} variant="default" size="sm">
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                <Icon className="h-5 w-5" />
-            </div>
-            <div className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</div>
-        </div>
-        {sub && <p className="text-xs mt-2 truncate text-slate-500 dark:text-slate-400">{sub}</p>}
-    </EnhancedCard>
-);
-
-interface DataCardProps {
-    title: string;
-    children: React.ReactNode;
-}
-const DataCard: React.FC<DataCardProps> = ({ title, children }) => (
-    <EnhancedCard title={title} variant="default" size="sm">
-        {children}
-    </EnhancedCard>
-);
-
-const DetailItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b text-left">
-        <span className="font-medium text-slate-700 dark:text-slate-100 text-sm md:text-base">{label}:</span>
-        <span className="text-left truncate max-w-[200px] text-xs md:text-sm text-slate-600 dark:text-slate-400">
-            {value ?? "N/A"}
-        </span>
-    </div>
-);
-
-const BudgetItem: React.FC<{ label: string; value: string | number; className?: string }> = ({ label, value, className = "" }) => (
-    <div className="flex justify-between items-center py-2 border-b">
-        <span className="font-medium text-slate-700 dark:text-slate-100 text-sm md:text-base">{label}:</span>
-        <span className={`font-semibold text-xs md:text-sm ${className} text-slate-800 dark:text-slate-100`}>{value || "0"}</span>
-    </div>
-);
-
-//————————————————————————————————————————
-// Utilities
-//————————————————————————————————————————
-function formatDate(dateString: string | null | undefined) {
-    if (!dateString) return "N/A";
-    try {
-        const d = new Date(dateString);
-        return d.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-        });
-    } catch {
-        return "Invalid date";
-    }
-}
-
 export default function ProjectDetailsPage() {
     return (
-        <Suspense fallback={<div className="p-6 text-muted-foreground text-center">Loading project...</div>}>
+        <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-3">
+                <Loader2 className="h-8 w-8 animate-spin text-brand-sky-500" />
+                <p className="text-slate-500 dark:text-slate-400">Loading detailsâ€¦</p>
+            </div>
+        }>
             <ProjectDetailsPageContent />
         </Suspense>
     );

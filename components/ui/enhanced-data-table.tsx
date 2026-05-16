@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, Eye, Edit, Trash2, TableIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -61,7 +61,7 @@ export function EnhancedDataTable<T extends Record<string, any>>({
     onSearch,
     onSort,
     onRowClick,
-    noDataMessage = 'No data available',
+    noDataMessage = 'لا يوجد بيانات في هذا الجدول',
     className = '',
     searchPlaceholder = 'Search...',
     showActions = true,
@@ -180,24 +180,28 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                                 ))
                             ) : data.length === 0 ? (
                                 // No data message or empty table
-                                hideEmptyMessage ? (
-                                    // Show empty table (just header, no rows)
-                                    null
-                                ) : noDataMessage ? (
+                                hideEmptyMessage ? null : (
                                     <tr>
                                         <td
                                             colSpan={columns.length + (showActions && actions.length > 0 ? 1 : 0)}
-                                            className="px-6 py-12 text-center"
+                                            className="px-6 py-14 text-center"
                                         >
-                                            <div className="flex flex-col items-center gap-2">
-                                                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
-                                                    <Search className="h-6 w-6 text-slate-400 dark:text-slate-500" />
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-700/60 flex items-center justify-center shadow-inner">
+                                                    <TableIcon className="h-7 w-7 text-slate-400 dark:text-slate-500" />
                                                 </div>
-                                                <p className="text-slate-500 dark:text-slate-400 font-medium">{noDataMessage}</p>
+                                                <div className="space-y-1">
+                                                    <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                                                        {noDataMessage}
+                                                    </p>
+                                                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                                                        No records found matching your criteria
+                                                    </p>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>
-                                ) : null
+                                )
                             ) : (
                                 // Data rows
                                 data
@@ -282,57 +286,77 @@ export function EnhancedDataTable<T extends Record<string, any>>({
                 </div>
 
                 {/* Pagination */}
-                {pagination && (
-                    <div className="flex items-center justify-between px-6 py-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700">
-                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                            <span>
-                                Showing {((pagination.currentPage - 1) * pagination.pageSize) + 1} to{' '}
-                                {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems)} of{' '}
-                                {pagination.totalItems} entries
-                            </span>
-                        </div>
+                {pagination && pagination.totalPages > 0 && (
+                    <div className="flex items-center justify-between px-6 py-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex-wrap gap-3">
+                        <span className="text-sm text-slate-500 dark:text-slate-400 shrink-0">
+                            {pagination.totalItems === 0
+                                ? 'No entries'
+                                : `Showing ${((pagination.currentPage - 1) * pagination.pageSize) + 1}–${Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems)} of ${pagination.totalItems}`}
+                        </span>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                            {/* Prev */}
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => pagination.onPageChange(pagination.currentPage - 1)}
-                                disabled={pagination.currentPage === 1}
-                                className="h-8 w-8 p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50"
+                                disabled={pagination.currentPage <= 1}
+                                className="h-8 w-8 p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20 hover:text-brand-sky-700 dark:hover:text-brand-sky-300 hover:border-brand-sky-300 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 <ChevronLeft className="h-4 w-4" />
                             </Button>
 
-                            <div className="flex items-center gap-1">
-                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                                    const page = i + 1;
-                                    const isActive = page === pagination.currentPage;
+                            {/* Page numbers with ellipsis */}
+                            {(() => {
+                                const { currentPage: cur, totalPages: total } = pagination;
+                                const pages: (number | '…')[] = [];
 
-                                    return (
+                                if (total <= 7) {
+                                    for (let i = 1; i <= total; i++) pages.push(i);
+                                } else {
+                                    pages.push(1);
+                                    if (cur > 3) pages.push('…');
+                                    const start = Math.max(2, cur - 1);
+                                    const end   = Math.min(total - 1, cur + 1);
+                                    for (let i = start; i <= end; i++) pages.push(i);
+                                    if (cur < total - 2) pages.push('…');
+                                    pages.push(total);
+                                }
+
+                                return pages.map((p, idx) =>
+                                    p === '…' ? (
+                                        <span
+                                            key={`ellipsis-${idx}`}
+                                            className="h-8 w-8 flex items-center justify-center text-sm text-slate-400 dark:text-slate-500 select-none"
+                                        >
+                                            …
+                                        </span>
+                                    ) : (
                                         <Button
-                                            key={page}
-                                            variant={isActive ? 'default' : 'outline'}
+                                            key={p}
+                                            variant="outline"
                                             size="sm"
-                                            onClick={() => pagination.onPageChange(page)}
+                                            onClick={() => pagination.onPageChange(p as number)}
                                             className={cn(
-                                                'h-8 w-8 p-0',
-                                                isActive 
-                                                    ? 'bg-brand-sky-600 hover:bg-brand-sky-700 text-white' 
-                                                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                                'h-8 w-8 p-0 text-sm font-medium transition-colors',
+                                                p === cur
+                                                    ? 'bg-brand-sky-600 hover:bg-brand-sky-700 border-brand-sky-600 text-white shadow-sm'
+                                                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20 hover:text-brand-sky-700 dark:hover:text-brand-sky-300 hover:border-brand-sky-300'
                                             )}
                                         >
-                                            {page}
+                                            {p}
                                         </Button>
-                                    );
-                                })}
-                            </div>
+                                    )
+                                );
+                            })()}
 
+                            {/* Next */}
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => pagination.onPageChange(pagination.currentPage + 1)}
-                                disabled={pagination.currentPage === pagination.totalPages}
-                                className="h-8 w-8 p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50"
+                                disabled={pagination.currentPage >= pagination.totalPages}
+                                className="h-8 w-8 p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20 hover:text-brand-sky-700 dark:hover:text-brand-sky-300 hover:border-brand-sky-300 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 <ChevronRight className="h-4 w-4" />
                             </Button>

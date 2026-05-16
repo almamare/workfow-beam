@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState, useMemo, useCallback, useRef, Suspense } from 'react';
 import { AppDispatch } from '@/stores/store';
@@ -202,7 +202,7 @@ function ClientRequestsPageContent() {
                 }
             });
 
-            const headers = ['Request Code', 'Request Type', 'Client', 'Client Number', 'Client Type', 'Status', 'State', 'City', 'Budget', 'Notes', 'Created By', 'Created At'];
+            const headers = ['Request Code', 'Request Type', 'Client', 'Client Number', 'Client Type', 'Status', 'Governorate', 'City', 'Budget', 'Notes', 'Created By', 'Created At'];
             const csvHeaders = headers.join(',');
             const items = data?.body?.tasks_requests?.items || [];
             
@@ -275,7 +275,7 @@ function ClientRequestsPageContent() {
                 }
             }
 
-            const headers = ['Request Code', 'Request Type', 'Client Name', 'Client Number', 'Client Type', 'Status', 'State', 'City', 'Budget', 'Notes', 'Created By', 'Created At'];
+            const headers = ['Request Code', 'Request Type', 'Client Name', 'Client Number', 'Client Type', 'Status', 'Governorate', 'City', 'Budget', 'Notes', 'Created By', 'Created At'];
             const csvHeaders = headers.join(',');
             
             const csvRow = [
@@ -435,7 +435,7 @@ function ClientRequestsPageContent() {
         },
         {
             key: 'client_state' as any,
-            header: 'State',
+            header: 'Governorate',
             render: (value: any, row: ClientRequestWithData) => {
                 const client = row.client;
                 return <span className="text-slate-600 dark:text-slate-400">{client?.state || 'N/A'}</span>;
@@ -605,7 +605,7 @@ function ClientRequestsPageContent() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Status Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="status" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 Status
                             </Label>
                             <Select
@@ -631,7 +631,7 @@ function ClientRequestsPageContent() {
 
                         {/* From Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_from" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 From Date
                             </Label>
                             <DatePicker
@@ -645,7 +645,7 @@ function ClientRequestsPageContent() {
 
                         {/* To Date */}
                         <div className="space-y-2">
-                            <Label htmlFor="date_to" className="text-slate-700 dark:text-slate-300 font-medium">
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">
                                 To Date
                             </Label>
                             <DatePicker
@@ -736,7 +736,7 @@ function ClientRequestsPageContent() {
                     }}
                     noDataMessage="No client requests found matching your criteria"
                     searchPlaceholder="Search requests..."
-                    hideEmptyMessage={true}
+                    
                 />
             </EnhancedCard>
 
@@ -751,7 +751,7 @@ function ClientRequestsPageContent() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="request_type" className="text-slate-700 dark:text-slate-300 font-medium">Request Type *</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Request Type *</Label>
                             <Select value={formData.request_type} onValueChange={(value) => setFormData(prev => ({ ...prev, request_type: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue placeholder="Select Request Type" />
@@ -779,7 +779,7 @@ function ClientRequestsPageContent() {
                             </p>
                         </div>
                         <div>
-                            <Label htmlFor="priority" className="text-slate-700 dark:text-slate-300 font-medium">Priority</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Priority</Label>
                             <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue />
@@ -856,7 +856,7 @@ function ClientRequestsPageContent() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="edit-request_type" className="text-slate-700 dark:text-slate-300 font-medium">Request Type</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Request Type</Label>
                             <Select value={formData.request_type} onValueChange={(value) => setFormData(prev => ({ ...prev, request_type: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue />
@@ -881,7 +881,7 @@ function ClientRequestsPageContent() {
                             />
                         </div>
                         <div>
-                            <Label htmlFor="edit-priority" className="text-slate-700 dark:text-slate-300 font-medium">Priority</Label>
+                            <Label className="text-slate-700 dark:text-slate-300 font-medium">Priority</Label>
                             <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
                                 <SelectTrigger className="mt-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
                                     <SelectValue />
@@ -959,4 +959,3 @@ export default function ClientRequestsPage() {
         </Suspense>
     );
 }
-

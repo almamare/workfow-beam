@@ -16,9 +16,10 @@ import {
 interface DatePickerProps {
     value?: string
     onChange: (value: string) => void
+    id?: string
 }
 
-export function DatePicker({ value, onChange }: DatePickerProps) {
+export function DatePicker({ value, onChange, id }: DatePickerProps) {
     const [date, setDate] = React.useState<Date | undefined>(
         value ? new Date(value) : undefined
     )
@@ -39,6 +40,7 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
+                    id={id}
                     variant={'outline'}
                     className={cn(
                         'w-full justify-start text-left font-normal',

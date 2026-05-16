@@ -123,9 +123,9 @@ export default function RolesPage() {
             key: 'created_at',
             header: 'Created',
             sortable: true,
-            render: (value: unknown) => (
+            render: (value: any) => (
                 <span className="text-slate-500 dark:text-slate-400 text-sm">
-                    {value ? new Date(String(value)).toLocaleDateString() : '-'}
+                    {value ? String(value) as string : '-'}
                 </span>
             ),
         },
@@ -182,7 +182,7 @@ export default function RolesPage() {
             label: 'Manage permissions',
             icon: <KeyRound className="h-4 w-4" />,
             onClick: (row) => router.push(`/roles/permissions?id=${row.id}`),
-            variant: 'default',
+            variant: 'success',
         },
         {
             label: 'Delete',

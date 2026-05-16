@@ -5,7 +5,14 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch } from '@/stores/store';
-import { selectClientsRequestsForApprovalTotal, fetchClientsRequestsForApproval } from '@/stores/slices/clients_requests_for_approval';
+import {
+    fetchPendingCounts,
+    selectProjectsPendingCount,
+    selectFinancialPendingCount,
+    selectClientsPendingCount,
+    selectTasksPendingCount,
+    selectProjectContractsPendingCount,
+} from '@/stores/slices/pending_counts';
 import {
     Home,
     Users,
@@ -101,7 +108,6 @@ const routeMapping: Record<string, string> = {
     '/projects/details': '/projects',
     '/projects/tender/create': '/projects',
     '/projects/tender/update': '/projects',
-    '/budgets': '/projects',
     '/requests/projects': '/projects',
     '/requests/projects/pending': '/projects',
     '/requests/projects/approved': '/projects',
@@ -183,6 +189,7 @@ const routeMapping: Record<string, string> = {
     '/approvals': '/requests',
     
     // Financial sub-process pages - each maps to its own config
+    '/requests/financial/pending': '/requests/financial',
     '/requests/financial/details': '/requests/financial',
     '/requests/financial/timeline': '/requests/financial',
     '/financial/disbursements/new': '/financial/disbursements',
@@ -281,7 +288,6 @@ const routeConfig: Record<string, {
             { href: '/requests/projects/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
             { href: '/requests/projects/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
             { href: '/projects/create', title: 'Create Project', icon: 'Plus', color: 'text-green-400' },
-            { href: '/budgets', title: 'Budgets', icon: 'TrendingUp', color: 'text-teal-400' },
         ]
     },
     '/clients': {
@@ -394,7 +400,7 @@ const routeConfig: Record<string, {
         backLink: { href: '/financial', title: 'Back to Financial' },
         menuItems: [
             { href: '/requests/financial', title: 'All Requests', icon: 'CreditCard', color: 'text-emerald-400' },
-            { href: '/requests/financial?status=Pending', title: 'Pending', icon: 'Clock', color: 'text-yellow-400' },
+            { href: '/requests/financial/pending', title: 'Pending', icon: 'Clock', color: 'text-yellow-400' },
             { href: '/requests/financial?status=Approved', title: 'Approved', icon: 'CheckCircle', color: 'text-green-400' },
             { href: '/requests/financial?status=Rejected', title: 'Rejected', icon: 'XCircle', color: 'text-red-400' },
         ]
@@ -714,17 +720,17 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
     const dispatch = useDispatch<AppDispatch>();
     const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({});
     
-    // Get pending approvals count for clients
-    const pendingApprovalsCount = useSelector(selectClientsRequestsForApprovalTotal);
-    
-    // Fetch pending approvals count when sidebar mounts (only fetch count, limit to 1 item)
-    // But only if we're NOT on the pending page to avoid clearing data
+    // Pending counts per request type
+    const projectsPendingCount       = useSelector(selectProjectsPendingCount);
+    const financialPendingCount      = useSelector(selectFinancialPendingCount);
+    const clientsPendingCount        = useSelector(selectClientsPendingCount);
+    const tasksPendingCount          = useSelector(selectTasksPendingCount);
+    const projectContractsPendingCount = useSelector(selectProjectContractsPendingCount);
+
+    // Fetch unified pending counts on mount
     useEffect(() => {
-        // Don't fetch if we're already on the pending page - let the page handle its own data fetching
-        if (pathname !== '/requests/clients/pending') {
-            dispatch(fetchClientsRequestsForApproval({ page: 1, limit: 1, countOnly: true }));
-        }
-    }, [dispatch, pathname]);
+        dispatch(fetchPendingCounts());
+    }, [dispatch]);
 
     // Auto-open collapsible if current path matches a subItem
     useEffect(() => {
@@ -785,9 +791,17 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                         color: menuItem.color
                     };
                     
-                    // Add badge count for pending approvals
-                    if (menuItem.href === '/requests/clients/pending') {
-                        item.badge = pendingApprovalsCount;
+                    // Add badge counts for all pending request routes
+                    if (menuItem.href === '/requests/projects/pending') {
+                        item.badge = projectsPendingCount;
+                    } else if (menuItem.href === '/requests/financial/pending') {
+                        item.badge = financialPendingCount;
+                    } else if (menuItem.href === '/requests/clients/pending') {
+                        item.badge = clientsPendingCount;
+                    } else if (menuItem.href === '/requests/tasks/pending') {
+                        item.badge = tasksPendingCount;
+                    } else if (menuItem.href === '/requests/project-contracts/pending') {
+                        item.badge = projectContractsPendingCount;
                     }
                     
                     // Add subItems if they exist
@@ -806,7 +820,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
         }
 
         return items;
-    }, [currentRoute, pendingApprovalsCount]);
+    }, [currentRoute, projectsPendingCount, financialPendingCount, clientsPendingCount, tasksPendingCount, projectContractsPendingCount]);
 
     const hideText = collapsed && !mobileOpen;
 
