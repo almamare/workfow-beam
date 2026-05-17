@@ -37,11 +37,11 @@ export function resolveNotificationActionLink(
     const restMappings: Array<{ pattern: RegExp; to: (id: string) => string }> = [
         { pattern: /^\/clients\/([^/?#]+)\/?$/i, to: (id) => `/clients/details?id=${encodeURIComponent(id)}` },
         { pattern: /^\/projects\/([^/?#]+)\/?$/i, to: (id) => `/projects/details?id=${encodeURIComponent(id)}` },
-        { pattern: /^\/task-orders\/([^/?#]+)\/?$/i, to: (id) => `/tasks/details?id=${encodeURIComponent(id)}` },
+        { pattern: /^\/task-orders\/([^/?#]+)\/?$/i, to: (id) => `/contracts/details?id=${encodeURIComponent(id)}` },
         { pattern: /^\/client-contracts\/([^/?#]+)\/?$/i, to: (id) => `/client-contracts/details?id=${encodeURIComponent(id)}` },
         { pattern: /^\/requests\/tasks\/([^/?#]+)\/?$/i, to: (id) => `/requests/tasks/details?id=${encodeURIComponent(id)}` },
         // Change orders: no dedicated route — open task order detail as closest match
-        { pattern: /^\/change-orders\/([^/?#]+)\/?$/i, to: (id) => `/tasks/details?id=${encodeURIComponent(id)}` },
+        { pattern: /^\/change-orders\/([^/?#]+)\/?$/i, to: (id) => `/contracts/details?id=${encodeURIComponent(id)}` },
         { pattern: /^\/financial\/disbursements\/([^/?#]+)\/?$/i, to: (id) => `/financial/disbursements/${encodeURIComponent(id)}` },
     ];
 

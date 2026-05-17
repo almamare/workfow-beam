@@ -57,7 +57,7 @@ export const SYSTEM_MODULES = [
             'Multi-stage approval for contract creation',
             'Link contracts to projects and financial records',
         ],
-        route: '/project-contracts',
+        route: '/contracts/contracts',
         howTo: [
             { title: 'Creating a Contract', steps: ['Navigate to Project Contracts from the dashboard', 'Click "Create Contract" in the sidebar', 'Select the associated project and contractor', 'Enter contract value, terms, and milestone schedule', 'Attach relevant documents (BOQ, specifications)', 'Submit for multi-stage approval'] },
             { title: 'Managing Contractors', steps: ['Navigate to Contractors in the sidebar', 'Click "Create Contractor" to add a new subcontractor', 'Enter company details, license, and contact information', 'View all contracts associated with each contractor'] },

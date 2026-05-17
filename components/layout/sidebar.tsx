@@ -116,16 +116,16 @@ const routeMapping: Record<string, string> = {
     '/requests/projects/timeline': '/projects',
 
     // Project contracts — own sidebar
-    '/requests/project-contracts': '/tasks/contracts',
-    '/requests/project-contracts/pending': '/tasks/contracts',
-    '/requests/project-contracts/approved': '/tasks/contracts',
-    '/requests/project-contracts/rejected': '/tasks/contracts',
-    '/requests/project-contracts/details': '/tasks/contracts',
-    '/requests/project-contracts/timeline': '/tasks/contracts',
-    '/project-contracts': '/tasks/contracts',
-    '/project-contracts/create': '/tasks/contracts',
-    '/project-contracts/update': '/tasks/contracts',
-    '/project-contracts/details': '/tasks/contracts',
+    '/requests/contracts/contracts': '/contracts/contracts',
+    '/requests/contracts/contracts/pending': '/contracts/contracts',
+    '/requests/contracts/contracts/approved': '/contracts/contracts',
+    '/requests/contracts/contracts/rejected': '/contracts/contracts',
+    '/requests/contracts/contracts/details': '/contracts/contracts',
+    '/requests/contracts/contracts/timeline': '/contracts/contracts',
+    '/contracts/contracts': '/contracts/contracts',
+    '/contracts/contracts/create': '/contracts/contracts',
+    '/contracts/contracts/update': '/contracts/contracts',
+    '/contracts/contracts/details': '/contracts/contracts',
 
     // Clients related pages
     '/clients/create': '/clients',
@@ -137,35 +137,33 @@ const routeMapping: Record<string, string> = {
     '/requests/clients/rejected': '/clients',
     '/requests/clients/details': '/clients',
     '/requests/clients/timeline': '/clients',
-    '/client-contracts': '/tasks/client-contracts',
-    '/client-contracts/create': '/tasks/client-contracts',
-    '/client-contracts/update': '/tasks/client-contracts',
-    '/client-contracts/details': '/tasks/client-contracts',
-    
+    '/client-contracts': '/contracts/client-contracts',
+    '/client-contracts/create': '/contracts/client-contracts',
+    '/client-contracts/update': '/contracts/client-contracts',
+    '/client-contracts/details': '/contracts/client-contracts',
+
     // Contractors — own sidebar
-    '/contractors': '/tasks/contractors',
-    '/contractors/create': '/tasks/contractors',
-    '/contractors/update': '/tasks/contractors',
-    '/contractors/details': '/tasks/contractors',
-    
+    '/contracts/contractors': '/contracts/contractors',
+    '/contracts/contractors/create': '/contracts/contractors',
+    '/contracts/contractors/update': '/contracts/contractors',
+    '/contracts/contractors/details': '/contracts/contractors',
+
     // Task Orders list
-    '/tasks/list': '/tasks/list',
-    '/tasks/create': '/tasks/list',
-    '/tasks/update': '/tasks/list',
-    '/tasks/details': '/tasks/list',
+    '/contracts/task-orders': '/contracts/task-orders',
+    '/contracts/create': '/contracts/task-orders',
+    '/contracts/update': '/contracts/task-orders',
+    '/contracts/details': '/contracts/task-orders',
+    '/requests/tasks/pending': '/contracts/task-orders',
+    '/requests/tasks/approved': '/contracts/task-orders',
+    '/requests/tasks/rejected': '/contracts/task-orders',
+    '/requests/tasks/details': '/contracts/task-orders',
+    '/requests/tasks/timeline': '/contracts/task-orders',
 
     // Change Orders — own sidebar
-    '/change-orders': '/tasks/change-orders',
-    '/change-orders/create': '/tasks/change-orders',
-    '/change-orders/details': '/tasks/change-orders',
+    '/change-orders': '/contracts/change-orders',
+    '/change-orders/create': '/contracts/change-orders',
+    '/change-orders/details': '/contracts/change-orders',
 
-    // Task Requests — own sidebar
-    '/requests/tasks': '/tasks/requests',
-    '/requests/tasks/pending': '/tasks/requests',
-    '/requests/tasks/approved': '/tasks/requests',
-    '/requests/tasks/rejected': '/tasks/requests',
-    '/requests/tasks/details': '/tasks/requests',
-    '/requests/tasks/timeline': '/tasks/requests',
     
     // Users related pages
     '/users/create': '/users',
@@ -207,7 +205,7 @@ const routeMapping: Record<string, string> = {
     // Workflow settings sub-pages
     '/settings/workflow/clients': '/settings/workflow',
     '/settings/workflow/projects': '/settings/workflow',
-    '/settings/workflow/project-contracts': '/settings/workflow',
+    '/settings/workflow/contracts': '/settings/workflow',
     '/settings/workflow/financial': '/settings/workflow',
     '/settings/workflow/employment': '/settings/workflow',
     '/settings/workflow/tasks': '/settings/workflow',
@@ -302,69 +300,61 @@ const routeConfig: Record<string, {
             { href: '/clients/create', title: 'Create Client', icon: 'Plus', color: 'text-green-400' }
         ]
     },
-    // Task Orders — each section has its own isolated sidebar
-    '/tasks/list': {
+    // Contracts — each section has its own isolated sidebar
+    '/contracts/task-orders': {
         title: 'Task Orders',
         icon: 'ClipboardList',
         color: 'text-yellow-400',
-        backLink: { href: '/tasks', title: 'Back to Task Orders' },
+        backLink: { href: '/contracts', title: 'Back to Contracts' },
         menuItems: [
-            { href: '/tasks/list', title: 'All Task Orders', icon: 'ClipboardList', color: 'text-yellow-400' },
-            { href: '/tasks/create', title: 'Create Task Order', icon: 'Plus', color: 'text-green-400' },
+            { href: '/contracts/task-orders', title: 'Task Orders', icon: 'ClipboardList', color: 'text-yellow-400' },
+            { href: '/requests/tasks/pending', title: 'Pending Requests', icon: 'Clock', color: 'text-amber-400' },
+            { href: '/requests/tasks/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
+            { href: '/requests/tasks/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
+            { href: '/contracts/create', title: 'Create Task Order', icon: 'Plus', color: 'text-green-400' },
         ]
     },
-    '/tasks/change-orders': {
+    '/contracts/change-orders': {
         title: 'Change Orders',
         icon: 'FileEdit',
         color: 'text-violet-400',
-        backLink: { href: '/tasks', title: 'Back to Task Orders' },
+        backLink: { href: '/contracts', title: 'Back to Contracts' },
         menuItems: [
             { href: '/change-orders', title: 'All Change Orders', icon: 'FileEdit', color: 'text-violet-400' },
             { href: '/change-orders/create', title: 'Create Change Order', icon: 'Plus', color: 'text-green-400' },
         ]
     },
-    '/tasks/contractors': {
+    '/contracts/contractors': {
         title: 'Contractors',
         icon: 'Building',
         color: 'text-brand-sky-400',
-        backLink: { href: '/tasks', title: 'Back to Task Orders' },
+        backLink: { href: '/contracts', title: 'Back to Contracts' },
         menuItems: [
-            { href: '/contractors', title: 'All Contractors', icon: 'Building', color: 'text-brand-sky-400' },
-            { href: '/contractors/create', title: 'Create Contractor', icon: 'Plus', color: 'text-green-400' },
+            { href: '/contracts/contractors', title: 'All Contractors', icon: 'Building', color: 'text-brand-sky-400' },
+            { href: '/contracts/contractors/create', title: 'Create Contractor', icon: 'Plus', color: 'text-green-400' },
         ]
     },
-    '/tasks/contracts': {
-        title: 'Project Contracts',
+    '/contracts/contracts': {
+        title: 'Contracts',
         icon: 'FileCheck',
         color: 'text-teal-400',
-        backLink: { href: '/tasks', title: 'Back to Task Orders' },
+        backLink: { href: '/contracts', title: 'Back to Contracts' },
         menuItems: [
-            { href: '/project-contracts', title: 'All Project Contracts', icon: 'FileCheck', color: 'text-teal-400' },
-            { href: '/requests/project-contracts/pending', title: 'Pending Requests', icon: 'Clock', color: 'text-amber-400' },
-            { href: '/requests/project-contracts/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
-            { href: '/requests/project-contracts/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
-            { href: '/project-contracts/create', title: 'Create Contract', icon: 'Plus', color: 'text-green-400' },
+            { href: '/contracts/contracts', title: 'All Contracts', icon: 'FileCheck', color: 'text-teal-400' },
+            { href: '/requests/contracts/contracts/pending', title: 'Pending Requests', icon: 'Clock', color: 'text-amber-400' },
+            { href: '/requests/contracts/contracts/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
+            { href: '/requests/contracts/contracts/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
+            { href: '/contracts/contracts/create', title: 'Create Contract', icon: 'Plus', color: 'text-green-400' },
         ]
     },
-    '/tasks/client-contracts': {
+    '/contracts/client-contracts': {
         title: 'Client Contracts',
         icon: 'FileText',
         color: 'text-emerald-400',
-        backLink: { href: '/tasks', title: 'Back to Task Orders' },
+        backLink: { href: '/contracts', title: 'Back to Contracts' },
         menuItems: [
             { href: '/client-contracts', title: 'All Client Contracts', icon: 'FileText', color: 'text-emerald-400' },
             { href: '/client-contracts/create', title: 'Create Client Contract', icon: 'Plus', color: 'text-green-400' },
-        ]
-    },
-    '/tasks/requests': {
-        title: 'Task Requests',
-        icon: 'FileText',
-        color: 'text-amber-400',
-        backLink: { href: '/tasks', title: 'Back to Task Orders' },
-        menuItems: [
-            { href: '/requests/tasks/pending', title: 'Pending Requests', icon: 'Clock', color: 'text-yellow-400' },
-            { href: '/requests/tasks/approved', title: 'Approved Requests', icon: 'CheckCircle', color: 'text-green-400' },
-            { href: '/requests/tasks/rejected', title: 'Rejected Requests', icon: 'XCircle', color: 'text-red-400' },
         ]
     },
     '/users': {
@@ -550,7 +540,7 @@ const routeConfig: Record<string, {
         menuItems: [
             { href: '/settings/workflow/clients', title: 'Clients', icon: 'Users', color: 'text-purple-400' },
             { href: '/settings/workflow/projects', title: 'Projects', icon: 'FolderOpen', color: 'text-indigo-400' },
-            { href: '/settings/workflow/project-contracts', title: 'Project Contracts', icon: 'FileCheck', color: 'text-teal-400' },
+            { href: '/settings/workflow/contracts', title: 'Contracts', icon: 'FileCheck', color: 'text-teal-400' },
             { href: '/settings/workflow/financial', title: 'Financial', icon: 'CreditCard', color: 'text-emerald-400' },
             { href: '/settings/workflow/employment', title: 'Employment', icon: 'UserCheck', color: 'text-brand-sky-400' },
             { href: '/settings/workflow/tasks', title: 'Tasks', icon: 'ClipboardList', color: 'text-amber-400' },
@@ -800,7 +790,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
                         item.badge = clientsPendingCount;
                     } else if (menuItem.href === '/requests/tasks/pending') {
                         item.badge = tasksPendingCount;
-                    } else if (menuItem.href === '/requests/project-contracts/pending') {
+                    } else if (menuItem.href === '/requests/contracts/contracts/pending') {
                         item.badge = projectContractsPendingCount;
                     }
                     
@@ -878,7 +868,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, setMobileOpen }: Side
     }, [mobileOpen, setMobileOpen]);
 
     // Hide sidebar entirely on dashboard and section overview pages
-    if (pathname === '/dashboard' || pathname === '/financial' || pathname === '/tasks' || pathname === '/ai' || pathname === '/settings') {
+    if (pathname === '/dashboard' || pathname === '/financial' || pathname === '/contracts' || pathname === '/ai' || pathname === '/settings') {
         return null;
     }
 

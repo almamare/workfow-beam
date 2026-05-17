@@ -2,6 +2,7 @@ export interface ProjectContract {
     id: string;
     project_id: string;
     client_id?: string | null;
+    contractor_id?: string | null;
     contract_no: string;
     title: string;
     contract_type: 'Main' | 'Subcontract' | 'Amendment' | 'Framework' | 'Other';
@@ -11,8 +12,6 @@ export interface ProjectContract {
     contract_date: string;
     start_date?: string | null;
     end_date?: string | null;
-    contract_value: string | number;
-    currency: string;
     status: 'Draft' | 'Active' | 'Expired' | 'Cancelled' | 'Suspended';
     approval_status: 'Draft' | 'Pending' | 'Approved' | 'Rejected';
     notes?: string;
@@ -22,8 +21,11 @@ export interface ProjectContract {
     project_number?: string;
     client_name?: string;
     client_no?: string;
+    contractor_name?: string;
+    contractor_number?: string;
     project?: Record<string, unknown>;
     client?: Record<string, unknown>;
+    contractor?: Record<string, unknown>;
 }
 
 export interface ProjectContractsData {
@@ -58,6 +60,7 @@ export interface ProjectContractResponseLegacy {
 
 export interface CreateProjectContractRequest {
     project_id: string;
+    contractor_id?: string;
     client_id?: string;
     title: string;
     contract_type?: ProjectContract['contract_type'];
@@ -67,9 +70,8 @@ export interface CreateProjectContractRequest {
     contract_date: string;
     start_date?: string;
     end_date?: string;
-    contract_value: number;
-    currency?: string;
     notes?: string;
+    attachments?: { title: string; file: string; status: string; version: string }[];
 }
 
 export interface UpdateProjectContractRequest {
@@ -83,8 +85,6 @@ export interface UpdateProjectContractRequest {
     contract_date?: string;
     start_date?: string;
     end_date?: string;
-    contract_value?: number;
-    currency?: string;
     status?: ProjectContract['status'];
     notes?: string;
 }

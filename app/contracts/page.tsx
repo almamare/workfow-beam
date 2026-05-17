@@ -2,95 +2,74 @@
 
 import React from 'react';
 import {
-    Users,
-    FolderOpen,
-    FileCheck,
-    CreditCard,
-    UserCheck,
     ClipboardList,
-    GitBranch,
+    FileEdit,
+    FileCheck,
+    Building,
 } from 'lucide-react';
 import Link from 'next/link';
 
-const workflowSections = [
+const taskMenuItems = [
     {
-        title: 'Clients',
-        icon: Users,
-        href: '/settings/workflow/clients',
-        color: '#7c3aed',
-        bg: '#f5f3ff',
-        description: 'Client creation approval chain',
+        title: 'Task Orders',
+        icon: ClipboardList,
+        href: '/contracts/task-orders',
+        color: '#d97706',
+        bg: '#fffbeb',
     },
     {
-        title: 'Projects',
-        icon: FolderOpen,
-        href: '/settings/workflow/projects',
-        color: '#4f46e5',
-        bg: '#eef2ff',
-        description: 'Project approval workflow',
+        title: 'Change Orders',
+        icon: FileEdit,
+        href: '/change-orders',
+        color: '#7c3aed',
+        bg: '#f5f3ff',
+    },
+    {
+        title: 'Contractors',
+        icon: Building,
+        href: '/contracts/contractors',
+        color: '#0284c7',
+        bg: '#f0f9ff',
     },
     {
         title: 'Contracts',
         icon: FileCheck,
-        href: '/settings/workflow/contracts',
+        href: '/contracts/contracts',
         color: '#0f766e',
         bg: '#f0fdfa',
-        description: 'Contract approval steps',
-    },
-    {
-        title: 'Financial',
-        icon: CreditCard,
-        href: '/settings/workflow/financial',
-        color: '#059669',
-        bg: '#ecfdf5',
-        description: 'Financial request approval',
-    },
-    {
-        title: 'Employment',
-        icon: UserCheck,
-        href: '/settings/workflow/employment',
-        color: '#0284c7',
-        bg: '#f0f9ff',
-        description: 'HR and employment approvals',
-    },
-    {
-        title: 'Tasks',
-        icon: ClipboardList,
-        href: '/settings/workflow/tasks',
-        color: '#d97706',
-        bg: '#fffbeb',
-        description: 'Task request workflow',
     },
 ];
 
-export default function WorkflowHubPage() {
+export default function TaskOrdersHubPage() {
     return (
         <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
+            {/* Title strip */}
             <div className="px-3 sm:px-6 lg:px-8 pt-3 pb-2">
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200 flex items-center gap-3">
-                    <GitBranch className="h-9 w-9 text-brand-sky-500" />
-                    Approval Workflow
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
+                    Contracts Management
                 </h1>
                 <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
-                    Configure approval steps for each request type
+                    Choose the section you want to access
                 </p>
             </div>
 
+            {/* Section label */}
             <div className="px-3 sm:px-6 lg:px-8 pt-4 pb-4">
                 <div className="flex items-center gap-3">
                     <span
                         className="w-[3px] h-5 rounded-full inline-block flex-shrink-0"
-                        style={{ background: 'linear-gradient(135deg,hsl(216,100%,36%) 0%,hsl(216,90%,48%) 100%)' }}
+                        style={{ background: 'linear-gradient(180deg,hsl(38,92%,50%),hsl(38,92%,65%))' }}
                     />
                     <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-widest">
-                        Workflow Types &nbsp;·&nbsp; {workflowSections.length} types
+                        Contract Sections &nbsp;·&nbsp; {taskMenuItems.length} sections
                     </p>
                 </div>
             </div>
 
+            {/* Grid */}
             <div className="flex-1 px-3 sm:px-6 lg:px-8 pb-6">
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3 sm:gap-4">
-                    {workflowSections.map((item, i) => (
+                    {taskMenuItems.map((item, i) => (
                         <Link
                             key={item.href}
                             href={item.href}
@@ -119,7 +98,7 @@ export default function WorkflowHubPage() {
 
                                 <div className="flex items-baseline justify-center gap-1.5 px-1 w-full">
                                     <span className="font-black text-[13px] sm:text-[14px] leading-none tabular-nums flex-shrink-0">
-                                        {`W.${i + 1}`}
+                                        {`3.${i + 1}`}
                                     </span>
                                     -
                                     <p className="text-slate-700 dark:text-slate-200 font-semibold text-[11.5px] sm:text-[12.5px]
@@ -128,6 +107,11 @@ export default function WorkflowHubPage() {
                                         {item.title}
                                     </p>
                                 </div>
+
+                                <div
+                                    className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-200 pointer-events-none rounded-2xl"
+                                    style={{ background: item.color }}
+                                />
                             </div>
                         </Link>
                     ))}

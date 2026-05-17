@@ -113,7 +113,7 @@ function UpdateContractorPageContent() {
         (async () => {
             if (!id) {
                 toast.error('Missing contractor id');
-                router.push('/contractors');
+                router.push('/contracts/contractors');
                 return;
             }
 
@@ -140,7 +140,7 @@ function UpdateContractorPageContent() {
                 setNo(c.number ?? '');
             } catch (err: any) {
                 toast.error(err?.response?.data?.message || err?.message || 'Failed to load contractor');
-                router.push('/contractors');
+                router.push('/contracts/contractors');
             } finally {
                 setPageLoading(false);
             }
@@ -224,7 +224,7 @@ function UpdateContractorPageContent() {
                 </div>
                 <Button 
                     variant="outline" 
-                    onClick={() => router.push('/contractors')}
+                    onClick={() => router.push('/contracts/contractors')}
                     className="border-brand-sky-200 dark:border-brand-sky-800 hover:border-brand-sky-300 hover:text-brand-sky-700 dark:hover:border-brand-sky-700 text-brand-sky-700 dark:text-brand-sky-300 hover:bg-brand-sky-50 dark:hover:bg-brand-sky-900/20"
                 >
                     Back to Contractors

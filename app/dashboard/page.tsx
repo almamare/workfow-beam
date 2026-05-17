@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/stores/store';
-import Image from 'next/image';
 import Link from 'next/link';
 import { LEGAL_LINK_LABELS, LEGAL_ROUTES } from '@/lib/legal';
 import {
@@ -28,20 +27,14 @@ import {
     Package,
     Briefcase,
     Bot,
-    FileCheck,
-    LayoutGrid,
     HelpCircle,
 } from 'lucide-react';
-
-/** Product name shown on the dashboard strip (matches app branding). */
-const SYSTEM_NAME = 'BEAM';
 
 // ── Sections ───────────────────────────────────────────────────────────────────
 const sections = [
     { title: 'Clients', icon: UserCircle, href: '/clients', color: '#7c3aed', bg: '#f5f3ff' },
     { title: 'Projects', icon: FolderOpen, href: '/projects', color: '#4f46e5', bg: '#eef2ff' },
-    { title: 'Project Contracts', icon: FileCheck, href: '/project-contracts', color: '#0891b2', bg: '#ecfeff' },
-    { title: 'Task Orders', icon: ClipboardList, href: '/tasks', color: '#d97706', bg: '#fffbeb' },
+    { title: 'Contracts', icon: ClipboardList, href: '/contracts', color: '#d97706', bg: '#fffbeb' },
     { title: 'Users', icon: Users, href: '/users', color: '#2563eb', bg: '#eff6ff' },
     { title: 'Financial', icon: Wallet, href: '/financial', color: '#059669', bg: '#ecfdf5' },
     { title: 'Requests', icon: FileText, href: '/requests/tasks', color: '#ca8a04', bg: '#fefce8' },

@@ -120,7 +120,7 @@ function ProjectDetailsPageContent() {
     const loadRelatedData = useCallback(async (id: string) => {
         setContractsLoading(true);
         try {
-            const res = await axios.get("/project-contracts/fetch", { params: { project_id: id, limit: 100 } });
+            const res = await axios.get("/contracts/contracts/fetch", { params: { project_id: id, limit: 100 } });
             const block = res.data?.body?.contracts ?? res.data?.data?.contracts;
             setContracts(block?.items ?? []);
         } catch { /* ignore */ } finally { setContractsLoading(false); }
@@ -178,7 +178,7 @@ function ProjectDetailsPageContent() {
     const contractActions: Action<ProjectContract>[] = [
         {
             label: "View Contract",
-            onClick: (r) => router.push(`/requests/project-contracts/details?id=${r.id}`),
+            onClick: (r) => router.push(`/requests/contracts/contracts/details?id=${r.id}`),
             icon: <Eye className="h-4 w-4" />,
             variant: "info" as const,
         },

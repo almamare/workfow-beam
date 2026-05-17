@@ -66,16 +66,12 @@ export function FilterBar({
               value={filter.value}
               onValueChange={filter.onValueChange}
             >
-              <SelectTrigger className="w-full sm:w-48 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-brand-sky-300 dark:hover:border-brand-sky-600 focus:border-brand-sky-300 dark:focus:border-brand-sky-500 focus:ring-2 focus:ring-brand-sky-100 dark:focus:ring-brand-sky-900/50 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder={filter.label} />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+              <SelectContent>
                 {filter.options.map((option) => (
-                  <SelectItem 
-                    key={option.key} 
-                    value={option.value}
-                    className="text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-brand-sky-600 dark:hover:text-brand-sky-400 focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-brand-sky-600 dark:focus:text-brand-sky-400 cursor-pointer transition-colors duration-200"
-                  >
+                  <SelectItem key={option.key} value={option.value}>
                     {option.label}
                   </SelectItem>
                 ))}

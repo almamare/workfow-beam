@@ -25,7 +25,7 @@ import { toast } from 'sonner';
 const TYPE_MAP: Record<string, RequestType> = {
     clients: 'Clients',
     projects: 'Projects',
-    'project-contracts': 'ProjectContracts',
+    'contracts': 'ProjectContracts',
     financial: 'Financial',
     employment: 'Employment',
     tasks: 'Tasks',

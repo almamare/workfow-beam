@@ -302,7 +302,7 @@ export default function ChangeOrdersPage() {
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Link href="/tasks">
+                        <Link href="/contracts">
                             <Button variant="outline" size="sm" className="border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
                                 <ArrowLeft className="h-4 w-4 mr-2" />
                                 Task Orders
