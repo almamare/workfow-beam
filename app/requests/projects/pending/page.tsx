@@ -155,7 +155,7 @@ function ProjectsPendingPageContent() {
                     page: 1,
                 }
             });
-            const headers = ['Request Code', 'Project', 'Project Number', 'Type', 'Current Step', 'Step Name', 'Status', 'Notes', 'Created By', 'Created At'];
+            const headers = ['Request Code', 'Project', 'Project Number', 'Type', 'Step Name', 'Status', 'Notes', 'Created By', 'Created At'];
             const csvHeaders = headers.join(',');
             const rows = data?.body?.tasks_requests?.items || data?.data?.tasks_requests?.items || [];
             const csvRows = rows.map((req: any) => [
@@ -163,7 +163,6 @@ function ProjectsPendingPageContent() {
                 '',
                 '',
                 '',
-                req.current_step_level || '',
                 escapeCsv(req.step_name || ''),
                 req.status,
                 escapeCsv(req.notes || ''),
@@ -235,20 +234,6 @@ function ProjectsPendingPageContent() {
             render: (value: any, row: ProjectRequestWithData) => (
                 <span className="text-slate-500 dark:text-slate-400 font-mono text-sm">{row.project?.number || 'N/A'}</span>
             ),
-            sortable: true
-        },
-        {
-            key: 'current_step_level' as keyof ProjectRequestWithData,
-            header: 'Current Step',
-            render: (value: any) => {
-                if (!value && value !== 0) return <span className="text-slate-400">N/A</span>;
-                const stepValue = String(value);
-                return (
-                    <Badge variant="outline" className={`${stepColors[stepValue] || 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'} font-medium`}>
-                        Step {stepValue}
-                    </Badge>
-                );
-            },
             sortable: true
         },
         {

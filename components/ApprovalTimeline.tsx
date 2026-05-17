@@ -12,6 +12,8 @@ import {
     MinusCircle,
     RefreshCw,
     FileCheck,
+    Briefcase,
+    Building2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Approval } from '@/stores/types/approvals';
@@ -200,10 +202,24 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({ approvals, l
         );
     }
 
+    // Filter out the initial Submitted step (creation record, no approval action)
+    const visibleApprovals = approvals.filter((a) => a.status !== 'Submitted');
+
+    if (visibleApprovals.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                <Info className="h-10 w-10 text-slate-300 dark:text-slate-600" />
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                    No approval records found for this request.
+                </p>
+            </div>
+        );
+    }
+
     return (
         <div className="relative px-1 py-2">
-            {approvals.map((approval, index) => {
-                const isLast = index === approvals.length - 1;
+            {visibleApprovals.map((approval, index) => {
+                const isLast = index === visibleApprovals.length - 1;
                 const cfg = getStatusConfig(approval.status);
                 const { Icon } = cfg;
 
@@ -215,7 +231,8 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({ approvals, l
 
                 const approverName =
                     approval.approver_name || approval.created_name || null;
-                const roleName = approval.approver_role_name || null;
+                const jobTitle     = approval.approver_job_title  || null;
+                const department   = approval.approver_department || null;
                 const displayDate =
                     approval.action_date || approval.updated_at || approval.created_at || null;
                 const initials = getInitials(approverName);
@@ -298,16 +315,25 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({ approvals, l
                                         >
                                             {initials}
                                         </div>
-                                        {/* Name + role */}
+                                        {/* Name + job title + department */}
                                         <div className="min-w-0 flex-1">
                                             <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-tight truncate">
                                                 {approverName}
                                             </p>
-                                            {roleName && (
-                                                <span className="inline-block mt-0.5 text-[11px] leading-none text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 rounded px-1.5 py-0.5">
-                                                    {roleName}
-                                                </span>
-                                            )}
+                                            <div className="flex flex-wrap items-center gap-1 mt-1">
+                                                {jobTitle && (
+                                                    <span className="inline-flex items-center gap-1 text-[11px] leading-none text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded px-1.5 py-0.5">
+                                                        <Briefcase className="h-2.5 w-2.5 flex-shrink-0" />
+                                                        {jobTitle}
+                                                    </span>
+                                                )}
+                                                {department && (
+                                                    <span className="inline-flex items-center gap-1 text-[11px] leading-none text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded px-1.5 py-0.5">
+                                                        <Building2 className="h-2.5 w-2.5 flex-shrink-0" />
+                                                        {department}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                         {/* Date — pushed to right */}
                                         {displayDate && (

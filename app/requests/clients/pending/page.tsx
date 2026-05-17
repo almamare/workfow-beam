@@ -350,31 +350,6 @@ function ClientsPendingPageContent() {
             sortable: true
         },
         {
-            key: 'current_step_level' as keyof ClientRequestWithData,
-            header: 'Current Step',
-            render: (value: any) => {
-                if (!value && value !== 0) {
-                    return <span className="text-slate-400">N/A</span>;
-                }
-                
-                const stepValue = String(value);
-                const stepColors: Record<string, string> = {
-                    '1': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-                    '2': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-                    '3': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
-                    '4': 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-                    '5': 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
-                };
-                
-                return (
-                    <Badge variant="outline" className={`${stepColors[stepValue] || 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'} font-medium`}>
-                        Step {stepValue}
-                    </Badge>
-                );
-            },
-            sortable: true
-        },
-        {
             key: 'status' as keyof ClientRequestWithData,
             header: 'Status',
             render: (value: any) => {

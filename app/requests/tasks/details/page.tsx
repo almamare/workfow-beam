@@ -102,6 +102,8 @@ interface Approval {
     approver_name?: string;
     approver_role?: string;
     approver_role_name?: string;
+    approver_job_title?: string | null;
+    approver_department?: string | null;
     step_name_display?: string;
     step_level?: string | number;
     created_at: string;
@@ -246,7 +248,9 @@ function TaskRequestDetails() {
         if (!id) return;
         try {
             const res = await axios.get(`/approvals/fetch/${id}`);
-            setApprovals((res.data.body?.approvals?.items || []).map((item: any, index: number) => ({ ...item, _sequenceIndex: index + 1 })));
+            setApprovals((res.data.body?.approvals?.items || [])
+                .filter((a: any) => a.status !== 'Submitted')
+                .map((item: any, index: number) => ({ ...item, _sequenceIndex: index + 1 })));
         } catch (error) {
             toast.error("Failed to load approvals");
         }
@@ -352,9 +356,14 @@ function TaskRequestDetails() {
             render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value ? value : 'N/A'}</span>
         },
         {
-            key: 'approver_role',
-            header: 'Role',
-            render: (value: any, row: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{row?.approver_role_name || value || 'N/A'}</span>
+            key: 'approver_job_title',
+            header: 'Job Title',
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value || 'N/A'}</span>
+        },
+        {
+            key: 'approver_department',
+            header: 'Department',
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value || 'N/A'}</span>
         },
         {
             key: 'step_name',
@@ -377,13 +386,6 @@ function TaskRequestDetails() {
                 <div className="max-w-xs">
                     <div className="text-sm text-slate-800 dark:text-slate-200 truncate">{value || '-'}</div>
                 </div>
-            )
-        },
-        {
-            key: 'created_at',
-            header: 'Created Date',
-            render: (value: any) => (
-                <span className="text-slate-600 dark:text-slate-400 text-sm">{value ? value : 'N/A'}</span>
             )
         },
         {

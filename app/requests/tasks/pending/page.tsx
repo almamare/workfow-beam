@@ -93,14 +93,13 @@ function TasksPendingPageContent() {
             const { data } = await axios.get('/requests/tasks/fetch/for-approval', {
                 params: { request_type: 'Tasks', search, limit: 10000, page: 1 }
             });
-            const headers = ['Request Code', 'Request Type', 'Contractor', 'Project', 'Current Step', 'Step Name', 'Status', 'Notes', 'Created By', 'Created At'];
+            const headers = ['Request Code', 'Request Type', 'Contractor', 'Project', 'Step Name', 'Status', 'Notes', 'Created By', 'Created At'];
             const rows = data?.body?.tasks_requests?.items || data?.data?.tasks_requests?.items || [];
             const csvRows = rows.map((req: any) => [
                 req.request_code,
                 req.request_type || '',
                 escapeCsv(req.contractor_name || ''),
                 escapeCsv(req.project_name || ''),
-                req.current_step_level || '',
                 escapeCsv(req.step_name || ''),
                 req.status,
                 escapeCsv(req.notes || ''),
@@ -168,20 +167,6 @@ function TasksPendingPageContent() {
             key: 'project_name',
             header: 'Project',
             render: (value: any) => <span className="font-semibold text-slate-800 dark:text-slate-200">{value || '-'}</span>,
-            sortable: true,
-        },
-        {
-            key: 'current_step_level',
-            header: 'Current Step',
-            render: (value: any) => {
-                if (!value && value !== 0) return <span className="text-slate-400">N/A</span>;
-                const sv = String(value);
-                return (
-                    <Badge variant="outline" className={`${stepColors[sv] || 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200'} font-medium`}>
-                        Step {sv}
-                    </Badge>
-                );
-            },
             sortable: true,
         },
         {

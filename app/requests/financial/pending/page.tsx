@@ -161,20 +161,6 @@ function FinancialPendingContent() {
             sortable: true,
         },
         {
-            key: 'current_step_level',
-            header: 'Current Step',
-            render: (value: any) => {
-                if (!value && value !== 0) return <span className="text-slate-400">N/A</span>;
-                const sv = String(value);
-                return (
-                    <Badge variant="outline" className={`${stepColors[sv] || 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200'} font-medium`}>
-                        Step {sv}
-                    </Badge>
-                );
-            },
-            sortable: true,
-        },
-        {
             key: 'step_name',
             header: 'Step Name',
             render: (value: any) => <span className="text-slate-700 dark:text-slate-300">{value || '-'}</span>,

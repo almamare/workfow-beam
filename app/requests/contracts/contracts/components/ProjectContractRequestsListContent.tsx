@@ -236,7 +236,7 @@ export function ProjectContractRequestsListContent({
         },
     ];
 
-    const badgeColor = status === 'Approved' ? 'success' : status === 'Rejected' ? 'destructive' : 'default';
+    const badgeColor = status === 'Approved' ? 'success' : status === 'Rejected' ? 'danger' : 'default';
     const badgeLabel = status === 'all'
         ? 'Total Requests'
         : `Total ${status} Requests`;

@@ -114,13 +114,12 @@ function ProjectContractsPendingContent() {
     const exportToExcel = () => {
         setIsExporting(true);
         try {
-            const headers = ['Request Code', 'Contract Title', 'Project', 'Contractor', 'Current Step', 'Step Name', 'Status', 'Created By', 'Created At'];
+            const headers = ['Request Code', 'Contract Title', 'Project', 'Contractor', 'Step Name', 'Status', 'Created By', 'Created At'];
             const rows = items.map((r: TaskRequest) => [
                 r.request_code || '',
                 escapeCsv((r as any).contract_title || ''),
                 escapeCsv((r as any).project_name || ''),
                 escapeCsv((r as any).contractor_name || ''),
-                r.current_step_level || '',
                 escapeCsv(r.step_name || ''),
                 r.status || '',
                 escapeCsv(r.created_by_name || ''),
@@ -184,20 +183,6 @@ function ProjectContractsPendingContent() {
             render: (value: any, row: TaskRequest) => (
                 <span className="text-slate-700 dark:text-slate-300">{(row as any).contractor_name || '-'}</span>
             ),
-            sortable: true,
-        },
-        {
-            key: 'current_step_level',
-            header: 'Current Step',
-            render: (value: any) => {
-                if (!value && value !== 0) return <span className="text-slate-400">N/A</span>;
-                const sv = String(value);
-                return (
-                    <Badge variant="outline" className={`${STEP_COLORS[sv] || 'bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'} font-medium`}>
-                        Step {sv}
-                    </Badge>
-                );
-            },
             sortable: true,
         },
         {

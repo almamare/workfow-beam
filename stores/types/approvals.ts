@@ -9,6 +9,10 @@ export interface Approval {
     /** Role display name of the approver (for display) */
     approver_role_name?: string | null;
     approver_type?: string | null;
+    /** Job title resolved from employees table */
+    approver_job_title?: string | null;
+    /** Department name resolved from departments table */
+    approver_department?: string | null;
     /** Role key required by the workflow step */
     required_role?: string | null;
     created_id?: string;

@@ -106,6 +106,8 @@ interface Approval {
     step_process?: string; // Alternative process date field
     processed_at?: string; // Alternative process date field
     approver_role: string;
+    approver_job_title?: string | null;
+    approver_department?: string | null;
     _sequenceIndex?: number; // Internal index for display (not from server)
 }
 
@@ -243,7 +245,9 @@ function ProjectContractRequestDetails() {
         if (!id) return;
         try {
             const res = await axios.get(`/approvals/fetch/${id}`);
-            const approvalsData = res.data.body?.approvals?.items || [];
+            const approvalsData = (res.data.body?.approvals?.items || []).filter(
+                (a: Approval) => a.status !== 'Submitted'
+            );
             // Add index to each approval for sequence display
             const approvalsWithIndex = approvalsData.map((approval: Approval, index: number) => ({
                 ...approval,
@@ -396,9 +400,14 @@ function ProjectContractRequestDetails() {
             render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value ? value : 'N/A'}</span>
         },
         {
-            key: 'approver_role',
-            header: 'Role',
-            render: (value: any, row: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{row?.approver_role_name || value || 'N/A'}</span>
+            key: 'approver_job_title',
+            header: 'Job Title',
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value || 'N/A'}</span>
+        },
+        {
+            key: 'approver_department',
+            header: 'Department',
+            render: (value: any) => <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{value || 'N/A'}</span>
         },
         {
             key: 'step_name',
@@ -421,13 +430,6 @@ function ProjectContractRequestDetails() {
                 <div className="max-w-xs">
                     <div className="text-sm text-slate-800 dark:text-slate-200 truncate">{value || '-'}</div>
                 </div>
-            )
-        },
-        {
-            key: 'created_at',
-            header: 'Created Date',
-            render: (value: any) => (
-                <span className="text-slate-600 dark:text-slate-400 text-sm">{value ? value : 'N/A'}</span>
             )
         },
         {

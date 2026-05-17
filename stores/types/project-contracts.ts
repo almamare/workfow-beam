@@ -15,6 +15,8 @@ export interface ProjectContract {
     status: 'Draft' | 'Active' | 'Expired' | 'Cancelled' | 'Suspended';
     approval_status: 'Draft' | 'Pending' | 'Approved' | 'Rejected';
     notes?: string;
+    contract_value?: string | number | null;
+    currency?: string | null;
     created_at: string;
     updated_at?: string;
     project_name?: string;
